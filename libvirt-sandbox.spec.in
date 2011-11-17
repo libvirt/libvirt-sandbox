@@ -1,0 +1,87 @@
+# -*- rpm-spec -*-
+
+%define with_introspection 0
+%define with_python 0
+
+%if 0%{?fedora} >= 15
+%define with_introspection 1
+%endif
+%if 0%{?rhel} >= 6
+%define with_introspection 1
+%endif
+
+
+Name: @PACKAGE@
+Version: @VERSION@
+Release: 1%{?dist}%{?extra_release}
+Summary: libvirt application sandbox framework
+Group: Development/Libraries
+License: LGPLv2+
+URL: http://libvirt.org/
+Source0: http://libvirt.org/%{name}/%{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires: libvirt-gobject-devel >= 0.0.1
+%if %{with_introspection}
+BuildRequires: gobject-introspection-devel
+%endif
+
+%package devel
+Group: Development/Libraries
+Summary: libvirt sandbox integration for events development files
+Requires: %{name} = %{version}-%{release}
+
+%description
+This package provides a framework for building application sandboxes
+using libvirt.
+
+%description devel
+This package provides development header files and libraries for
+the libvirt sandbox
+
+%prep
+%setup -q
+
+%build
+
+%if %{with_introspection}
+%define introspection_arg --enable-introspection
+%else
+%define introspection_arg --disable-introspection
+%endif
+
+%configure %{introspection_arg}
+%__make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+%__make install  DESTDIR=$RPM_BUILD_ROOT
+rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.a
+rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.la
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(-,root,root,-)
+%doc README COPYING AUTHORS ChangeLog NEWS
+%{_libdir}/libvirt-sandbox-1.0.so.*
+%if %{with_introspection}
+%{_libdir}/girepository-1.0/LibvirtSandbox-1.0.typelib
+%endif
+
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/libvirt-sandbox-1.0.so
+%{_libdir}/pkgconfig/libvirt-sandbox-1.0.pc
+%dir %{_includedir}/libvirt-sandbox-1.0
+%dir %{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox
+%{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox/libvirt-sandbox.h
+%{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox/libvirt-sandbox-*.h
+%if %{with_introspection}
+%{_datadir}/gir-1.0/LibvirtSandbox-1.0.gir
+%endif
+#%{_datadir}/gtk-doc/html/Libvirt-sandbox
+
+%changelog
