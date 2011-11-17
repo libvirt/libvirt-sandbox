@@ -9,6 +9,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-mount.h \
+			libvirt-sandbox-cleaner.h \
 			libvirt-sandbox-builder.h \
 			libvirt-sandbox-builder-machine.h \
 			libvirt-sandbox-builder-container.h \
@@ -18,6 +19,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-mount.c \
+			libvirt-sandbox-cleaner.c \
 			libvirt-sandbox-builder.c \
 			libvirt-sandbox-builder-machine.c \
 			libvirt-sandbox-builder-container.c \

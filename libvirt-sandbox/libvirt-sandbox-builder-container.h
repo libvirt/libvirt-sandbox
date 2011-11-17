@@ -57,8 +57,7 @@ struct _GVirSandboxBuilderContainerClass
 
 GType gvir_sandbox_builder_container_get_type(void);
 
-GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *connection,
-                                                                GVirSandboxConfig *config);
+GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *connection);
 
 G_END_DECLS
 

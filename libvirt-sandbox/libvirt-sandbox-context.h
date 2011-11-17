@@ -63,6 +63,7 @@ GVirSandboxContext *gvir_sandbox_context_new(GVirConnection *connection,
                                              GVirSandboxConfig *config);
 
 GVirSandboxConfig *gvir_sandbox_context_get_config(GVirSandboxContext *ctxt);
+GVirSandboxCleaner *gvir_sandbox_context_get_cleaner(GVirSandboxContext *ctxt);
 
 gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);

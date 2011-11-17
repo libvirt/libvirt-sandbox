@@ -102,10 +102,11 @@ static void gvir_sandbox_builder_machine_finalize(GObject *object)
 }
 
 
-static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuilder *builder,
+static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                                GVirSandboxConfig *config,
+                                                                GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                                 GError **error)
 {
-    GVirSandboxConfig *config = gvir_sandbox_builder_get_config(builder);
     GString *str = g_string_new("<domain type='kvm'>\n");
     GVirConfigDomain *dom;
     const gchar *kernel = "";
@@ -235,17 +236,14 @@ static void gvir_sandbox_builder_machine_init(GVirSandboxBuilderMachine *builder
 /**
  * gvir_sandbox_builder_machine_new:
  * @connection: (transfer none): the connection
- * @config: (transfer none): the sandbox configuration
  *
  * Create a new graphical application sandbox builderuration
  *
  * Returns: (transfer full): a new graphical sandbox builder object
  */
-GVirSandboxBuilderMachine *gvir_sandbox_builder_machine_new(GVirConnection *connection,
-                                                            GVirSandboxConfig *config)
+GVirSandboxBuilderMachine *gvir_sandbox_builder_machine_new(GVirConnection *connection)
 {
     return GVIR_SANDBOX_BUILDER_MACHINE(g_object_new(GVIR_SANDBOX_TYPE_BUILDER_MACHINE,
                                                      "connection", connection,
-                                                     "config", config,
                                                      NULL));
 }

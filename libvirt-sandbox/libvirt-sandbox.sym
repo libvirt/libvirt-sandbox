@@ -38,8 +38,13 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_context_start;
 	gvir_sandbox_context_stop;
 
-	gvir_sandbox_builder_cleanup_post_start;
-	gvir_sandbox_builder_cleanup_post_stop;
+	gvir_sandbox_cleaner_get_type;
+	gvir_sandbox_cleaner_new;
+	gvir_sandbox_cleaner_run_post_start;
+	gvir_sandbox_cleaner_run_post_stop;
+	gvir_sandbox_cleaner_add_action_post_start;
+	gvir_sandbox_cleaner_add_action_post_stop;
+
 	gvir_sandbox_builder_construct;
 	gvir_sandbox_builder_get_config;
 	gvir_sandbox_builder_get_connection;

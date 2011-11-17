@@ -56,27 +56,22 @@ struct _GVirSandboxBuilderClass
     GObjectClass parent_class;
 
     GVirConfigDomain *(*construct)(GVirSandboxBuilder *builder,
+                                   GVirSandboxConfig *config,
+                                   GVirSandboxCleaner *cleaner,
                                    GError **error);
 };
 
 GType gvir_sandbox_builder_get_type(void);
 
 GVirSandboxBuilder *gvir_sandbox_builder_for_connection(GVirConnection *connection,
-                                                        GVirSandboxConfig *config,
                                                         GError **error);
 
-GVirSandboxConfig *gvir_sandbox_builder_get_config(GVirSandboxBuilder *builder);
 GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder);
 
 GVirConfigDomain *gvir_sandbox_builder_construct(GVirSandboxBuilder *builder,
+                                                 GVirSandboxConfig *config,
+                                                 GVirSandboxCleaner *cleaner,
                                                  GError **error);
-
-gboolean gvir_sandbox_builder_cleanup_post_start(GVirSandboxBuilder *builder,
-                                                 GError **error);
-
-gboolean gvir_sandbox_builder_cleanup_post_stop(GVirSandboxBuilder *builder,
-                                                GError **error);
-
 
 G_END_DECLS
 

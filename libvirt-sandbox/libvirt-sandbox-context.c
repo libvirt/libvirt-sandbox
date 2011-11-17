@@ -34,6 +34,7 @@ struct _GVirSandboxContextPrivate
     GVirSandboxConfig *config;
 
     GVirSandboxBuilder *builder;
+    GVirSandboxCleaner *cleaner;
 };
 
 G_DEFINE_TYPE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
@@ -132,6 +133,8 @@ static void gvir_sandbox_context_finalize(GObject *object)
         g_object_unref(priv->connection);
     if (priv->config)
         g_object_unref(priv->config);
+    if (priv->cleaner)
+        g_object_unref(priv->cleaner);
 
     G_OBJECT_CLASS(gvir_sandbox_context_parent_class)->finalize(object);
 }
@@ -186,7 +189,10 @@ static void gvir_sandbox_context_class_init(GVirSandboxContextClass *klass)
 
 static void gvir_sandbox_context_init(GVirSandboxContext *ctxt)
 {
+    GVirSandboxContextPrivate *priv = ctxt->priv;
     ctxt->priv = GVIR_SANDBOX_CONTEXT_GET_PRIVATE(ctxt);
+
+    priv->cleaner = gvir_sandbox_cleaner_new();
 }
 
 
@@ -221,6 +227,22 @@ GVirSandboxConfig *gvir_sandbox_context_get_config(GVirSandboxContext *ctxt)
     GVirSandboxContextPrivate *priv = ctxt->priv;
     g_object_ref(priv->config);
     return priv->config;
+}
+
+
+/**
+ * gvir_sandbox_context_get_cleaner:
+ * @ctxt: (transfer none): the sandbox context
+ *
+ * Retrieves the sandbox cleaner
+ *
+ * Returns: (transfer full): the current cleaner
+ */
+GVirSandboxCleaner *gvir_sandbox_context_get_cleaner(GVirSandboxContext *ctxt)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+    g_object_ref(priv->cleaner);
+    return priv->cleaner;
 }
 
 
@@ -269,11 +291,12 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     }
 
     if (!(priv->builder = gvir_sandbox_builder_for_connection(priv->connection,
-                                                              priv->config,
                                                               error)))
         return FALSE;
 
     if (!(config = gvir_sandbox_builder_construct(priv->builder,
+                                                  priv->config,
+                                                  priv->cleaner,
                                                   error))) {
         goto error;
     }
@@ -286,8 +309,7 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     if (!gvir_domain_start(priv->domain, 0, error))
         goto error;
 
-    if (!gvir_sandbox_builder_cleanup_post_start(priv->builder,
-                                                 error))
+    if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
         goto error;
 
     g_object_unref(config);
@@ -301,10 +323,14 @@ error:
     }
     if (priv->domain) {
         gvir_domain_stop(priv->domain, 0, NULL);
+        gvir_sandbox_cleaner_run_post_stop(priv->cleaner, NULL);
         gvir_domain_delete(priv->domain, 0, NULL);
         g_object_unref(priv->domain);
         priv->domain = NULL;
     }
+
+    g_object_unref(priv->cleaner);
+    priv->cleaner = gvir_sandbox_cleaner_new();
     return FALSE;
 }
 
@@ -312,23 +338,25 @@ error:
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
+    gboolean ret = TRUE;
 
     if (!gvir_domain_stop(priv->domain, 0, error))
-        return FALSE;
+        ret = FALSE;
 
-    gvir_domain_delete(priv->domain, 0, NULL);
+    if (!gvir_domain_delete(priv->domain, 0, error))
+        ret = FALSE;
 
     g_object_unref(priv->domain);
     priv->domain = NULL;
 
-    if (!gvir_sandbox_builder_cleanup_post_stop(priv->builder, error)) {
-        g_object_unref(priv->builder);
-        priv->builder = NULL;
-        return FALSE;
-    }
+    if (!gvir_sandbox_cleaner_run_post_stop(priv->cleaner, error))
+        ret = FALSE;
 
     g_object_unref(priv->builder);
     priv->builder = NULL;
 
-    return TRUE;
+    g_object_unref(priv->cleaner);
+    priv->cleaner = gvir_sandbox_cleaner_new();
+
+    return ret;
 }

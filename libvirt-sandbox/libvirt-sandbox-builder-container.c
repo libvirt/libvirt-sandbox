@@ -103,9 +103,10 @@ static void gvir_sandbox_builder_container_finalize(GObject *object)
 
 
 static GVirConfigDomain *gvir_sandbox_builder_container_construct(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                                  GVirSandboxConfig *config,
+                                                                  GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                                   GError **error G_GNUC_UNUSED)
 {
-    GVirSandboxConfig *config = gvir_sandbox_builder_get_config(builder);
     GString *str = g_string_new("<domain type='lxc'>\n");
     GVirConfigDomain *dom;
     const gchar *cmdline = "";
@@ -208,17 +209,14 @@ static void gvir_sandbox_builder_container_init(GVirSandboxBuilderContainer *bui
 /**
  * gvir_sandbox_builder_container_new:
  * @connection: (transfer none): the connection
- * @config: (transfer none): the sandbox configuration
  *
  * Create a new graphical application sandbox builderuration
  *
  * Returns: (transfer full): a new graphical sandbox builder object
  */
-GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *connection,
-                                                                GVirSandboxConfig *config)
+GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *connection)
 {
     return GVIR_SANDBOX_BUILDER_CONTAINER(g_object_new(GVIR_SANDBOX_TYPE_BUILDER_CONTAINER,
                                                        "connection", connection,
-                                                       "config", config,
                                                        NULL));
 }
