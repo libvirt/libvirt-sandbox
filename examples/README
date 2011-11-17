@@ -1,0 +1,7 @@
+                 Sandbox Examples
+                 ================
+
+To run the example programs first set
+
+   export GI_TYPELIB_PATH=/path/to/checkout/libvirt-sandbox:
+   export LD_LIBRARY_PATH=/path/to/checkout/libvirt-sandbox/.libs
