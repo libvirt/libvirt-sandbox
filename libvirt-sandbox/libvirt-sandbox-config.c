@@ -30,6 +30,7 @@
 
 struct _GVirSandboxConfigPrivate
 {
+    gchar *name;
     gchar *root;
     gchar *arch;
     GList *mounts;
@@ -46,6 +47,7 @@ G_DEFINE_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
 enum {
     PROP_0,
 
+    PROP_NAME,
     PROP_ROOT,
     PROP_ARCH,
 
@@ -69,6 +71,10 @@ static void gvir_sandbox_config_get_property(GObject *object,
     GVirSandboxConfigPrivate *priv = config->priv;
 
     switch (prop_id) {
+    case PROP_NAME:
+        g_value_set_string(value, priv->name);
+        break;
+
     case PROP_ROOT:
         g_value_set_string(value, priv->root);
         break;
@@ -100,6 +106,11 @@ static void gvir_sandbox_config_set_property(GObject *object,
     GVirSandboxConfigPrivate *priv = config->priv;
 
     switch (prop_id) {
+    case PROP_NAME:
+        g_free(priv->name);
+        priv->name = g_value_dup_string(value);
+        break;
+
     case PROP_ROOT:
         g_free(priv->root);
         priv->root = g_value_dup_string(value);
@@ -135,7 +146,9 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_list_free(priv->mounts);
 
     g_strfreev(priv->command);
+    fprintf(stderr,">>>[%s]\n", priv->name);
 
+    g_free(priv->name);
     g_free(priv->root);
     g_free(priv->arch);
     g_free(priv->secType);
@@ -154,10 +167,22 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
     object_class->set_property = gvir_sandbox_config_set_property;
 
     g_object_class_install_property(object_class,
+                                    PROP_NAME,
+                                    g_param_spec_string("name",
+                                                        "Name",
+                                                        "The sandbox name",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
                                     PROP_ROOT,
                                     g_param_spec_string("root",
                                                         "Root",
-                                                        "The host root directory",
+                                                        "The sandbox root",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -211,6 +236,7 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
 
     priv = config->priv = GVIR_SANDBOX_CONFIG_GET_PRIVATE(config);
 
+    priv->name = g_strdup("sandbox");
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
     priv->secType = g_strdup("svirt_sandbox_t");
@@ -219,15 +245,31 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
 
 /**
  * gvir_sandbox_config_new:
+ * @name: the sandbox name
  *
  * Create a new console application sandbox configuration
  *
  * Returns: (transfer full): a new sandbox config object
  */
-GVirSandboxConfig *gvir_sandbox_config_new(void)
+GVirSandboxConfig *gvir_sandbox_config_new(const gchar *name)
 {
     return GVIR_SANDBOX_CONFIG(g_object_new(GVIR_SANDBOX_TYPE_CONFIG,
+                                            "name", name,
                                             NULL));
+}
+
+/**
+ * gvir_sandbox_config_get_name:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox name
+ *
+ * Returns: (transfer none): the current name
+ */
+const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->name;
 }
 
 

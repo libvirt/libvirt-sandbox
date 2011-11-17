@@ -59,7 +59,9 @@ struct _GVirSandboxConfigClass
 
 GType gvir_sandbox_config_get_type(void);
 
-GVirSandboxConfig *gvir_sandbox_config_new(void);
+GVirSandboxConfig *gvir_sandbox_config_new(const gchar *name);
+
+const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config);
 
 void gvir_sandbox_config_set_root(GVirSandboxConfig *config, const gchar *hostdir);
 const gchar *gvir_sandbox_config_get_root(GVirSandboxConfig *config);

@@ -19,6 +19,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_add_mount;
 	gvir_sandbox_config_get_command;
 	gvir_sandbox_config_get_mounts;
+	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
 	gvir_sandbox_config_get_security_level;
 	gvir_sandbox_config_get_security_type;
@@ -28,6 +29,28 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_set_root;
 	gvir_sandbox_config_set_security_level;
 	gvir_sandbox_config_set_security_type;
+
+	gvir_sandbox_context_get_type;
+	gvir_sandbox_context_get_config;
+	gvir_sandbox_context_get_domain;
+	gvir_sandbox_context_get_connection;
+	gvir_sandbox_context_new;
+	gvir_sandbox_context_start;
+	gvir_sandbox_context_stop;
+
+	gvir_sandbox_builder_cleanup_post_start;
+	gvir_sandbox_builder_cleanup_post_stop;
+	gvir_sandbox_builder_construct;
+	gvir_sandbox_builder_get_config;
+	gvir_sandbox_builder_get_connection;
+	gvir_sandbox_builder_get_type;
+	gvir_sandbox_builder_new;
+
+	gvir_sandbox_builder_machine_get_type;
+	gvir_sandbox_builder_machine_new;
+
+	gvir_sandbox_builder_container_get_type;
+	gvir_sandbox_builder_container_new;
 
     local:
         *;

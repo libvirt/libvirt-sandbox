@@ -184,7 +184,7 @@ static void gvir_sandbox_config_graphical_init(GVirSandboxConfigGraphical *confi
 
 
 /**
- * gvir_sandbox_config_mount_new:
+ * gvir_sandbox_config_graphical_new:
  *
  * Create a new graphical application sandbox configuration
  *

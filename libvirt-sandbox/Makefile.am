@@ -9,11 +9,19 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-mount.h \
+			libvirt-sandbox-builder.h \
+			libvirt-sandbox-builder-machine.h \
+			libvirt-sandbox-builder-container.h \
+			libvirt-sandbox-context.h \
 			$(NULL)
 SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-mount.c \
+			libvirt-sandbox-builder.c \
+			libvirt-sandbox-builder-machine.c \
+			libvirt-sandbox-builder-container.c \
+			libvirt-sandbox-context.c \
 			$(NULL)
 
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
@@ -24,6 +32,7 @@ libvirt_sandbox_1_0_la_SOURCES = \
 libvirt_sandbox_1_0_la_CFLAGS = \
 			-DDATADIR="\"$(datadir)\"" \
 			-DLIBVIRT_SANDBOX_BUILD \
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
