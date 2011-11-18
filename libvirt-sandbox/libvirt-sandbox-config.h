@@ -69,6 +69,21 @@ const gchar *gvir_sandbox_config_get_root(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_arch(GVirSandboxConfig *config, const gchar *arch);
 const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_set_tty(GVirSandboxConfig *config, gboolean tty);
+gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_userid(GVirSandboxConfig *config, guint uid);
+guint gvir_sandbox_config_get_userid(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_groupid(GVirSandboxConfig *config, guint gid);
+guint gvir_sandbox_config_get_groupid(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_username(GVirSandboxConfig *config, const gchar *username);
+const gchar *gvir_sandbox_config_get_username(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_homedir(GVirSandboxConfig *config, const gchar *homedir);
+const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config);
+
 void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
                                    GVirSandboxConfigMount *mnt);
 GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config);

@@ -33,6 +33,13 @@ struct _GVirSandboxConfigPrivate
     gchar *name;
     gchar *root;
     gchar *arch;
+    gboolean tty;
+
+    guint uid;
+    guint gid;
+    gchar *username;
+    gchar *homedir;
+
     GList *mounts;
 
     gchar **command;
@@ -50,6 +57,12 @@ enum {
     PROP_NAME,
     PROP_ROOT,
     PROP_ARCH,
+    PROP_TTY,
+
+    PROP_UID,
+    PROP_GID,
+    PROP_USERNAME,
+    PROP_HOMEDIR,
 
     PROP_SECURITY_TYPE,
     PROP_SECURITY_LEVEL,
@@ -81,6 +94,26 @@ static void gvir_sandbox_config_get_property(GObject *object,
 
     case PROP_ARCH:
         g_value_set_string(value, priv->arch);
+        break;
+
+    case PROP_TTY:
+        g_value_set_boolean(value, priv->tty);
+        break;
+
+    case PROP_UID:
+        g_value_set_uint(value, priv->uid);
+        break;
+
+    case PROP_GID:
+        g_value_set_uint(value, priv->gid);
+        break;
+
+    case PROP_USERNAME:
+        g_value_set_string(value, priv->username);
+        break;
+
+    case PROP_HOMEDIR:
+        g_value_set_string(value, priv->homedir);
         break;
 
     case PROP_SECURITY_TYPE:
@@ -119,6 +152,28 @@ static void gvir_sandbox_config_set_property(GObject *object,
     case PROP_ARCH:
         g_free(priv->arch);
         priv->arch = g_value_dup_string(value);
+        break;
+
+    case PROP_TTY:
+        priv->tty = g_value_get_boolean(value);
+        break;
+
+    case PROP_UID:
+        priv->uid = g_value_get_uint(value);
+        break;
+
+    case PROP_GID:
+        priv->gid = g_value_get_uint(value);
+        break;
+
+    case PROP_USERNAME:
+        g_free(priv->username);
+        priv->username = g_value_dup_string(value);
+        break;
+
+    case PROP_HOMEDIR:
+        g_free(priv->homedir);
+        priv->homedir = g_value_dup_string(value);
         break;
 
     case PROP_SECURITY_TYPE:
@@ -200,6 +255,65 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
     g_object_class_install_property(object_class,
+                                    PROP_TTY,
+                                    g_param_spec_string("tty",
+                                                        "TTY",
+                                                        "TTY",
+                                                        FALSE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_UID,
+                                    g_param_spec_uint("uid",
+                                                      "UID",
+                                                      "The user ID",
+                                                      0,
+                                                      G_MAXUINT,
+                                                      geteuid(),
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_GID,
+                                    g_param_spec_uint("gid",
+                                                      "GID",
+                                                      "The group ID",
+                                                      0,
+                                                      G_MAXUINT,
+                                                      getegid(),
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_USERNAME,
+                                    g_param_spec_string("username",
+                                                        "Username",
+                                                        "The username",
+                                                        g_get_user_name(),
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_HOMEDIR,
+                                    g_param_spec_string("homedir",
+                                                        "Homedir",
+                                                        "The home directory",
+                                                        g_get_home_dir(),
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
                                     PROP_SECURITY_TYPE,
                                     g_param_spec_string("security-type",
                                                         "Security type",
@@ -239,6 +353,15 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
     priv->secType = g_strdup("svirt_sandbox_t");
+
+    priv->command = g_new0(gchar *, 2);
+    priv->command[0] = g_strdup("/bin/sh");
+    priv->command[1] = NULL;
+
+    priv->uid = geteuid();
+    priv->gid = getegid();
+    priv->username = g_strdup(g_get_user_name());
+    priv->homedir = g_strdup(g_get_home_dir());
 }
 
 
@@ -317,6 +440,7 @@ void gvir_sandbox_config_set_arch(GVirSandboxConfig *config, const gchar *arch)
     priv->arch = g_strdup(arch);
 }
 
+
 /**
  * gvir_sandbox_config_get_arch:
  * @config: (transfer none): the sandbox config
@@ -330,6 +454,158 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config)
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->arch;
 }
+
+
+/**
+ * gvir_sandbox_config_set_tty:
+ * @config: (transfer none): the sandbox config
+ * @tty: (transfer none): true if the container should have a tty
+ *
+ * Set whether the container console should have a interactive tty.
+ */
+void gvir_sandbox_config_set_tty(GVirSandboxConfig *config, gboolean tty)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->tty = tty;
+}
+
+
+/**
+ * gvir_sandbox_config_get_tty:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox tty flag
+ *
+ * Returns: (transfer none): the tty flag
+ */
+gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->tty;
+}
+
+
+/**
+ * gvir_sandbox_config_set_userid:
+ * @config: (transfer none): the sandbox config
+ * @uid: (transfer none): the sandbox user ID
+ *
+ * Set the user ID to invoke the sandbox application under.
+ * Defaults to the user ID of the current program.
+ */
+void gvir_sandbox_config_set_userid(GVirSandboxConfig *config, guint uid)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->uid = uid;
+}
+
+
+/**
+ * gvir_sandbox_config_get_userid:
+ * @config: (transfer none): the sandbox config
+ *
+ * Get the user ID to invoke the sandbox application under.
+ *
+ * Returns: (transfer none): the user ID
+ */
+guint gvir_sandbox_config_get_userid(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->uid;
+}
+
+
+/**
+ * gvir_sandbox_config_set_groupid:
+ * @config: (transfer none): the sandbox config
+ * @gid: (transfer none): the sandbox group ID
+ *
+ * Set the group ID to invoke the sandbox application under.
+ * Defaults to the group ID of the current program.
+ */
+void gvir_sandbox_config_set_groupid(GVirSandboxConfig *config, guint gid)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->gid = gid;
+}
+
+
+/**
+ * gvir_sandbox_config_get_groupid:
+ * @config: (transfer none): the sandbox config
+ *
+ * Get the group ID to invoke the sandbox application under.
+ *
+ * Returns: (transfer none): the group ID
+ */
+guint gvir_sandbox_config_get_groupid(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->gid;
+}
+
+
+/**
+ * gvir_sandbox_config_set_username:
+ * @config: (transfer none): the sandbox config
+ * @username: (transfer none): the sandbox user name
+ *
+ * Set the user name associated with the sandbox user ID.
+ * Defaults to the user name of the current program.
+ */
+void gvir_sandbox_config_set_username(GVirSandboxConfig *config, const gchar *username)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->username);
+    priv->username = g_strdup(username);
+}
+
+
+/**
+ * gvir_sandbox_config_get_username:
+ * @config: (transfer none): the sandbox config
+ *
+ * Get the user name to invoke the sandbox application under.
+ *
+ * Returns: (transfer none): the user name
+ */
+const gchar *gvir_sandbox_config_get_username(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->username;
+}
+
+
+/**
+ * gvir_sandbox_config_set_homedir:
+ * @config: (transfer none): the sandbox config
+ * @homedir: (transfer none): the sandbox home directory
+ *
+ * Set the home directory associated with the sandbox user ID.
+ * Defaults to the home directory of the current program.
+ */
+void gvir_sandbox_config_set_homedir(GVirSandboxConfig *config, const gchar *homedir)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->homedir);
+    priv->homedir = g_strdup(homedir);
+}
+
+
+/**
+ * gvir_sandbox_config_get_homedir:
+ * @config: (transfer none): the sandbox config
+ *
+ * Get the home directory associated with the sandbox user ID
+ *
+ * Returns: (transfer none): the home directory
+ */
+const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->homedir;
+}
+
 
 
 /**

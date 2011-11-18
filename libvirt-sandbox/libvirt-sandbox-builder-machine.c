@@ -145,6 +145,75 @@ cleanup:
 }
 
 
+static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config)
+{
+    GString *str = g_string_new("");
+    gchar **argv, **tmp;
+    gchar *cmdrawstr;
+    gchar *cmdb64str;
+    size_t len = 0, offset;
+    gchar *ret;
+
+    argv = gvir_sandbox_config_get_command(config);
+
+    tmp = argv;
+    while (*tmp) {
+        len += strlen(*tmp) + 1;
+        tmp++;
+    }
+
+    cmdrawstr = g_new0(gchar, len);
+    tmp = argv;
+    offset = 0;
+    while (*tmp) {
+        size_t tlen = strlen(*tmp);
+        memcpy(cmdrawstr + offset, *tmp, tlen + 1);
+        offset += tlen + 1;
+        tmp++;
+    }
+
+    cmdb64str = g_base64_encode((guchar*)cmdrawstr, len);
+    g_free(cmdrawstr);
+
+    /* First sandbox specific args */
+    g_string_append_printf(str, "sandbox-cmd=%s", cmdb64str);
+    g_free(cmdb64str);
+
+    if (gvir_sandbox_config_get_tty(config))
+        g_string_append(str, " sandbox-isatty");
+
+    g_string_append_printf(str, " sandbox-uid=%u", gvir_sandbox_config_get_userid(config));
+    g_string_append_printf(str, " sandbox-gid=%u", gvir_sandbox_config_get_groupid(config));
+    g_string_append_printf(str, " sandbox-user=%s", gvir_sandbox_config_get_username(config));
+    g_string_append_printf(str, " sandbox-home=%s", gvir_sandbox_config_get_homedir(config));
+
+    if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
+        GVirSandboxConfigGraphical *gconfig = GVIR_SANDBOX_CONFIG_GRAPHICAL(config);
+        g_string_append(str, " sandbox-xorg");
+        g_string_append_printf(str, " sandbox-vm=%s",
+                               gvir_sandbox_config_graphical_get_window_manager(gconfig));
+    }
+
+    /* Now kernel args */
+    g_string_append(str, " console=ttyS0");
+    if (getenv("LIBVIRT_SANDBOX_DEBUG"))
+        g_string_append(str, " debug loglevel=10 earlyprintk=ttyS0");
+    else
+        g_string_append(str, " quiet loglevel=0");
+
+    /* These make boot a little bit faster */
+    g_string_append(str, " edd=off");
+    g_string_append(str, " printk.time=1");
+    g_string_append(str, " noreplace-smp");
+    g_string_append(str, " cgroup_disable=memory");
+    g_string_append(str, " pci=noearly");
+
+    ret = str->str;
+    g_string_free(str, FALSE);
+    return ret;
+}
+
+
 static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                     GError **error G_GNUC_UNUSED,
                                                     gpointer opaque)
@@ -173,6 +242,7 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
         goto cleanup;
 
     kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
+    cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
     gvir_sandbox_cleaner_add_action_post_start(cleaner,
                                                gvir_sandbox_builder_machine_delete,

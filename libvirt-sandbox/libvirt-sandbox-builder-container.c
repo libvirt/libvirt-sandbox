@@ -102,15 +102,66 @@ static void gvir_sandbox_builder_container_finalize(GObject *object)
 }
 
 
+static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config)
+{
+    GString *str = g_string_new("");
+    gchar **argv, **tmp;
+    gchar *cmdrawstr;
+    gchar *cmdb64str;
+    size_t len = 0, offset;
+    gchar *ret;
+
+    argv = gvir_sandbox_config_get_command(config);
+
+    tmp = argv;
+    while (*tmp) {
+        len += strlen(*tmp) + 1;
+        tmp++;
+    }
+
+    cmdrawstr = g_new0(gchar, len);
+    tmp = argv;
+    offset = 0;
+    while (*tmp) {
+        size_t tlen = strlen(*tmp);
+        memcpy(cmdrawstr + offset, *tmp, tlen + 1);
+        offset += tlen + 1;
+        tmp++;
+    }
+
+    cmdb64str = g_base64_encode((guchar*)cmdrawstr, len);
+    g_free(cmdrawstr);
+
+    /* First sandbox specific args */
+    g_string_append_printf(str, "sandbox-cmd=%s", cmdb64str);
+    g_free(cmdb64str);
+
+    if (gvir_sandbox_config_get_tty(config))
+        g_string_append(str, " sandbox-isatty");
+
+    g_string_append_printf(str, " sandbox-uid=%u", gvir_sandbox_config_get_userid(config));
+    g_string_append_printf(str, " sandbox-gid=%u", gvir_sandbox_config_get_groupid(config));
+    g_string_append_printf(str, " sandbox-user=%s", gvir_sandbox_config_get_username(config));
+    g_string_append_printf(str, " sandbox-home=%s", gvir_sandbox_config_get_homedir(config));
+
+    ret = str->str;
+    g_string_free(str, FALSE);
+    return ret;
+}
+
+
+
 static GVirConfigDomain *gvir_sandbox_builder_container_construct(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                                   GVirSandboxConfig *config,
                                                                   GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                                   GError **error G_GNUC_UNUSED)
 {
     GString *str = g_string_new("<domain type='lxc'>\n");
-    GVirConfigDomain *dom;
-    const gchar *cmdline = "";
+    GVirConfigDomain *dom = NULL;
+    gchar *cmdline = NULL;
     GList *mounts = NULL, *tmp = NULL;
+
+    cmdline = gvir_sandbox_builder_container_cmdline(config);
 
     g_string_append_printf(str, "  <name>%s</name>\n",
                            gvir_sandbox_config_get_name(config));
@@ -154,7 +205,7 @@ static GVirConfigDomain *gvir_sandbox_builder_container_construct(GVirSandboxBui
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
         *error = g_error_new(GVIR_SANDBOX_BUILDER_CONTAINER_ERROR, 0,
                              "%s", "Graphical sandboxes are not supported for containers");
-        goto error;
+        goto cleanup;
     }
 
     g_string_append(str, "  </devices>\n");
@@ -176,12 +227,11 @@ static GVirConfigDomain *gvir_sandbox_builder_container_construct(GVirSandboxBui
     g_string_append(str, "</domain>");
 
     dom = gvir_config_domain_new_from_xml(str->str, error);
-    g_string_free(str, TRUE);
-    return dom;
 
-error:
+cleanup:
     g_string_free(str, TRUE);
-    return NULL;
+    g_free(cmdline);
+    return dom;
 }
 
 
