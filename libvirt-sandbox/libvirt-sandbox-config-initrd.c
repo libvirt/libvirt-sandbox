@@ -152,7 +152,7 @@ static void gvir_sandbox_config_initrd_init(GVirSandboxConfigInitrd *config)
     struct utsname uts;
     priv = config->priv = GVIR_SANDBOX_CONFIG_INITRD_GET_PRIVATE(config);
 
-    priv->init = g_strdup("/usr/bin/libvirt-sandbox-init-qemu");
+    priv->init = g_strdup(LIBEXECDIR "/libvirt-sandbox-init-qemu");
     uname(&uts);
     priv->kver = g_strdup(uts.release);
 }

@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
+%{_libexecdir}/libvirt-sandbox-init-common
+%{_libexecdir}/libvirt-sandbox-init-lxc
+%{_libexecdir}/libvirt-sandbox-init-qemu
 %{_libdir}/libvirt-sandbox-1.0.so.*
 %if %{with_introspection}
 %{_libdir}/girepository-1.0/LibvirtSandbox-1.0.typelib

@@ -29,3 +29,6 @@ libvirt-sandbox/LibvirtSandbox-1.0.typelib
 *.la
 *.o
 *~
+libvirt-sandbox/libvirt-sandbox-init-lxc
+libvirt-sandbox/libvirt-sandbox-init-common
+libvirt-sandbox/libvirt-sandbox-init-qemu

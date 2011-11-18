@@ -2,7 +2,52 @@
 EXTRA_DIST = libvirt-sandbox.sym
 CLEANFILES =
 
+libexec_PROGRAMS = \
+	libvirt-sandbox-init-common \
+	libvirt-sandbox-init-qemu \
+	libvirt-sandbox-init-lxc \
+	$(NULL)
+
 lib_LTLIBRARIES = libvirt-sandbox-1.0.la
+
+libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c
+libvirt_sandbox_init_common_CFLAGS = \
+	-DLIBEXECDIR="\"$(libexecdir)\"" \
+	$(COVERAGE_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(WARN_CFLAGS) \
+	$(NULL)
+libvirt_sandbox_init_common_LDFLAGS= -lutil \
+	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+	$(GOBJECT_LIBS) \
+	$(WARN_CFLAGS) \
+	$(NULL)
+
+libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
+libvirt_sandbox_init_lxc_CFLAGS = \
+	-DLIBEXECDIR="\"$(libexecdir)\"" \
+	$(COVERAGE_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(WARN_CFLAGS) \
+	$(NULL)
+libvirt_sandbox_init_lxc_LDFLAGS = \
+	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+	$(GOBJECT_LIBS) \
+	$(WARN_CFLAGS) \
+	$(NULL)
+
+
+libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
+libvirt_sandbox_init_qemu_CFLAGS = \
+	-DLIBEXECDIR="\"$(libexecdir)\"" \
+	$(COVERAGE_CFLAGS) \
+	$(WARN_CFLAGS) \
+	$(NULL)
+libvirt_sandbox_init_qemu_LDFLAGS = \
+	-static \
+	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+	$(WARN_CFLAGS) \
+	$(NULL)
 
 SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
@@ -36,6 +81,7 @@ libvirt_sandbox_1_0_la_HEADERS = \
 libvirt_sandbox_1_0_la_SOURCES = \
 			$(SANDBOX_SOURCE_FILES)
 libvirt_sandbox_1_0_la_CFLAGS = \
+			-DBINDIR="\"$(bindir)\"" \
 			-DDATADIR="\"$(datadir)\"" \
 			-DLIBVIRT_SANDBOX_BUILD \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \

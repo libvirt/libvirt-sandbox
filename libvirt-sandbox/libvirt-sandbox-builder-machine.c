@@ -112,7 +112,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(const gchar *kver,
     int fd = -1;
 
     gvir_sandbox_config_initrd_set_kver(cfg, kver);
-    gvir_sandbox_config_initrd_set_init(cfg, "/usr/bin/libvirt-sandbox-init-qemu");
+    gvir_sandbox_config_initrd_set_init(cfg, LIBEXECDIR "/libvirt-sandbox-init-qemu");
 
     gvir_sandbox_config_initrd_add_module(cfg, "fscache.ko");
     gvir_sandbox_config_initrd_add_module(cfg, "9pnet.ko");

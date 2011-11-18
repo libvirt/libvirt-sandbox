@@ -177,7 +177,7 @@ static void gvir_sandbox_config_graphical_init(GVirSandboxConfigGraphical *confi
 
     priv = config->priv = GVIR_SANDBOX_CONFIG_GRAPHICAL_GET_PRIVATE(config);
 
-    priv->windowManager = g_strdup("/usr/bin/matchbox-window-manager");
+    priv->windowManager = g_strdup(BINDIR "/matchbox-window-manager");
     priv->windowSize.width = 1024;
     priv->windowSize.height = 768;
 }
