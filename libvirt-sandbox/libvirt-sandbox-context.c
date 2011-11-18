@@ -190,7 +190,7 @@ static void gvir_sandbox_context_class_init(GVirSandboxContextClass *klass)
 static void gvir_sandbox_context_init(GVirSandboxContext *ctxt)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
-    ctxt->priv = GVIR_SANDBOX_CONTEXT_GET_PRIVATE(ctxt);
+    priv = ctxt->priv = GVIR_SANDBOX_CONTEXT_GET_PRIVATE(ctxt);
 
     priv->cleaner = gvir_sandbox_cleaner_new();
 }

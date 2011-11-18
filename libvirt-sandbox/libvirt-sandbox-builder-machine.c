@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -102,17 +103,81 @@ static void gvir_sandbox_builder_machine_finalize(GObject *object)
 }
 
 
+static gchar *gvir_sandbox_builder_machine_mkinitrd(const gchar *kver,
+                                                    GError **error)
+{
+    GVirSandboxConfigInitrd *cfg = gvir_sandbox_config_initrd_new();
+    GVirSandboxBuilderInitrd *builder = gvir_sandbox_builder_initrd_new();
+    gchar *targetfile = g_strdup_printf("/tmp/libvirt-sandbox-initrd-XXXXXX");
+    int fd = -1;
+
+    gvir_sandbox_config_initrd_set_kver(cfg, kver);
+    gvir_sandbox_config_initrd_set_init(cfg, "/usr/bin/libvirt-sandbox-init-qemu");
+
+    gvir_sandbox_config_initrd_add_module(cfg, "fscache.ko");
+    gvir_sandbox_config_initrd_add_module(cfg, "9pnet.ko");
+    gvir_sandbox_config_initrd_add_module(cfg, "9p.ko");
+    gvir_sandbox_config_initrd_add_module(cfg, "9pnet_virtio.ko");
+#if 0
+    gvir_sandbox_config_initrd_add_module(cfg, "virtio_net.ko");
+    gvir_sandbox_config_initrd_add_module(cfg, "virtio_balloon.ko");
+#endif
+
+    if ((fd = mkstemp(targetfile)) < 0) {
+        g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
+                    "Cannot create initrd %s", targetfile);
+        goto cleanup;
+    }
+
+    if (!gvir_sandbox_builder_initrd_construct(builder, cfg, targetfile, error))
+        goto cleanup;
+
+cleanup:
+    if (fd != -1)
+        close(fd);
+    if (*error) {
+        g_free(targetfile);
+        targetfile = NULL;
+    }
+    g_object_unref(cfg);
+    g_object_unref(builder);
+    return targetfile;
+}
+
+
+static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                    GError **error G_GNUC_UNUSED,
+                                                    gpointer opaque)
+{
+    gchar *path = opaque;
+    unlink(path);
+    return TRUE;
+}
+
 static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                                 GVirSandboxConfig *config,
-                                                                GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                                GVirSandboxCleaner *cleaner,
                                                                 GError **error)
 {
     GString *str = g_string_new("<domain type='kvm'>\n");
-    GVirConfigDomain *dom;
-    const gchar *kernel = "";
-    const gchar *initrd = "";
+    GVirConfigDomain *dom = NULL;
+    gchar *kernel = NULL;
+    gchar *initrd = NULL;
     const gchar *cmdline = "";
     GList *mounts = NULL, *tmp = NULL;
+    struct utsname uts;
+
+    uname(&uts);
+
+    if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(uts.release, error)))
+        goto cleanup;
+
+    kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
+
+    gvir_sandbox_cleaner_add_action_post_start(cleaner,
+                                               gvir_sandbox_builder_machine_delete,
+                                               initrd,
+                                               g_free);
 
     g_string_append_printf(str, "  <name>%s</name>\n",
                            gvir_sandbox_config_get_name(config));
@@ -154,7 +219,7 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
         else {
             *error = g_error_new(GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
                                  "Cannot export mount to %s", target);
-            goto error;
+            goto cleanup;
         }
 
 
@@ -167,9 +232,6 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
 
         tmp = tmp->next;
     }
-    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(mounts);
-    mounts = NULL;
 
     g_string_append(str, "    <memballoon model='none'/>\n");
 
@@ -201,14 +263,13 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
     g_string_append(str, "</domain>");
 
     dom = gvir_config_domain_new_from_xml(str->str, error);
-    g_string_free(str, TRUE);
-    return dom;
 
-error:
+cleanup:
     g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
     g_list_free(mounts);
     g_string_free(str, TRUE);
-    return NULL;
+    g_free(kernel);
+    return dom;
 }
 
 

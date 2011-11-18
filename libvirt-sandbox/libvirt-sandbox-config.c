@@ -146,7 +146,6 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_list_free(priv->mounts);
 
     g_strfreev(priv->command);
-    fprintf(stderr,">>>[%s]\n", priv->name);
 
     g_free(priv->name);
     g_free(priv->root);
