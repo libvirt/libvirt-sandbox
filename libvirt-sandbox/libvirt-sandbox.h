@@ -30,8 +30,10 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-mount.h>
 #include <libvirt-sandbox/libvirt-sandbox-config.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-graphical.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-initrd.h>
 #include <libvirt-sandbox/libvirt-sandbox-cleaner.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder.h>
+#include <libvirt-sandbox/libvirt-sandbox-builder-initrd.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-machine.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-container.h>
 #include <libvirt-sandbox/libvirt-sandbox-context.h>

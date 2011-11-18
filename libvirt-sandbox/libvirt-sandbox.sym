@@ -30,6 +30,15 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_set_security_level;
 	gvir_sandbox_config_set_security_type;
 
+	gvir_sandbox_config_initrd_add_module;
+	gvir_sandbox_config_initrd_get_init;
+	gvir_sandbox_config_initrd_get_kver;
+	gvir_sandbox_config_initrd_get_modules;
+	gvir_sandbox_config_initrd_get_type;
+	gvir_sandbox_config_initrd_new;
+	gvir_sandbox_config_initrd_set_init;
+	gvir_sandbox_config_initrd_set_kver;
+
 	gvir_sandbox_context_get_type;
 	gvir_sandbox_context_get_config;
 	gvir_sandbox_context_get_domain;
@@ -56,6 +65,10 @@ LIBVIRT_SANDBOX_0.0.1 {
 
 	gvir_sandbox_builder_container_get_type;
 	gvir_sandbox_builder_container_new;
+
+	gvir_sandbox_builder_initrd_construct;
+	gvir_sandbox_builder_initrd_get_type;
+	gvir_sandbox_builder_initrd_new;
 
     local:
         *;
