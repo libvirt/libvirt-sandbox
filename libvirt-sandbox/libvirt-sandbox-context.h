@@ -73,7 +73,6 @@ GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);
 
 #if 0
 GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt);
-GVirSandboxGraphics *gvir_sandbox_context_get_graphics(GVirSandboxContext *ctxt);
 #endif
 
 G_END_DECLS

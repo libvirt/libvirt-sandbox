@@ -61,6 +61,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-builder-machine.h \
 			libvirt-sandbox-builder-container.h \
 			libvirt-sandbox-context.h \
+			libvirt-sandbox-context-graphical.h \
 			$(NULL)
 SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config.c \
@@ -73,6 +74,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-builder-machine.c \
 			libvirt-sandbox-builder-container.c \
 			libvirt-sandbox-context.c \
+			libvirt-sandbox-context-graphical.c \
 			$(NULL)
 
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox

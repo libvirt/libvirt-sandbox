@@ -198,6 +198,7 @@ static void gvir_sandbox_context_init(GVirSandboxContext *ctxt)
 
 /**
  * gvir_sandbox_context_new:
+ * @connection: (transfer none): the libvirt connection
  * @config: (transfer none): the initial configuratoion
  *
  * Create a new sandbox context from the specified configuration
