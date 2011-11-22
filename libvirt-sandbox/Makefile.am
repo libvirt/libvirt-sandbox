@@ -44,7 +44,7 @@ libvirt_sandbox_init_qemu_CFLAGS = \
 	$(WARN_CFLAGS) \
 	$(NULL)
 libvirt_sandbox_init_qemu_LDFLAGS = \
-	-static \
+	-all-static \
 	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
 	$(WARN_CFLAGS) \
 	$(NULL)
