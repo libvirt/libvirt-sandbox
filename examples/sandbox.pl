@@ -13,8 +13,6 @@ my $cfg = LibvirtSandbox::Config->new("sandbox");
 my $conn = LibvirtGObject::Connection->new("qemu:///session");
 $conn->open(undef);
 
-$conn->fetch_domains(undef);
-
 my $ctxt = LibvirtSandbox::Context->new($conn, $cfg);
 $ctxt->start();
 $ctxt->stop();

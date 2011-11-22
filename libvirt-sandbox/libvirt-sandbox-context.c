@@ -302,12 +302,10 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
         goto error;
     }
 
-    if (!(priv->domain = gvir_connection_create_domain(priv->connection,
-                                                       config,
-                                                       error)))
-        goto error;
-
-    if (!gvir_domain_start(priv->domain, 0, error))
+    if (!(priv->domain = gvir_connection_start_domain(priv->connection,
+                                                      config,
+                                                      0,
+                                                      error)))
         goto error;
 
     if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
@@ -325,7 +323,6 @@ error:
     if (priv->domain) {
         gvir_domain_stop(priv->domain, 0, NULL);
         gvir_sandbox_cleaner_run_post_stop(priv->cleaner, NULL);
-        gvir_domain_delete(priv->domain, 0, NULL);
         g_object_unref(priv->domain);
         priv->domain = NULL;
     }
@@ -342,9 +339,6 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
     gboolean ret = TRUE;
 
     if (!gvir_domain_stop(priv->domain, 0, error))
-        ret = FALSE;
-
-    if (!gvir_domain_delete(priv->domain, 0, error))
         ret = FALSE;
 
     g_object_unref(priv->domain);
