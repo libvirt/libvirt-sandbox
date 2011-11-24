@@ -1,0 +1,9 @@
+              Tips for hacking on libvirt-sandbox
+              ===================================
+
+To test the GObject introspection based language bindings without
+having to run make install, there are two environment variables
+that need to be set:
+
+   export GI_TYPELIB_PATH=`pwd`/libvirt-sandbox
+   export LD_LIBRARY_PATH=`pwd`/libvirt-sandbox/.libs
