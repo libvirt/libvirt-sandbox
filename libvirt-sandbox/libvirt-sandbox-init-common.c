@@ -330,12 +330,12 @@ decode_command(const char *base64str, char ***retargv)
 {
     gsize len;
     gchar *cmdstr;
-  int theargc = 0;
-  char **theargv = NULL;
-  char *end;
-  long long int ret;
-  char *cmd;
-  char **tmp;
+    int theargc = 0;
+    char **theargv = NULL;
+    char *end;
+    long long int ret;
+    char *cmd;
+    char **tmp;
 
   if (!(cmdstr = (char*)g_base64_decode(base64str, &len))) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot decode %s\n",
@@ -869,7 +869,6 @@ int main(int argc, char **argv) {
   cmdarg = argv[optind];
 
   setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
-
   struct rlimit res = { 65536, 65536 };
   setrlimit(RLIMIT_NOFILE, &res);
 

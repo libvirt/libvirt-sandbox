@@ -36,6 +36,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-builder-initrd.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-machine.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-container.h>
+#include <libvirt-sandbox/libvirt-sandbox-console.h>
 #include <libvirt-sandbox/libvirt-sandbox-context.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-graphical.h>
 

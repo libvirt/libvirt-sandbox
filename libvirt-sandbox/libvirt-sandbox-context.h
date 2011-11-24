@@ -71,9 +71,7 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);
 GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt);
 GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);
 
-#if 0
 GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt);
-#endif
 
 G_END_DECLS
 

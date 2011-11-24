@@ -398,8 +398,8 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 #ifdef STRACE
     args[narg++] = STRACE;
     args[narg++] = "-f";
-    args[narg++] = "-e";
-    args[narg++] = STRACE_FILTER;
+//    args[narg++] = "-e";
+    //  args[narg++] = STRACE_FILTER;
     args[narg++] = "-s";
     args[narg++] = "2000";
 #endif
@@ -424,7 +424,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     args[narg++] = cmdargs;
 
     if (debug)
-      fprintf(stderr, "Running common init\n");
+        fprintf(stderr, "libvirt-sandbox-init-qemu: Running common init %s\n", args[0]);
     execv(args[0], (char**)args);
     fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot execute %s: %s\n",
 	    __func__, args[0], strerror(errno));

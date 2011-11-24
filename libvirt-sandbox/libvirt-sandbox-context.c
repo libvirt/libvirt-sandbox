@@ -32,6 +32,8 @@ struct _GVirSandboxContextPrivate
     GVirConnection *connection;
     GVirDomain *domain;
     GVirSandboxConfig *config;
+    GVirSandboxConsole *console;
+    gboolean active;
 
     GVirSandboxBuilder *builder;
     GVirSandboxCleaner *cleaner;
@@ -126,6 +128,9 @@ static void gvir_sandbox_context_finalize(GObject *object)
 {
     GVirSandboxContext *ctxt = GVIR_SANDBOX_CONTEXT(object);
     GVirSandboxContextPrivate *priv = ctxt->priv;
+
+    if (priv->active)
+        gvir_sandbox_context_stop(ctxt, NULL);
 
     if (priv->domain)
         g_object_unref(priv->domain);
@@ -311,6 +316,9 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
         goto error;
 
+    priv->console = gvir_sandbox_console_new(priv->connection, priv->domain);
+
+    priv->active = TRUE;
     g_object_unref(config);
     return TRUE;
 
@@ -353,5 +361,24 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
     g_object_unref(priv->cleaner);
     priv->cleaner = gvir_sandbox_cleaner_new();
 
+    g_object_unref(priv->console);
+    priv->console = NULL;
+
+    priv->active = FALSE;
+
     return ret;
+}
+
+
+/**
+ * gvir_sandbox_context_get_console:
+ * @ctxt: (transfer none): the sandbox context
+ *
+ * Returns: (transfer full)(allow-none): the sandbox console (or NULL)
+ */
+GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+
+    return g_object_ref(priv->console);
 }

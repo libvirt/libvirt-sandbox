@@ -60,6 +60,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-builder-initrd.h \
 			libvirt-sandbox-builder-machine.h \
 			libvirt-sandbox-builder-container.h \
+			libvirt-sandbox-console.h \
 			libvirt-sandbox-context.h \
 			libvirt-sandbox-context-graphical.h \
 			$(NULL)
@@ -73,6 +74,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-builder-initrd.c \
 			libvirt-sandbox-builder-machine.c \
 			libvirt-sandbox-builder-container.c \
+			libvirt-sandbox-console.c \
 			libvirt-sandbox-context.c \
 			libvirt-sandbox-context-graphical.c \
 			$(NULL)
@@ -89,9 +91,13 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
+			$(GIO_UNIX_CFLAGS) \
+			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(WARN_CFLAGS)
 libvirt_sandbox_1_0_la_LIBADD = \
+			$(GIO_UNIX_LIBS) \
+			$(LIBVIRT_GLIB_LIBS) \
 			$(LIBVIRT_GOBJECT_LIBS) \
 			$(CYGWIN_EXTRA_LIBADD)
 libvirt_sandbox_1_0_la_DEPENDENCIES = \

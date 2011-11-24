@@ -21,12 +21,14 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_mounts;
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
+	gvir_sandbox_config_get_tty;
 	gvir_sandbox_config_get_security_level;
 	gvir_sandbox_config_get_security_type;
 	gvir_sandbox_config_get_type;
 	gvir_sandbox_config_new;
 	gvir_sandbox_config_set_command;
 	gvir_sandbox_config_set_root;
+	gvir_sandbox_config_set_tty;
 	gvir_sandbox_config_set_security_level;
 	gvir_sandbox_config_set_security_type;
 
@@ -39,10 +41,17 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_initrd_set_init;
 	gvir_sandbox_config_initrd_set_kver;
 
+	gvir_sandbox_console_get_type;
+	gvir_sandbox_console_new;
+	gvir_sandbox_console_attach;
+	gvir_sandbox_console_attach_stdio;
+	gvir_sandbox_console_detach;
+
 	gvir_sandbox_context_get_type;
 	gvir_sandbox_context_get_config;
 	gvir_sandbox_context_get_domain;
 	gvir_sandbox_context_get_connection;
+	gvir_sandbox_context_get_console;
 	gvir_sandbox_context_new;
 	gvir_sandbox_context_start;
 	gvir_sandbox_context_stop;
