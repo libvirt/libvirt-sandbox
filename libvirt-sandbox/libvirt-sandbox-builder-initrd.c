@@ -362,6 +362,9 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
     GList *modnames = NULL;
     GList *modfiles = NULL;
     GList *tmp;
+    GFile *modlist = NULL;
+    gchar *modlistpath = NULL;
+    GOutputStream *modlistos = NULL;
 
     if (!gvir_sandbox_builder_initrd_copy_file(
             gvir_sandbox_config_initrd_get_init(config),
@@ -377,22 +380,50 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
 
     tmp = modfiles;
     while (tmp) {
-        gchar *tgt = g_strdup_printf("%s/%s", tmpdir, g_file_get_basename(tmp->data));
+        const gchar *basename = g_file_get_basename(tmp->data);
+        gchar *tgt = g_strdup_printf("%s/%s", tmpdir, basename);
         GFile *file = g_file_new_for_path(tgt);
         g_free(tgt);
+
         if (!g_file_copy(tmp->data, file, 0, NULL, NULL, NULL, error)) {
             g_object_unref(file);
             goto cleanup;
         }
         g_object_unref(file);
+
         tmp = tmp->next;
     }
+
+
+    modlistpath = g_strdup_printf("%s/modules", tmpdir);
+    modlist = g_file_new_for_path(modlistpath);
+    if (!(modlistos = G_OUTPUT_STREAM(g_file_create(modlist, G_FILE_CREATE_NONE, NULL, error))))
+        goto cleanup;
+
+    tmp = modnames;
+    while (tmp) {
+        if (!g_output_stream_write_all(modlistos,
+                                       tmp->data, strlen(tmp->data),
+                                       NULL, NULL, error))
+            goto cleanup;
+        if (!g_output_stream_write_all(modlistos,
+                                       "\n", 1,
+                                       NULL, NULL, error))
+            goto cleanup;
+        tmp = tmp->next;
+    }
+
+    if (!g_output_stream_close(modlistos, NULL, error))
+        goto cleanup;
 
     ret = TRUE;
 cleanup:
     g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
     g_list_free(modfiles);
     g_list_free(modnames);
+    g_free(modlistpath);
+    g_object_unref(modlist);
+    g_object_unref(modlistos);
     return ret;
 }
 
