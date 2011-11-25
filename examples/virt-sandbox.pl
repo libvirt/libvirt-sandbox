@@ -11,14 +11,14 @@ Glib::Object::Introspection->setup(basename => 'LibvirtSandbox', version => '1.0
 
 LibvirtGObject::init_object_check(undef);
 
-sub do_quit {
-    Gtk::main_quit();
+my $cfg = LibvirtSandbox::Config->new("sandbox");
+if (int(@ARGV) > 0) {
+    $cfg->set_command(@ARGV);
+}
+if (-t STDIN) {
+    $cfg->set_tty(1);
 }
 
-
-print "Foo\n";
-
-my $cfg = LibvirtSandbox::Config->new("sandbox");
 my $conn = LibvirtGObject::Connection->new("qemu:///session");
 $conn->open(undef);
 
@@ -27,15 +27,18 @@ $ctxt->start();
 
 my $con = $ctxt->get_console();
 
-$con->connect("closed", \&do_quit);
+sub closed {
+    Gtk::main_quit();
+}
 
+$con->connect("closed", \&closed);
 $con->attach_stdio();
-
-GLib::timeout_add(5000, \&do_quit);
 
 Gtk::main();
 
-$con->detach();
-
-
-$ctxt->stop();
+eval {
+    $con->detach();
+};
+eval {
+    $ctxt->stop();
+};

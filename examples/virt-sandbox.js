@@ -7,6 +7,9 @@ const Gtk = imports.gi.Gtk;
 LibvirtGObject.init_object_check(null, null);
 
 var cfg = LibvirtSandbox.Config.new("sandbox");
+/* XXX how to set argv & check if stdin is a tty ? */
+cfg.set_tty(true);
+
 var conn = LibvirtGObject.Connection.new("qemu:///session");
 conn.open(null)
 
@@ -25,6 +28,10 @@ con.attach_stdio()
 
 Gtk.main()
 
-con.detach()
+try {
+    con.detach()
+} catch (err) {}
 
-ctxt.stop();
+try {
+    ctxt.stop();
+} catch (err) {}

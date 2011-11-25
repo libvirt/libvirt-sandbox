@@ -12,9 +12,11 @@ args = sys.argv[1:]
 LibvirtGObject.init_object_check(None)
 
 cfg = LibvirtSandbox.Config.new("sandbox")
-cfg.set_command(args)
+if len(args) > 0:
+    cfg.set_command(args)
 if os.isatty(sys.stdin.fileno()):
     cfg.set_tty(True)
+
 conn = LibvirtGObject.Connection.new("qemu:///session")
 conn.open(None)
 
@@ -33,8 +35,9 @@ Gtk.main()
 
 try:
     con.detach()
-    ctxt.stop()
 except:
     pass
-finally:
+try:
+    ctxt.stop()
+except:
     pass

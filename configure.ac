@@ -119,6 +119,8 @@ AM_CONDITIONAL([WITH_INTROSPECTION], [test "x$enable_introspection" = "xyes"])
 
 AC_OUTPUT(Makefile
           libvirt-sandbox/Makefile
+          bin/Makefile
+          examples/Makefile
           libvirt-sandbox.spec
           libvirt-sandbox-1.0.pc)
 
