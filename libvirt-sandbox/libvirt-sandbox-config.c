@@ -656,9 +656,10 @@ void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv)
     guint len = g_strv_length(argv);
     size_t i;
     g_strfreev(priv->command);
-    priv->command = g_new0(gchar *, len);
+    priv->command = g_new0(gchar *, len + 1);
     for (i = 0 ; i < len ; i++)
         priv->command[i] = g_strdup(argv[i]);
+    priv->command[len] = NULL;
 }
 
 
