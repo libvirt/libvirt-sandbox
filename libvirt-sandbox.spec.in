@@ -15,23 +15,30 @@ Name: @PACKAGE@
 Version: @VERSION@
 Release: 1%{?dist}%{?extra_release}
 Summary: libvirt application sandbox framework
-Group: Development/Libraries
+Group: Development/Tools
 License: LGPLv2+
 URL: http://libvirt.org/
 Source0: http://libvirt.org/%{name}/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-
 BuildRequires: libvirt-gobject-devel >= 0.0.1
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
 
+%package libs
+Group: Development/Libraries
+Summary: libvirt application sandbox framework libraries
+
 %package devel
 Group: Development/Libraries
-Summary: libvirt sandbox integration for events development files
-Requires: %{name} = %{version}-%{release}
+Summary: libvirt application sandbox framework development files
+Requires: %{name}-libs = %{version}-%{release}
 
 %description
+This package provides a command for running applications within
+a sandbox using libvirt.
+
+%description libs
 This package provides a framework for building application sandboxes
 using libvirt.
 
@@ -63,7 +70,14 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.la
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
+
 %files
+%defattr(-,root,root,-)
+%{_bindir}/virt-sandbox
+
+%files libs
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
 %{_libexecdir}/libvirt-sandbox-init-common
@@ -76,6 +90,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-,root,root,-)
+%doc examples/virt-sandbox.pl
+%doc examples/virt-sandbox.py
+%doc examples/virt-sandbox.js
+%doc examples/virt-sandbox-mkinitrd.py
 %{_libdir}/libvirt-sandbox-1.0.so
 %{_libdir}/pkgconfig/libvirt-sandbox-1.0.pc
 %dir %{_includedir}/libvirt-sandbox-1.0
