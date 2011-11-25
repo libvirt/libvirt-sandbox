@@ -34,6 +34,9 @@
 #define GVIR_SANDBOX_CONSOLE_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsolePrivate))
 
+/* This magic string comes to you all the way from the southern hemisphere of the world */
+#define GVIR_SANDBOX_HANDSHAKE_MAGIC "xoqpuɐs"
+
 struct _GVirSandboxConsolePrivate
 {
     GVirConnection *connection;
@@ -54,7 +57,13 @@ struct _GVirSandboxConsolePrivate
     gchar *localToConsole;
     gsize localToConsoleLength;
     gsize localToConsoleOffset;
+
+    /* True if stdin has shown us EOF */
     gboolean localEOF;
+    /* True if guest handshake has completed */
+    gboolean guestHandshake;
+    /* True if handshake bytes didn't match */
+    gboolean guestError;
 
     GSource *localStdinSource;
     GSource *localStdoutSource;
@@ -235,7 +244,7 @@ static gboolean gvir_sandbox_console_start_term(GVirSandboxConsole *console,
     int fd = g_unix_input_stream_get_fd(localStdin);
     struct termios ios;
 
-    if (0)
+    if (!isatty(fd))
         return TRUE;
 
     if (tcgetattr(fd, &priv->termiosProps) < 0) {
@@ -275,7 +284,7 @@ static gboolean gvir_sandbox_console_stop_term(GVirSandboxConsole *console,
     GVirSandboxConsolePrivate *priv = console->priv;
     int fd = g_unix_input_stream_get_fd(localStdin);
 
-    if (0)
+    if (!isatty(fd))
         return TRUE;
 
     if (tcsetattr(fd, TCSADRAIN, &priv->termiosProps) < 0) {
@@ -307,10 +316,16 @@ static void do_console_update_events(GVirSandboxConsole *console)
     if (!priv->localStdin) /* Closed */
         return;
 
+    /* We don't want to process local stdin, until we have the
+     * handshake from the guest OS. THe reason is that when the
+     * Linux kernel starts the console is *not* in raw mode.
+     * Thus if we send any data to the guest, before the console
+     * tty has been put into rawmode, it will be echoed before
+     * even getting to the sandboxed application.
+     */
     if ((priv->localToConsoleOffset < priv->localToConsoleLength) &&
-        (!priv->localEOF)) {
+        (!priv->localEOF) && priv->guestHandshake) {
         if (priv->localStdinSource == NULL) {
-            //fprintf(stderr, "Enable stdin source\n");
             priv->localStdinSource = g_pollable_input_stream_create_source
                 (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
             g_source_set_callback(priv->localStdinSource,
@@ -322,16 +337,17 @@ static void do_console_update_events(GVirSandboxConsole *console)
         }
     } else {
         if (priv->localStdinSource) {
-            //fprintf(stderr, "Disable stdin source\n");
             g_source_destroy(priv->localStdinSource);
             g_source_unref(priv->localStdinSource);
             priv->localStdinSource = NULL;
         }
     }
 
-    if (priv->consoleToLocalOffset) {
+    /* If handshake has completed without error,
+     * then all output should go to stdout
+     */
+    if (priv->consoleToLocalOffset && priv->guestHandshake && !priv->guestError) {
         if (priv->localStdoutSource == NULL) {
-            //fprintf(stderr, "Enable stdout source\n");
             priv->localStdoutSource = g_pollable_output_stream_create_source
                 (G_POLLABLE_OUTPUT_STREAM(priv->localStdout), NULL);
             g_source_set_callback(priv->localStdoutSource,
@@ -343,10 +359,31 @@ static void do_console_update_events(GVirSandboxConsole *console)
         }
     } else {
         if (priv->localStdoutSource) {
-            //fprintf(stderr, "Disable stdout source\n");
             g_source_destroy(priv->localStdoutSource);
             g_source_unref(priv->localStdoutSource);
             priv->localStdoutSource = NULL;
+        }
+    }
+
+    /* If handshake has completed with error,
+     * then all output should go to stderr
+     */
+    if (priv->consoleToLocalOffset && priv->guestHandshake && priv->guestError) {
+        if (priv->localStderrSource == NULL) {
+            priv->localStderrSource = g_pollable_output_stream_create_source
+                (G_POLLABLE_OUTPUT_STREAM(priv->localStderr), NULL);
+            g_source_set_callback(priv->localStderrSource,
+                                  (GSourceFunc)do_console_local_write,
+                                  console,
+                                  NULL);
+            g_source_attach(priv->localStderrSource,
+                            g_main_context_default());
+        }
+    } else {
+        if (priv->localStderrSource) {
+            g_source_destroy(priv->localStderrSource);
+            g_source_unref(priv->localStderrSource);
+            priv->localStderrSource = NULL;
         }
     }
 
@@ -360,7 +397,6 @@ static void do_console_update_events(GVirSandboxConsole *console)
         priv->consoleWatch = 0;
     }
     if (cond) {
-        //fprintf(stderr, "Enable console source %d\n", cond);
         priv->consoleWatch = gvir_stream_add_watch(priv->console,
                                                    cond,
                                                    do_console_stream_readwrite,
@@ -392,7 +428,6 @@ static gboolean do_console_stream_readwrite(GVirStream *stream,
              priv->consoleToLocalLength - priv->consoleToLocalOffset,
              NULL,
              &err);
-        //fprintf(stderr, "Read %zd\n", ret);
         if (ret < 0) {
             if (err && err->code == G_IO_ERROR_WOULD_BLOCK) {
                 /* Shouldn't get this, but you never know */
@@ -405,17 +440,33 @@ static gboolean do_console_stream_readwrite(GVirStream *stream,
             }
         }
         if (ret == 0) { /* EOF */
-            if ((priv->consoleToLocalLength - priv->consoleToLocalOffset) < 2) {
-                priv->consoleToLocal = g_renew(gchar, priv->consoleToLocal,
-                                               priv->consoleToLocalLength + 2);
-                priv->consoleToLocalLength += 2;
-            }
-            priv->localEOF = TRUE;
-            priv->consoleToLocal[priv->consoleToLocalOffset++] = '\\';
-            priv->consoleToLocal[priv->consoleToLocalOffset++] = '9';
             goto done;
         }
         priv->consoleToLocalOffset += ret;
+
+        /*
+         * The first thing we expect to see from the guest output is the
+         * magic handshake byte sequence. If we don't see this, it indicates
+         * that something has gone wrong in the startup process. If this
+         * happens all output is forwarded to stderr, instead of stdout
+         */
+        if (!priv->guestHandshake &&
+            (priv->consoleToLocalOffset >= sizeof(GVIR_SANDBOX_HANDSHAKE_MAGIC))) {
+            priv->guestHandshake = TRUE;
+            if (memcmp(priv->consoleToLocal,
+                       GVIR_SANDBOX_HANDSHAKE_MAGIC,
+                       sizeof(GVIR_SANDBOX_HANDSHAKE_MAGIC)) == 0) {
+                /* Discard the matched handshake bytes */
+                memmove(priv->consoleToLocal,
+                        priv->consoleToLocal + sizeof(GVIR_SANDBOX_HANDSHAKE_MAGIC),
+                        priv->consoleToLocalOffset - sizeof(GVIR_SANDBOX_HANDSHAKE_MAGIC));
+                priv->consoleToLocalOffset -= sizeof(GVIR_SANDBOX_HANDSHAKE_MAGIC);
+                /* Further output will go to stdout */
+            } else {
+                /* This causes output to now go to stderr */
+                priv->guestError = TRUE;
+            }
+        }
     }
 
     if (cond & GVIR_STREAM_IO_CONDITION_WRITABLE) {
@@ -425,7 +476,6 @@ static gboolean do_console_stream_readwrite(GVirStream *stream,
                                       priv->localToConsoleOffset,
                                       NULL,
                                       &err);
-        //fprintf(stderr, "Write %zd\n", ret);
         if (ret < 0) {
             do_console_close(console, err);
             g_error_free(err);
@@ -460,11 +510,28 @@ static gboolean do_console_local_read(GObject *stream,
          priv->localToConsole + priv->localToConsoleOffset,
          priv->localToConsoleLength - priv->localToConsoleOffset,
          NULL, &err);
-    //fprintf(stderr, "<<< Console read %zd\n", ret);
     if (ret < 0) {
         do_console_close(console, err);
         g_error_free(err);
         goto cleanup;
+    }
+
+    if (ret == 0) {
+        /* There is no concept of 'EOF' on the serial / paravirt
+         * console the guest / container is using for its stdio.
+         * Thus we send the magic escape sequence '\9'. The
+         * libvirt-sandbox-init-common process we notice this
+         * and close the stdin of the sandboxed application so
+         * that it sees EOF
+         */
+        if ((priv->localToConsoleLength - priv->localToConsoleOffset) < 2) {
+            priv->localToConsole = g_renew(gchar, priv->localToConsole,
+                                           priv->localToConsoleLength + 2);
+            priv->localToConsoleLength += 2;
+        }
+        priv->localEOF = TRUE;
+        priv->localToConsole[priv->localToConsoleOffset++] = '\\';
+        priv->localToConsole[priv->localToConsoleOffset++] = '9';
     }
 
     priv->localToConsoleOffset += ret;
@@ -479,17 +546,16 @@ cleanup:
 static gboolean do_console_local_write(GObject *stream,
                                        gpointer opaque)
 {
-    GUnixOutputStream *localStdout = G_UNIX_OUTPUT_STREAM(stream);
+    GUnixOutputStream *localStdoutOrStderr = G_UNIX_OUTPUT_STREAM(stream);
     GVirSandboxConsole *console = GVIR_SANDBOX_CONSOLE(opaque);
     GVirSandboxConsolePrivate *priv = console->priv;
     GError *err = NULL;
 
     gssize ret = g_pollable_output_stream_write_nonblocking
-        (G_POLLABLE_OUTPUT_STREAM(localStdout),
+        (G_POLLABLE_OUTPUT_STREAM(localStdoutOrStderr),
          priv->consoleToLocal,
          priv->consoleToLocalOffset,
          NULL, &err);
-    //fprintf(stderr, ">>>> Console write %zd\n", ret);
     if (ret < 0) {
         do_console_close(console, err);
         g_error_free(err);
@@ -585,7 +651,6 @@ gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
 {
     GVirSandboxConsolePrivate *priv = console->priv;
     gboolean ret = FALSE;
-//    fprintf(stderr, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! detach\n");
     if (!priv->localStdin) {
         return TRUE;
 #if 0

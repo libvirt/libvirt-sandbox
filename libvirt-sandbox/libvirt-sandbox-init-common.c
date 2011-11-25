@@ -42,6 +42,18 @@
 
 #define MAGIC "xoqpuɐs"
 
+static int debug = 0;
+static int sigwrite;
+
+#define ATTR_UNUSED __attribute__((__unused__))
+
+static void sig_child(int sig ATTR_UNUSED)
+{
+    char ignore = '1';
+    if (write(sigwrite, &ignore, 1) != 1)
+        abort();
+}
+
 static ssize_t
 safewrite(int fd, const void *buf, size_t count)
 {
@@ -109,6 +121,10 @@ static int
 start_dbus(void)
 {
   pid_t pid;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: starting dbus\n");
+
   if (mount("none", "/var/lib/dbus", "tmpfs", 0, "") < 0) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/lib/dbus: %s\n",
 	    __func__, strerror(errno));
@@ -185,6 +201,10 @@ static int
 start_consolekit(void)
 {
   pid_t pid;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: starting consolekit\n");
+
   pid = fork();
   if (pid < 0) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
@@ -227,6 +247,10 @@ static int
 start_xorg(void)
 {
   pid_t pid;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: starting xorg\n");
+
   if (mount("none", "/var/log", "tmpfs", 0, "") < 0) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/log: %s\n",
 	    __func__, strerror(errno));
@@ -292,6 +316,10 @@ static int
 start_windowmanager(const char *path)
 {
   pid_t pid;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: starting windowmanager %s\n", path);
+
   pid = fork();
   if (pid < 0) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
@@ -336,6 +364,10 @@ decode_command(const char *base64str, char ***retargv)
     long long int ret;
     char *cmd;
     char **tmp;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: decoding '%s'\n", base64str);
+
 
   if (!(cmdstr = (char*)g_base64_decode(base64str, &len))) {
     fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot decode %s\n",
@@ -385,6 +417,10 @@ decode_command(const char *base64str, char ***retargv)
 
 static int change_user(const char *user, uid_t uid, gid_t gid, const char *home)
 {
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: changing user %s %d %d %s\n",
+              user, uid, gid, home);
+
   if (strcmp(user, "root") == 0)
     return 0;
 
@@ -431,7 +467,7 @@ static int change_user(const char *user, uid_t uid, gid_t gid, const char *home)
 }
 
 static int run_command(int interactive, char **argv,
-		       int *childin, int *childout)
+		       int *appin, int *appout)
 {
   int pid;
   int master = -1;
@@ -439,7 +475,11 @@ static int run_command(int interactive, char **argv,
   int pipein[2] = { -1, -1};
   int pipeout[2] = { -1, -1};
 
-  *childin = *childout = -1;
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: running command %s %d\n",
+              argv[0], interactive);
+
+  *appin = *appout = -1;
 
   if (interactive) {
     if (openpty(&master, &slave, NULL, NULL, NULL) < 0) {
@@ -448,8 +488,8 @@ static int run_command(int interactive, char **argv,
       goto error;
     }
 
-    *childin = master;
-    *childout = master;
+    *appin = master;
+    *appout = master;
   } else {
     if (pipe(pipein) < 0 ||
 	pipe(pipeout) < 0) {
@@ -457,8 +497,8 @@ static int run_command(int interactive, char **argv,
 	      strerror(errno));
       goto error;
     }
-    *childin = pipein[1];
-    *childout = pipeout[0];
+    *appin = pipein[1];
+    *appout = pipeout[0];
   }
 
   if ((pid = fork()) < 0) {
@@ -534,7 +574,7 @@ static int run_command(int interactive, char **argv,
     if (pipeout[1] < 0)
       close(pipeout[1]);
   }
-  *childin = *childout = -1;
+  *appin = *appout = -1;
   return -1;
 }
 
@@ -575,220 +615,236 @@ static ssize_t write_data(int fd, char *buf, size_t *len)
 }
 
 
-static int run_io(int *childin, int *childout)
+static int run_io(pid_t child, int sigread, int appin, int appout)
 {
-  char inbuf[1024];
-  size_t inlen = 0;
-  char outbuf[1024];
-  size_t outlen = 0;
+  char hostToApp[1024];
+  size_t hostToAppLen = 0;
+  char appToHost[1024];
+  size_t appToHostLen = 0;
 
-  int parentin = STDIN_FILENO;
-  int parentout = STDOUT_FILENO;
+  int hostin = STDIN_FILENO;
+  int hostout = STDOUT_FILENO;
 
   int inescape = 0;
-  int outescape = 0;
+
+  if (debug)
+      fprintf(stderr, "libvirt-sandbox-init-common: running I/O loop %d %d", appin, appout);
 
   while (1) {
-    int i;
-    struct pollfd fds[6];
-    int nfds = 0;
+      int i;
+      struct pollfd fds[6];
+      int nfds = 0;
 
-    if (parentin != -1) {
-      if (inlen < sizeof(inbuf)) {
-	fds[nfds].fd = parentin;
-	fds[nfds].events = POLLIN;
-	nfds++;
-      }
-    }
-    if (parentout != -1) {
-      if (outlen && !outescape) {
-	fds[nfds].fd = parentout;
-	fds[nfds].events = POLLOUT;
-	nfds++;
-      }
-    }
-    if (*childin != -1 && *childin == *childout) {
-      fds[nfds].events = 0;
-      if (inlen && !inescape)
-	fds[nfds].events |= POLLOUT;
-      if (outlen < sizeof(outbuf))
-	fds[nfds].events |= POLLIN;
-      if ((inlen && !inescape) || (outlen < sizeof(outbuf))) {
-	fds[nfds].fd = *childin;
-	nfds++;
-      }
-    } else if (*childin != -1) {
-      if (inlen && !inescape) {
-	fds[nfds].fd = *childin;
-	fds[nfds].events |= POLLOUT;
-	nfds++;
-      }
-    } else if (*childout != -1) {
-      if (outlen < sizeof(outbuf)) {
-	fds[nfds].fd = *childout;
-	fds[nfds].events = POLLIN;
-	nfds++;
-      }
-    }
+      fds[nfds].fd = sigread;
+      fds[nfds].events = POLLIN;
+      nfds++;
 
-    if ((nfds = poll(fds, nfds, -1)) < 0) {
-      fprintf(stderr, "Poll error:%s\n",
-	      strerror(errno));
-      return -1;
-    }
-
-    for (i = 0 ; i < (sizeof(fds)/sizeof(fds[0])) ; i++) {
-      ssize_t got;
-
-      if (fds[i].fd == parentin) {
-	if (fds[i].revents & (POLLIN|POLLHUP)) {
-	  if (fds[i].revents & POLLIN) {
-	    got = read_data(parentin, inbuf, &inlen, sizeof(inbuf));
-	    if (got < 0)
-	      return -1;
-	  } else {
-	    got = 0;
-	  }
-	  if (got == 0) {
-	    close(parentin);
-	    parentin = -1;
-	    if (inlen == 0) {
-	      close(*childin);
-	      if (*childin == *childout) {
-		*childout = -1;
-		if (outlen == 0) {
-		  close(parentout);
-		  parentout = -1;
-		}
-	      }
-	      *childin = -1;
-	    }
-	  }
-	}
-      } else if (fds[i].fd == parentout) {
-	if (fds[i].revents & POLLOUT) {
-	  got = write_data(parentout, outbuf, &outlen);
-	  if (got < 0)
-	    return -1;
-	  if (outlen == 0 && *childout == -1) {
-	    close(parentout);
-	    parentout = -1;
-	  }
-	}
-      } else if (fds[i].fd == *childin) {
-        if (fds[i].revents & POLLOUT) {
-	  got = write_data(*childin, inbuf, &inlen);
-	  if (got < 0)
-	    return -1;
-	  if (inlen == 0 && parentin == -1) {
-	    close(*childin);
-	    if (*childin == *childout) {
-	      *childout = -1;
-	      if (outlen == 0) {
-		close(parentout);
-		parentout = -1;
-	      }
-	    }
-	    *childin = -1;
-	  }
-	} else if (*childin == *childout &&
-		   (fds[i].revents & (POLLIN|POLLHUP))) {
-	  if (fds[i].revents & POLLIN) {
-	    got = read_data(*childout, outbuf, &outlen, sizeof(outbuf));
-	    if (got < 0)
-	      return -1;
-	  } else {
-	    got = 0;
-	  }
-	  if (got == 0) {
-	    close(*childout);
-	    if (*childin == *childout)
-	      *childin = -1;
-	    *childout = -1;
-	    close(parentin);
-	    parentin = -1;
-	    if (outlen == 0) {
-	      close(parentout);
-	      parentout = -1;
-	    }
-	  }
-	}
-      } else if (fds[i].fd == *childout) {
-	if (fds[i].revents & (POLLIN|POLLHUP)) {
-	  if (fds[i].revents & POLLIN) {
-	    got = read_data(*childout, outbuf, &outlen, sizeof(outbuf));
-	    if (got < 0)
-	      return -1;
-	  } else {
-	    got = 0;
-	  }
-	  if (got == 0) {
-	    close(*childout);
-	    if (*childin == *childout)
-	      *childin = -1;
-	    *childout = -1;
-	    close(parentin);
-	    parentin = -1;
-	    if (outlen == 0) {
-	      close(parentout);
-	      parentout = -1;
-	    }
-	  }
-	}
+      /* If hostin is still open & we have space to store data */
+      if (hostin != -1 && hostToAppLen < sizeof(hostToApp)) {
+          fds[nfds].fd = hostin;
+          fds[nfds].events = POLLIN;
+          nfds++;
       }
-    }
 
-    if (1) {
-    int n;
-    for (n = 0, i = 0 ; i < inlen ; i++) {
-      if (inescape) {
-	if (inbuf[i] == '9') {
-	  close(parentin);
-	  parentin = -1;
-	} else {
-	  inbuf[n] = inbuf[i];
-	  n++;
-	}
-	inescape = 0;
-      } else {
-	if (inbuf[i] == '\\') {
-	  inescape = 1;
-	} else {
-	  if (n < i)
-	    inbuf[n] = inbuf[i];
-	  n++;
-	}
+      /* If hostout is still open & we have pending data to send */
+      if (hostout != -1 && appToHostLen > 0) {
+          fds[nfds].fd = hostout;
+          fds[nfds].events = POLLOUT;
+          nfds++;
       }
-    }
-    inlen = n;
-    }
 
-    if (parentin == -1 &&
-	parentout == -1 &&
-	*childout == -1 &&
-	*childin == -1)
-      break;
+      /* If app is using a PTY & still open */
+      if ((appin == appout) && appin != -1) {
+          fds[nfds].events = 0;
+          /* If we have data to transmit & don't have an escape seq */
+          if (hostToAppLen > 0 && !inescape)
+              fds[nfds].events |= POLLOUT;
+
+          /* If we have space to received more data */
+          if (appToHostLen < sizeof(appToHost))
+              fds[nfds].events |= POLLIN;
+
+          if (fds[nfds].events != 0) {
+              fds[nfds].fd = appin;
+              nfds++;
+          }
+      }
+
+      /* If app is using a pair of pipes */
+      if (appin != appout) {
+          /* If appin is still open & we have pending data & don't have an escape seq */
+          if (appin != -1 && hostToAppLen > 0 && !inescape) {
+              fds[nfds].fd = appin;
+              fds[nfds].events |= POLLOUT;
+              nfds++;
+          }
+
+          /* If appout is still open & we have space for more data */
+          if (appout != -1 && appToHostLen < sizeof(appToHost)) {
+              fds[nfds].fd = appout;
+              fds[nfds].events = POLLIN;
+              nfds++;
+          }
+      }
+
+      /* This shouldn't actually happen, but for some reason... */
+      if (nfds == 0)
+          break;
+
+  repoll:
+      if (poll(fds, nfds, -1) < 0) {
+          if (errno == EINTR)
+              goto repoll;
+          fprintf(stderr, "Poll error:%s\n",
+                  strerror(errno));
+          return -1;
+      }
+
+      for (i = 0 ; i < nfds ; i++) {
+          ssize_t got;
+
+          if (fds[i].fd == sigread) {
+              if (fds[i].revents) {
+                  char ignore;
+                  if (read(sigread, &ignore, 1) != 1)
+                      abort();
+                  waitpid(child, NULL, WNOHANG);
+              }
+          } else if (fds[i].fd == hostin) {
+              if (fds[i].revents) {
+                  got = read_data(hostin, hostToApp, &hostToAppLen, sizeof(hostToApp));
+                  if (got <= 0) { /* On EOF or error, close */
+                      close(hostin);
+                      hostin = -1;
+                  }
+              }
+          } else if (fds[i].fd == hostout) {
+              if (fds[i].revents) {
+                  got = write_data(hostout, appToHost, &appToHostLen);
+                  if (got < 0) {
+                      close(hostout);
+                      hostout = -1;
+                  }
+              }
+          } else if (fds[i].fd == appin && fds[i].fd == appout) {
+              if (fds[i].revents & POLLIN) {
+                  got = read_data(appin, appToHost, &appToHostLen, sizeof(appToHost));
+                  if (got <= 0) {
+                      close(appin);
+                      appin = appout = -1;
+                  }
+                  fds[i].revents &= ~(POLLIN);
+              }
+              if (fds[i].revents & POLLOUT) {
+                  got = write_data(appin, hostToApp, &hostToAppLen);
+                  if (got < 0) {
+                      close(appin);
+                      appin = appout = -1;
+                  }
+                  fds[i].revents &= ~(POLLOUT);
+              }
+              if (fds[i].revents) {
+                  close(appin);
+                  appin = appout = -1;
+              }
+          } else if (fds[i].fd == appin) {
+              if (fds[i].revents) {
+                  got = write_data(appin, hostToApp, &hostToAppLen);
+                  if (got < 0) {
+                      close(appin);
+                      appin = -1;
+                  }
+              }
+          } else if (fds[i].fd == appout) {
+              if (fds[i].revents) {
+                  got = read_data(appout, appToHost, &appToHostLen, sizeof(appToHost));
+                  if (got <= 0) {
+                      close(appout);
+                      appout = -1;
+                  }
+              }
+          }
+      }
+
+      int n;
+      for (n = 0, i = 0 ; i < hostToAppLen ; i++) {
+          if (inescape) {
+              if (hostToApp[i] == '9') {
+                  close(hostin);
+                  hostin = -1;
+              } else {
+                  hostToApp[n] = hostToApp[i];
+                  n++;
+              }
+              inescape = 0;
+          } else {
+              if (hostToApp[i] == '\\') {
+                  inescape = 1;
+              } else {
+                  if (n < i)
+                      hostToApp[n] = hostToApp[i];
+                  n++;
+              }
+          }
+      }
+      hostToAppLen = n;
+
+      if ((hostin == -1) &&
+          (hostToAppLen == 0) &&
+          (appin != -1)) {
+          close(appin);
+          if (appin == appout)
+              appout = -1;
+          appin = -1;
+      }
+      if ((appout == -1) &&
+          (appToHostLen == 0) &&
+          (hostout != -1)) {
+          close(hostout);
+          hostout = -1;
+      }
+
+      /* See if we've closed all streams */
+      if (hostin == -1 &&
+          hostout == -1 &&
+          appout == -1 &&
+          appin == -1)
+          break;
+
+      /* If child has gone away we've no more data to send back to host */
+      if ((kill(child, 0) < 0) &&
+          (appToHostLen == 0))
+          break;
   }
+
+  if (hostin != -1)
+      close(hostin);
+  if (hostout != -1)
+      close(hostout);
+  if (appin != -1)
+      close(appout);
+  if (appout != -1)
+      close(appout);
   return 0;
 }
 
 
 int main(int argc, char **argv) {
-  int debug = 0;
   int interactive = 0;
   int xorg = 0;
   const char *user = "nobody";
   const char *wm = NULL;
   int pid;
   int err;
-  int childin;
-  int childout;
-  char **childargv;
+  int appin;
+  int appout;
+  char **appargv;
   const char *cmdarg;
   int uid = 99;
   int gid = 99;
   const char *home = "/home/nobody";
   long int tmp;
+  int sigpipe[2] = { -1, -1 };
 
   while (1) {
     int option_index = 0;
@@ -891,26 +947,35 @@ int main(int argc, char **argv) {
       start_windowmanager(wm) < 0)
     exit(EXIT_FAILURE);
 
-  if (decode_command(cmdarg, &childargv) < 0)
+  if (pipe(sigpipe) < 0) {
+      fprintf(stderr, "libvirt-sandbox-init-common: unable to create signal pipe: %s",
+              strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  sigwrite = sigpipe[1];
+
+  signal(SIGCHLD, sig_child);
+
+  if (decode_command(cmdarg, &appargv) < 0)
     exit(EXIT_FAILURE);
 
-  if ((pid = run_command(interactive, childargv,
-			 &childin, &childout)) < 0)
+  if ((pid = run_command(interactive, appargv,
+			 &appin, &appout)) < 0)
     exit(EXIT_FAILURE);
 
   if (debug) {
     fprintf(stderr, "Got %d %d\n",
-	    childin, childout);
+	    appin, appout);
   }
 
-  err = run_io(&childin, &childout);
+  err = run_io(pid, sigpipe[0], appin, appout);
 
-  if (childin != -1)
-    close(childin);
-  if (childout != -1 && childout != childin)
-    close(childout);
+  //while (waitpid(pid, NULL, 0) != pid);
 
-  while (waitpid(pid, NULL, 0) != pid);
+  if (sigpipe[0] != -1)
+      close(sigpipe[0]);
+  if (sigpipe[1] != -1)
+      close(sigpipe[1]);
 
   exit(err < 0 ? EXIT_FAILURE : EXIT_SUCCESS);
 }

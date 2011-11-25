@@ -5,6 +5,7 @@ from gi.repository import LibvirtSandbox
 from gi.repository import GLib
 from gi.repository import Gtk
 import sys
+import os
 
 args = sys.argv[1:]
 
@@ -12,7 +13,8 @@ LibvirtGObject.init_object_check(None)
 
 cfg = LibvirtSandbox.Config.new("sandbox")
 cfg.set_command(args)
-cfg.set_tty(True)
+if os.isatty(sys.stdin.fileno()):
+    cfg.set_tty(True)
 conn = LibvirtGObject.Connection.new("qemu:///session")
 conn.open(None)
 

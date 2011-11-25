@@ -397,11 +397,12 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     memset(&args, 0, sizeof(args));
 #ifdef STRACE
     args[narg++] = STRACE;
-    args[narg++] = "-f";
-//    args[narg++] = "-e";
-    //  args[narg++] = STRACE_FILTER;
-    args[narg++] = "-s";
-    args[narg++] = "2000";
+    args[narg++] = "-q";
+    // args[narg++] = "-f";
+    args[narg++] = "-e";
+    args[narg++] = STRACE_FILTER;
+//    args[narg++] = "-s";
+//    args[narg++] = "2000";
 #endif
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
     if (istty)
@@ -421,6 +422,8 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 	args[narg++] = wm;
       }
     }
+    if (debug)
+        args[narg++] = "-d";
     args[narg++] = cmdargs;
 
     if (debug)
