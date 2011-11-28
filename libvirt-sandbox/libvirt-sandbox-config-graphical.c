@@ -25,6 +25,19 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-config-graphical
+ * @short_description: Graphical sandbox configuration details
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxConfigGraphical
+ *
+ * Provides an object to store configuration details for a graphical config
+ *
+ * The GVirSandboxConfigGraphical object extends #GVirSandboxConfig to store
+ * the extra information required to setup a graphical desktop application
+ * sandbox.
+ */
+
 #define GVIR_SANDBOX_CONFIG_GRAPHICAL_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_GRAPHICAL, GVirSandboxConfigGraphicalPrivate))
 

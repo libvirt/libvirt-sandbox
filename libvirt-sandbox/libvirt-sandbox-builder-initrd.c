@@ -28,6 +28,19 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-builder-initrd
+ * @short_description: Kernel ramdisk construction
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxBuilderMachine, #GVirSandboxConfigInitrd
+ *
+ * Provides an object for constructing kernel ramdisks
+ *
+ * The GVirSandboxBuilderInitrd object provides the support
+ * required to dynically creat minimal footprint kernel
+ * ramdisks for booting virtual machine based sandboxes.
+ */
+
 #define GVIR_SANDBOX_BUILDER_INITRD_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_INITRD, GVirSandboxBuilderInitrdPrivate))
 

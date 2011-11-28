@@ -25,6 +25,18 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-builder-container
+ * @short_description: Sandbox container construction
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxBuilder, #GVirSandboxBuilderMachine
+ *
+ * Provides an object for creating sandboxes using container virtualization
+ *
+ * The GVirSandboxBuilderContainer object provides a way to builder sandboxes
+ * using OS container virtualization technologies such as LXC.
+ */
+
 #define GVIR_SANDBOX_BUILDER_CONTAINER_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_CONTAINER, GVirSandboxBuilderContainerPrivate))
 

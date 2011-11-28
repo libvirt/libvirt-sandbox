@@ -25,6 +25,18 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-config
+ * @short_description: Basic sandbox configuration details
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxConfigGraphical
+ *
+ * Provides a base object to store configurations for the application sandbox
+ *
+ * The GVirSandboxConfig object stores the basic information required to
+ * create application sandboxes with a simple text based console. 
+ */
+
 #define GVIR_SANDBOX_CONFIG_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG, GVirSandboxConfigPrivate))
 
@@ -665,6 +677,7 @@ void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv)
 
 /**
  * gvir_sandbox_config_get_command:
+ * @config: (transfer none): the sandbox config
  *
  * Retrieve the sandbox command and arguments
  *

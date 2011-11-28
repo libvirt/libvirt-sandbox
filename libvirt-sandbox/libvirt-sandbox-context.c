@@ -24,6 +24,20 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-context
+ * @short_description: Application sandbox context
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxContextGraphical
+ *
+ * Provides a base class for implementing console based application sandboxes
+ *
+ * The GVirSandboxContext object takes a #GVirSandboxConfig instance, passing it
+ * to #GVirSandboxBuilder instance to create a virtual machine, and then provides
+ * access to a #GVirSandboxConsole instance for interacting with the sandboxed
+ * application's stdio.
+ */
+
 #define GVIR_SANDBOX_CONTEXT_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT, GVirSandboxContextPrivate))
 

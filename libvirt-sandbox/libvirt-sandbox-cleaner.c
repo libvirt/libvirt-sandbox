@@ -24,6 +24,19 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-cleaner
+ * @short_description: Sandbox context cleanup tasks
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ *
+ * Provides an object for managing cleanup tasks associated with a sandbox
+ *
+ * The GVirSandboxCleaner object provides a framework for registering
+ * cleanup tasks to be performed at various stages of a sandbox's
+ * lifecycle. This is typically used to delete temporary files and
+ * other similar state.
+ */
+
 #define GVIR_SANDBOX_CLEANER_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CLEANER, GVirSandboxCleanerPrivate))
 

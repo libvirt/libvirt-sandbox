@@ -25,6 +25,18 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-builder
+ * @short_description: Sandbox construction base class
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxBuilderContainer #GVirSandboxBuilderMachine
+ *
+ * Provides a base class for constructing sandboxes
+ *
+ * The GVirSandboxBuilder objects provides the basic framework for creating
+ * #GVirDomain instances from #GVirSandboxConfig instances.
+ */
+
 #define GVIR_SANDBOX_BUILDER_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER, GVirSandboxBuilderPrivate))
 

@@ -25,6 +25,19 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-context-graphical
+ * @short_description: Desktop application sandbox context
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_also: #GVirSandboxContext
+ *
+ * Provides a base class for implementing graphical desktop application sandboxes
+ *
+ * The GVirSandboxContextGraphical object extends the functionality provided by
+ * #GVirSandboxContext to allow the application to display output in a graphical
+ * desktop.
+ */
+
 #define GVIR_SANDBOX_CONTEXT_GRAPHICAL_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT_GRAPHICAL, GVirSandboxContextGraphicalPrivate))
 

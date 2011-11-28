@@ -31,6 +31,20 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-console
+ * @short_description: A text mode console
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ *
+ * Provides an object to interface to the text mode console of the sandbox
+ *
+ * The GVirSandboxConsole object provides support for interfacing to the
+ * text mode console of the sandbox. It forwards I/O between the #GVirStream
+ * associated with the virtual machine's console and a local console
+ * represented by #GUnixInputStream and #GUnixOutputStream objects.
+ *
+ */
+
 #define GVIR_SANDBOX_CONSOLE_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsolePrivate))
 

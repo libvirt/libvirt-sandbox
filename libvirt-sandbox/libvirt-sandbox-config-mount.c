@@ -25,6 +25,21 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-config-mount
+ * @short_description: Filesystem attachment configuration details
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ * @see_aloso: #GVirSandboxConfig
+ *
+ * Provides an object to store information about a filesystem attachment in the sandbox
+ *
+ * The GVirSandboxConfigMount object stores information required to attach
+ * a host filesystem to the application sandbox. The sandbox starts off with
+ * a complete view of the the host filesystem. This object allows a specific
+ * area of the host filesystem to be hidden and replaced with alternate
+ * content.
+ */
+
 #define GVIR_SANDBOX_CONFIG_MOUNT_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT, GVirSandboxConfigMountPrivate))
 

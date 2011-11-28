@@ -26,6 +26,18 @@
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
+/**
+ * SECTION: libvirt-sandbox-config-initrd
+ * @short_description: Kernel ramdisk configuration details
+ * @include: libvirt-sandbox/libvirt-sandbox.h
+ *
+ * Provides an object to store information about a kernel ramdisk
+ *
+ * The GVirSandboxConfigInitrd object stores the information required
+ * to build a kernel ramdisk to use when booting a virtual machine
+ * as a sandbox.
+ */
+
 #define GVIR_SANDBOX_CONFIG_INITRD_GET_PRIVATE(obj)                         \
         (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_INITRD, GVirSandboxConfigInitrdPrivate))
 
