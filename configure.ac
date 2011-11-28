@@ -48,6 +48,7 @@ PKG_CHECK_MODULES(GOBJECT, gobject-2.0 >= $GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GLIB, libvirt-glib-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GOBJECT, libvirt-gobject-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 
+GTK_DOC_CHECK([1.10],[--flavour no-tmpl])
 
 dnl Extra link-time flags for Cygwin.
 dnl Copied from libxml2 configure.in, but I removed mingw changes
@@ -121,6 +122,8 @@ AC_OUTPUT(Makefile
           libvirt-sandbox/Makefile
           bin/Makefile
           examples/Makefile
+          docs/Makefile
+          docs/libvirt-sandbox/Makefile
           libvirt-sandbox.spec
           libvirt-sandbox-1.0.pc)
 

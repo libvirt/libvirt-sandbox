@@ -1,5 +1,5 @@
 
-SUBDIRS = libvirt-sandbox bin examples
+SUBDIRS = libvirt-sandbox bin examples docs
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -10,7 +10,7 @@ EXTRA_DIST = @PACKAGE@.spec $(pkgconfig_DATA:%.pc=%.pc.in)
 
 DISTCLEAN_FILES = @PACKAGE@.spec $(pkgconfig_DATA)
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-introspection=yes
+DISTCHECK_CONFIGURE_FLAGS = --enable-introspection=yes --enable-gtk-doc=yes
 
 dist-hook: gen-ChangeLog
 

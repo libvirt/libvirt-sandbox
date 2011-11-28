@@ -103,6 +103,6 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with_introspection}
 %{_datadir}/gir-1.0/LibvirtSandbox-1.0.gir
 %endif
-#%{_datadir}/gtk-doc/html/Libvirt-sandbox
+%{_datadir}/gtk-doc/html/Libvirt-sandbox
 
 %changelog
