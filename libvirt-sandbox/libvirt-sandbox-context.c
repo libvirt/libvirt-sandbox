@@ -337,7 +337,8 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     return TRUE;
 
 error:
-    g_object_unref(config);
+    if (config)
+        g_object_unref(config);
     if (priv->builder) {
         g_object_unref(priv->builder);
         priv->builder = NULL;
@@ -360,23 +361,29 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
     GVirSandboxContextPrivate *priv = ctxt->priv;
     gboolean ret = TRUE;
 
-    if (!gvir_domain_stop(priv->domain, 0, error))
-        ret = FALSE;
+    if (priv->domain) {
+        if (!gvir_domain_stop(priv->domain, 0, error))
+            ret = FALSE;
 
-    g_object_unref(priv->domain);
-    priv->domain = NULL;
+        g_object_unref(priv->domain);
+        priv->domain = NULL;
+    }
 
     if (!gvir_sandbox_cleaner_run_post_stop(priv->cleaner, error))
         ret = FALSE;
 
-    g_object_unref(priv->builder);
-    priv->builder = NULL;
+    if (priv->builder) {
+        g_object_unref(priv->builder);
+        priv->builder = NULL;
+    }
 
     g_object_unref(priv->cleaner);
     priv->cleaner = gvir_sandbox_cleaner_new();
 
-    g_object_unref(priv->console);
-    priv->console = NULL;
+    if (priv->console) {
+        g_object_unref(priv->console);
+        priv->console = NULL;
+    }
 
     priv->active = FALSE;
 
