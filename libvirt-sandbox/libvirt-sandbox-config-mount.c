@@ -50,7 +50,7 @@ struct _GVirSandboxConfigMountPrivate
     GHashTable *includes;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigMount, gvir_sandbox_config_mount, GVIR_SANDBOX_TYPE_CONFIG);
+G_DEFINE_TYPE(GVirSandboxConfigMount, gvir_sandbox_config_mount, G_TYPE_OBJECT);
 
 
 enum {
