@@ -34,3 +34,4 @@ libvirt-sandbox/libvirt-sandbox-init-common
 libvirt-sandbox/libvirt-sandbox-init-qemu
 bin/virt-sandbox
 build/
+bin/virt-sandbox.1

@@ -1,6 +1,15 @@
 
 bin_PROGRAMS = virt-sandbox
 
+man1_MANS = virt-sandbox.1
+
+POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
+
+virt-sandbox.1: virt-sandbox.c Makefile
+	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
+
+CLEANFILES = virt-sandbox.1
+
 virt_sandbox_SOURCES = virt-sandbox.c
 virt_sandbox_CFLAGS = \
 		$(GIO_UNIX_CFLAGS) \
