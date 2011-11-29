@@ -17,6 +17,9 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_mount_set_root;
 
 	gvir_sandbox_config_add_mount;
+	gvir_sandbox_config_add_mount_strv;
+	gvir_sandbox_config_add_include_strv;
+	gvir_sandbox_config_add_include_file;
 	gvir_sandbox_config_get_command;
 	gvir_sandbox_config_get_mounts;
 	gvir_sandbox_config_get_name;

@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <sys/utsname.h>
+#include <string.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -86,6 +87,13 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+#define GVIR_SANDBOX_CONFIG_ERROR gvir_sandbox_config_error_quark()
+
+static GQuark
+gvir_sandbox_config_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-config");
+}
 
 static void gvir_sandbox_config_get_property(GObject *object,
                                              guint prop_id,
@@ -651,6 +659,169 @@ GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config)
     return g_list_copy(priv->mounts);
 }
 
+
+/**
+ * gvir_sandbox_config_find_mount:
+ * @config: (transfer none): the sandbox config
+ * @target: the guest target path
+ *
+ * Finds the #GVirSandboxCOnfigMount object corresponding to a guest
+ * path of @target.
+ *
+ * Returns: (transfer full)(allow-none): a mount object or NULL
+ */
+GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config,
+                                                       const gchar *target)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    GList *tmp = priv->mounts;
+
+    while (tmp) {
+        GVirSandboxConfigMount *mnt = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
+        if (g_str_equal(gvir_sandbox_config_mount_get_target(mnt), target)) {
+            return g_object_ref(mnt);
+        }
+        tmp = tmp->next;
+    }
+    return NULL;
+}
+
+
+/**
+ * gvir_sandbox_config_set_mounts:
+ * @config: (transfer none): the sandbox config
+ * @mounts: (transfer none)(array zero-terminate=1): the list of mounts
+ *
+ * Parses @mounts whose elements are in the format
+ * GUEST-TARGET=ROOT-PATH, creating #GVirSandboxConfigMount
+ * instances for each element.
+ */
+void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
+                                        gchar **mounts)
+{
+    gsize i = 0;
+    while (mounts && mounts[i]) {
+        const gchar *guest = mounts[i];
+        const gchar *host = NULL;
+        GVirSandboxConfigMount *mnt;
+        gchar *tmp;
+
+        if ((tmp = strchr(mounts[i], '=')) != NULL) {
+            *tmp = '\0';
+            host = tmp + 1;
+        }
+
+        mnt = gvir_sandbox_config_mount_new(guest);
+        gvir_sandbox_config_mount_set_root(mnt, host);
+
+        gvir_sandbox_config_add_mount(config, mnt);
+        g_object_unref(mnt);
+
+        i++;
+    }
+}
+
+
+gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
+                                              gchar **includes,
+                                              GError **error)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    gsize i = 0;
+
+    while (includes && includes[i]) {
+        const gchar *guest = NULL;
+        const gchar *host = includes[i];
+        GVirSandboxConfigMount *mnt = NULL;
+        GList *mnts = NULL;
+        gchar *tmp;
+
+        if ((tmp = strchr(includes[i], '=')) != NULL) {
+            *tmp = '\0';
+            guest = tmp + 1;
+        }
+
+        mnts = priv->mounts;
+        while (mnts) {
+            mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
+            if (g_str_has_prefix(host, gvir_sandbox_config_mount_get_target(mnt)))
+                break;
+            mnt = NULL;
+            mnts = mnts->next;
+        }
+        if (!mnt) {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "No mount with a prefix under %s", host);
+            return FALSE;
+        }
+
+        gvir_sandbox_config_mount_add_include(mnt, host, guest);
+
+        i++;
+    }
+
+    return TRUE;
+}
+
+
+gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
+                                              gchar *includefile,
+                                              GError **error)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    GFile *file = g_file_new_for_path(includefile);
+    GFileInputStream *is = NULL;
+    GDataInputStream *dis = NULL;
+    gboolean ret = FALSE;
+    gchar *line = NULL;
+
+    if (!(is = g_file_read(file, NULL, error)))
+        goto cleanup;
+
+    dis = g_data_input_stream_new(G_INPUT_STREAM(is));
+
+    while ((line = g_data_input_stream_read_line(dis,
+                                                 NULL,
+                                                 NULL,
+                                                 error))) {
+        const gchar *guest = NULL;
+        const gchar *host = line;
+        GVirSandboxConfigMount *mnt = NULL;
+        GList *mnts = NULL;
+        gchar *tmp;
+
+        if ((tmp = strchr(line, '=')) != NULL) {
+            *tmp = '\0';
+            guest = tmp + 1;
+        }
+
+        mnts = priv->mounts;
+        while (mnts) {
+            mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
+            if (g_str_has_prefix(host, gvir_sandbox_config_mount_get_target(mnt)))
+                break;
+            mnt = NULL;
+            mnts = mnts->next;
+        }
+        if (!mnt) {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "No mount with a prefix under %s", host);
+            goto cleanup;
+        }
+
+        gvir_sandbox_config_mount_add_include(mnt, host, guest);
+    }
+
+    if (error && *error)
+        goto cleanup;
+
+    ret = TRUE;
+cleanup:
+    if (dis)
+        g_object_unref(dis);
+    g_object_unref(file);
+    return ret;
+}
 
 /**
  * gvir_sandbox_config_set_command:

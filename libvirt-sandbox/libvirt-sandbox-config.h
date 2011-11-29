@@ -87,6 +87,17 @@ const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config);
 void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
                                    GVirSandboxConfigMount *mnt);
 GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config);
+GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config,
+                                                       const gchar *target);
+void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
+                                        gchar **mounts);
+
+gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
+                                              gchar **includes,
+                                              GError **error);
+gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
+                                              gchar *includefile,
+                                              GError **error);
 
 void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv);
 gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config);
