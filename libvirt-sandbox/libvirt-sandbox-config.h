@@ -91,10 +91,10 @@ GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv);
 gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config);
 
-void gvir_sandbox_config_set_security_type(GVirSandboxConfig *config, const gchar *type);
-const gchar *gvir_sandbox_config_get_security_type(GVirSandboxConfig *config);
-void gvir_sandbox_config_set_security_level(GVirSandboxConfig *config, const gchar *level);
-const gchar *gvir_sandbox_config_get_security_level(GVirSandboxConfig *config);
+void gvir_sandbox_config_set_security_label(GVirSandboxConfig *config, const gchar *label);
+const gchar *gvir_sandbox_config_get_security_label(GVirSandboxConfig *config);
+void gvir_sandbox_config_set_security_dynamic(GVirSandboxConfig *config, gboolean dynamic);
+gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config);
 
 G_END_DECLS
 

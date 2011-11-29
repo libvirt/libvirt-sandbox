@@ -56,8 +56,8 @@ struct _GVirSandboxConfigPrivate
 
     gchar **command;
 
-    gchar *secType;
-    gchar *secLevel;
+    gchar *secLabel;
+    gboolean secDynamic;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
@@ -76,8 +76,8 @@ enum {
     PROP_USERNAME,
     PROP_HOMEDIR,
 
-    PROP_SECURITY_TYPE,
-    PROP_SECURITY_LEVEL,
+    PROP_SECURITY_LABEL,
+    PROP_SECURITY_DYNAMIC,
 };
 
 enum {
@@ -128,12 +128,12 @@ static void gvir_sandbox_config_get_property(GObject *object,
         g_value_set_string(value, priv->homedir);
         break;
 
-    case PROP_SECURITY_TYPE:
-        g_value_set_string(value, priv->secType);
+    case PROP_SECURITY_LABEL:
+        g_value_set_string(value, priv->secLabel);
         break;
 
-    case PROP_SECURITY_LEVEL:
-        g_value_set_string(value, priv->secLevel);
+    case PROP_SECURITY_DYNAMIC:
+        g_value_set_boolean(value, priv->secDynamic);
         break;
 
     default:
@@ -188,14 +188,13 @@ static void gvir_sandbox_config_set_property(GObject *object,
         priv->homedir = g_value_dup_string(value);
         break;
 
-    case PROP_SECURITY_TYPE:
-        g_free(priv->secType);
-        priv->secType = g_value_dup_string(value);
+    case PROP_SECURITY_LABEL:
+        g_free(priv->secLabel);
+        priv->secLabel = g_value_dup_string(value);
         break;
 
-    case PROP_SECURITY_LEVEL:
-        g_free(priv->secLevel);
-        priv->secLevel = g_value_dup_string(value);
+    case PROP_SECURITY_DYNAMIC:
+        priv->secDynamic = g_value_get_boolean(value);
         break;
 
     default:
@@ -217,8 +216,7 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_free(priv->name);
     g_free(priv->root);
     g_free(priv->arch);
-    g_free(priv->secType);
-    g_free(priv->secLevel);
+    g_free(priv->secLabel);
 
     G_OBJECT_CLASS(gvir_sandbox_config_parent_class)->finalize(object);
 }
@@ -326,10 +324,10 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
     g_object_class_install_property(object_class,
-                                    PROP_SECURITY_TYPE,
-                                    g_param_spec_string("security-type",
-                                                        "Security type",
-                                                        "The SELinux security type",
+                                    PROP_SECURITY_LABEL,
+                                    g_param_spec_string("security-label",
+                                                        "Security label",
+                                                        "The security label",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -337,16 +335,16 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
     g_object_class_install_property(object_class,
-                                    PROP_SECURITY_LEVEL,
-                                    g_param_spec_string("security-level",
-                                                        "Security level",
-                                                        "The SELinux security level",
-                                                        NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
+                                    PROP_SECURITY_DYNAMIC,
+                                    g_param_spec_boolean("security-dynamic",
+                                                         "Security dynamic",
+                                                         "The security mode",
+                                                         TRUE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_STATIC_NAME |
+                                                         G_PARAM_STATIC_NICK |
+                                                         G_PARAM_STATIC_BLURB));
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigPrivate));
 }
@@ -364,7 +362,7 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->name = g_strdup("sandbox");
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
-    priv->secType = g_strdup("svirt_sandbox_t");
+    priv->secLabel = g_strdup("system_u:system_r:svirt_t:s0:c0.c1023");
 
     priv->command = g_new0(gchar *, 2);
     priv->command[0] = g_strdup("/bin/sh");
@@ -690,61 +688,60 @@ gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config)
 }
 
 /**
- * gvir_sandbox_config_set_security_type:
+ * gvir_sandbox_config_set_security_label:
  * @config: (transfer none): the sandbox config
- * @type: (transfer none): the security level
+ * @label: (transfer none): the host directory
  *
- * Set the SELinux security type for the sandbox. The default
- * type is "svirt_sandbox_t"
- */
-void gvir_sandbox_config_set_security_type(GVirSandboxConfig *config, const gchar *type)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    g_free(priv->secType);
-    priv->secType = g_strdup(type);
-}
-
-/**
- * gvir_sandbox_config_get_security_type:
- * @config: (transfer none): the sandbox config
- *
- * Retrieve the sandbox security type
- *
- * Returns: (transfer none): the security type
- */
-const gchar *gvir_sandbox_config_get_security_type(GVirSandboxConfig *config)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    return priv->secType;
-}
-
-/**
- * gvir_sandbox_config_set_security_level:
- * @config: (transfer none): the sandbox config
- * @level: (transfer none): the host directory
- *
- * Set the sandbox security level. By default a dynamic security level
- * is chosen. A static security level must be specified if any
+ * Set the sandbox security label. By default a dynamic security label
+ * is chosen. A static security label must be specified if any
  * custom mounts are added
  */
-void gvir_sandbox_config_set_security_level(GVirSandboxConfig *config, const gchar *level)
+void gvir_sandbox_config_set_security_label(GVirSandboxConfig *config, const gchar *label)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    g_free(priv->secLevel);
-    priv->secLevel = g_strdup(level);
+    g_free(priv->secLabel);
+    priv->secLabel = g_strdup(label);
 }
 
 /**
- * gvir_sandbox_config_get_security_level:
+ * gvir_sandbox_config_get_security_label:
  * @config: (transfer none): the sandbox config
  *
- * Retrieve the sandbox security level
+ * Retrieve the sandbox security label
  *
- * Returns: (transfer none): the security level
+ * Returns: (transfer none): the security label
  */
-const gchar *gvir_sandbox_config_get_security_level(GVirSandboxConfig *config)
+const gchar *gvir_sandbox_config_get_security_label(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    return priv->secLevel;
+    return priv->secLabel;
 }
 
+
+/**
+ * gvir_sandbox_config_set_security_dynamic:
+ * @config: (transfer none): the sandbox config
+ * @dynamic: (transfer none): the security mode
+ *
+ * Set the SELinux security dynamic for the sandbox. The default
+ * dynamic is "svirt_sandbox_t"
+ */
+void gvir_sandbox_config_set_security_dynamic(GVirSandboxConfig *config, gboolean dynamic)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->secDynamic = dynamic;
+}
+
+/**
+ * gvir_sandbox_config_get_security_dynamic:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieve the sandbox security mode
+ *
+ * Returns: (transfer none): the security mode
+ */
+gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->secDynamic;
+}

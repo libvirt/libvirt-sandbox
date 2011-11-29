@@ -336,16 +336,16 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
 
     g_string_append(str, "  </devices>\n");
 
-    if (gvir_sandbox_config_get_security_level(config)) {
-        g_string_append(str, "  <seclabel type='static' model='selinux'>\n");
-        g_string_append_printf(str, "    <label>system_u:system_r:%s:s0:%s</label>\n",
-                               gvir_sandbox_config_get_security_type(config),
-                               gvir_sandbox_config_get_security_level(config));
+    if (gvir_sandbox_config_get_security_dynamic(config)) {
+        g_string_append(str, "  <seclabel type='dynamic' model='selinux'>\n");
+        if (gvir_sandbox_config_get_security_label(config))
+            g_string_append_printf(str, "    <baselabel>%s</baselabel>\n",
+                                   gvir_sandbox_config_get_security_label(config));
         g_string_append(str, "  </seclabel>\n");
     } else {
-        g_string_append(str, "  <seclabel type='dynamic' model='selinux'>\n");
-        g_string_append_printf(str, "    <baselabel>system_u:system_r:%s:s0</baselabel>\n",
-                               gvir_sandbox_config_get_security_type(config));
+        g_string_append(str, "  <seclabel type='static' model='selinux'>\n");
+        g_string_append_printf(str, "    <label>%s</label>\n",
+                               gvir_sandbox_config_get_security_label(config));
         g_string_append(str, "  </seclabel>\n");
     }
 
