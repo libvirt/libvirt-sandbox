@@ -414,8 +414,7 @@ static void do_console_update_events(GVirSandboxConsole *console)
         priv->consoleWatch = gvir_stream_add_watch(priv->console,
                                                    cond,
                                                    do_console_stream_readwrite,
-                                                   console,
-                                                   NULL);
+                                                   console);
     }
 
 }
