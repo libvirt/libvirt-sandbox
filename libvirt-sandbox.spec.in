@@ -76,6 +76,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_bindir}/virt-sandbox
+%{_mandir}/man1/virt-sandbox.1*
 
 %files libs
 %defattr(-,root,root,-)
