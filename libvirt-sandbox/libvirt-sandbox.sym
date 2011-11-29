@@ -33,6 +33,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_set_root;
 	gvir_sandbox_config_set_tty;
 	gvir_sandbox_config_set_security_level;
+	gvir_sandbox_config_set_security_opts;
 	gvir_sandbox_config_set_security_type;
 
 	gvir_sandbox_config_initrd_add_module;

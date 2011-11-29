@@ -916,3 +916,30 @@ gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config)
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->secDynamic;
 }
+
+
+gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
+                                               const gchar *optstr,
+                                               GError **error)
+{
+    gchar **opts = g_strsplit(optstr, ",", 0);
+    gsize i = 0;
+
+    while (opts[i]) {
+        gchar *name = opts[i];
+        gchar *value = strchr(name, '=');
+
+        if (strncmp(name, "label=", 5) == 0) {
+            gvir_sandbox_config_set_security_label(config, value);
+        } else if (g_str_equal(name, "dynamic")) {
+            gvir_sandbox_config_set_security_dynamic(config, TRUE);
+        } else if (g_str_equal(name, "static")) {
+            gvir_sandbox_config_set_security_dynamic(config, FALSE);
+        } else {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "Unknown security option '%s'", name);
+            return FALSE;
+        }
+    }
+    return TRUE;
+}

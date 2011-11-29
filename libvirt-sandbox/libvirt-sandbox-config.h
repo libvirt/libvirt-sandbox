@@ -106,6 +106,9 @@ void gvir_sandbox_config_set_security_label(GVirSandboxConfig *config, const gch
 const gchar *gvir_sandbox_config_get_security_label(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_security_dynamic(GVirSandboxConfig *config, gboolean dynamic);
 gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config);
+gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
+                                               const gchar *optstr,
+                                               GError**error);
 
 G_END_DECLS
 
