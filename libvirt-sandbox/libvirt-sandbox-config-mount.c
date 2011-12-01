@@ -35,7 +35,7 @@
  *
  * The GVirSandboxConfigMount object stores information required to attach
  * a host filesystem to the application sandbox. The sandbox starts off with
- * a complete view of the the host filesystem. This object allows a specific
+ * a complete view of the host filesystem. This object allows a specific
  * area of the host filesystem to be hidden and replaced with alternate
  * content.
  */
