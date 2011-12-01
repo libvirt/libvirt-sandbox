@@ -243,23 +243,43 @@ static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner 
     return TRUE;
 }
 
-static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuilder *builder G_GNUC_UNUSED,
-                                                                GVirSandboxConfig *config,
-                                                                GVirSandboxCleaner *cleaner,
-                                                                GError **error)
+static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder *builder,
+                                                             GVirSandboxConfig *config,
+                                                             GVirSandboxCleaner *cleaner,
+                                                             GVirConfigDomain *domain,
+                                                             GError **error)
 {
-    GString *str = g_string_new("<domain type='kvm'>\n");
-    GVirConfigDomain *dom = NULL;
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_basic(builder, config, cleaner, domain, error))
+        return FALSE;
+
+    gvir_config_domain_set_virt_type(domain,
+                                     GVIR_CONFIG_DOMAIN_VIRT_KVM);
+
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *builder,
+                                                          GVirSandboxConfig *config,
+                                                          GVirSandboxCleaner *cleaner,
+                                                          GVirConfigDomain *domain,
+                                                          GError **error)
+{
     gchar *kernel = NULL;
     gchar *initrd = NULL;
-    const gchar *cmdline = "";
-    GList *mounts = NULL, *tmp = NULL;
+    gchar *cmdline = NULL;
     struct utsname uts;
+    GVirConfigDomainOs *os;
+
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_os(builder, config, cleaner, domain, error))
+        return FALSE;
 
     uname(&uts);
 
     if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(uts.release, error)))
-        goto cleanup;
+        return FALSE;
 
     kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
@@ -269,31 +289,70 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
                                                initrd,
                                                g_free);
 
-    g_string_append_printf(str, "  <name>%s</name>\n",
-                           gvir_sandbox_config_get_name(config));
-    g_string_append_printf(str, "  <memory>%d</memory>\n", 512*1024);
+    os = gvir_config_domain_os_new();
+    gvir_config_domain_os_set_os_type(os,
+                                      GVIR_CONFIG_DOMAIN_OS_TYPE_HVM);
+    gvir_config_domain_os_set_arch(os,
+                                   gvir_sandbox_config_get_arch(config));
+    gvir_config_domain_os_set_kernel(os, kernel);
+    gvir_config_domain_os_set_ramdisk(os, initrd);
+    gvir_config_domain_os_set_cmdline(os, cmdline);
 
-    g_string_append(str, "  <os>\n");
-    g_string_append_printf(str, "    <type arch='%s'>hvm</type>\n",
-                           gvir_sandbox_config_get_arch(config));
-    g_string_append_printf(str, "    <kernel>%s</kernel>\n", kernel);
-    g_string_append_printf(str, "    <initrd>%s</initrd>\n", initrd);
-    g_string_append_printf(str, "    <cmdline>%s</cmdline>\n", cmdline);
-    g_string_append(str, "  </os>\n");
+    gvir_config_domain_set_os(domain, os);
 
-    g_string_append(str, "  <features>\n");
-    g_string_append(str, "    <acpi/>\n");
-    g_string_append(str, "  </features>\n");
+    g_free(kernel);
+    g_free(cmdline);
+    /* initrd is free'd by the cleaner */
 
-    g_string_append(str, "  <devices>\n");
-    g_string_append(str, "    <console type='pty'/>\n");
+    return TRUE;
+}
 
-    g_string_append(str, "    <filesystem type='mount' accessmode='passthrough'>\n");
-    g_string_append_printf(str, "      <source dir='%s'/>\n",
-                           gvir_sandbox_config_get_root(config));
-    g_string_append(str, "      <target dir='sandbox:root'/>\n");
-    g_string_append(str, "      <readonly/>\n");
-    g_string_append(str, "    </filesystem>\n");
+
+static gboolean gvir_sandbox_builder_machine_construct_features(GVirSandboxBuilder *builder,
+                                                                GVirSandboxConfig *config,
+                                                                GVirSandboxCleaner *cleaner,
+                                                                GVirConfigDomain *domain,
+                                                                GError **error)
+{
+    gchar **features;
+
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_features(builder, config, cleaner, domain, error))
+        return FALSE;
+
+    features = g_new0(gchar *, 1);
+    features[0] = g_strdup("acpi");
+    gvir_config_domain_set_features(domain, features);
+    g_strfreev(features);
+    return TRUE;
+}
+
+static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilder *builder,
+                                                               GVirSandboxConfig *config,
+                                                               GVirSandboxCleaner *cleaner,
+                                                               GVirConfigDomain *domain,
+                                                               GError **error)
+{
+    GVirConfigDomainFilesys *fs;
+    GVirConfigDomainMemballoon *ball;
+    GVirConfigDomainGraphicsSpice *graph;
+    GList *tmp = NULL, *mounts = NULL;
+
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_devices(builder, config, cleaner, domain, error))
+        return FALSE;
+
+    fs = gvir_config_domain_filesys_new();
+    gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+    gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+    gvir_config_domain_filesys_set_source(fs,
+                                          gvir_sandbox_config_get_root(config));
+    gvir_config_domain_filesys_set_target(fs, "sandbox:root");
+    gvir_config_domain_filesys_set_readonly(fs, TRUE);
+
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(fs));
+    g_object_unref(fs);
 
     tmp = mounts = gvir_sandbox_config_get_mounts(config);
     while (tmp) {
@@ -307,59 +366,43 @@ static GVirConfigDomain *gvir_sandbox_builder_machine_construct(GVirSandboxBuild
         else if (strcmp(target, "/tmp") == 0)
             tgtsym = "sandbox:tmp";
         else {
-            *error = g_error_new(GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
-                                 "Cannot export mount to %s", target);
-            goto cleanup;
+            g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
+                        "Cannot export mount to %s", target);
+            return FALSE;
         }
 
+        fs = gvir_config_domain_filesys_new();
+        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+        gvir_config_domain_filesys_set_source(fs,
+                                              gvir_sandbox_config_mount_get_root(mconfig));
+        gvir_config_domain_filesys_set_target(fs, tgtsym);
 
-        g_string_append(str, "    <filesystem type='mount' accessmode='passthrough'>\n");
-        g_string_append_printf(str, "      <source dir='%s'/>\n",
-                               gvir_sandbox_config_mount_get_root(mconfig));
-        g_string_append_printf(str, "      <target dir='%s'/>\n", tgtsym);
-        g_string_append(str, "      <readonly/>\n");
-        g_string_append(str, "    </filesystem>\n");
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
+        g_object_unref(fs);
 
         tmp = tmp->next;
     }
 
-    g_string_append(str, "    <memballoon model='none'/>\n");
+
+    ball = gvir_config_domain_memballoon_new();
+    gvir_config_domain_memballoon_set_model(ball,
+                                            GVIR_CONFIG_DOMAIN_MEMBALLOON_MODEL_NONE);
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(ball));
+    g_object_unref(ball);
+
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
-        const gchar *xauth = getenv("XAUTHORITY");
-
-        if (xauth)
-            g_string_append_printf(str, "    <graphics type='sdl' display=':0' xauth='%s'/>\n", xauth);
-        else
-            g_string_append(str, "    <graphics type='sdl' display=':0'/>\n");
+        graph = gvir_config_domain_graphics_spice_new();
+        gvir_config_domain_graphics_spice_set_port(graph, -1);
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(graph));
+        g_object_unref(graph);
     }
 
-    g_string_append(str, "  </devices>\n");
-
-    if (gvir_sandbox_config_get_security_dynamic(config)) {
-        g_string_append(str, "  <seclabel type='dynamic' model='selinux'>\n");
-        if (gvir_sandbox_config_get_security_label(config))
-            g_string_append_printf(str, "    <baselabel>%s</baselabel>\n",
-                                   gvir_sandbox_config_get_security_label(config));
-        g_string_append(str, "  </seclabel>\n");
-    } else {
-        g_string_append(str, "  <seclabel type='static' model='selinux'>\n");
-        g_string_append_printf(str, "    <label>%s</label>\n",
-                               gvir_sandbox_config_get_security_label(config));
-        g_string_append(str, "  </seclabel>\n");
-    }
-
-
-    g_string_append(str, "</domain>");
-
-    dom = gvir_config_domain_new_from_xml(str->str, error);
-
-cleanup:
-    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(mounts);
-    g_string_free(str, TRUE);
-    g_free(kernel);
-    return dom;
+    return TRUE;
 }
 
 
@@ -372,7 +415,10 @@ static void gvir_sandbox_builder_machine_class_init(GVirSandboxBuilderMachineCla
     object_class->get_property = gvir_sandbox_builder_machine_get_property;
     object_class->set_property = gvir_sandbox_builder_machine_set_property;
 
-    builder_class->construct = gvir_sandbox_builder_machine_construct;
+    builder_class->construct_basic = gvir_sandbox_builder_machine_construct_basic;
+    builder_class->construct_os = gvir_sandbox_builder_machine_construct_os;
+    builder_class->construct_features = gvir_sandbox_builder_machine_construct_features;
+    builder_class->construct_devices = gvir_sandbox_builder_machine_construct_devices;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxBuilderMachinePrivate));
 }

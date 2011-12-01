@@ -55,10 +55,36 @@ struct _GVirSandboxBuilderClass
 {
     GObjectClass parent_class;
 
-    GVirConfigDomain *(*construct)(GVirSandboxBuilder *builder,
+    gboolean (*construct_basic)(GVirSandboxBuilder *builder,
+                                GVirSandboxConfig *config,
+                                GVirSandboxCleaner *cleaner,
+                                GVirConfigDomain *domain,
+                                GError **error);
+    gboolean (*construct_os)(GVirSandboxBuilder *builder,
+                             GVirSandboxConfig *config,
+                             GVirSandboxCleaner *cleaner,
+                             GVirConfigDomain *domain,
+                             GError **error);
+    gboolean (*construct_features)(GVirSandboxBuilder *builder,
+                                  GVirSandboxConfig *config,
+                                  GVirSandboxCleaner *cleaner,
+                                  GVirConfigDomain *domain,
+                                  GError **error);
+    gboolean (*construct_devices)(GVirSandboxBuilder *builder,
+                                  GVirSandboxConfig *config,
+                                  GVirSandboxCleaner *cleaner,
+                                  GVirConfigDomain *domain,
+                                  GError **error);
+    gboolean (*construct_security)(GVirSandboxBuilder *builder,
                                    GVirSandboxConfig *config,
                                    GVirSandboxCleaner *cleaner,
+                                   GVirConfigDomain *domain,
                                    GError **error);
+    gboolean (*construct_domain)(GVirSandboxBuilder *builder,
+                                 GVirSandboxConfig *config,
+                                 GVirSandboxCleaner *cleaner,
+                                 GVirConfigDomain *domain,
+                                 GError **error);
 };
 
 GType gvir_sandbox_builder_get_type(void);

@@ -68,6 +68,37 @@ gvir_sandbox_builder_error_quark(void)
     return g_quark_from_static_string("gvir-sandbox-builder");
 }
 
+static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
+                                                      GVirSandboxConfig *config,
+                                                      GVirSandboxCleaner *cleaner,
+                                                      GVirConfigDomain *domain,
+                                                      GError **error);
+static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder,
+                                                     GVirSandboxConfig *config,
+                                                     GVirSandboxCleaner *cleaner,
+                                                     GVirConfigDomain *domain,
+                                                     GError **error);
+static gboolean gvir_sandbox_builder_construct_os(GVirSandboxBuilder *builder,
+                                                  GVirSandboxConfig *config,
+                                                  GVirSandboxCleaner *cleaner,
+                                                  GVirConfigDomain *domain,
+                                                  GError **error);
+static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *builder,
+                                                        GVirSandboxConfig *config,
+                                                        GVirSandboxCleaner *cleaner,
+                                                        GVirConfigDomain *domain,
+                                                        GError **error);
+static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder,
+                                                       GVirSandboxConfig *config,
+                                                       GVirSandboxCleaner *cleaner,
+                                                       GVirConfigDomain *domain,
+                                                       GError **error);
+static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder,
+                                                        GVirSandboxConfig *config,
+                                                        GVirSandboxCleaner *cleaner,
+                                                        GVirConfigDomain *domain,
+                                                        GError **error);
+
 static void gvir_sandbox_builder_get_property(GObject *object,
                                              guint prop_id,
                                              GValue *value,
@@ -127,6 +158,13 @@ static void gvir_sandbox_builder_class_init(GVirSandboxBuilderClass *klass)
     object_class->finalize = gvir_sandbox_builder_finalize;
     object_class->get_property = gvir_sandbox_builder_get_property;
     object_class->set_property = gvir_sandbox_builder_set_property;
+
+    klass->construct_domain = gvir_sandbox_builder_construct_domain;
+    klass->construct_basic = gvir_sandbox_builder_construct_basic;
+    klass->construct_os = gvir_sandbox_builder_construct_os;
+    klass->construct_features = gvir_sandbox_builder_construct_features;
+    klass->construct_devices = gvir_sandbox_builder_construct_devices;
+    klass->construct_security = gvir_sandbox_builder_construct_security;
 
     g_object_class_install_property(object_class,
                                     PROP_CONNECTION,
@@ -197,6 +235,114 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
     return priv->connection;
 }
 
+
+static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
+                                                      GVirSandboxConfig *config,
+                                                      GVirSandboxCleaner *cleaner,
+                                                      GVirConfigDomain *domain,
+                                                      GError **error)
+{
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+
+    if (!(klass->construct_basic(builder, config, cleaner, domain, error)))
+        return FALSE;
+
+    if (!(klass->construct_os(builder, config, cleaner, domain, error)))
+        return FALSE;
+
+    if (!(klass->construct_features(builder, config, cleaner, domain, error)))
+        return FALSE;
+
+    if (!(klass->construct_devices(builder, config, cleaner, domain, error)))
+        return FALSE;
+
+    if (!(klass->construct_security(builder, config, cleaner, domain, error)))
+        return FALSE;
+
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                     GVirSandboxConfig *config,
+                                                     GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                     GVirConfigDomain *domain,
+                                                     GError **error G_GNUC_UNUSED)
+{
+    gvir_config_domain_set_name(domain,
+                                gvir_sandbox_config_get_name(config));
+    /* XXX configurable */
+    gvir_config_domain_set_memory(domain, 1024*512);
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_construct_os(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                  GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                  GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                  GVirConfigDomain *domain G_GNUC_UNUSED,
+                                                  GError **error G_GNUC_UNUSED)
+{
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                        GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                        GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                        GVirConfigDomain *domain G_GNUC_UNUSED,
+                                                        GError **error G_GNUC_UNUSED)
+{
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                       GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                       GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                       GVirConfigDomain *domain G_GNUC_UNUSED,
+                                                       GError **error G_GNUC_UNUSED)
+{
+    GVirConfigDomainConsolePty *con;
+
+    con = gvir_config_domain_console_pty_new();
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(con));
+    g_object_unref(con);
+
+    return TRUE;
+}
+
+
+static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                        GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                        GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                                        GVirConfigDomain *domain G_GNUC_UNUSED,
+                                                        GError **error G_GNUC_UNUSED)
+{
+    GVirConfigDomainSeclabel *sec = gvir_config_domain_seclabel_new();
+
+    gvir_config_domain_seclabel_set_model(sec, "selinux");
+    if (gvir_sandbox_config_get_security_dynamic(config)) {
+        gvir_config_domain_seclabel_set_type(sec,
+                                             GVIR_CONFIG_DOMAIN_SECLABEL_DYNAMIC);
+        if (gvir_sandbox_config_get_security_label(config))
+            gvir_config_domain_seclabel_set_baselabel(sec,
+                                                      gvir_sandbox_config_get_security_label(config));
+    } else {
+        gvir_config_domain_seclabel_set_type(sec,
+                                             GVIR_CONFIG_DOMAIN_SECLABEL_STATIC);
+        gvir_config_domain_seclabel_set_label(sec,
+                                              gvir_sandbox_config_get_security_label(config));
+    }
+
+    gvir_config_domain_set_seclabel(domain, sec);
+    g_object_unref(sec);
+
+    return TRUE;
+}
+
+
 /**
  * gvir_sandbox_builder_construct:
  * @builder: (transfer none): the sandbox builder
@@ -213,5 +359,13 @@ GVirConfigDomain *gvir_sandbox_builder_construct(GVirSandboxBuilder *builder,
                                                  GVirSandboxCleaner *cleaner,
                                                  GError **error)
 {
-    return GVIR_SANDBOX_BUILDER_GET_CLASS(builder)->construct(builder, config, cleaner, error);
+    GVirConfigDomain *domain = gvir_config_domain_new();
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+
+    if (!(klass->construct_domain(builder, config, cleaner, domain, error))) {
+        g_object_unref(domain);
+        return NULL;
+    }
+
+    return domain;
 }
