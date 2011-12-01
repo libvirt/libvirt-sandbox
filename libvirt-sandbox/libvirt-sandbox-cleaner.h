@@ -1,7 +1,7 @@
 /*
  * libvirt-sandbox-cleaner.h: libvirt sandbox cleaner
  *
- * Copyright (C) 2011 Red Hat
+ * Copyright (C) 2011 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
