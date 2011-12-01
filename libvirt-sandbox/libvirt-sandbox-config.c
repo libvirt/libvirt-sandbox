@@ -690,7 +690,7 @@ GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config
 /**
  * gvir_sandbox_config_set_mounts:
  * @config: (transfer none): the sandbox config
- * @mounts: (transfer none)(array zero-terminate=1): the list of mounts
+ * @mounts: (transfer none)(array zero-terminated=1): the list of mounts
  *
  * Parses @mounts whose elements are in the format
  * GUEST-TARGET=ROOT-PATH, creating #GVirSandboxConfigMount
