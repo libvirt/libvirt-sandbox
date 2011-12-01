@@ -38,7 +38,7 @@ static void libvirt_sandbox_version(void)
 {
         g_print(_("%s version %s\n"), PACKAGE, VERSION);
 
-        exit(0);
+        exit(EXIT_SUCCESS);
 }
 
 
