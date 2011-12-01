@@ -120,8 +120,10 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config)
     gchar **argv, **tmp;
     gchar *cmdrawstr;
     gchar *cmdb64str;
-    size_t len = 0, offset;
+    size_t len = 0, offset = 0;
+    gchar *lenstr;
     gchar *ret;
+    gsize prefix = 0;
 
     argv = gvir_sandbox_config_get_command(config);
 
@@ -131,9 +133,15 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config)
         tmp++;
     }
 
-    cmdrawstr = g_new0(gchar, len);
+    lenstr = g_strdup_printf("%zu", len);
+    prefix = strlen(lenstr);
+    cmdrawstr = g_new0(gchar, prefix + 1 + len);
+
+    memcpy(cmdrawstr, lenstr, prefix);
+    cmdrawstr[prefix] = ':';
+    offset += prefix + 1;
+
     tmp = argv;
-    offset = 0;
     while (*tmp) {
         size_t tlen = strlen(*tmp);
         memcpy(cmdrawstr + offset, *tmp, tlen + 1);
@@ -141,7 +149,7 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config)
         tmp++;
     }
 
-    cmdb64str = g_base64_encode((guchar*)cmdrawstr, len);
+    cmdb64str = g_base64_encode((guchar*)cmdrawstr, prefix + 1 + len);
     g_free(cmdrawstr);
 
     /* First sandbox specific args */
