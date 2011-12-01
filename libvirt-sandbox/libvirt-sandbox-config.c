@@ -35,7 +35,7 @@
  * Provides a base object to store configurations for the application sandbox
  *
  * The GVirSandboxConfig object stores the basic information required to
- * create application sandboxes with a simple text based console. 
+ * create application sandboxes with a simple text based console.
  */
 
 #define GVIR_SANDBOX_CONFIG_GET_PRIVATE(obj)                         \
@@ -835,7 +835,7 @@ cleanup:
  * gvir_sandbox_config_set_command:
  * @config: (transfer none): the sandbox config
  * @argv: (transfer none)(array zero-terminated=1): the command path and arguments
- * 
+ *
  * Set the path of the command to be run and its arguments. The @argv should
  * be a NULL terminated list
  */

@@ -3,7 +3,7 @@
 
 set -e
 srcdir=`dirname $0`
-test -z "$srcdir" && srcdir=. 
+test -z "$srcdir" && srcdir=.
 
 THEDIR=`pwd`
 cd $srcdir
@@ -58,6 +58,6 @@ if test "x$1" = "x--system"; then
 fi
 
 $srcdir/configure --enable-compile-warnings=maximum $EXTRA_ARGS "$@" && {
-    echo 
+    echo
     echo "Now type 'make' to compile libvirt-sandbox."
 }
