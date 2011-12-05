@@ -1,0 +1,242 @@
+              Libvirt Sandbox Architecture
+              ============================
+
+This document outlines how the libvirt sandbox architecture operates with different
+types of virtualization technology.
+
+
+Filesystem usage
+================
+
+The general principal behind the "application sandbox" is that the user is running
+the actual binaries from their primary OS installation. ie, there is no separate
+"guest OS" installation to manage. This is key to achieving the goal of having
+zero admin overhead for using virtualization.
+
+Thus the foundation of the sandbox is the host filesystem passthrough capabilities
+of the virtualization technology. There needs to be the ability to pass the entire
+root filesystem of the host through to the virtual domain in readonly mode. There
+are then zero or more additional host locations passed through in read-write mode,
+to be mounted at the specific locations in the virtual donain to which the application
+will require write access. The host and guest paths for the additional locations
+need not, and typically will not, be the same.
+
+A fairly common configuration for sandboxing an end user application would be to
+setup a private $HOME and /tmp in the virtual domain. The host filesystem passthrough
+setup would thus do something like
+
+  - Host: /                             -> Guest: /
+  - Host: /home/berrange/tmp/myapp/tmp  -> Guest: /tmp
+  - Host: /home/berrange/tmp/myapp/home -> Guest: /home/berrange
+
+When backed by an LXC container domain, these mappings are directly expressed
+in the libvirt configuration, eg
+
+   <filesystem>
+     <source dir='/home/berrange/tmp/myapp/tmp'/>
+     <target dir='/tmp'/>
+   </filesystem>
+
+The libvirt LXC startup process will take care of actually mounting the
+filesystem during guest startup.
+
+When backed by a QEMU virtual machine, these mappings are done symbolically
+using the 9p filesystem.
+
+   <filesystem>
+     <source dir='/home/berrange/tmp/myapp/tmp'/>
+     <target dir='sandbox:tmp'/>
+   </filesystem>
+
+The 'init' process in the virtual machine then does an equivalent of
+
+    mount("sandbox:tmp", "/tmp", "9p" "trans=virtio")
+
+to actually mount the passed through filesystem in the guest machine.
+
+
+Boot process
+============
+
+The boot process for application sandboxes naturally differs between containers
+and virtual machine based virtualization hosts. The startup work is thus split
+between two binaries, a hypervisor specific initializer and a hypervisor agnostic
+initializer.
+
+LXC boot
+--------
+
+For LXC container domains, the hypervisor specific initializer is the binary
+
+    /usr/libexec/libvirt-sandbox-init-lxc
+
+It is responsible for:
+
+  - Obtain config variables from the LIBVIRT_LXC_CMDLINE env variable
+  - Put the primary console into rawmode if the host was connected to a TTY
+  - Run the common initializer
+
+The LIBVIRT_LXC_CMDDLINE variable was populated from the <cmdline> libvirt
+XML element.
+
+QEMU boot
+---------
+
+For QEMU virtual machine domains, the hypervisor specific initializer is the
+binary
+
+   /usr/libexec/libvirt-sandbox-init-qemu
+
+It is responsible for:
+
+  - Obtain config variables from the /proc/cmdline system file
+  - Loading the virtio 9p filesystem kernel modules
+  - Mounting the root filesystem via 9p
+  - Mounting the additional filesystems via 9p
+  - Mounting misc system filesytems (/sys, /proc, /dev/pts, etc)
+  - Populating /dev device nodes
+  - Put the primary console into rawmode if the host was connected to a TTY
+  - Run the common initializer
+
+The /proc/cmdline file was populated from the kernel boot args, which in
+turn came from the <cmdline> libvirt XML element.
+
+
+Common boot
+-----------
+
+The common initializer is the binary
+
+   /usr/libexec/libvirt-sandbox-init-common
+
+It is responsible for
+
+  - Switching to a non-root UID & GID (if requested)
+  - Drop all capabilities & clear bounding set.
+  - Setting basic env variables ($HOME, $USER, etc)
+  - Launching additional services (dbus, xorg, etc)
+  - Decoding the base64 encoded application command line arguments
+  - Launching the sandboxed application
+  - Forwarding I/O between the sandboxed application & host OS
+
+
+Console I/O
+===========
+
+The sandboxed application ultimately has its stdio connected to the
+primary console of the virtual machine. This is typically either a
+serial port (for machine virtualization), or a paravirtualized
+character device (for container virtualization). On the host, the
+console is connected to the stdio of whatever process launched the
+sandbox.
+
+The first problem to be overcome here is that EOF on the host console
+does not automatically propagate to the guest domain console. The
+second problem is that the primary console is typically operating in
+a non-raw mode initially, which means that any data sent from the
+host to the guest is automatically echoed back out. This is not
+desirable, since the application to be run needs to be in charge of
+this. Thus it is often neccessary to put the guest console into raw
+mode. Unfortunately with a virtual machine based sandbox, there is
+no way to tell the kernel to put its console in raw mode from the
+moment it boots. Thus it is critical to prevent the host from sending
+any data to the guest, until the console has been switched to raw
+mode. The final problem is highly desirable to be able to detect
+failure of the guest side initialization code which runs prior to
+launch of the sandbox application
+
+The solution to all these problems is to not connect the sandboxed
+application directly to the primary guest console. Instead the
+application will be connected to either a pair of pipes, or a newly
+allocated psuedo TTY. The common initializer binary then has the
+tasks of forwarding I/O between the application and the host process,
+over the primary console.
+
+For host to guest traffic, the '\' character is used to enable escape
+sequences to be sent. Any literal '\' in the stream is itself escaped
+as '\\'.
+
+Initially the host process starts off in receive mode only. ie it will
+not attmpt to send any data to the virtual guest.
+
+If the sandbox successfully starts the application, the magic byte
+sequence "xoqpuɐs" will be transmitted from the guest to the host.
+This byte sequence is guarenteed to be the first data sent from the
+guest to the host in normal circumstances. Thus if the host process
+receives any other byte sequences it knows that sandbox startup has
+failed. In this case, further data received from the guest should
+be written to stderr on the host, otherwise further data will be
+written to stdout.
+
+Assuming the magic byte sequence was received, the host process will
+now enable transmission of data to the guest. When the host process
+sees EOF on its stdin, it will send the two byte escape sequence '\9'.
+Upon receiving this, the guest will close stdin of the sandboxed
+application, transmit any pending output from the application's
+stdout/stderr and then shutdown the entire guest.
+
+
+Kernels and initrds
+===================
+
+For application sandboxes based on virtual machines, a kernel and
+initrd is required to boot the guest. The goal once again is to run
+the same kernel in the guest, as curently runs on the host OS. The
+initrd though, will typically need to be different, since at the time
+of writing all distro initrd's lack the ability to boot from a 9p
+based host filesystem.
+
+In addition startup performance of the virtual machine startup is
+absolutely critical. The hardware configured for the virtual machine
+is well known ahead of time, thus a highly targetted initrd can be
+built and all hardware probing can be avoided. In fact all that is
+required is an initrd containing a 9p module and the virtio-net
+modules (and their dependencies).
+
+The initrd for the sandbox can be built from scratch in a fraction
+of a second, and uses the QEMU specific binary libvirt-sandbox-init-qemu
+as its 'init' process. This binary is static linked to avoid the
+need to copy any ELF libraries into the initrd. Overall the initrd
+is a few 100KB in size.
+
+
+Boot performance
+================
+
+For LXC based application sandboxes, startup performance is not an
+issue, since everything required can start in a fraction of a second.
+
+QEMU virtual machine based sandboxes are a trickier proposition to
+optimize. Several aspects come into play
+
+   1. Time for libvirt to start QEMU
+   2. Time for QEMU to start SeaBIOS
+   3. Time for SeaBIOS to start the kernel
+   4. Time for the kernel to start the sandbox init
+   5. Time for the sandbox init to start the application
+   6. Time for the kernel to shutdown after the sandbox exits
+   7. Time for QEMU to exit after the kernel issues ACPI poweroff
+   8. Time for libvirt to cleanup after QEMU exits.
+
+At the time of writing, the overall time required to run '/bin/false'
+is somewhere of the order of 3-4 seconds. Of this, most of the time
+is spent in step 3, with SeaBIOS copying the kenrel+initrd into the
+right place in guest memory. The next heaviest step is 1, due to the
+inefficiency in libvirt probing QEMU command line arguments.
+
+The kernel command line is tuned in an attempt to minimize the time
+it spends initializing hardware
+
+ - loglevel=0 - to supress all extraneous kernel output on the primary
+                console which would get mixed up with application data
+ - quiet      - as above
+ - edd=off    - stop probing for EDD support which does not exist for QEMU
+ - noreplace-smp - don't attempt to switch SMP alternatives, which wastes
+                   many cycles
+ - pci=noearly - minimize time spent initializing the PCI bus
+ - cgroup_disable=memory - don't waste time on unsed subsystem
+
+Still todo
+
+  - Disable IDE controller probing (or disable PIIX IDE in QEMU ?)
+  - Disable USB controller probing (or disable PIIX USB in QEMU ?)
