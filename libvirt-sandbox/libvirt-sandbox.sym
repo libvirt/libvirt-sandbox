@@ -16,6 +16,33 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_mount_new;
 	gvir_sandbox_config_mount_set_root;
 
+	gvir_sandbox_config_network_add_address;
+	gvir_sandbox_config_network_add_route;
+	gvir_sandbox_config_network_get_type;
+	gvir_sandbox_config_network_get_dhcp;
+	gvir_sandbox_config_network_get_routes;
+	gvir_sandbox_config_network_get_addresses;
+	gvir_sandbox_config_network_new;
+	gvir_sandbox_config_network_set_dhcp;
+
+	gvir_sandbox_config_network_address_get_type;
+	gvir_sandbox_config_network_address_get_broadcast;
+	gvir_sandbox_config_network_address_get_primary;
+	gvir_sandbox_config_network_address_get_network;
+	gvir_sandbox_config_network_address_new;
+	gvir_sandbox_config_network_address_set_broadcast;
+	gvir_sandbox_config_network_address_set_primary;
+	gvir_sandbox_config_network_address_set_network;
+
+	gvir_sandbox_config_network_route_get_type;
+	gvir_sandbox_config_network_route_get_netmask;
+	gvir_sandbox_config_network_route_get_gateway;
+	gvir_sandbox_config_network_route_get_target;
+	gvir_sandbox_config_network_route_new;
+	gvir_sandbox_config_network_route_set_netmask;
+	gvir_sandbox_config_network_route_set_gateway;
+	gvir_sandbox_config_network_route_set_target;
+
 	gvir_sandbox_config_add_mount;
 	gvir_sandbox_config_add_mount_strv;
 	gvir_sandbox_config_add_include_strv;

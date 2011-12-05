@@ -53,6 +53,7 @@ struct _GVirSandboxConfigPrivate
     gchar *username;
     gchar *homedir;
 
+    GList *networks;
     GList *mounts;
 
     gchar **command;
@@ -218,6 +219,9 @@ static void gvir_sandbox_config_finalize(GObject *object)
 
     g_list_foreach(priv->mounts, (GFunc)g_object_unref, NULL);
     g_list_free(priv->mounts);
+
+    g_list_foreach(priv->networks, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->networks);
 
     g_strfreev(priv->command);
 
@@ -624,6 +628,23 @@ const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config)
     return priv->homedir;
 }
 
+
+
+/**
+ * gvir_sandbox_config_add_network:
+ * @config: (transfer none): the sandbox config
+ * @network: (transfer none): the network configuration
+ *
+ * Adds a new network connection to the sandbox
+ */
+void gvir_sandbox_config_add_network(GVirSandboxConfig *config,
+                                     GVirSandboxConfigNetwork *network)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+
+    g_object_ref(network);
+    priv->networks = g_list_append(priv->networks, network);
+}
 
 
 /**

@@ -84,6 +84,9 @@ const gchar *gvir_sandbox_config_get_username(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_homedir(GVirSandboxConfig *config, const gchar *homedir);
 const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_add_network(GVirSandboxConfig *config,
+                                     GVirSandboxConfigNetwork *network);
+
 void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
                                    GVirSandboxConfigMount *mnt);
 GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config);

@@ -53,6 +53,9 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-graphical.h \
+			libvirt-sandbox-config-network.h \
+			libvirt-sandbox-config-network-address.h \
+			libvirt-sandbox-config-network-route.h \
 			libvirt-sandbox-config-mount.h \
 			libvirt-sandbox-config-initrd.h \
 			libvirt-sandbox-cleaner.h \
@@ -67,6 +70,9 @@ SANDBOX_HEADER_FILES = \
 SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-graphical.c \
+			libvirt-sandbox-config-network.c \
+			libvirt-sandbox-config-network-address.c \
+			libvirt-sandbox-config-network-route.c \
 			libvirt-sandbox-config-mount.c \
 			libvirt-sandbox-config-initrd.c \
 			libvirt-sandbox-cleaner.c \

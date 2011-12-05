@@ -1,6 +1,6 @@
 /*
  * libvirt-sandbox.h: libvirt sandbox integration
- *
+[ *
  * Copyright (C) 2010 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,6 +28,9 @@
 
 /* Local includes */
 #include <libvirt-sandbox/libvirt-sandbox-config-mount.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-network-address.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-network.h>
 #include <libvirt-sandbox/libvirt-sandbox-config.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-graphical.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-initrd.h>
