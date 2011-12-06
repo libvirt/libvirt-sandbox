@@ -2,6 +2,8 @@
 EXTRA_DIST = libvirt-sandbox.sym
 CLEANFILES =
 
+SUBDIRS = tests
+
 libexec_PROGRAMS = \
 	libvirt-sandbox-init-common \
 	libvirt-sandbox-init-qemu \

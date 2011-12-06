@@ -88,6 +88,12 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
+                                                GKeyFile *file,
+                                                GError **error);
+static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
+                                            GKeyFile *file);
+
 #define GVIR_SANDBOX_CONFIG_ERROR gvir_sandbox_config_error_quark()
 
 static GQuark
@@ -241,6 +247,9 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
     object_class->finalize = gvir_sandbox_config_finalize;
     object_class->get_property = gvir_sandbox_config_get_property;
     object_class->set_property = gvir_sandbox_config_set_property;
+
+    klass->load_config = gvir_sandbox_config_load_config;
+    klass->save_config = gvir_sandbox_config_save_config;
 
     g_object_class_install_property(object_class,
                                     PROP_NAME,
@@ -992,4 +1001,531 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
         }
     }
     return TRUE;
+}
+
+
+static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *file,
+                                                                     guint i,
+                                                                     GError **error)
+{
+    GVirSandboxConfigMount *config = NULL;
+    gchar *key = NULL;
+    gchar *str = NULL;
+    gchar *str2 = NULL;
+    guint j;
+    GError *e = NULL;
+
+    key = g_strdup_printf("mount.%u", i);
+    if ((str = g_key_file_get_string(file, key, "target", &e)) == NULL) {
+        if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+            g_error_free(e);
+            return NULL;
+        }
+        g_error_free(e);
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", "Missing mount target in config file");
+        g_free(str);
+        goto error;
+    }
+    config = gvir_sandbox_config_mount_new(str);
+    g_free(str);
+
+    if ((str = g_key_file_get_string(file, key, "root", NULL)) == NULL) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", "Missing mount root in config file");
+        g_free(str);
+        goto error;
+    }
+    gvir_sandbox_config_mount_set_root(config, str);
+    g_free(str);
+
+    for (j = 0 ; j < 1024 ; j++) {
+        key = g_strdup_printf("mount.%u.include.%u", i, j);
+
+        if ((str = g_key_file_get_string(file, key, "src", &e)) == NULL) {
+            if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+                g_error_free(e);
+                e = NULL;
+                break;
+            }
+            g_propagate_error(error, e);
+            goto error;
+        }
+
+        str2 = g_key_file_get_string(file, key, "dst", NULL);
+        gvir_sandbox_config_mount_add_include(config, str, str2);
+
+        g_free(key);
+    }
+
+
+    return config;
+
+error:
+    g_free(key);
+    g_object_unref(config);
+    return NULL;
+}
+
+
+static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFile *file,
+                                                                         guint i,
+                                                                         GError **error)
+{
+    GVirSandboxConfigNetwork *config = NULL;
+    gchar *key = NULL;
+    gchar *str1 = NULL;
+    gchar *str2 = NULL;
+    gchar *str3 = NULL;
+    gboolean b;
+    guint j;
+    GError *e = NULL;
+
+    key = g_strdup_printf("network.%u", i);
+    b = g_key_file_get_boolean(file, key, "dhcp", &e);
+    if (e) {
+        if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+            g_error_free(e);
+            return NULL;
+        }
+        g_error_free(e);
+        e = NULL;
+        b = TRUE;
+    }
+    config = gvir_sandbox_config_network_new();
+    gvir_sandbox_config_network_set_dhcp(config, b);
+
+    g_free(key);
+    key = NULL;
+
+    for (j = 0 ; j < 100 ; j++) {
+        GInetAddress *primary = NULL;
+        GInetAddress *broadcast = NULL;
+        GInetAddress *netmask = NULL;
+        GVirSandboxConfigNetworkAddress *addr;
+        key = g_strdup_printf("network.%u.address.%u", i, j);
+
+        if ((str1 = g_key_file_get_string(file, key, "primary", &e)) == NULL) {
+            if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+                g_error_free(e);
+                e = NULL;
+                break;
+            }
+            g_propagate_error(error, e);
+            goto error;
+        }
+
+        str2 = g_key_file_get_string(file, key, "broadcast", NULL);
+        str3 = g_key_file_get_string(file, key, "netmask", NULL);
+
+        primary = g_inet_address_new_from_string(str1);
+        if (str2)
+            broadcast = g_inet_address_new_from_string(str2);
+        if (str3)
+            netmask = g_inet_address_new_from_string(str3);
+
+        addr = gvir_sandbox_config_network_address_new(primary,
+                                                       broadcast,
+                                                       netmask);
+        gvir_sandbox_config_network_add_address(config, addr);
+
+        g_free(str1);
+        g_free(str2);
+        g_free(str3);
+        g_free(key);
+        key = NULL;
+    }
+
+
+    for (j = 0 ; j < 100 ; j++) {
+        GInetAddress *netmask = NULL;
+        GInetAddress *target = NULL;
+        GVirSandboxConfigNetworkRoute *route;
+        key = g_strdup_printf("network.%u.address.%u", i, j);
+
+        if ((str1 = g_key_file_get_string(file, key, "netmask", &e)) == NULL) {
+            if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+                g_error_free(e);
+                e = NULL;
+                break;
+            }
+            g_propagate_error(error, e);
+            goto error;
+        }
+
+        str2 = g_key_file_get_string(file, key, "gateway", NULL);
+        str3 = g_key_file_get_string(file, key, "target", NULL);
+
+        netmask = g_inet_address_new_from_string(str1);
+        if (str3)
+            target = g_inet_address_new_from_string(str3);
+
+        route = gvir_sandbox_config_network_route_new(netmask, str2, target);
+        gvir_sandbox_config_network_add_route(config, route);
+
+        g_free(str1);
+        g_free(str2);
+        g_free(str3);
+        g_free(key);
+        key = NULL;
+    }
+
+
+    return config;
+
+error:
+    g_free(key);
+    g_object_unref(config);
+    return NULL;
+}
+
+
+static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
+                                                GKeyFile *file,
+                                                GError **error)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    gchar *str;
+    gboolean b;
+    guint64 u;
+    guint i;
+    GError *e = NULL;
+    gboolean ret = FALSE;
+    gchar **argv = g_new0(gchar *, 1);
+    gsize argc = 0;
+    argv[0] = NULL;
+
+    if ((str = g_key_file_get_string(file, "core", "name", NULL)) != NULL) {
+        g_free(priv->name);
+        priv->name = str;
+    }
+    if ((str = g_key_file_get_string(file, "core", "root", NULL)) != NULL) {
+        g_free(priv->root);
+        priv->root = str;
+    }
+    if ((str = g_key_file_get_string(file, "core", "arch", NULL)) != NULL) {
+        g_free(priv->arch);
+        priv->arch = str;
+    }
+    b = g_key_file_get_boolean(file, "core", "tty", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->tty = b;
+    }
+
+    u = g_key_file_get_uint64(file, "identity", "uid", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->uid = u;
+    }
+    u = g_key_file_get_uint64(file, "identity", "gid", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->gid = u;
+    }
+
+    if ((str = g_key_file_get_string(file, "identity", "username", NULL)) != NULL) {
+        g_free(priv->username);
+        priv->username = str;
+    }
+    if ((str = g_key_file_get_string(file, "identity", "homedir", NULL)) != NULL) {
+        g_free(priv->homedir);
+        priv->homedir = str;
+    }
+
+    for (i = 0 ; i < 1024 ; i++) {
+        gchar *key = g_strdup_printf("argv.%u", i);
+        if ((str = g_key_file_get_string(file, "command", key, &e)) == NULL) {
+            if (e->code == G_KEY_FILE_ERROR_KEY_NOT_FOUND) {
+                g_error_free(e);
+                e = NULL;
+                break;
+            }
+            g_propagate_error(error, e);
+            goto cleanup;
+        }
+
+        argv = g_renew(char *, argv, argc+2);
+        argv[argc++] = str;
+        argv[argc] = NULL;
+    }
+    g_strfreev(priv->command);
+    priv->command = argv;
+    argv = NULL;
+
+    for (i = 0 ; i < 100 ; i++) {
+        GVirSandboxConfigNetwork *network;
+        if (!(network = gvir_sandbox_config_load_config_network(file, i, error)) &&
+            *error)
+            goto cleanup;
+        if (network)
+            priv->networks = g_list_append(priv->networks, network);
+    }
+
+
+    for (i = 0 ; i < 1024 ; i++) {
+        GVirSandboxConfigMount *mount;
+        if (!(mount = gvir_sandbox_config_load_config_mount(file, i, error)) &&
+            *error)
+            goto cleanup;
+        if (mount)
+            priv->mounts = g_list_append(priv->mounts, mount);
+    }
+
+
+    g_free(priv->secLabel);
+    if ((str = g_key_file_get_string(file, "security", "label", NULL)) != NULL)
+        priv->secLabel = str;
+    else
+        priv->secLabel = NULL;
+
+    b = g_key_file_get_boolean(file, "security", "dynamic", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->secDynamic = b;
+    }
+
+    ret = TRUE;
+cleanup:
+    if (argv)
+        g_strfreev(argv);
+    return ret;
+}
+
+
+static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config,
+                                                  GKeyFile *file,
+                                                  guint i)
+{
+    gchar *key;
+    GHashTable *includes;
+    GHashTableIter iter;
+    uint j;
+    gpointer keyptr, valptr;
+
+    key = g_strdup_printf("mount.%u", i);
+    g_key_file_set_string(file, key, "target", gvir_sandbox_config_mount_get_target(config));
+    g_key_file_set_string(file, key, "root", gvir_sandbox_config_mount_get_root(config));
+    g_free(key);
+
+    includes = gvir_sandbox_config_mount_get_includes(config);
+
+    j = 0;
+    g_hash_table_iter_init(&iter, includes);
+    while (g_hash_table_iter_next(&iter, &keyptr, &valptr)) {
+        const gchar *dst = keyptr;
+        const gchar *src = valptr;
+
+        key = g_strdup_printf("mount.%u.include.%u", i, j);
+        g_key_file_set_string(file, key, "dst", dst);
+        if (src)
+            g_key_file_set_string(file, key, "src", src);
+        g_free(key);
+
+        j++;
+    }
+}
+
+
+static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *config,
+                                                    GKeyFile *file,
+                                                    guint i)
+{
+    gchar *key;
+    uint j, k;
+    GList *tmp, *addrs, *routes;
+
+    j = 0;
+    addrs = tmp = gvir_sandbox_config_network_get_addresses(config);
+    while (tmp) {
+        GVirSandboxConfigNetworkAddress *addr = tmp->data;
+        GInetAddress *inet;
+        gchar *str;
+
+        key = g_strdup_printf("network.%u.address.%u", i, j);
+
+        inet = gvir_sandbox_config_network_address_get_primary(addr);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "primary", str);
+        g_free(str);
+
+        inet = gvir_sandbox_config_network_address_get_broadcast(addr);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "broadcast", str);
+        g_free(str);
+
+        inet = gvir_sandbox_config_network_address_get_netmask(addr);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "netmask", str);
+        g_free(str);
+
+        g_free(key);
+
+        g_object_unref(addr);
+
+        tmp = tmp->next;
+        j++;
+    }
+    g_list_free(addrs);
+
+
+    k = 0;
+    routes = tmp = gvir_sandbox_config_network_get_routes(config);
+    while (tmp) {
+        GVirSandboxConfigNetworkRoute *route = tmp->data;
+        GInetAddress *inet;
+        gchar *str;
+
+        key = g_strdup_printf("network.%u.route.%u", i, k);
+
+        inet = gvir_sandbox_config_network_route_get_netmask(route);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "netmask", str);
+        g_free(str);
+
+        g_key_file_set_string(file, key, "gateway",
+                              gvir_sandbox_config_network_route_get_gateway(route));
+
+        inet = gvir_sandbox_config_network_route_get_target(route);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "target", str);
+        g_free(str);
+
+        g_free(key);
+
+        g_object_unref(route);
+
+        tmp = tmp->next;
+        k++;
+    }
+    g_list_free(routes);
+
+
+    key = g_strdup_printf("network.%u", i);
+    g_key_file_set_boolean(file, key, "dhcp", gvir_sandbox_config_network_get_dhcp(config));
+    g_key_file_set_uint64(file, key, "addresses", j);
+    g_key_file_set_uint64(file, key, "routes", k);
+    g_free(key);
+}
+
+
+
+static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
+                                            GKeyFile *file)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    guint argc, i;
+    GList *tmp;
+
+    g_key_file_set_string(file, "core", "name", priv->name);
+    g_key_file_set_string(file, "core", "root", priv->root);
+    g_key_file_set_string(file, "core", "arch", priv->arch);
+    g_key_file_set_boolean(file, "core", "tty", priv->tty);
+
+    g_key_file_set_uint64(file, "identity", "uid", priv->uid);
+    g_key_file_set_uint64(file, "identity", "gid", priv->gid);
+    g_key_file_set_string(file, "identity", "username", priv->username);
+    g_key_file_set_string(file, "identity", "homedir", priv->homedir);
+
+    argc = g_strv_length(priv->command);
+    for (i = 0 ; i < argc ; i++) {
+        gchar *key = g_strdup_printf("argv.%u", i);
+        g_key_file_set_string(file, "command", key, priv->command[i]);
+        g_free(key);
+    }
+
+    i = 0;
+    tmp = priv->mounts;
+    while (tmp) {
+        gvir_sandbox_config_save_config_mount(tmp->data,
+                                              file,
+                                              i);
+
+        tmp = tmp->next;
+        i++;
+    }
+
+    i = 0;
+    tmp = priv->networks;
+    while (tmp) {
+        gvir_sandbox_config_save_config_network(tmp->data,
+                                                file,
+                                                i);
+
+        tmp = tmp->next;
+        i++;
+    }
+
+    if (priv->secLabel)
+        g_key_file_set_string(file, "security", "label", priv->secLabel);
+    g_key_file_set_boolean(file, "security", "dynamic", priv->secDynamic);
+}
+
+gboolean gvir_sandbox_config_load_path(GVirSandboxConfig *config,
+                                       const gchar *path,
+                                       GError **error)
+{
+    GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+    GKeyFile *file = g_key_file_new();
+    gboolean ret = FALSE;
+
+    if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, error))
+        goto cleanup;
+
+    if (!(klass->load_config(config, file, error)))
+        goto cleanup;
+
+    ret = TRUE;
+cleanup:
+    g_key_file_free(file);
+    return ret;
+}
+
+
+gboolean gvir_sandbox_config_save_path(GVirSandboxConfig *config,
+                                       const gchar *path,
+                                       GError **error)
+{
+    GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+    GKeyFile *file = g_key_file_new();
+    gboolean ret = FALSE;
+    gchar *data = NULL;
+    GFile *f = g_file_new_for_path(path);
+    GOutputStream *os = NULL;
+    gsize len;
+
+    klass->save_config(config, file);
+
+    if (!(data = g_key_file_to_data(file, &len, error)))
+        goto cleanup;
+
+    if (!(os = G_OUTPUT_STREAM(g_file_create(f, G_FILE_CREATE_PRIVATE, NULL, error))))
+        goto cleanup;
+
+    if (!g_output_stream_write_all(os, data, len, NULL, NULL, error))
+        goto unlink;
+
+    if (!g_output_stream_close(os, NULL, error))
+        goto unlink;
+
+    ret = TRUE;
+cleanup:
+    g_free(data);
+    g_key_file_free(file);
+    g_object_unref(f);
+    if (os)
+        g_object_unref(os);
+    return ret;
+
+unlink:
+    g_file_delete(f, NULL, NULL);
+    goto cleanup;
 }

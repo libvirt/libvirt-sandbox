@@ -55,11 +55,23 @@ struct _GVirSandboxConfigClass
 {
     GObjectClass parent_class;
 
+    gboolean (*load_config)(GVirSandboxConfig *config,
+                            GKeyFile *file,
+                            GError **error);
+    void (*save_config)(GVirSandboxConfig *config,
+                        GKeyFile *file);
 };
 
 GType gvir_sandbox_config_get_type(void);
 
 GVirSandboxConfig *gvir_sandbox_config_new(const gchar *name);
+
+gboolean gvir_sandbox_config_load_path(GVirSandboxConfig *config,
+                                       const gchar *path,
+                                       GError **error);
+gboolean gvir_sandbox_config_save_path(GVirSandboxConfig *config,
+                                       const gchar *path,
+                                       GError **error);
 
 const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config);
 
