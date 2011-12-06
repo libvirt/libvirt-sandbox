@@ -722,12 +722,14 @@ void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
 {
     gsize i = 0;
     while (mounts && mounts[i]) {
-        const gchar *guest = mounts[i];
+        gchar *guest = NULL;
         const gchar *host = NULL;
         GVirSandboxConfigMount *mnt;
         gchar *tmp;
 
-        if ((tmp = strchr(mounts[i], '=')) != NULL) {
+        guest = g_strdup(mounts[i]);
+
+        if ((tmp = strchr(guest, '=')) != NULL) {
             *tmp = '\0';
             host = tmp + 1;
         }
@@ -737,12 +739,21 @@ void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
 
         gvir_sandbox_config_add_mount(config, mnt);
         g_object_unref(mnt);
-
+        g_free(guest);
         i++;
     }
 }
 
 
+/**
+ * gvir_sandbox_config_set_includes:
+ * @config: (transfer none): the sandbox config
+ * @includes: (transfer none)(array zero-terminated=1): the list of includes
+ *
+ * Parses @includes whose elements are in the format
+ * GUEST-TARGET=ROOT-PATH. If ROOT_PATH is omitted,
+ * then it is assumed to be the same as GUEST-TARGET
+ */
 gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
                                               gchar **includes,
                                               GError **error)
@@ -751,24 +762,27 @@ gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
     gsize i = 0;
 
     while (includes && includes[i]) {
-        const gchar *guest = NULL;
-        const gchar *host = includes[i];
+        const gchar *host;
+        gchar *guest;
+        const gchar *relguest;
         GVirSandboxConfigMount *mnt = NULL;
         GList *mnts = NULL;
         gchar *tmp;
 
-        if ((tmp = strchr(includes[i], '=')) != NULL) {
+        guest = g_strdup(includes[i]);
+        if ((tmp = strchr(guest, '=')) != NULL) {
             *tmp = '\0';
-            guest = tmp + 1;
+            host = tmp + 1;
+        } else {
+            host = guest;
         }
 
         mnts = priv->mounts;
         while (mnts) {
             mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
             const gchar *target = gvir_sandbox_config_mount_get_target(mnt);
-            if (g_str_has_prefix(host, target)) {
-                if (!guest)
-                    guest = host + strlen(target);
+            if (g_str_has_prefix(guest, target)) {
+                relguest = guest + strlen(target);
                 break;
             }
             mnt = NULL;
@@ -776,11 +790,13 @@ gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
         }
         if (!mnt) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "No mount with a prefix under %s", host);
+                        "No mount with a prefix under %s", guest);
+            g_free(guest);
             return FALSE;
         }
 
-        gvir_sandbox_config_mount_add_include(mnt, host, guest);
+        gvir_sandbox_config_mount_add_include(mnt, host, relguest);
+        g_free(guest);
 
         i++;
     }
@@ -809,24 +825,26 @@ gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
                                                  NULL,
                                                  NULL,
                                                  error))) {
-        const gchar *guest = NULL;
-        const gchar *host = line;
+        const gchar *host;
+        gchar *guest;
         GVirSandboxConfigMount *mnt = NULL;
         GList *mnts = NULL;
         gchar *tmp;
 
-        if ((tmp = strchr(line, '=')) != NULL) {
+        guest = g_strdup(line);
+        if ((tmp = strchr(guest, '=')) != NULL) {
             *tmp = '\0';
-            guest = tmp + 1;
+            host = tmp + 1;
+        } else {
+            host = guest;
         }
 
         mnts = priv->mounts;
         while (mnts) {
             mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
             const gchar *target = gvir_sandbox_config_mount_get_target(mnt);
-            if (g_str_has_prefix(host, target)) {
-                if (!guest)
-                    guest = host + strlen(target);
+            if (g_str_has_prefix(guest, target)) {
+                guest = guest + strlen(target);
                 break;
             }
             mnt = NULL;
@@ -834,11 +852,14 @@ gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
         }
         if (!mnt) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "No mount with a prefix under %s", host);
-            goto cleanup;
+                        "No mount with a prefix under %s", guest);
+            g_free(guest);
+            return FALSE;
         }
 
         gvir_sandbox_config_mount_add_include(mnt, host, guest);
+        g_free(guest);
+        g_free(line);
     }
 
     if (error && *error)
