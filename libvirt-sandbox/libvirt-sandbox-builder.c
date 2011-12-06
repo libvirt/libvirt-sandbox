@@ -303,13 +303,16 @@ static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *build
                                                        GVirConfigDomain *domain G_GNUC_UNUSED,
                                                        GError **error G_GNUC_UNUSED)
 {
-    GVirConfigDomainConsolePty *con;
+    GVirConfigDomainConsole *con;
+    GVirConfigDomainChardevSourcePty *src;
 
-    con = gvir_config_domain_console_pty_new();
+    src = gvir_config_domain_chardev_source_pty_new();
+    con = gvir_config_domain_console_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(con));
     g_object_unref(con);
-
     return TRUE;
 }
 
