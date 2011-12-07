@@ -617,8 +617,8 @@ gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
     g_object_get(priv->domain, "handle", &dom, NULL);
     g_object_get(priv->console, "handle", &st, NULL);
 
-    if (virDomainOpenConsole(dom, "serial0", st, 0) < 0) {
-        gvir_error_new(GVIR_SANDBOX_CONSOLE_ERROR, 0,
+    if (virDomainOpenConsole(dom, NULL, st, 0) < 0) {
+        gvir_set_error(error, GVIR_SANDBOX_CONSOLE_ERROR, 0,
                        "%s", "Cannot open console");
         goto cleanup;
     }
