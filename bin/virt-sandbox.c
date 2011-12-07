@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
         { "mount", 'M', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
-          N_("setup private mounts for /tmp & /home"), "GUEST-PATH=HOST-PATH" },
+          N_("pass host locations through to the guest"), "GUEST-PATH=HOST-PATH" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
     g_set_application_name(_("Libvirt Sandbox"));
 
-    context = g_option_context_new (_("- Virtual machine graphical console"));
+    context = g_option_context_new (_("- Libvirt Sandbox"));
     g_option_context_add_main_entries (context, options, NULL);
     g_option_context_parse (context, &argc, &argv, &error);
     if (error) {
@@ -121,24 +121,36 @@ int main(int argc, char **argv) {
     hv = gvir_connection_new(uri);
     if (!gvir_connection_open(hv, NULL, &error)) {
         g_printerr(_("Unable to open connection: %s\n"),
-                   error->message);
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
     }
 
     cfg = gvir_sandbox_config_new(name ? name : "sandbox");
     gvir_sandbox_config_set_command(cfg, cmdargs);
     if (mounts &&
-        !gvir_sandbox_config_add_host_mount_strv(cfg, mounts, &error))
+        !gvir_sandbox_config_add_host_mount_strv(cfg, mounts, &error)) {
+        g_printerr(_("Unable to parse host mounts: %s\n"),
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
+    }
     if (includes &&
-        !gvir_sandbox_config_add_host_include_strv(cfg, includes, &error))
+        !gvir_sandbox_config_add_host_include_strv(cfg, includes, &error)) {
+        g_printerr(_("Unable to parse includes: %s\n"),
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
+    }
     if (includefile &&
-        !gvir_sandbox_config_add_host_include_file(cfg, includefile, &error))
+        !gvir_sandbox_config_add_host_include_file(cfg, includefile, &error)) {
+        g_printerr(_("Unable to parse include file: %s\n"),
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
+    }
     if (security &&
-        !gvir_sandbox_config_set_security_opts(cfg, security, &error))
+        !gvir_sandbox_config_set_security_opts(cfg, security, &error)) {
+        g_printerr(_("Unable to parse security: %s\n"),
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
+    }
 
     if (isatty(STDIN_FILENO))
         gvir_sandbox_config_set_tty(cfg, TRUE);
@@ -147,7 +159,7 @@ int main(int argc, char **argv) {
 
     if (!gvir_sandbox_context_start(ctx, &error)) {
         g_printerr(_("Unable to start sandbox: %s\n"),
-                   error->message);
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
     }
 
@@ -156,7 +168,7 @@ int main(int argc, char **argv) {
 
     if (!(gvir_sandbox_console_attach_stdio(con, &error))) {
         g_printerr(_("Unable to attach sandbox console: %s\n"),
-                   error->message);
+                   error && error->message ? error->message : "unknown");
         goto cleanup;
     }
 

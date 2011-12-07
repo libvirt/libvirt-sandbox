@@ -1,5 +1,8 @@
 LIBVIRT_SANDBOX_0.0.1 {
    global:
+	gvir_sandbox_init;
+	gvir_sandbox_init_check;
+
 	gvir_sandbox_config_graphical_get_type;
 	gvir_sandbox_config_graphical_get_window_manager;
 	gvir_sandbox_config_graphical_get_window_size;
@@ -28,37 +31,43 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_network_address_get_type;
 	gvir_sandbox_config_network_address_get_broadcast;
 	gvir_sandbox_config_network_address_get_primary;
-	gvir_sandbox_config_network_address_get_network;
+	gvir_sandbox_config_network_address_get_prefix;
 	gvir_sandbox_config_network_address_new;
 	gvir_sandbox_config_network_address_set_broadcast;
 	gvir_sandbox_config_network_address_set_primary;
-	gvir_sandbox_config_network_address_set_network;
+	gvir_sandbox_config_network_address_set_prefix;
 
 	gvir_sandbox_config_network_route_get_type;
-	gvir_sandbox_config_network_route_get_netmask;
+	gvir_sandbox_config_network_route_get_prefix;
 	gvir_sandbox_config_network_route_get_gateway;
 	gvir_sandbox_config_network_route_get_target;
 	gvir_sandbox_config_network_route_new;
-	gvir_sandbox_config_network_route_set_netmask;
+	gvir_sandbox_config_network_route_set_prefix;
 	gvir_sandbox_config_network_route_set_gateway;
 	gvir_sandbox_config_network_route_set_target;
 
 	gvir_sandbox_config_add_bind_mount;
 	gvir_sandbox_config_add_bind_mount_strv;
-	gvir_sandbox_config_add_host_mount;
-	gvir_sandbox_config_add_host_mount_strv;
 	gvir_sandbox_config_add_host_include_strv;
 	gvir_sandbox_config_add_host_include_file;
+	gvir_sandbox_config_add_host_mount;
+	gvir_sandbox_config_add_host_mount_strv;
 	gvir_sandbox_config_add_network;
 	gvir_sandbox_config_add_network_strv;
 	gvir_sandbox_config_get_command;
+	gvir_sandbox_config_get_groupid;
+	gvir_sandbox_config_get_homedir;
+	gvir_sandbox_config_get_bind_mounts;
 	gvir_sandbox_config_get_host_mounts;
+	gvir_sandbox_config_get_networks;
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
 	gvir_sandbox_config_get_tty;
 	gvir_sandbox_config_get_security_level;
 	gvir_sandbox_config_get_security_type;
 	gvir_sandbox_config_get_type;
+	gvir_sandbox_config_get_username;
+	gvir_sandbox_config_get_userid;
 	gvir_sandbox_config_find_bind_mount;
 	gvir_sandbox_config_find_host_mount;
 	gvir_sandbox_config_has_networks;

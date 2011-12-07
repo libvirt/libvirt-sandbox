@@ -61,6 +61,11 @@ int main(int argc, char **argv)
         "/tmp/bar=/var/tmp/foo/bar",
         NULL,
     };
+    const gchar *networks[] = {
+        "dhcp",
+        "address=10.0.0.1/24%10.0.0.255",
+        "address=10.0.0.1/24%10.0.0.255;route=192.168.1.0/24%10.0.0.3",
+    };
     const gchar *command[] = {
         "/bin/ls", "-l", "--color", NULL,
     };
@@ -83,8 +88,13 @@ int main(int argc, char **argv)
     gvir_sandbox_config_set_username(cfg1, "superdevil");
     gvir_sandbox_config_set_homedir(cfg1, "/var/run/hell");
 
-    gvir_sandbox_config_add_mount_strv(cfg1, (gchar**)mounts);
+    if (!gvir_sandbox_config_add_mount_strv(cfg1, (gchar**)mounts, &err))
+        goto cleanup;
+
     if (!gvir_sandbox_config_add_include_strv(cfg1, (gchar**)includes, &err))
+        goto cleanup;
+
+    if (!gvir_sandbox_config_add_network_strv(cfg1, (gchar**)networks, &err))
         goto cleanup;
 
     gvir_sandbox_config_set_security_dynamic(cfg1, FALSE);

@@ -22,10 +22,11 @@
 
 #include <config.h>
 
-#include <glib.h>
+#include <libvirt-sandbox/libvirt-sandbox.h>
+#include <glib/gi18n.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 #if HAVE_CAPNG
 #include <cap-ng.h>
 #endif
@@ -46,10 +47,19 @@
 
 #define MAGIC "xoqpuɐs"
 
-static int debug = 0;
+static gboolean debug = FALSE;
+static gboolean verbose = FALSE;
 static int sigwrite;
 
 #define ATTR_UNUSED __attribute__((__unused__))
+
+#define GVIR_SANDBOX_INIT_COMMON_ERROR gvir_sandbox_init_common_error_quark()
+
+static GQuark
+gvir_sandbox_init_common_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-init-common");
+}
 
 static void sig_child(int sig ATTR_UNUSED)
 {
@@ -357,69 +367,212 @@ start_windowmanager(const char *path)
 }
 
 
-static int
-decode_command(const char *base64str, char ***retargv)
+static gboolean start_dhcp(const gchar *devname, GError **error)
 {
-    gsize len;
-    gchar *cmdstr;
-    int theargc = 0;
-    char **theargv = NULL;
-    char *end;
-    long long int ret;
-    char *cmd;
-    char **tmp;
+    const gchar *argv[] = { "/sbin/dhclient", "--no-pid", devname, NULL };
 
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-common: decoding '%s'\n", base64str);
+    if (!g_spawn_async(NULL, (gchar**)argv, NULL, 0,
+                       NULL, NULL, NULL, error))
+        return FALSE;
 
-
-    if (!(cmdstr = (char*)g_base64_decode(base64str, &len))) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot decode %s\n",
-                __func__, base64str);
-        return -1;
-    }
-
-    ret = strtoll(cmdstr, &end, 10);
-    if ((ret == LLONG_MIN || ret == LLONG_MAX) && errno == ERANGE) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot read length of %s\n",
-                __func__, base64str);
-        return -1;
-    }
-
-    cmd = end + 1;
-    do {
-        tmp = realloc(theargv, sizeof(char *) * theargc+1);
-        if (!tmp) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: %s\n",
-                    __func__, strerror(errno));
-            return -1;
-        }
-        theargv = tmp;
-        if (!(theargv[theargc] = strdup(cmd))) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: %s\n",
-                    __func__, strerror(errno));
-            return -1;
-        }
-
-        cmd += strlen(cmd) + 1;
-        theargc++;
-    } while (cmd < (end + 1 + ret));
-
-    tmp = realloc(theargv, sizeof(char *) * theargc+1);
-    if (!tmp) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-    theargv = tmp;
-    theargv[theargc++] = NULL;
-
-    *retargv = theargv;
-    return 0;
+    return TRUE;
 }
 
 
-static int change_user(const char *user, uid_t uid, gid_t gid, const char *home)
+static gboolean add_address(const gchar *devname,
+                            GVirSandboxConfigNetworkAddress *config,
+                            GError **error)
+{
+    GInetAddress *addr = gvir_sandbox_config_network_address_get_primary(config);
+    guint prefix = gvir_sandbox_config_network_address_get_prefix(config);
+    GInetAddress *bcast = gvir_sandbox_config_network_address_get_broadcast(config);
+    gchar *addrstr = g_inet_address_to_string(addr);
+    gchar *fulladdrstr = g_strdup_printf("%s/%u", addrstr, prefix);
+    gchar *bcaststr = g_inet_address_to_string(bcast);
+    gboolean ret = FALSE;
+
+    const gchar *argv1[] = {
+        "/sbin/ip", "addr",
+        "add", fulladdrstr,
+        "broadcast", bcaststr,
+        "dev", devname,
+        NULL
+    };
+    const gchar *argv2[] = {
+        "/sbin/ip", "link",
+        "set", devname, "up",
+        NULL
+    };
+
+    if (!g_spawn_sync(NULL, (gchar**)argv1, NULL, 0,
+                      NULL, NULL, NULL, NULL, NULL, error))
+        goto cleanup;
+    if (!g_spawn_sync(NULL, (gchar**)argv2, NULL, 0,
+                      NULL, NULL, NULL, NULL, NULL, error))
+        goto cleanup;
+
+    ret = TRUE;
+cleanup:
+    g_free(addrstr);
+    g_free(bcaststr);
+    g_free(fulladdrstr);
+    return ret;
+}
+
+
+static gboolean add_route(const gchar *devname,
+                          GVirSandboxConfigNetworkRoute *config,
+                          GError **error)
+{
+    guint prefix = gvir_sandbox_config_network_route_get_prefix(config);
+    GInetAddress *gateway = gvir_sandbox_config_network_route_get_gateway(config);
+    GInetAddress *target = gvir_sandbox_config_network_route_get_target(config);
+    gchar *targetstr = g_inet_address_to_string(target);
+    gchar *fulltargetstr = g_strdup_printf("%s/%u", targetstr, prefix);
+    gchar *gatewaystr = g_inet_address_to_string(gateway);
+    gboolean ret = FALSE;
+
+    const gchar *argv[] = {
+        "/sbin/ip", "route",
+        "add", fulltargetstr,
+        "via", gatewaystr,
+        "dev", devname,
+        NULL
+    };
+
+    if (!g_spawn_sync(NULL, (gchar**)argv, NULL, 0,
+                      NULL, NULL, NULL, NULL, NULL, error))
+        goto cleanup;
+
+    ret = TRUE;
+cleanup:
+    g_free(fulltargetstr);
+    g_free(gatewaystr);
+    g_free(targetstr);
+    return ret;
+}
+
+
+static gboolean setup_network_device(GVirSandboxConfigNetwork *config,
+                                     const gchar *devname,
+                                     GError **error)
+{
+    GList *addrs = NULL;
+    GList *routes = NULL;
+    GList *tmp;
+    gboolean ret = FALSE;
+
+    if (gvir_sandbox_config_network_get_dhcp(config)) {
+        if (!start_dhcp(devname, error))
+            goto cleanup;
+    } else {
+        tmp = addrs = gvir_sandbox_config_network_get_addresses(config);
+        while (tmp) {
+            GVirSandboxConfigNetworkAddress *addr = tmp->data;
+
+            if (!add_address(devname, addr, error))
+                goto cleanup;
+
+            tmp = tmp->next;
+        }
+
+        tmp = routes = gvir_sandbox_config_network_get_routes(config);
+        while (tmp) {
+            GVirSandboxConfigNetworkRoute *route = tmp->data;
+
+            if (!add_route(devname, route, error))
+                goto cleanup;
+
+            tmp = tmp->next;
+        }
+    }
+
+    ret = TRUE;
+
+cleanup:
+    g_list_foreach(addrs, (GFunc)g_object_unref, NULL);
+    g_list_free(addrs);
+    g_list_foreach(routes, (GFunc)g_object_unref, NULL);
+    g_list_free(routes);
+    return ret;
+}
+
+
+
+static gboolean setup_network(GVirSandboxConfig *config, GError **error)
+{
+    int i = 0;
+    GList *nets, *tmp;
+    gchar *devname = NULL;
+    gboolean ret = FALSE;
+
+    nets = tmp = gvir_sandbox_config_get_networks(config);
+
+    while (tmp) {
+        GVirSandboxConfigNetwork *netconfig = tmp->data;
+
+        g_free(devname);
+        devname = g_strdup_printf("eth%d", i++);
+        if (!setup_network_device(netconfig, devname, error))
+            goto cleanup;
+
+        tmp = tmp->next;
+    }
+
+    ret = TRUE;
+
+cleanup:
+    g_free(devname);
+    g_list_foreach(nets, (GFunc)g_object_unref, NULL);
+    g_list_free(nets);
+    return ret;
+}
+
+
+static gboolean setup_bind_mount(GVirSandboxConfigMount *config, GError **error)
+{
+    const gchar *src = gvir_sandbox_config_mount_get_root(config);
+    const gchar *tgt = gvir_sandbox_config_mount_get_target(config);
+
+    if (mount(src, tgt, NULL, MS_BIND, NULL) < 0) {
+        g_set_error(error, GVIR_SANDBOX_INIT_COMMON_ERROR, 0,
+                    "Cannot bind %s to %s", src, tgt);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+static gboolean setup_bind_mounts(GVirSandboxConfig *config, GError **error)
+{
+    GList *mounts, *tmp;
+    gboolean ret = FALSE;
+
+    mounts = tmp = gvir_sandbox_config_get_bind_mounts(config);
+
+    while (tmp) {
+        GVirSandboxConfigMount *mntconfig = tmp->data;
+
+        if (!setup_bind_mount(mntconfig, error))
+            goto cleanup;
+
+        tmp = tmp->next;
+    }
+
+    ret = TRUE;
+
+cleanup:
+    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
+    g_list_free(mounts);
+    return ret;
+}
+
+
+static int change_user(const gchar *user,
+                       uid_t uid,
+                       gid_t gid,
+                       const gchar *home)
 {
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: changing user %s %d %d %s\n",
@@ -470,7 +623,7 @@ static int change_user(const char *user, uid_t uid, gid_t gid, const char *home)
     return 0;
 }
 
-static int run_command(int interactive, char **argv,
+static int run_command(gboolean interactive, gchar **argv,
                        int *appin, int *appout)
 {
     int pid;
@@ -832,101 +985,73 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
     return 0;
 }
 
+static void libvirt_sandbox_version(void)
+{
+        g_print(_("%s version %s\n"), PACKAGE, VERSION);
+
+        exit(EXIT_SUCCESS);
+}
+
 
 int main(int argc, char **argv) {
-    int interactive = 0;
     int xorg = 0;
-    const char *user = "nobody";
-    const char *wm = NULL;
+    gchar *wm = NULL;
     int pid;
     int err;
     int appin;
     int appout;
-    char **appargv;
-    const char *cmdarg;
-    int uid = 99;
-    int gid = 99;
-    const char *home = "/home/nobody";
-    long int tmp;
+    gchar *configfile = NULL;
     int sigpipe[2] = { -1, -1 };
+    GError *error = NULL;
+    GOptionContext *context;
+    GOptionEntry options[] = {
+        { "version", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          libvirt_sandbox_version, N_("display version information"), NULL },
+        { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
+          N_("display verbose information"), NULL },
+        { "debug", 'd', 0, G_OPTION_ARG_NONE, &debug,
+          N_("display debugging information"), NULL },
+        { "config", 'c', 0, G_OPTION_ARG_STRING, &configfile,
+          N_("config file path"), "URI"},
+        { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
+    };
+    const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
+    GVirSandboxConfig *config;
+    int ret = EXIT_FAILURE;
 
-    while (1) {
-        int option_index = 0;
-        int c;
-        static const struct option long_options[] = {
-            {"debug", no_argument, NULL,  'd' },
-            {"user",  required_argument, NULL,  'n' },
-            {"uid",  required_argument, NULL,  'u' },
-            {"gid",  required_argument, NULL,  'g' },
-            {"home",  required_argument, NULL,  'h' },
-            {"interactive", no_argument, NULL, 'i' },
-            {"xorg", no_argument, NULL, 'X' },
-            {"windowmanager",  required_argument, NULL,  'w' },
-            {NULL, 0, NULL,  0 }
-        };
-
-        c = getopt_long(argc, argv, "diXu:g:n:h:w:",
-                        long_options, &option_index);
-        if (c == -1)
-            break;
-
-        switch (c) {
-        case 'd':
-            debug = 1;
-            break;
-
-        case 'i':
-            interactive = 1;
-            break;
-
-        case 'X':
-            xorg = 1;
-            break;
-
-        case 'n':
-            user = optarg;
-            break;
-
-        case 'u':
-            tmp = strtoll(optarg, NULL, 10);
-            if ((tmp == LLONG_MIN || tmp == LLONG_MAX) && errno == ERANGE) {
-                fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot parse uid: %s\n",
-                        __func__, optarg);
-                exit(EXIT_FAILURE);
-            }
-            uid = (uid_t)tmp;
-            break;
-
-        case 'g':
-            tmp = strtoll(optarg, NULL, 10);
-            if ((tmp == LLONG_MIN || tmp == LLONG_MAX) && errno == ERANGE) {
-                fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot parse gid: %s\n",
-                        __func__, optarg);
-                exit(EXIT_FAILURE);
-            }
-            gid = (uid_t)tmp;
-            break;
-
-        case 'h':
-            home = optarg;
-            break;
-
-        case 'w':
-            wm = optarg;
-            break;
-
-        default:
-            fprintf(stderr, "Unexpected command line argument\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    if (optind == argc) {
-        fprintf(stderr, "Missing command to execute\n");
+    if (geteuid() != 0) {
+        g_printerr("%s: must be launched as root\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    cmdarg = argv[optind];
+    if (!gvir_sandbox_init_check(&argc, &argv, &error))
+        exit(EXIT_FAILURE);
+
+    g_set_application_name(_("Libvirt Sandbox Init Common"));
+
+    context = g_option_context_new (_("- Libvirt Sandbox"));
+    g_option_context_add_main_entries (context, options, NULL);
+    g_option_context_parse (context, &argc, &argv, &error);
+    if (error) {
+        g_printerr("%s: %s\n%s\n",
+                   argv[0],
+                   error->message,
+                   gettext(help_msg));
+        g_error_free(error);
+        goto cleanup;
+    }
+
+    g_option_context_free(context);
+
+    config = gvir_sandbox_config_new("sandbox");
+    if (!gvir_sandbox_config_load_path(config, configfile ? configfile : "/.config/sandbox.cfg", &error)) {
+        g_printerr("%s: Unable to load config %s: %s\n",
+                   argv[0],
+                   configfile ? configfile : "/.config/sandbox.cfg",
+                   error->message);
+        g_error_free(error);
+        goto cleanup;
+    }
 
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
     struct rlimit res = { 65536, 65536 };
@@ -944,7 +1069,16 @@ int main(int argc, char **argv) {
         start_xorg() < 0)
         exit(EXIT_FAILURE);
 
-    if (change_user(user, uid, gid, home) < 0)
+    if (!setup_network(config, &error))
+        goto error;
+
+    if (!setup_bind_mounts(config, &error))
+        goto error;
+
+    if (change_user(gvir_sandbox_config_get_username(config),
+                    gvir_sandbox_config_get_userid(config),
+                    gvir_sandbox_config_get_groupid(config),
+                    gvir_sandbox_config_get_homedir(config)) < 0)
         exit(EXIT_FAILURE);
 
     if (wm &&
@@ -960,10 +1094,8 @@ int main(int argc, char **argv) {
 
     signal(SIGCHLD, sig_child);
 
-    if (decode_command(cmdarg, &appargv) < 0)
-        exit(EXIT_FAILURE);
-
-    if ((pid = run_command(interactive, appargv,
+    if ((pid = run_command(gvir_sandbox_config_get_tty(config),
+                           gvir_sandbox_config_get_command(config),
                            &appin, &appout)) < 0)
         exit(EXIT_FAILURE);
 
@@ -981,5 +1113,19 @@ int main(int argc, char **argv) {
     if (sigpipe[1] != -1)
         close(sigpipe[1]);
 
-    exit(err < 0 ? EXIT_FAILURE : EXIT_SUCCESS);
+    if (err < 0)
+        goto cleanup;
+
+    ret = EXIT_SUCCESS;
+
+cleanup:
+    if (error)
+        g_error_free(error);
+    return ret;
+
+error:
+    g_printerr("%s: %s",
+               argv[0],
+               error && error->message ? error->message : "Unknown failure");
+    goto cleanup;
 }

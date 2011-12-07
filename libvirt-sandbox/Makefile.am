@@ -14,45 +14,56 @@ lib_LTLIBRARIES = libvirt-sandbox-1.0.la
 
 libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c
 libvirt_sandbox_init_common_CFLAGS = \
-	-DLIBEXECDIR="\"$(libexecdir)\"" \
-	$(COVERAGE_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(WARN_CFLAGS) \
-	$(NULL)
-libvirt_sandbox_init_common_LDFLAGS= -lutil \
-	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
-	$(GOBJECT_LIBS) \
-	$(WARN_CFLAGS) \
-	$(NULL)
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			$(COVERAGE_CFLAGS) \
+			-I$(top_srcdir) \
+			$(GIO_UNIX_CFLAGS) \
+			$(LIBVIRT_GLIB_CFLAGS) \
+			$(LIBVIRT_GOBJECT_CFLAGS) \
+			$(WARN_CFLAGS) \
+			$(NULL)
+libvirt_sandbox_init_common_LDFLAGS= \
+			libvirt-sandbox-1.0.la \
+			-lutil \
+			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+			$(GIO_UNIX_LIBS) \
+			$(LIBVIRT_GLIB_LIBS) \
+			$(LIBVIRT_GOBJECT_LIBS) \
+			$(WARN_CFLAGS) \
+			$(NULL)
 
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
 libvirt_sandbox_init_lxc_CFLAGS = \
-	-DLIBEXECDIR="\"$(libexecdir)\"" \
-	$(COVERAGE_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(WARN_CFLAGS) \
-	$(NULL)
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-I$(top_srcdir) \
+			$(GIO_UNIX_CFLAGS) \
+			$(LIBVIRT_GLIB_CFLAGS) \
+			$(LIBVIRT_GOBJECT_CFLAGS) \
+			$(WARN_CFLAGS) \
+			$(NULL)
 libvirt_sandbox_init_lxc_LDFLAGS = \
-	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
-	$(GOBJECT_LIBS) \
-	$(WARN_CFLAGS) \
-	$(NULL)
-
+			libvirt-sandbox-1.0.la \
+			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+			$(GIO_UNIX_LIBS) \
+			$(LIBVIRT_GLIB_LIBS) \
+			$(LIBVIRT_GOBJECT_LIBS) \
+			$(WARN_CFLAGS) \
+			$(NULL)
 
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
 libvirt_sandbox_init_qemu_CFLAGS = \
-	-DLIBEXECDIR="\"$(libexecdir)\"" \
-	$(COVERAGE_CFLAGS) \
-	$(WARN_CFLAGS) \
-	$(NULL)
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			$(WARN_CFLAGS) \
+			$(NULL)
 libvirt_sandbox_init_qemu_LDFLAGS = \
-	-all-static \
-	$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
-	$(WARN_CFLAGS) \
-	$(NULL)
+			-all-static \
+			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+			$(WARN_CFLAGS) \
+			$(NULL)
 
 SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
+			libvirt-sandbox-main.h \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-network.h \
@@ -70,6 +81,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-context-graphical.h \
 			$(NULL)
 SANDBOX_SOURCE_FILES = \
+			libvirt-sandbox-main.c \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-network.c \
@@ -102,12 +114,14 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
-			$(WARN_CFLAGS)
+			$(WARN_CFLAGS) \
+			$(NULL)
 libvirt_sandbox_1_0_la_LIBADD = \
 			$(GIO_UNIX_LIBS) \
 			$(LIBVIRT_GLIB_LIBS) \
 			$(LIBVIRT_GOBJECT_LIBS) \
-			$(CYGWIN_EXTRA_LIBADD)
+			$(CYGWIN_EXTRA_LIBADD) \
+			$(NULL)
 libvirt_sandbox_1_0_la_DEPENDENCIES = \
                         libvirt-sandbox.sym
 libvirt_sandbox_1_0_la_LDFLAGS = \

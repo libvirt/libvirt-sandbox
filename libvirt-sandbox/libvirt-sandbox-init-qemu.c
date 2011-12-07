@@ -40,7 +40,6 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <sys/reboot.h>
 #include <termios.h>
 
@@ -48,14 +47,6 @@
 
 static void print_uptime (void);
 static void insmod (const char *filename);
-static char *get_cmd_and_args(void);
-static char *get_user_name(void);
-static char *get_user_id(void);
-static char *get_group_id(void);
-static char *get_home_dir(void);
-static int get_isatty(void);
-static int get_xorg(void);
-static char *get_windowmanager(void);
 static void set_debug(void);
 
 static int debug = 0;
@@ -214,7 +205,6 @@ bind_file(const char *src, const char *dst, int mode)
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
-    int istty, xorg;
     set_debug();
 
     if (debug)
@@ -276,57 +266,6 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     mount_other("/selinux", "selinuxfs", 0755);
     mount_other("/dev/shm", "tmpfs", 01777);
 
-    char *cmdargs = get_cmd_and_args();
-    char *user = get_user_name();
-    char *uid = get_user_id();
-    char *gid = get_group_id();
-    char *home = get_home_dir();
-    char *wm = get_windowmanager();
-
-    /* Find all other virtio 9p PCI devices in sysfs */
-#define SYS_9PDRIVER "/sys/bus/virtio/drivers/9pnet_virtio"
-    DIR *dh = opendir(SYS_9PDRIVER);
-    if (!dh) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open %s: %s\n",
-                __func__, SYS_9PDRIVER, strerror(errno));
-        exit_poweroff();
-    }
-
-    struct dirent *de;
-    while ((de = readdir(dh))) {
-        if (strncmp(de->d_name, "virtio", 6) == 0) {
-            char *mount_tag;
-            if (asprintf(&mount_tag, "%s/%s/mount_tag", SYS_9PDRIVER, de->d_name) < 0) {
-                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot format mount tag: %s\n",
-                        __func__, strerror(errno));
-                exit_poweroff();
-            }
-
-            FILE *mt = fopen(mount_tag, "r");
-            if (!mt) {
-                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open %s: %s\n",
-                        __func__, mount_tag, strerror(errno));
-                exit_poweroff();
-            }
-            char *tmp = NULL;
-            size_t n;
-            if (getline(&tmp, &n, mt) <= 0) {
-                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read line from %s: %s\n",
-                        __func__, mount_tag, strerror(errno));
-                exit_poweroff();
-            }
-
-            if (strcmp(tmp, "sandbox:tmp") == 0) {
-                mount_9pfs(tmp, "/tmp", 0755, 0);
-            } else if (strcmp(tmp, "sandbox:home") == 0) {
-                mount_9pfs(tmp, home, 0755, 0);
-            }
-            fclose(mt);
-            free(tmp);
-            free(mount_tag);
-        }
-    }
-
     if (mkdir("/dev/input", 0777) < 0) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make directory /dev/input: %s\n",
                 __func__, strerror(errno));
@@ -368,16 +307,28 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     MKNOD("/dev/input/mouse0", S_IFCHR |0777, makedev(13, 32));
     umask(0022);
 
-    /* Run /init from ext2 filesystem. */
-    print_uptime();
-    if (!cmdargs) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: missing encoded command + args\n",
-                __func__);
+    mount_9pfs("sandbox:config", "/.config", 0755, 1);
+
+    fp = fopen("/.config/mounts.cfg", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open /.config/mounts.cfg: %s\n",
+                __func__, strerror(errno));
         exit_poweroff();
     }
+    while (fgets(line, sizeof line, fp)) {
+        char *target = strchr(line, '=');
+        *target = '\0';
+        target++;
+        size_t n = strlen(line);
+        if (n > 0 && line[n-1] == '\n')
+            line[--n] = '\0';
 
-    istty = get_isatty();
-    xorg = get_xorg();
+        mount_9pfs(line, target, 0755, 1);
+    }
+    fclose(fp);
+
+    /* Run /init from ext2 filesystem. */
+    print_uptime();
 
     signal(SIGCHLD, sig_child);
 
@@ -409,26 +360,8 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 //    args[narg++] = "2000";
 #endif
         args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-        if (istty)
-            args[narg++] = "-i";
-        args[narg++] = "-n";
-        args[narg++] = user;
-        args[narg++] = "-u";
-        args[narg++] = uid;
-        args[narg++] = "-g";
-        args[narg++] = gid;
-        args[narg++] = "-h";
-        args[narg++] = home;
-        if (xorg) {
-            args[narg++] = "-X";
-            if (wm) {
-                args[narg++] = "-w";
-                args[narg++] = wm;
-            }
-        }
         if (debug)
             args[narg++] = "-d";
-        args[narg++] = cmdargs;
 
         if (debug)
             fprintf(stderr, "libvirt-sandbox-init-qemu: Running common init %s\n", args[0]);
@@ -514,111 +447,6 @@ print_uptime(void)
     fclose(fp);
 
     fprintf(stderr, "libvirt-sandbox-init-qemu: uptime: %s", line);
-}
-
-
-static char *
-get_command_arg(const char *name)
-{
-    FILE *fp = fopen("/proc/cmdline", "r");
-    char *start, *end;
-
-    if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open /proc/cmdline: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-
-    if (!fgets(line, sizeof line, fp)) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/cmdline: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-    fclose(fp);
-
-    start = strstr(line, name);
-    if (!start)
-        return NULL;
-    start += strlen(name);
-    end = strstr(start, " ");
-    if (!end)
-        end = strstr(start, "\n");
-    if (end)
-        return strndup(start, end-start);
-    else
-        return strdup(start);
-}
-
-
-static int
-has_command_arg(const char *name)
-{
-    FILE *fp = fopen("/proc/cmdline", "r");
-
-    if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open /proc/cmdline: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-
-    if (!fgets(line, sizeof line, fp)) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/cmdline: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-
-    fclose(fp);
-
-    return strstr(line, name) != NULL;
-}
-
-
-static char *
-get_user_name(void)
-{
-    return get_command_arg("sandbox-user=");
-}
-
-static char *
-get_user_id(void)
-{
-    return get_command_arg("sandbox-uid=");
-}
-
-static char *
-get_group_id(void)
-{
-    return get_command_arg("sandbox-gid=");
-}
-
-static char *
-get_home_dir(void)
-{
-    return get_command_arg("sandbox-home=");
-}
-
-static char *
-get_cmd_and_args(void)
-{
-    return get_command_arg("sandbox-cmd=");
-}
-
-static int
-get_isatty(void)
-{
-    return has_command_arg("sandbox-isatty");
-}
-
-static int
-get_xorg(void)
-{
-    return has_command_arg("sandbox-xorg");
-}
-
-static char *
-get_windowmanager(void)
-{
-    return get_command_arg("sandbox-wm=");
 }
 
 

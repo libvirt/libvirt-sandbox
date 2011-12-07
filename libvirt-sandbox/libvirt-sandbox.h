@@ -27,6 +27,7 @@
 #include <libvirt-gobject/libvirt-gobject.h>
 
 /* Local includes */
+#include <libvirt-sandbox/libvirt-sandbox-main.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-address.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>

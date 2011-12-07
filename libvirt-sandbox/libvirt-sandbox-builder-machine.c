@@ -115,24 +115,26 @@ static void gvir_sandbox_builder_machine_finalize(GObject *object)
 }
 
 
-static gchar *gvir_sandbox_builder_machine_mkinitrd(const gchar *kver,
+static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
+                                                    const gchar *kver,
                                                     GError **error)
 {
-    GVirSandboxConfigInitrd *cfg = gvir_sandbox_config_initrd_new();
+    GVirSandboxConfigInitrd *initrd = gvir_sandbox_config_initrd_new();
     GVirSandboxBuilderInitrd *builder = gvir_sandbox_builder_initrd_new();
     gchar *targetfile = g_strdup_printf("/tmp/libvirt-sandbox-initrd-XXXXXX");
     int fd = -1;
 
-    gvir_sandbox_config_initrd_set_kver(cfg, kver);
-    gvir_sandbox_config_initrd_set_init(cfg, LIBEXECDIR "/libvirt-sandbox-init-qemu");
+    gvir_sandbox_config_initrd_set_kver(initrd, kver);
+    gvir_sandbox_config_initrd_set_init(initrd, LIBEXECDIR "/libvirt-sandbox-init-qemu");
 
-    gvir_sandbox_config_initrd_add_module(cfg, "fscache.ko");
-    gvir_sandbox_config_initrd_add_module(cfg, "9pnet.ko");
-    gvir_sandbox_config_initrd_add_module(cfg, "9p.ko");
-    gvir_sandbox_config_initrd_add_module(cfg, "9pnet_virtio.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "fscache.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "9pnet.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "9p.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "9pnet_virtio.ko");
+    if (gvir_sandbox_config_has_networks(config))
+        gvir_sandbox_config_initrd_add_module(initrd, "virtio_net.ko");
 #if 0
-    gvir_sandbox_config_initrd_add_module(cfg, "virtio_net.ko");
-    gvir_sandbox_config_initrd_add_module(cfg, "virtio_balloon.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "virtio_balloon.ko");
 #endif
 
     if ((fd = mkstemp(targetfile)) < 0) {
@@ -141,7 +143,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(const gchar *kver,
         goto cleanup;
     }
 
-    if (!gvir_sandbox_builder_initrd_construct(builder, cfg, targetfile, error))
+    if (!gvir_sandbox_builder_initrd_construct(builder, initrd, targetfile, error))
         goto cleanup;
 
 cleanup:
@@ -151,68 +153,16 @@ cleanup:
         g_free(targetfile);
         targetfile = NULL;
     }
-    g_object_unref(cfg);
+    g_object_unref(initrd);
     g_object_unref(builder);
     return targetfile;
 }
 
 
-static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config)
+static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_GNUC_UNUSED)
 {
     GString *str = g_string_new("");
-    gchar **argv, **tmp;
-    gchar *cmdrawstr;
-    gchar *cmdb64str;
-    gsize len = 0, offset = 0;
     gchar *ret;
-    gchar *lenstr;
-    gsize prefix = 0;
-
-    argv = gvir_sandbox_config_get_command(config);
-
-    tmp = argv;
-    while (*tmp) {
-        len += strlen(*tmp) + 1;
-        tmp++;
-    }
-
-    lenstr = g_strdup_printf("%zu", len);
-    prefix = strlen(lenstr);
-    cmdrawstr = g_new0(gchar, prefix + 1 + len);
-
-    memcpy(cmdrawstr, lenstr, prefix);
-    cmdrawstr[prefix] = ':';
-    offset += prefix + 1;
-
-    tmp = argv;
-    while (*tmp) {
-        size_t tlen = strlen(*tmp);
-        memcpy(cmdrawstr + offset, *tmp, tlen + 1);
-        offset += tlen + 1;
-        tmp++;
-    }
-
-    cmdb64str = g_base64_encode((guchar*)cmdrawstr, prefix + 1 + len);
-    g_free(cmdrawstr);
-
-    /* First sandbox specific args */
-    g_string_append_printf(str, "sandbox-cmd=%s", cmdb64str);
-    g_free(cmdb64str);
-
-    if (gvir_sandbox_config_get_tty(config))
-        g_string_append(str, " sandbox-isatty");
-
-    g_string_append_printf(str, " sandbox-uid=%u", gvir_sandbox_config_get_userid(config));
-    g_string_append_printf(str, " sandbox-gid=%u", gvir_sandbox_config_get_groupid(config));
-    g_string_append_printf(str, " sandbox-user=%s", gvir_sandbox_config_get_username(config));
-    g_string_append_printf(str, " sandbox-home=%s", gvir_sandbox_config_get_homedir(config));
-
-    if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
-        GVirSandboxConfigGraphical *gconfig = GVIR_SANDBOX_CONFIG_GRAPHICAL(config);
-        g_string_append(str, " sandbox-xorg");
-        g_string_append_printf(str, " sandbox-vm=%s",
-                               gvir_sandbox_config_graphical_get_window_manager(gconfig));
-    }
 
     /* Now kernel args */
     g_string_append(str, " console=ttyS0");
@@ -243,14 +193,79 @@ static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner 
     return TRUE;
 }
 
+static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder *builder,
+                                                              GVirSandboxConfig *config,
+                                                              const gchar *configdir,
+                                                              GVirSandboxCleaner *cleaner,
+                                                              GVirConfigDomain *domain,
+                                                              GError **error)
+{
+    gchar *mntfile = g_strdup_printf("%s/mounts.cfg", configdir);
+    GFile *file = g_file_new_for_path(mntfile);
+    GFileOutputStream *fos = g_file_replace(file,
+                                            NULL,
+                                            FALSE,
+                                            G_FILE_CREATE_REPLACE_DESTINATION,
+                                            NULL,
+                                            error);
+    gboolean ret = FALSE;
+    GList *tmp, *mounts = NULL;
+    int i;
+
+    if (!fos)
+        goto cleanup;
+
+    i = 0;
+    tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
+    while (tmp) {
+        GVirSandboxConfigMount *mount = tmp->data;
+        gchar *key = g_strdup_printf("mount%u=%s\n", i,
+                                     gvir_sandbox_config_mount_get_target(mount));
+
+        if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos), key, strlen(key),
+                                       NULL, NULL, error)) {
+            g_free(key);
+            goto cleanup;
+        }
+
+        i++;
+        tmp = tmp->next;
+    }
+
+    if (!g_output_stream_close(G_OUTPUT_STREAM(fos), NULL, error))
+        goto cleanup;
+
+    gvir_sandbox_cleaner_add_action_post_stop(cleaner,
+                                              gvir_sandbox_builder_machine_delete,
+                                              mntfile,
+                                              g_free);
+    mntfile = NULL;
+
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_domain(builder, config, configdir, cleaner, domain, error))
+        goto cleanup;
+
+    ret = TRUE;
+cleanup:
+    g_list_free(mounts);
+    if (fos)
+        g_object_unref(fos);
+    if (!ret)
+        g_file_delete(file, NULL, NULL);
+    g_object_unref(file);
+    g_free(mntfile);
+    return ret;
+}
+
 static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder *builder,
                                                              GVirSandboxConfig *config,
+                                                             const gchar *configdir,
                                                              GVirSandboxCleaner *cleaner,
                                                              GVirConfigDomain *domain,
                                                              GError **error)
 {
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
-        construct_basic(builder, config, cleaner, domain, error))
+        construct_basic(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
     gvir_config_domain_set_virt_type(domain,
@@ -262,6 +277,7 @@ static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder 
 
 static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *builder,
                                                           GVirSandboxConfig *config,
+                                                          const gchar *configdir,
                                                           GVirSandboxCleaner *cleaner,
                                                           GVirConfigDomain *domain,
                                                           GError **error)
@@ -273,12 +289,12 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     GVirConfigDomainOs *os;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
-        construct_os(builder, config, cleaner, domain, error))
+        construct_os(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
     uname(&uts);
 
-    if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(uts.release, error)))
+    if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(config, uts.release, error)))
         return FALSE;
 
     kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
@@ -310,6 +326,7 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
 
 static gboolean gvir_sandbox_builder_machine_construct_features(GVirSandboxBuilder *builder,
                                                                 GVirSandboxConfig *config,
+                                                                const gchar *configdir,
                                                                 GVirSandboxCleaner *cleaner,
                                                                 GVirConfigDomain *domain,
                                                                 GError **error)
@@ -317,7 +334,7 @@ static gboolean gvir_sandbox_builder_machine_construct_features(GVirSandboxBuild
     gchar **features;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
-        construct_features(builder, config, cleaner, domain, error))
+        construct_features(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
     features = g_new0(gchar *, 1);
@@ -329,17 +346,20 @@ static gboolean gvir_sandbox_builder_machine_construct_features(GVirSandboxBuild
 
 static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilder *builder,
                                                                GVirSandboxConfig *config,
+                                                               const gchar *configdir,
                                                                GVirSandboxCleaner *cleaner,
                                                                GVirConfigDomain *domain,
                                                                GError **error)
 {
     GVirConfigDomainFilesys *fs;
+    GVirConfigDomainInterfaceUser *iface;
     GVirConfigDomainMemballoon *ball;
     GVirConfigDomainGraphicsSpice *graph;
-    GList *tmp = NULL, *mounts = NULL;
+    GList *tmp = NULL, *mounts = NULL, *networks = NULL;
+    int i;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
-        construct_devices(builder, config, cleaner, domain, error))
+        construct_devices(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
     fs = gvir_config_domain_filesys_new();
@@ -354,33 +374,53 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
     g_object_unref(fs);
 
+
+    fs = gvir_config_domain_filesys_new();
+    gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+    gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+    gvir_config_domain_filesys_set_source(fs, configdir);
+    gvir_config_domain_filesys_set_target(fs, "sandbox:config");
+    gvir_config_domain_filesys_set_readonly(fs, TRUE);
+
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(fs));
+    g_object_unref(fs);
+
+
+
     tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
+    i = 0;
     while (tmp) {
         GVirSandboxConfigMount *mconfig = tmp->data;
-        const gchar *home = getenv("HOME");
-        const gchar *tgtsym;
-        const gchar *target = gvir_sandbox_config_mount_get_target(mconfig);
-        if (home &&
-            (g_str_equal(target, home)))
-            tgtsym = "sandbox:home";
-        else if (g_str_equal(target, "/tmp"))
-            tgtsym = "sandbox:tmp";
-        else {
-            g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
-                        "Cannot export mount to %s", target);
-            return FALSE;
-        }
+        gchar *target = g_strdup_printf("sandbox:mount%d", i);
 
         fs = gvir_config_domain_filesys_new();
         gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
         gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
         gvir_config_domain_filesys_set_source(fs,
                                               gvir_sandbox_config_mount_get_root(mconfig));
-        gvir_config_domain_filesys_set_target(fs, tgtsym);
+        gvir_config_domain_filesys_set_target(fs, target);
 
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(fs));
         g_object_unref(fs);
+        g_free(target);
+
+        tmp = tmp->next;
+        i++;
+    }
+
+
+    tmp = networks = gvir_sandbox_config_get_networks(config);
+    while (tmp) {
+        iface = gvir_config_domain_interface_user_new();
+
+        gvir_config_domain_interface_set_model(GVIR_CONFIG_DOMAIN_INTERFACE(iface),
+                                               "virtio");
+
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(iface));
+        g_object_unref(iface);
 
         tmp = tmp->next;
     }
@@ -415,6 +455,7 @@ static void gvir_sandbox_builder_machine_class_init(GVirSandboxBuilderMachineCla
     object_class->get_property = gvir_sandbox_builder_machine_get_property;
     object_class->set_property = gvir_sandbox_builder_machine_set_property;
 
+    builder_class->construct_domain = gvir_sandbox_builder_machine_construct_domain;
     builder_class->construct_basic = gvir_sandbox_builder_machine_construct_basic;
     builder_class->construct_os = gvir_sandbox_builder_machine_construct_os;
     builder_class->construct_features = gvir_sandbox_builder_machine_construct_features;

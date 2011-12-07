@@ -57,31 +57,37 @@ struct _GVirSandboxBuilderClass
 
     gboolean (*construct_basic)(GVirSandboxBuilder *builder,
                                 GVirSandboxConfig *config,
+                                const gchar *configdir,
                                 GVirSandboxCleaner *cleaner,
                                 GVirConfigDomain *domain,
                                 GError **error);
     gboolean (*construct_os)(GVirSandboxBuilder *builder,
                              GVirSandboxConfig *config,
+                             const gchar *configdir,
                              GVirSandboxCleaner *cleaner,
                              GVirConfigDomain *domain,
                              GError **error);
     gboolean (*construct_features)(GVirSandboxBuilder *builder,
-                                  GVirSandboxConfig *config,
-                                  GVirSandboxCleaner *cleaner,
-                                  GVirConfigDomain *domain,
-                                  GError **error);
+                                   GVirSandboxConfig *config,
+                                   const gchar *configdir,
+                                   GVirSandboxCleaner *cleaner,
+                                   GVirConfigDomain *domain,
+                                   GError **error);
     gboolean (*construct_devices)(GVirSandboxBuilder *builder,
                                   GVirSandboxConfig *config,
+                                  const gchar *configdir,
                                   GVirSandboxCleaner *cleaner,
                                   GVirConfigDomain *domain,
                                   GError **error);
     gboolean (*construct_security)(GVirSandboxBuilder *builder,
                                    GVirSandboxConfig *config,
+                                   const gchar *configdir,
                                    GVirSandboxCleaner *cleaner,
                                    GVirConfigDomain *domain,
                                    GError **error);
     gboolean (*construct_domain)(GVirSandboxBuilder *builder,
                                  GVirSandboxConfig *config,
+                                 const gchar *configdir,
                                  GVirSandboxCleaner *cleaner,
                                  GVirConfigDomain *domain,
                                  GError **error);
@@ -96,6 +102,7 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
 
 GVirConfigDomain *gvir_sandbox_builder_construct(GVirSandboxBuilder *builder,
                                                  GVirSandboxConfig *config,
+                                                 const gchar *configdir,
                                                  GVirSandboxCleaner *cleaner,
                                                  GError **error);
 
