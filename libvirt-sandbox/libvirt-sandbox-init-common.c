@@ -425,7 +425,7 @@ static int change_user(const char *user, uid_t uid, gid_t gid, const char *home)
         fprintf(stderr, "libvirt-sandbox-init-common: changing user %s %d %d %s\n",
                 user, uid, gid, home);
 
-    if (strcmp(user, "root") == 0)
+    if (g_str_equal(user, "root"))
         return 0;
 
     setenv("HOME", home, 1);

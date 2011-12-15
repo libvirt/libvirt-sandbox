@@ -361,9 +361,9 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         const gchar *tgtsym;
         const gchar *target = gvir_sandbox_config_mount_get_target(mconfig);
         if (home &&
-            (strcmp(target, home) == 0))
+            (g_str_equal(target, home)))
             tgtsym = "sandbox:home";
-        else if (strcmp(target, "/tmp") == 0)
+        else if (g_str_equal(target, "/tmp"))
             tgtsym = "sandbox:tmp";
         else {
             g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,

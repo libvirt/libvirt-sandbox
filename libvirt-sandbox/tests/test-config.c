@@ -1,4 +1,6 @@
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -74,15 +76,15 @@ int main(int argc, char **argv)
     gvir_sandbox_config_set_arch(cfg1, "ia64");
     gvir_sandbox_config_set_tty(cfg1, TRUE);
 
-    gvir_sandbox_config_set_command(cfg1, command);
+    gvir_sandbox_config_set_command(cfg1, (gchar**)command);
 
     gvir_sandbox_config_set_userid(cfg1, 666);
     gvir_sandbox_config_set_groupid(cfg1, 666);
     gvir_sandbox_config_set_username(cfg1, "superdevil");
     gvir_sandbox_config_set_homedir(cfg1, "/var/run/hell");
 
-    gvir_sandbox_config_add_mount_strv(cfg1, mounts);
-    if (!gvir_sandbox_config_add_include_strv(cfg1, includes, &err))
+    gvir_sandbox_config_add_mount_strv(cfg1, (gchar**)mounts);
+    if (!gvir_sandbox_config_add_include_strv(cfg1, (gchar**)includes, &err))
         goto cleanup;
 
     gvir_sandbox_config_set_security_dynamic(cfg1, FALSE);

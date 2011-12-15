@@ -316,7 +316,7 @@ sc_prohibit_strcmp:
 	@grep -nE '! *str''cmp *\(|\<str''cmp *\(.+\) *[!=]='	\
 	    $$($(VC_LIST_EXCEPT))					\
 	  | grep -vE ':# *define STRN?EQ\(' &&				\
-	  { echo '$(ME): replace str''cmp calls above with STREQ/STRNEQ' \
+	  { echo '$(ME): replace str''cmp calls above with g_str_equal' \
 		1>&2; exit 1; } || :
 
 # Pass EXIT_*, not number, to usage, exit, and error (when exiting)

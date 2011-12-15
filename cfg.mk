@@ -59,12 +59,7 @@ VC_LIST_ALWAYS_EXCLUDE_REGEX = \
 
 # Functions like free() that are no-ops on NULL arguments.
 useless_free_options =				\
-  --name=g_free					\
-  --name=xmlBufferFree				\
-  --name=xmlFree				\
-  --name=xmlFreeDoc				\
-  --name=xmlXPathFreeContext			\
-  --name=xmlXPathFreeObject
+  --name=g_free
 
 # Ensure that no C source file, docs, or rng schema uses TABs for
 # indentation.  Also match *.h.in files, to get libvirt.h.in.  Exclude
@@ -124,14 +119,8 @@ sc_check_author_list:
 	test $$fail = 0
 
 
-exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/libvirt-sandbox-init-|bin/virt-sandbox)
+exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)
 
 exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]
 
-exclude_file_name_regexp--sc_prohibit_strcmp = ^*/*.[ch]
-
-exclude_file_name_regexp--sc_require_config_h = python/libvirt-glib.c
-exclude_file_name_regexp--sc_require_config_h_first = python/libvirt-glib.c
-
-# XXX we shouldn't really ignore this, but the horrible enum rules...
-exclude_file_name_regexp--sc_makefile_at_at_check = libvirt-gobject/Makefile.am
+exclude_file_name_regexp--sc_prohibit_strcmp = ^libvirt-sandbox/libvirt-sandbox-init-qemu.c

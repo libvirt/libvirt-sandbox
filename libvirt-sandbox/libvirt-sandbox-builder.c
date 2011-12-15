@@ -205,10 +205,10 @@ GVirSandboxBuilder *gvir_sandbox_builder_for_connection(GVirConnection *connecti
     const gchar *uri = gvir_connection_get_uri(connection);
     GVirSandboxBuilder *builder = NULL;
 
-    if (strcmp(uri, "lxc:///") == 0) {
+    if (g_str_equal(uri, "lxc:///")) {
         builder = GVIR_SANDBOX_BUILDER(gvir_sandbox_builder_container_new(connection));
-    } else if (strcmp(uri, "qemu:///session") == 0 ||
-               strcmp(uri, "qemu:///system") == 0) {
+    } else if (g_str_equal(uri, "qemu:///session") ||
+               g_str_equal(uri, "qemu:///system")) {
         builder = GVIR_SANDBOX_BUILDER(gvir_sandbox_builder_machine_new(connection));
     }
 
