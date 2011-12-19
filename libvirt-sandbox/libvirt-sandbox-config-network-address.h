@@ -60,14 +60,14 @@ struct _GVirSandboxConfigNetworkAddressClass
 GType gvir_sandbox_config_network_address_get_type(void);
 
 GVirSandboxConfigNetworkAddress *gvir_sandbox_config_network_address_new(GInetAddress *primary,
-                                                                         GInetAddress *netmask,
+                                                                         guint prefix,
                                                                          GInetAddress *broadcast);
 
 void gvir_sandbox_config_network_address_set_primary(GVirSandboxConfigNetworkAddress *config, GInetAddress *addr);
 GInetAddress *gvir_sandbox_config_network_address_get_primary(GVirSandboxConfigNetworkAddress *config);
 
-void gvir_sandbox_config_network_address_set_netmask(GVirSandboxConfigNetworkAddress *config, GInetAddress *addr);
-GInetAddress *gvir_sandbox_config_network_address_get_netmask(GVirSandboxConfigNetworkAddress *config);
+void gvir_sandbox_config_network_address_set_prefix(GVirSandboxConfigNetworkAddress *config, guint prefix);
+guint gvir_sandbox_config_network_address_get_prefix(GVirSandboxConfigNetworkAddress *config);
 
 void gvir_sandbox_config_network_address_set_broadcast(GVirSandboxConfigNetworkAddress *config, GInetAddress *addr);
 GInetAddress *gvir_sandbox_config_network_address_get_broadcast(GVirSandboxConfigNetworkAddress *config);

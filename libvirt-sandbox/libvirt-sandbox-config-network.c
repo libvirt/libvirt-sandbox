@@ -198,7 +198,7 @@ void gvir_sandbox_config_network_add_address(GVirSandboxConfigNetwork *config,
  *
  * Retrieve the list of network interface addresses
  *
- * Returns: (transfer full): the address list
+ * Returns: (transfer full)(element-type GVirSandboxConfigNetworkAddress): the address list
  */
 GList *gvir_sandbox_config_network_get_addresses(GVirSandboxConfigNetwork *config)
 {
@@ -228,7 +228,7 @@ void gvir_sandbox_config_network_add_route(GVirSandboxConfigNetwork *config,
  *
  * Retrieve the list of network interface routes
  *
- * Returns: (transfer full): the route list
+ * Returns: (transfer full)(element-type GVirSandboxConfigNetworkRoute): the route list
  */
 GList *gvir_sandbox_config_network_get_routes(GVirSandboxConfigNetwork *config)
 {

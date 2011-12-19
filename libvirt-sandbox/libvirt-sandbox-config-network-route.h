@@ -59,15 +59,15 @@ struct _GVirSandboxConfigNetworkRouteClass
 
 GType gvir_sandbox_config_network_route_get_type(void);
 
-GVirSandboxConfigNetworkRoute *gvir_sandbox_config_network_route_new(GInetAddress *netmask,
-                                                                     const gchar *gateway,
-                                                                     GInetAddress *target);
+GVirSandboxConfigNetworkRoute *gvir_sandbox_config_network_route_new(GInetAddress *target,
+                                                                     guint prefix,
+                                                                     GInetAddress *gateway);
 
-void gvir_sandbox_config_network_route_set_netmask(GVirSandboxConfigNetworkRoute *config, GInetAddress *addr);
-GInetAddress *gvir_sandbox_config_network_route_get_netmask(GVirSandboxConfigNetworkRoute *config);
+void gvir_sandbox_config_network_route_set_prefix(GVirSandboxConfigNetworkRoute *config, guint prefix);
+guint gvir_sandbox_config_network_route_get_prefix(GVirSandboxConfigNetworkRoute *config);
 
-void gvir_sandbox_config_network_route_set_gateway(GVirSandboxConfigNetworkRoute *config, const gchar *dev);
-const gchar *gvir_sandbox_config_network_route_get_gateway(GVirSandboxConfigNetworkRoute *config);
+void gvir_sandbox_config_network_route_set_gateway(GVirSandboxConfigNetworkRoute *config, GInetAddress *addr);
+GInetAddress *gvir_sandbox_config_network_route_get_gateway(GVirSandboxConfigNetworkRoute *config);
 
 void gvir_sandbox_config_network_route_set_target(GVirSandboxConfigNetworkRoute *config, GInetAddress *addr);
 GInetAddress *gvir_sandbox_config_network_route_get_target(GVirSandboxConfigNetworkRoute *config);

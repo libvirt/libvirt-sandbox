@@ -43,8 +43,8 @@
 
 struct _GVirSandboxConfigNetworkRoutePrivate
 {
-    GInetAddress *netmask;
-    gchar *gateway;
+    guint prefix;
+    GInetAddress *gateway;
     GInetAddress *target;
 };
 
@@ -53,7 +53,7 @@ G_DEFINE_TYPE(GVirSandboxConfigNetworkRoute, gvir_sandbox_config_network_route, 
 
 enum {
     PROP_0,
-    PROP_NETMASK,
+    PROP_PREFIX,
     PROP_GATEWAY,
     PROP_TARGET,
 };
@@ -74,12 +74,12 @@ static void gvir_sandbox_config_network_route_get_property(GObject *object,
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
 
     switch (prop_id) {
-    case PROP_NETMASK:
-        g_value_set_object(value, priv->netmask);
+    case PROP_PREFIX:
+        g_value_set_uint(value, priv->prefix);
         break;
 
     case PROP_GATEWAY:
-        g_value_set_string(value, priv->gateway);
+        g_value_set_object(value, priv->gateway);
         break;
 
     case PROP_TARGET:
@@ -101,15 +101,14 @@ static void gvir_sandbox_config_network_route_set_property(GObject *object,
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
 
     switch (prop_id) {
-    case PROP_NETMASK:
-        if (priv->netmask)
-            g_object_unref(priv->netmask);
-        priv->netmask = g_value_dup_object(value);
+    case PROP_PREFIX:
+        priv->prefix = g_value_get_uint(value);
         break;
 
     case PROP_GATEWAY:
-        g_free(priv->gateway);
-        priv->gateway = g_value_dup_string(value);
+        if (priv->gateway)
+            g_object_unref(priv->gateway);
+        priv->gateway = g_value_dup_object(value);
         break;
 
     case PROP_TARGET:
@@ -129,9 +128,8 @@ static void gvir_sandbox_config_network_route_finalize(GObject *object)
     GVirSandboxConfigNetworkRoute *config = GVIR_SANDBOX_CONFIG_NETWORK_ROUTE(object);
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
 
-    if (priv->netmask)
-        g_object_unref(priv->netmask);
-    g_free(priv->gateway);
+    if (priv->gateway)
+        g_object_unref(priv->gateway);
     if (priv->target)
         g_object_unref(priv->target);
 
@@ -148,23 +146,23 @@ static void gvir_sandbox_config_network_route_class_init(GVirSandboxConfigNetwor
     object_class->set_property = gvir_sandbox_config_network_route_set_property;
 
     g_object_class_install_property(object_class,
-                                    PROP_NETMASK,
-                                    g_param_spec_object("netmask",
-                                                        "Netmask",
-                                                        "Netmask address",
-                                                        G_TYPE_INET_ADDRESS,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
+                                    PROP_PREFIX,
+                                    g_param_spec_uint("prefix",
+                                                      "Prefix",
+                                                      "Prefix length",
+                                                      0, 128, 24,
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
     g_object_class_install_property(object_class,
                                     PROP_GATEWAY,
-                                    g_param_spec_string("gateway",
+                                    g_param_spec_object("gateway",
                                                         "Gateway",
                                                         "Gateway device",
-                                                        NULL,
+                                                        G_TYPE_INET_ADDRESS,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_CONSTRUCT_ONLY |
@@ -196,71 +194,70 @@ static void gvir_sandbox_config_network_route_init(GVirSandboxConfigNetworkRoute
 
 /**
  * gvir_sandbox_config_network_route_new:
- * @netmask: the netmask route
- * @gateway: the gateway device
  * @target: the target address
+ * @prefix: the prefix length
+ * @gateway: the gateway device
  *
  * Create a new network route config.
  *
  * Returns: (transfer full): a new sandbox network route object
  */
-GVirSandboxConfigNetworkRoute *gvir_sandbox_config_network_route_new(GInetAddress *netmask,
-                                                                     const gchar *gateway,
-                                                                     GInetAddress *target)
+GVirSandboxConfigNetworkRoute *gvir_sandbox_config_network_route_new(GInetAddress *target,
+                                                                     guint prefix,
+                                                                     GInetAddress *gateway)
 {
     return GVIR_SANDBOX_CONFIG_NETWORK_ROUTE(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ROUTE,
-                                                          "netmask", netmask,
-                                                          "gateway", gateway,
                                                           "target", target,
+                                                          "prefix", prefix,
+                                                          "gateway", gateway,
                                                           NULL));
 }
 
 
 /**
- * gvir_sandbox_config_network_route_set_netmask:
+ * gvir_sandbox_config_network_route_set_prefix:
  * @config: (transfer none): the sandbox network route config
- * @addr: (transfer none): the netmask route
+ * @prefix: prefix length
  *
- * Sets the netmask for an interface route
+ * Sets the prefix for an interface route
  */
-void gvir_sandbox_config_network_route_set_netmask(GVirSandboxConfigNetworkRoute *config,
-                                                   GInetAddress *addr)
+void gvir_sandbox_config_network_route_set_prefix(GVirSandboxConfigNetworkRoute *config,
+                                                  guint prefix)
 {
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
-    if (priv->netmask)
-        g_object_unref(priv->netmask);
-    priv->netmask = g_object_ref(addr);
+    priv->prefix = prefix;
 }
 
 
 /**
- * gvir_sandbox_config_network_route_get_netmask:
+ * gvir_sandbox_config_network_route_get_prefix:
  * @config: (transfer none): the sandbox network route config
  *
- * Retrieves the device that is the netmask for the route
+ * Retrieves the prefix length of the route
  *
- * Returns: (transfer none): the netmask address
+ * Returns: (transfer none): the prefix length
  */
-GInetAddress *gvir_sandbox_config_network_route_get_netmask(GVirSandboxConfigNetworkRoute *config)
+guint gvir_sandbox_config_network_route_get_prefix(GVirSandboxConfigNetworkRoute *config)
 {
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
-    return priv->netmask;
+    return priv->prefix;
 }
 
 
 /**
  * gvir_sandbox_config_network_route_set_gateway:
  * @config: (transfer none): the sandbox network route config
- * @dev: (transfer none): the gateway device
+ * @addr: (transfer none): the gateway device
  *
  * Sets the interface gateway device
  */
 void gvir_sandbox_config_network_route_set_gateway(GVirSandboxConfigNetworkRoute *config,
-                                                   const gchar *dev)
+                                                   GInetAddress *addr)
 {
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
-    g_free(priv->gateway);
-    priv->gateway = g_strdup(dev);
+    if (priv->gateway)
+        g_object_unref(priv->gateway);
+    priv->gateway = g_object_ref(addr);
 }
 
 
@@ -268,11 +265,11 @@ void gvir_sandbox_config_network_route_set_gateway(GVirSandboxConfigNetworkRoute
  * gvir_sandbox_config_network_route_get_gateway:
  * @config: (transfer none): the sandbox network route config
  *
- * Retrieves the network gateway device
+ * Retrieves the network gateway address
  *
- * Returns: (transfer none): the gateway device
+ * Returns: (transfer none): the gateway address
  */
-const gchar *gvir_sandbox_config_network_route_get_gateway(GVirSandboxConfigNetworkRoute *config)
+GInetAddress *gvir_sandbox_config_network_route_get_gateway(GVirSandboxConfigNetworkRoute *config)
 {
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
     return priv->gateway;

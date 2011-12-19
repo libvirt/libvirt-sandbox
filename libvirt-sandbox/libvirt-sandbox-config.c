@@ -1076,7 +1076,6 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
     gchar *key = NULL;
     gchar *str1 = NULL;
     gchar *str2 = NULL;
-    gchar *str3 = NULL;
     gboolean b;
     guint j;
     GError *e = NULL;
@@ -1101,7 +1100,7 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
     for (j = 0 ; j < 100 ; j++) {
         GInetAddress *primary = NULL;
         GInetAddress *broadcast = NULL;
-        GInetAddress *netmask = NULL;
+        guint prefix;
         GVirSandboxConfigNetworkAddress *addr;
         key = g_strdup_printf("network.%u.address.%u", i, j);
 
@@ -1116,34 +1115,34 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
         }
 
         str2 = g_key_file_get_string(file, key, "broadcast", NULL);
-        str3 = g_key_file_get_string(file, key, "netmask", NULL);
+        prefix = g_key_file_get_uint64(file, key, "prefix", NULL);
 
         primary = g_inet_address_new_from_string(str1);
         if (str2)
             broadcast = g_inet_address_new_from_string(str2);
-        if (str3)
-            netmask = g_inet_address_new_from_string(str3);
 
         addr = gvir_sandbox_config_network_address_new(primary,
-                                                       broadcast,
-                                                       netmask);
+                                                       prefix,
+                                                       broadcast);
         gvir_sandbox_config_network_add_address(config, addr);
 
+        g_object_unref(primary);
+        g_object_unref(broadcast);
         g_free(str1);
         g_free(str2);
-        g_free(str3);
         g_free(key);
         key = NULL;
     }
 
 
     for (j = 0 ; j < 100 ; j++) {
-        GInetAddress *netmask = NULL;
+        guint prefix;
         GInetAddress *target = NULL;
+        GInetAddress *gateway = NULL;
         GVirSandboxConfigNetworkRoute *route;
-        key = g_strdup_printf("network.%u.address.%u", i, j);
+        key = g_strdup_printf("network.%u.route.%u", i, j);
 
-        if ((str1 = g_key_file_get_string(file, key, "netmask", &e)) == NULL) {
+        if ((str1 = g_key_file_get_string(file, key, "target", &e)) == NULL) {
             if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
                 g_error_free(e);
                 e = NULL;
@@ -1154,18 +1153,19 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
         }
 
         str2 = g_key_file_get_string(file, key, "gateway", NULL);
-        str3 = g_key_file_get_string(file, key, "target", NULL);
+        prefix = g_key_file_get_uint64(file, key, "prefix", NULL);
 
-        netmask = g_inet_address_new_from_string(str1);
-        if (str3)
-            target = g_inet_address_new_from_string(str3);
+        target = g_inet_address_new_from_string(str1);
+        if (str2)
+            gateway = g_inet_address_new_from_string(str2);
 
-        route = gvir_sandbox_config_network_route_new(netmask, str2, target);
+        route = gvir_sandbox_config_network_route_new(target, prefix, gateway);
         gvir_sandbox_config_network_add_route(config, route);
 
+        g_object_unref(target);
+        g_object_unref(gateway);
         g_free(str1);
         g_free(str2);
-        g_free(str3);
         g_free(key);
         key = NULL;
     }
@@ -1362,10 +1362,8 @@ static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *co
         g_key_file_set_string(file, key, "broadcast", str);
         g_free(str);
 
-        inet = gvir_sandbox_config_network_address_get_netmask(addr);
-        str = g_inet_address_to_string(inet);
-        g_key_file_set_string(file, key, "netmask", str);
-        g_free(str);
+        g_key_file_set_uint64(file, key, "prefix",
+                              gvir_sandbox_config_network_address_get_prefix(addr));
 
         g_free(key);
 
@@ -1383,16 +1381,17 @@ static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *co
         GVirSandboxConfigNetworkRoute *route = tmp->data;
         GInetAddress *inet;
         gchar *str;
+        guint64 prefix;
 
         key = g_strdup_printf("network.%u.route.%u", i, k);
 
-        inet = gvir_sandbox_config_network_route_get_netmask(route);
-        str = g_inet_address_to_string(inet);
-        g_key_file_set_string(file, key, "netmask", str);
-        g_free(str);
+        prefix = gvir_sandbox_config_network_route_get_prefix(route);
+        g_key_file_set_uint64(file, key, "prefix", prefix);
 
-        g_key_file_set_string(file, key, "gateway",
-                              gvir_sandbox_config_network_route_get_gateway(route));
+        inet = gvir_sandbox_config_network_route_get_gateway(route);
+        str = g_inet_address_to_string(inet);
+        g_key_file_set_string(file, key, "gateway", str);
+        g_free(str);
 
         inet = gvir_sandbox_config_network_route_get_target(route);
         str = g_inet_address_to_string(inet);

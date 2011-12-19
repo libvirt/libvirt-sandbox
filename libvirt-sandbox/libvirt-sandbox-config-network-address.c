@@ -45,7 +45,7 @@ struct _GVirSandboxConfigNetworkAddressPrivate
 {
     GInetAddress *primary;
     GInetAddress *broadcast;
-    GInetAddress *netmask;
+    guint prefix;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfigNetworkAddress, gvir_sandbox_config_network_address, G_TYPE_OBJECT);
@@ -55,7 +55,7 @@ enum {
     PROP_0,
     PROP_PRIMARY,
     PROP_BROADCAST,
-    PROP_NETMASK,
+    PROP_PREFIX,
 };
 
 enum {
@@ -82,8 +82,8 @@ static void gvir_sandbox_config_network_address_get_property(GObject *object,
         g_value_set_object(value, priv->broadcast);
         break;
 
-    case PROP_NETMASK:
-        g_value_set_object(value, priv->netmask);
+    case PROP_PREFIX:
+        g_value_set_uint(value, priv->prefix);
         break;
 
     default:
@@ -113,10 +113,8 @@ static void gvir_sandbox_config_network_address_set_property(GObject *object,
         priv->broadcast = g_value_dup_object(value);
         break;
 
-    case PROP_NETMASK:
-        if (priv->netmask)
-            g_object_unref(priv->netmask);
-        priv->netmask = g_value_dup_object(value);
+    case PROP_PREFIX:
+        priv->prefix = g_value_get_uint(value);
         break;
 
     default:
@@ -132,8 +130,6 @@ static void gvir_sandbox_config_network_address_finalize(GObject *object)
 
     if (priv->primary)
         g_object_unref(priv->primary);
-    if (priv->netmask)
-        g_object_unref(priv->netmask);
     if (priv->broadcast)
         g_object_unref(priv->broadcast);
 
@@ -174,17 +170,17 @@ static void gvir_sandbox_config_network_address_class_init(GVirSandboxConfigNetw
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
     g_object_class_install_property(object_class,
-                                    PROP_NETMASK,
-                                    g_param_spec_object("netmask",
-                                                        "Netmask",
-                                                        "Netmask address",
-                                                        G_TYPE_INET_ADDRESS,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
+                                    PROP_PREFIX,
+                                    g_param_spec_uint("prefix",
+                                                      "Prefix",
+                                                      "Network prefix",
+                                                      0, 128, 24,
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigNetworkAddressPrivate));
 }
@@ -199,22 +195,22 @@ static void gvir_sandbox_config_network_address_init(GVirSandboxConfigNetworkAdd
 /**
  * gvir_sandbox_config_network_address_new:
  * @primary: the primary address
- * @netmask: the netmask address (optional)
+ * @prefix: the network prefix
  * @broadcast: the broadcast address (optional)
  *
  * Create a new network address config. Only the @primary parameter
- * is required to be non-NULL. The @netmask and @broadcast addresses
+ * is required to be non-NULL. The @broadcast address
  * will be automatically filled in, if not otherwise specified
  *
  * Returns: (transfer full): a new sandbox network_address object
  */
 GVirSandboxConfigNetworkAddress *gvir_sandbox_config_network_address_new(GInetAddress *primary,
-                                                                         GInetAddress *network,
+                                                                         guint prefix,
                                                                          GInetAddress *broadcast)
 {
     return GVIR_SANDBOX_CONFIG_NETWORK_ADDRESS(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ADDRESS,
                                                             "primary", primary,
-                                                            "network", network,
+                                                            "prefix", prefix,
                                                             "broadcast", broadcast,
                                                             NULL));
 }
@@ -253,34 +249,32 @@ GInetAddress *gvir_sandbox_config_network_address_get_primary(GVirSandboxConfigN
 
 
 /**
- * gvir_sandbox_config_network_address_set_network:
+ * gvir_sandbox_config_network_address_set_prefix:
  * @config: (transfer none): the sandbox network address config
- * @addr: (transfer none): the network address
+ * @prefix: the prefix length
  *
- * Sets the interface network address
+ * Sets the interface network prefix
  */
-void gvir_sandbox_config_network_address_set_netmask(GVirSandboxConfigNetworkAddress *config,
-                                                     GInetAddress *addr)
+void gvir_sandbox_config_network_address_set_prefix(GVirSandboxConfigNetworkAddress *config,
+                                                    guint prefix)
 {
     GVirSandboxConfigNetworkAddressPrivate *priv = config->priv;
-    if (priv->netmask)
-        g_object_unref(priv->netmask);
-    priv->netmask = g_object_ref(addr);
+    priv->prefix = prefix;
 }
 
 
 /**
- * gvir_sandbox_config_network_address_get_netmask:
+ * gvir_sandbox_config_network_address_get_prefix:
  * @config: (transfer none): the sandbox network address config
  *
- * Retrieves the network address
+ * Retrieves the network prefix
  *
- * Returns: (transfer none): the network address
+ * Returns: the network prefix
  */
-GInetAddress *gvir_sandbox_config_network_address_get_netmask(GVirSandboxConfigNetworkAddress *config)
+guint gvir_sandbox_config_network_address_get_prefix(GVirSandboxConfigNetworkAddress *config)
 {
     GVirSandboxConfigNetworkAddressPrivate *priv = config->priv;
-    return priv->netmask;
+    return priv->prefix;
 }
 
 
