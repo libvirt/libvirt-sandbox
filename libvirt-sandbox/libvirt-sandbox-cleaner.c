@@ -201,9 +201,12 @@ void gvir_sandbox_cleaner_add_action_post_stop(GVirSandboxCleaner *cleaner,
 gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *cleaner, GError **error)
 {
     GVirSandboxCleanerPrivate *priv = cleaner->priv;
-    GList *tmp = priv->postStart;
+    GList *actions = g_list_copy(priv->postStart);
+    GList *tmp;
     gboolean ret = TRUE;
 
+    actions = g_list_reverse(actions);
+    tmp = actions;
     while (tmp) {
         GVirSandboxCleanerEntry *ent = tmp->data;
 
@@ -212,6 +215,7 @@ gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *cleaner, GError
 
         tmp = tmp->next;
     }
+    g_list_free(actions);
 
     return ret;
 }
@@ -220,9 +224,12 @@ gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *cleaner, GError
 gboolean gvir_sandbox_cleaner_run_post_stop(GVirSandboxCleaner *cleaner, GError **error)
 {
     GVirSandboxCleanerPrivate *priv = cleaner->priv;
-    GList *tmp = priv->postStop;
+    GList *actions = g_list_copy(priv->postStop);
+    GList *tmp;
     gboolean ret = TRUE;
 
+    actions = g_list_reverse(actions);
+    tmp = actions;
     while (tmp) {
         GVirSandboxCleanerEntry *ent = tmp->data;
 
@@ -231,6 +238,7 @@ gboolean gvir_sandbox_cleaner_run_post_stop(GVirSandboxCleaner *cleaner, GError 
 
         tmp = tmp->next;
     }
+    g_list_free(actions);
 
     return ret;
 }
