@@ -22,14 +22,16 @@ libvirt_sandbox_init_common_CFLAGS = \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
-libvirt_sandbox_init_common_LDFLAGS= \
-			libvirt-sandbox-1.0.la \
+libvirt_sandbox_init_common_LDFLAGS = \
 			-lutil \
 			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
 			$(GIO_UNIX_LIBS) \
 			$(LIBVIRT_GLIB_LIBS) \
 			$(LIBVIRT_GOBJECT_LIBS) \
 			$(WARN_CFLAGS) \
+			$(NULL)
+libvirt_sandbox_init_common_LDADD = \
+			libvirt-sandbox-1.0.la \
 			$(NULL)
 
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
@@ -48,6 +50,9 @@ libvirt_sandbox_init_lxc_LDFLAGS = \
 			$(LIBVIRT_GLIB_LIBS) \
 			$(LIBVIRT_GOBJECT_LIBS) \
 			$(WARN_CFLAGS) \
+			$(NULL)
+libvirt_sandbox_init_lxc_LDADD = \
+			libvirt-sandbox-1.0.la \
 			$(NULL)
 
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
