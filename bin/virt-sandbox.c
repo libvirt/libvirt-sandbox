@@ -127,13 +127,14 @@ int main(int argc, char **argv) {
 
     cfg = gvir_sandbox_config_new(name ? name : "sandbox");
     gvir_sandbox_config_set_command(cfg, cmdargs);
-    if (mounts)
-        gvir_sandbox_config_add_mount_strv(cfg, mounts);
+    if (mounts &&
+        !gvir_sandbox_config_add_host_mount_strv(cfg, mounts, &error))
+        goto cleanup;
     if (includes &&
-        !gvir_sandbox_config_add_include_strv(cfg, includes, &error))
+        !gvir_sandbox_config_add_host_include_strv(cfg, includes, &error))
         goto cleanup;
     if (includefile &&
-        !gvir_sandbox_config_add_include_file(cfg, includefile, &error))
+        !gvir_sandbox_config_add_host_include_file(cfg, includefile, &error))
         goto cleanup;
     if (security &&
         !gvir_sandbox_config_set_security_opts(cfg, security, &error))

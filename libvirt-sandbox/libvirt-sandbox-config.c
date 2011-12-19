@@ -54,7 +54,8 @@ struct _GVirSandboxConfigPrivate
     gchar *homedir;
 
     GList *networks;
-    GList *mounts;
+    GList *hostMounts;
+    GList *bindMounts;
 
     gchar **command;
 
@@ -223,8 +224,11 @@ static void gvir_sandbox_config_finalize(GObject *object)
     GVirSandboxConfig *config = GVIR_SANDBOX_CONFIG(object);
     GVirSandboxConfigPrivate *priv = config->priv;
 
-    g_list_foreach(priv->mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(priv->mounts);
+    g_list_foreach(priv->hostMounts, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->hostMounts);
+
+    g_list_foreach(priv->bindMounts, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->bindMounts);
 
     g_list_foreach(priv->networks, (GFunc)g_object_unref, NULL);
     g_list_free(priv->networks);
@@ -657,54 +661,217 @@ void gvir_sandbox_config_add_network(GVirSandboxConfig *config,
 
 
 /**
- * gvir_sandbox_config_add_mount:
+ * gvir_sandbox_config_get_networks:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the list of custom networks in the sandbox
+ *
+ * Returns: (transfer full) (element-type GVirSandboxConfigNetwork): the list of networks
+ */
+GList *gvir_sandbox_config_get_networks(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_list_foreach(priv->networks, (GFunc)g_object_ref, NULL);
+    return g_list_copy(priv->networks);
+}
+
+
+/**
+ * gvir_sandbox_config_add_network_strv:
+ * @config: (transfer none): the sandbox config
+ * @networks: (transfer none)(array zero-terminated=1): the list of networks
+ *
+ * Parses @networks whose elements are in the format
+ * KEY=VALUE, creating #GVirSandboxConfigNetwork
+ * instances for each element.
+ *
+ *  dhcp
+ *  address=192.168.122.1/24%129.168.122.255;
+ *  address=192.168.122.1/24%129.168.122.255;address=2001:212::204.2/64
+ */
+gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
+                                              gchar **networks,
+                                              GError **error)
+{
+    gboolean ret = FALSE;
+    gsize i = 0;
+    while (networks && networks[i]) {
+        gchar **params = g_strsplit(networks[i], ";", 50);
+        gsize j = 0;
+        GVirSandboxConfigNetwork *net;
+
+        net = gvir_sandbox_config_network_new();
+
+        while (params && params[j]) {
+            gchar *param = params[j];
+
+            if (g_str_equal(param, "dhcp")) {
+                gvir_sandbox_config_network_set_dhcp(net, TRUE);
+            } else if (g_str_has_prefix(param, "address=")) {
+                GVirSandboxConfigNetworkAddress *addr;
+                GInetAddress *primaryaddr;
+                GInetAddress *bcastaddr;
+                gchar *primary = g_strdup(param + strlen("address="));
+                gchar *bcast = NULL;
+                guint prefix = 24;
+                gchar *tmp;
+                if ((tmp = strchr(primary, '/'))) {
+                    prefix = g_ascii_strtoll(tmp+1, NULL, 10);
+                    *tmp = '\0';
+                    tmp = strchr(tmp+1, '%');
+                } else {
+                    tmp = strchr(primary, '%');
+                }
+                if (tmp) {
+                    *tmp = '\0';
+                    bcast = tmp+1;
+                }
+
+                if (!(primaryaddr = g_inet_address_new_from_string(primary))) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Unable to parse address %s", primary);
+                    g_free(primary);
+                    goto cleanup;
+                }
+
+                if (!(bcastaddr = g_inet_address_new_from_string(bcast))) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Unable to parse address %s", bcast);
+                    g_free(primary);
+                    g_object_unref(primaryaddr);
+                    goto cleanup;
+                }
+
+                addr = gvir_sandbox_config_network_address_new(primaryaddr,
+                                                               prefix,
+                                                               bcastaddr);
+
+                gvir_sandbox_config_network_add_address(net, addr);
+
+                g_object_unref(primaryaddr);
+                g_object_unref(bcastaddr);
+                g_free(primary);
+
+                gvir_sandbox_config_network_set_dhcp(net, FALSE);
+            } else if (g_str_has_prefix(param, "route=")) {
+                GVirSandboxConfigNetworkRoute *route;
+                GInetAddress *targetaddr;
+                GInetAddress *gatewayaddr;
+                gchar *target = g_strdup(param + strlen("route="));
+                gchar *gateway = NULL;
+                guint prefix = 24;
+                gchar *tmp;
+                if ((tmp = strchr(target, '/'))) {
+                    prefix = g_ascii_strtoll(tmp+1, NULL, 10);
+                    *tmp = '\0';
+                    tmp = strchr(tmp+1, '%');
+                } else {
+                    tmp = strchr(target, '%');
+                }
+                if (tmp) {
+                    *tmp = '\0';
+                    gateway = tmp+1;
+                }
+
+                if (!(targetaddr = g_inet_address_new_from_string(target))) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Unable to parse address %s", target);
+                    g_free(target);
+                    goto cleanup;
+                }
+
+                if (!(gatewayaddr = g_inet_address_new_from_string(gateway))) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Unable to parse address %s", gateway);
+                    g_free(target);
+                    g_object_unref(targetaddr);
+                    goto cleanup;
+                }
+
+                route = gvir_sandbox_config_network_route_new(targetaddr,
+                                                              prefix,
+                                                              gatewayaddr);
+
+                gvir_sandbox_config_network_add_route(net, route);
+
+                g_object_unref(targetaddr);
+                g_object_unref(gatewayaddr);
+                g_free(target);
+
+                gvir_sandbox_config_network_set_dhcp(net, FALSE);
+            }
+
+            j++;
+        }
+        g_strfreev(params);
+
+        gvir_sandbox_config_add_network(config, net);
+        g_object_unref(net);
+        i++;
+    }
+    ret = TRUE;
+cleanup:
+    g_printerr("ret %d\n", ret);
+    return ret;
+}
+
+
+gboolean gvir_sandbox_config_has_networks(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->networks ? TRUE : FALSE;
+}
+
+
+/**
+ * gvir_sandbox_config_add_host_mount:
  * @config: (transfer none): the sandbox config
  * @mnt: (transfer none): the mount configuration
  *
  * Adds a new custom mount to the sandbox, to override part of the
  * host filesystem
  */
-void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
-                                   GVirSandboxConfigMount *mnt)
+void gvir_sandbox_config_add_host_mount(GVirSandboxConfig *config,
+                                        GVirSandboxConfigMount *mnt)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
 
     g_object_ref(mnt);
-    priv->mounts = g_list_append(priv->mounts, mnt);
+    priv->hostMounts = g_list_append(priv->hostMounts, mnt);
 }
 
 
 /**
- * gvir_sandbox_config_get_mounts:
+ * gvir_sandbox_config_get_host_mounts:
  * @config: (transfer none): the sandbox config
  *
  * Retrieves the list of custom mounts in the sandbox
  *
  * Returns: (transfer full) (element-type GVirSandboxConfigMount): the list of mounts
  */
-GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config)
+GList *gvir_sandbox_config_get_host_mounts(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    g_list_foreach(priv->mounts, (GFunc)g_object_ref, NULL);
-    return g_list_copy(priv->mounts);
+    g_list_foreach(priv->hostMounts, (GFunc)g_object_ref, NULL);
+    return g_list_copy(priv->hostMounts);
 }
 
 
 /**
- * gvir_sandbox_config_find_mount:
+ * gvir_sandbox_config_find_host_mount:
  * @config: (transfer none): the sandbox config
  * @target: the guest target path
  *
- * Finds the #GVirSandboxCOnfigMount object corresponding to a guest
+ * Finds the #GVirSandboxConfigMount object corresponding to a guest
  * path of @target.
  *
  * Returns: (transfer full)(allow-none): a mount object or NULL
  */
-GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config,
-                                                       const gchar *target)
+GVirSandboxConfigMount *gvir_sandbox_config_find_host_mount(GVirSandboxConfig *config,
+                                                            const gchar *target)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    GList *tmp = priv->mounts;
+    GList *tmp = priv->hostMounts;
 
     while (tmp) {
         GVirSandboxConfigMount *mnt = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
@@ -718,16 +885,17 @@ GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config
 
 
 /**
- * gvir_sandbox_config_set_mounts:
+ * gvir_sandbox_config_add_host_mount_strv:
  * @config: (transfer none): the sandbox config
  * @mounts: (transfer none)(array zero-terminated=1): the list of mounts
  *
  * Parses @mounts whose elements are in the format
- * GUEST-TARGET=ROOT-PATH, creating #GVirSandboxConfigMount
+ * GUEST-PATH=HOST-PATH, creating #GVirSandboxConfigMount
  * instances for each element.
  */
-void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
-                                        gchar **mounts)
+gboolean gvir_sandbox_config_add_host_mount_strv(GVirSandboxConfig *config,
+                                                 gchar **mounts,
+                                                 GError **error G_GNUC_UNUSED)
 {
     gsize i = 0;
     while (mounts && mounts[i]) {
@@ -746,16 +914,119 @@ void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
         mnt = gvir_sandbox_config_mount_new(guest);
         gvir_sandbox_config_mount_set_root(mnt, host);
 
-        gvir_sandbox_config_add_mount(config, mnt);
+        gvir_sandbox_config_add_host_mount(config, mnt);
         g_object_unref(mnt);
         g_free(guest);
         i++;
     }
+
+    return TRUE;
 }
 
 
 /**
- * gvir_sandbox_config_set_includes:
+ * gvir_sandbox_config_add_bind_mount:
+ * @config: (transfer none): the sandbox config
+ * @mnt: (transfer none): the mount configuration
+ *
+ * Adds a new custom mount to the sandbox, to override part of the
+ * bind filesystem
+ */
+void gvir_sandbox_config_add_bind_mount(GVirSandboxConfig *config,
+                                        GVirSandboxConfigMount *mnt)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+
+    g_object_ref(mnt);
+    priv->bindMounts = g_list_append(priv->bindMounts, mnt);
+}
+
+
+/**
+ * gvir_sandbox_config_get_bind_mounts:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the list of custom mounts in the sandbox
+ *
+ * Returns: (transfer full) (element-type GVirSandboxConfigMount): the list of mounts
+ */
+GList *gvir_sandbox_config_get_bind_mounts(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_list_foreach(priv->bindMounts, (GFunc)g_object_ref, NULL);
+    return g_list_copy(priv->bindMounts);
+}
+
+
+/**
+ * gvir_sandbox_config_find_bind_mount:
+ * @config: (transfer none): the sandbox config
+ * @target: the guest target path
+ *
+ * Finds the #GVirSandboxConfigMount object corresponding to a guest
+ * path of @target.
+ *
+ * Returns: (transfer full)(allow-none): a mount object or NULL
+ */
+GVirSandboxConfigMount *gvir_sandbox_config_find_bind_mount(GVirSandboxConfig *config,
+                                                            const gchar *target)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    GList *tmp = priv->bindMounts;
+
+    while (tmp) {
+        GVirSandboxConfigMount *mnt = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
+        if (g_str_equal(gvir_sandbox_config_mount_get_target(mnt), target)) {
+            return g_object_ref(mnt);
+        }
+        tmp = tmp->next;
+    }
+    return NULL;
+}
+
+
+/**
+ * gvir_sandbox_config_add_bind_mount_strv:
+ * @config: (transfer none): the sandbox config
+ * @mounts: (transfer none)(array zero-terminated=1): the list of mounts
+ *
+ * Parses @mounts whose elements are in the format
+ * GUEST-PATH=BIND-PATH, creating #GVirSandboxConfigMount
+ * instances for each element.
+ */
+gboolean gvir_sandbox_config_add_bind_mount_strv(GVirSandboxConfig *config,
+                                                 gchar **mounts,
+                                                 GError **error G_GNUC_UNUSED)
+{
+    gsize i = 0;
+    while (mounts && mounts[i]) {
+        gchar *guest = NULL;
+        const gchar *bind = NULL;
+        GVirSandboxConfigMount *mnt;
+        gchar *tmp;
+
+        guest = g_strdup(mounts[i]);
+
+        if ((tmp = strchr(guest, '=')) != NULL) {
+            *tmp = '\0';
+            bind = tmp + 1;
+        }
+
+        mnt = gvir_sandbox_config_mount_new(guest);
+        gvir_sandbox_config_mount_set_root(mnt, bind);
+
+        gvir_sandbox_config_add_bind_mount(config, mnt);
+        g_object_unref(mnt);
+        g_free(guest);
+        i++;
+    }
+
+    return TRUE;
+}
+
+
+/**
+ * gvir_sandbox_config_add_host_include_strv:
  * @config: (transfer none): the sandbox config
  * @includes: (transfer none)(array zero-terminated=1): the list of includes
  *
@@ -763,9 +1034,9 @@ void gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
  * GUEST-TARGET=ROOT-PATH. If ROOT_PATH is omitted,
  * then it is assumed to be the same as GUEST-TARGET
  */
-gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
-                                              gchar **includes,
-                                              GError **error)
+gboolean gvir_sandbox_config_add_host_include_strv(GVirSandboxConfig *config,
+                                                   gchar **includes,
+                                                   GError **error)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     gsize i = 0;
@@ -786,7 +1057,7 @@ gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
             host = guest;
         }
 
-        mnts = priv->mounts;
+        mnts = priv->hostMounts;
         while (mnts) {
             mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
             const gchar *target = gvir_sandbox_config_mount_get_target(mnt);
@@ -814,9 +1085,9 @@ gboolean gvir_sandbox_config_add_include_strv(GVirSandboxConfig *config,
 }
 
 
-gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
-                                              gchar *includefile,
-                                              GError **error)
+gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
+                                                   gchar *includefile,
+                                                   GError **error)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     GFile *file = g_file_new_for_path(includefile);
@@ -848,7 +1119,7 @@ gboolean gvir_sandbox_config_add_include_file(GVirSandboxConfig *config,
             host = guest;
         }
 
-        mnts = priv->mounts;
+        mnts = priv->hostMounts;
         while (mnts) {
             mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
             const gchar *target = gvir_sandbox_config_mount_get_target(mnt);
@@ -1005,6 +1276,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
 
 
 static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *file,
+                                                                     const gchar *group,
                                                                      guint i,
                                                                      GError **error)
 {
@@ -1015,7 +1287,7 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
     guint j;
     GError *e = NULL;
 
-    key = g_strdup_printf("mount.%u", i);
+    key = g_strdup_printf("%s.%u", group, i);
     if ((str = g_key_file_get_string(file, key, "target", &e)) == NULL) {
         if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
             g_error_free(e);
@@ -1040,7 +1312,7 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
     g_free(str);
 
     for (j = 0 ; j < 1024 ; j++) {
-        key = g_strdup_printf("mount.%u.include.%u", i, j);
+        key = g_strdup_printf("%s.%u.include.%u", group, i, j);
 
         if ((str = g_key_file_get_string(file, key, "src", &e)) == NULL) {
             if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
@@ -1271,11 +1543,20 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
 
     for (i = 0 ; i < 1024 ; i++) {
         GVirSandboxConfigMount *mount;
-        if (!(mount = gvir_sandbox_config_load_config_mount(file, i, error)) &&
+        if (!(mount = gvir_sandbox_config_load_config_mount(file, "hostmount", i, error)) &&
             *error)
             goto cleanup;
         if (mount)
-            priv->mounts = g_list_append(priv->mounts, mount);
+            priv->hostMounts = g_list_append(priv->hostMounts, mount);
+    }
+
+    for (i = 0 ; i < 1024 ; i++) {
+        GVirSandboxConfigMount *mount;
+        if (!(mount = gvir_sandbox_config_load_config_mount(file, "bindmount", i, error)) &&
+            *error)
+            goto cleanup;
+        if (mount)
+            priv->bindMounts = g_list_append(priv->bindMounts, mount);
     }
 
 
@@ -1303,6 +1584,7 @@ cleanup:
 
 static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config,
                                                   GKeyFile *file,
+                                                  const gchar *group,
                                                   guint i)
 {
     gchar *key;
@@ -1311,7 +1593,7 @@ static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config
     uint j;
     gpointer keyptr, valptr;
 
-    key = g_strdup_printf("mount.%u", i);
+    key = g_strdup_printf("%s.%u", group, i);
     g_key_file_set_string(file, key, "target", gvir_sandbox_config_mount_get_target(config));
     g_key_file_set_string(file, key, "root", gvir_sandbox_config_mount_get_root(config));
     g_free(key);
@@ -1324,7 +1606,7 @@ static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config
         const gchar *dst = keyptr;
         const gchar *src = valptr;
 
-        key = g_strdup_printf("mount.%u.include.%u", i, j);
+        key = g_strdup_printf("%s.%u.include.%u", group, i, j);
         g_key_file_set_string(file, key, "dst", dst);
         if (src)
             g_key_file_set_string(file, key, "src", src);
@@ -1442,10 +1724,23 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     }
 
     i = 0;
-    tmp = priv->mounts;
+    tmp = priv->hostMounts;
     while (tmp) {
         gvir_sandbox_config_save_config_mount(tmp->data,
                                               file,
+                                              "hostmount",
+                                              i);
+
+        tmp = tmp->next;
+        i++;
+    }
+
+    i = 0;
+    tmp = priv->bindMounts;
+    while (tmp) {
+        gvir_sandbox_config_save_config_mount(tmp->data,
+                                              file,
+                                              "bindmount",
                                               i);
 
         tmp = tmp->next;

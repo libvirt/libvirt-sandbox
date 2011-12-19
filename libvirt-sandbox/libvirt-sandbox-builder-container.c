@@ -258,7 +258,7 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
     g_object_unref(fs);
 
-    tmp = mounts = gvir_sandbox_config_get_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
     while (tmp) {
         GVirSandboxConfigMount *mconfig = tmp->data;
 
