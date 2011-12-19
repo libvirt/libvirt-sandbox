@@ -51,11 +51,13 @@ int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GError *error = NULL;
     gchar *name = NULL;
+    gchar **binds = NULL;
     gchar **mounts = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
     gchar *uri = NULL;
     gchar *security = NULL;
+    gchar **networks = NULL;
     gchar **cmdargs = NULL;
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
@@ -71,12 +73,16 @@ int main(int argc, char **argv) {
           N_("connect to hypervisor"), "URI"},
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
+        { "bind", 'b', 0, G_OPTION_ARG_STRING_ARRAY, &binds,
+          N_("bind guest locations together"), "DST-GUEST-PATH=SRC-GUEST-PATH" },
         { "mount", 'M', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
           N_("pass host locations through to the guest"), "GUEST-PATH=HOST-PATH" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
           N_("file contain list of files to include"), "PATH" },
+        { "network", 'N', 0, G_OPTION_ARG_STRING_ARRAY, &networks,
+          N_("setup network interface properties"), "PATH", },
         { "security", 's', 0, G_OPTION_ARG_STRING, &security,
           N_("security properties"), "PATH", },
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
@@ -133,6 +139,12 @@ int main(int argc, char **argv) {
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
+    if (binds &&
+        !gvir_sandbox_config_add_bind_mount_strv(cfg, binds, &error)) {
+        g_printerr(_("Unable to parse bind mounts: %s\n"),
+                   error && error->message ? error->message : "unknown");
+        goto cleanup;
+    }
     if (includes &&
         !gvir_sandbox_config_add_host_include_strv(cfg, includes, &error)) {
         g_printerr(_("Unable to parse includes: %s\n"),
@@ -142,6 +154,12 @@ int main(int argc, char **argv) {
     if (includefile &&
         !gvir_sandbox_config_add_host_include_file(cfg, includefile, &error)) {
         g_printerr(_("Unable to parse include file: %s\n"),
+                   error && error->message ? error->message : "unknown");
+        goto cleanup;
+    }
+    if (networks &&
+        !gvir_sandbox_config_add_network_strv(cfg, networks, &error)) {
+        g_printerr(_("Unable to parse networks: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
