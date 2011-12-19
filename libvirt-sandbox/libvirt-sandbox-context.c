@@ -378,7 +378,7 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
 
     if (!(priv->domain = gvir_connection_start_domain(priv->connection,
                                                       config,
-                                                      0,
+                                                      GVIR_DOMAIN_START_AUTODESTROY,
                                                       error)))
         goto error;
 
