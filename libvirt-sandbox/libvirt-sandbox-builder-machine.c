@@ -219,7 +219,7 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
     tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
     while (tmp) {
         GVirSandboxConfigMount *mount = tmp->data;
-        gchar *key = g_strdup_printf("mount%u=%s\n", i,
+        gchar *key = g_strdup_printf("sandbox:mount%u=%s\n", i,
                                      gvir_sandbox_config_mount_get_target(mount));
 
         if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos), key, strlen(key),

@@ -319,9 +319,9 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         char *target = strchr(line, '=');
         *target = '\0';
         target++;
-        size_t n = strlen(line);
-        if (n > 0 && line[n-1] == '\n')
-            line[--n] = '\0';
+        size_t n = strlen(target);
+        if (n > 0 && target[n-1] == '\n')
+            target[--n] = '\0';
 
         mount_9pfs(line, target, 0755, 1);
     }
