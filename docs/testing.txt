@@ -1,0 +1,78 @@
+   Test Plan for libvirt Sandbox
+   =============================
+
+For all tests, repeat with both KVM and LXC, eg
+
+   export LIBVIRT_DEFAULT_URI=qemu:///session
+   export LIBVIRT_DEFAULT_URI=qemu:///system
+   export LIBVIRT_DEFAULT_URI=lxc:///
+
+ 1. Console I/O.
+
+     a. No I/O, with TTY
+
+          libvirt-sandbox /bin/false
+
+     b. Output only, with TTY
+
+          libvirt-sandbox /bin/date
+
+     c. Input/output, with TTY
+
+          libvirt-sandbox /bin/sh
+
+     d. No I/O, without TTY
+
+          libvirt-sandbox /bin/false < /dev/null > /dev/null
+
+     e. Output only, without TTY
+
+          libvirt-sandbox /bin/date > date.txt
+
+     f. Input/output, without TTY
+
+          libvirt-sandbox /bin/cat < src.txt > dst.txt
+
+
+ 2. Filesystem config
+
+     a. Host FS only
+
+     b. Host FS + /tmp dir
+
+     c. Host FS + /tmp tempdir
+
+     d. Host FS + /home dir + /tmp tempdir
+
+     e. Host FS + /home file
+
+     f. Host FS + /home block
+
+     g. Host FS + /mnt file + /home bind + /tmp bind
+
+
+ 3. File includes
+
+     a. Host FS + /tmp dir + copy file /home/tmp/foo into /tmp/foo
+
+     b. Host FS + /tmp tempdir + copy file /home/tmp/foo into /tmp/foo
+
+     c. Host FS + /tmp dir + copy dir /home/tmp/bar into /tmp/bar
+
+     d. Host FS + /tmp tempdir + copy dir /home/tmp/bar into /tmp/bar
+
+     e. Host FS + /tmp dir + copy filelist /home/tmp/foolist
+
+     f. Host FS + /tmp tempdir + copy filelist /home/tmp/foolist
+
+
+ 4. Environment / security
+
+     a. Same UID/GID, same $USER, same $HOME, no capabilities
+
+     b. UID/GID > 0, USER=foo, HOME=/home/foo, no capabilities
+
+     c. UID/GID == 0, USER=root, HOME=/root, no capabilities
+
+     d. UID/GID == 0, USER=root, HOME=/root, all capabilities
+
