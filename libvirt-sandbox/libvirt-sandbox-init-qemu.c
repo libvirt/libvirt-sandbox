@@ -205,6 +205,11 @@ bind_file(const char *src, const char *dst, int mode)
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
+    if (getpid() != 1) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: must be run as the 'init' program of a KVM guest\n");
+        exit(EXIT_FAILURE);
+    }
+
     set_debug();
 
     if (debug)

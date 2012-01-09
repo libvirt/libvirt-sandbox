@@ -45,6 +45,11 @@ static int debug = 0;
 int
 main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 {
+    if (getenv("LIBVIRT_LXC_UUID") == NULL) {
+        fprintf(stderr, "libvirt-sandbox-init-lxc: must be run as the 'init' program of an LXC guest\n");
+        exit(EXIT_FAILURE);
+    }
+
     set_debug();
 
     if (debug)
