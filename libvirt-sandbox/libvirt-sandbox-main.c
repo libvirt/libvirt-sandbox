@@ -64,7 +64,7 @@ gboolean gvir_sandbox_init_check(int *argc,
                                  char ***argv,
                                  GError **err)
 {
-    if (!gvir_config_init_check(argc, argv, err))
+    if (!gvir_init_config_check(argc, argv, err))
         return FALSE;
 
     /* GLib >= 2.31.0 debug is off by default, so we need to
