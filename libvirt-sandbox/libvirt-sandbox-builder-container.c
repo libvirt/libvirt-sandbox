@@ -114,6 +114,21 @@ static void gvir_sandbox_builder_container_finalize(GObject *object)
 }
 
 
+static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config G_GNUC_UNUSED)
+{
+    GString *str = g_string_new("");
+    gchar *ret;
+
+    /* Now kernel args */
+    if (getenv("LIBVIRT_SANDBOX_DEBUG"))
+        g_string_append(str, "debug");
+
+    ret = str->str;
+    g_string_free(str, FALSE);
+    return ret;
+}
+
+
 static gboolean gvir_sandbox_builder_container_construct_basic(GVirSandboxBuilder *builder,
                                                                GVirSandboxConfig *config,
                                                                const gchar *configdir,
@@ -139,11 +154,14 @@ static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *
                                                             GVirConfigDomain *domain,
                                                             GError **error)
 {
+    gchar *cmdline = NULL;
     GVirConfigDomainOs *os;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
         construct_os(builder, config, configdir, cleaner, domain, error))
         return FALSE;
+
+    cmdline = gvir_sandbox_builder_container_cmdline(config);
 
     os = gvir_config_domain_os_new();
     gvir_config_domain_os_set_os_type(os,
@@ -152,7 +170,10 @@ static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *
                                    gvir_sandbox_config_get_arch(config));
     gvir_config_domain_os_set_init(os,
                                    LIBEXECDIR "/libvirt-sandbox-init-lxc");
+    gvir_config_domain_os_set_cmdline(os, cmdline);
     gvir_config_domain_set_os(domain, os);
+
+    g_free(cmdline);
 
     return TRUE;
 }
@@ -181,7 +202,6 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 {
     GVirConfigDomainFilesys *fs;
     GVirConfigDomainInterfaceNetwork *iface;
-    GVirConfigDomainMemballoon *ball;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
@@ -248,14 +268,6 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
         tmp = tmp->next;
     }
-
-
-    ball = gvir_config_domain_memballoon_new();
-    gvir_config_domain_memballoon_set_model(ball,
-                                            GVIR_CONFIG_DOMAIN_MEMBALLOON_MODEL_NONE);
-    gvir_config_domain_add_device(domain,
-                                  GVIR_CONFIG_DOMAIN_DEVICE(ball));
-    g_object_unref(ball);
 
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
