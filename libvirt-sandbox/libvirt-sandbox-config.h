@@ -84,6 +84,9 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_tty(GVirSandboxConfig *config, gboolean tty);
 gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_set_shell(GVirSandboxConfig *config, gboolean shell);
+gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config);
+
 void gvir_sandbox_config_set_userid(GVirSandboxConfig *config, guint uid);
 guint gvir_sandbox_config_get_userid(GVirSandboxConfig *config);
 

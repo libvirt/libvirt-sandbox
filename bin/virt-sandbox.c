@@ -61,6 +61,7 @@ int main(int argc, char **argv) {
     gchar **cmdargs = NULL;
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
+    gboolean shell = FALSE;
     GOptionContext *context;
     GOptionEntry options[] = {
         { "version", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -85,6 +86,8 @@ int main(int argc, char **argv) {
           N_("setup network interface properties"), "PATH", },
         { "security", 's', 0, G_OPTION_ARG_STRING, &security,
           N_("security properties"), "PATH", },
+        { "shell", '\0', 0, G_OPTION_ARG_NONE, &shell,
+          N_("start a shell"), NULL, },
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
           NULL, "COMMAND-PATH [ARGS...]" },
         { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -169,6 +172,9 @@ int main(int argc, char **argv) {
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
+
+    if (shell)
+        gvir_sandbox_config_set_shell(cfg, TRUE);
 
     if (isatty(STDIN_FILENO))
         gvir_sandbox_config_set_tty(cfg, TRUE);

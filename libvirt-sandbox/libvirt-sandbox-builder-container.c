@@ -202,6 +202,8 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 {
     GVirConfigDomainFilesys *fs;
     GVirConfigDomainInterfaceNetwork *iface;
+    GVirConfigDomainConsole *con;
+    GVirConfigDomainChardevSourcePty *src;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
@@ -269,6 +271,28 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
         tmp = tmp->next;
     }
 
+
+    /* The first console is for stdio of the sandboxed app */
+    src = gvir_config_domain_chardev_source_pty_new();
+    con = gvir_config_domain_console_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(con));
+    g_object_unref(con);
+
+
+    /* Optional second console is for a interactive shell (useful for
+     * troubleshooting stuff */
+    if (gvir_sandbox_config_get_shell(config)) {
+        src = gvir_config_domain_chardev_source_pty_new();
+        con = gvir_config_domain_console_new();
+        gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                              GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(con));
+        g_object_unref(con);
+    }
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_CONTAINER_ERROR, 0,

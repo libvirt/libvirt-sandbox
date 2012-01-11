@@ -63,6 +63,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
 	gvir_sandbox_config_get_tty;
+	gvir_sandbox_config_get_shell;
 	gvir_sandbox_config_get_security_level;
 	gvir_sandbox_config_get_security_type;
 	gvir_sandbox_config_get_type;
@@ -77,6 +78,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_set_command;
 	gvir_sandbox_config_set_root;
 	gvir_sandbox_config_set_tty;
+	gvir_sandbox_config_set_shell;
 	gvir_sandbox_config_set_arch;
 	gvir_sandbox_config_set_userid;
 	gvir_sandbox_config_set_groupid;

@@ -47,6 +47,7 @@ struct _GVirSandboxConfigPrivate
     gchar *root;
     gchar *arch;
     gboolean tty;
+    gboolean shell;
 
     guint uid;
     guint gid;
@@ -73,6 +74,7 @@ enum {
     PROP_ROOT,
     PROP_ARCH,
     PROP_TTY,
+    PROP_SHELL,
 
     PROP_UID,
     PROP_GID,
@@ -126,6 +128,10 @@ static void gvir_sandbox_config_get_property(GObject *object,
 
     case PROP_TTY:
         g_value_set_boolean(value, priv->tty);
+        break;
+
+    case PROP_SHELL:
+        g_value_set_boolean(value, priv->shell);
         break;
 
     case PROP_UID:
@@ -184,6 +190,10 @@ static void gvir_sandbox_config_set_property(GObject *object,
 
     case PROP_TTY:
         priv->tty = g_value_get_boolean(value);
+        break;
+
+    case PROP_SHELL:
+        priv->shell = g_value_get_boolean(value);
         break;
 
     case PROP_UID:
@@ -294,6 +304,17 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                     g_param_spec_string("tty",
                                                         "TTY",
                                                         "TTY",
+                                                        FALSE,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_SHELL,
+                                    g_param_spec_string("shell",
+                                                        "SHELL",
+                                                        "SHELL",
                                                         FALSE,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -517,6 +538,35 @@ gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->tty;
+}
+
+
+/**
+ * gvir_sandbox_config_set_shell:
+ * @config: (transfer none): the sandbox config
+ * @shell: (transfer none): true if the container should have a shell
+ *
+ * Set whether the container console should have a interactive shell.
+ */
+void gvir_sandbox_config_set_shell(GVirSandboxConfig *config, gboolean shell)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->shell = shell;
+}
+
+
+/**
+ * gvir_sandbox_config_get_shell:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox shell flag
+ *
+ * Returns: (transfer none): the shell flag
+ */
+gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->shell;
 }
 
 
@@ -1486,6 +1536,13 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     } else {
         priv->tty = b;
     }
+    b = g_key_file_get_boolean(file, "core", "shell", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->shell = b;
+    }
 
     u = g_key_file_get_uint64(file, "identity", "uid", &e);
     if (e) {
@@ -1710,6 +1767,7 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     g_key_file_set_string(file, "core", "root", priv->root);
     g_key_file_set_string(file, "core", "arch", priv->arch);
     g_key_file_set_boolean(file, "core", "tty", priv->tty);
+    g_key_file_set_boolean(file, "core", "shell", priv->shell);
 
     g_key_file_set_uint64(file, "identity", "uid", priv->uid);
     g_key_file_set_uint64(file, "identity", "gid", priv->gid);

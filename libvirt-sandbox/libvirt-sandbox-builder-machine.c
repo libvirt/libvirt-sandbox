@@ -355,6 +355,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     GVirConfigDomainInterfaceUser *iface;
     GVirConfigDomainMemballoon *ball;
     GVirConfigDomainGraphicsSpice *graph;
+    GVirConfigDomainSerial *con;
+    GVirConfigDomainChardevSourcePty *src;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
     int i;
 
@@ -368,7 +370,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     gvir_config_domain_filesys_set_source(fs,
                                           gvir_sandbox_config_get_root(config));
     gvir_config_domain_filesys_set_target(fs, "sandbox:root");
-    gvir_config_domain_filesys_set_readonly(fs, TRUE);
+    //gvir_config_domain_filesys_set_readonly(fs, TRUE);
 
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
@@ -380,7 +382,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
     gvir_config_domain_filesys_set_source(fs, configdir);
     gvir_config_domain_filesys_set_target(fs, "sandbox:config");
-    gvir_config_domain_filesys_set_readonly(fs, TRUE);
+    //gvir_config_domain_filesys_set_readonly(fs, TRUE);
 
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
@@ -432,6 +434,29 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(ball));
     g_object_unref(ball);
+
+
+    /* The first serial is for stdio of the sandboxed app */
+    src = gvir_config_domain_chardev_source_pty_new();
+    con = gvir_config_domain_serial_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(con));
+    g_object_unref(con);
+
+
+    /* Optional second serial is for a interactive shell (useful for
+     * troubleshooting stuff */
+    if (gvir_sandbox_config_get_shell(config)) {
+        src = gvir_config_domain_chardev_source_pty_new();
+        con = gvir_config_domain_serial_new();
+        gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                              GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(con));
+        g_object_unref(con);
+    }
 
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {

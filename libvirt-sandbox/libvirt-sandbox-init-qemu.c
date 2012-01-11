@@ -298,6 +298,9 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     MKNOD("/dev/tty1", S_IFCHR |0700, makedev(4, 1));
     MKNOD("/dev/tty2", S_IFCHR |0700, makedev(4, 2));
     MKNOD("/dev/ttyS0", S_IFCHR |0777, makedev(4, 64));
+    MKNOD("/dev/ttyS1", S_IFCHR |0777, makedev(4, 65));
+    MKNOD("/dev/ttyS2", S_IFCHR |0777, makedev(4, 66));
+    MKNOD("/dev/ttyS3", S_IFCHR |0777, makedev(4, 67));
     MKNOD("/dev/hvc0", S_IFCHR |0777, makedev(229, 0));
     MKNOD("/dev/fb", S_IFCHR |0700, makedev(29, 0));
     MKNOD("/dev/fb0", S_IFCHR |0700, makedev(29, 0));

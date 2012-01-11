@@ -367,6 +367,54 @@ start_windowmanager(const char *path)
 }
 
 
+static int
+start_shell(void)
+{
+    pid_t pid;
+
+    const gchar *devname = "/dev/ttyS1";
+    if (access(devname, R_OK|W_OK) < 0) {
+        devname = "/dev/tty2";
+    }
+
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-common: starting shell %s\n", devname);
+
+    pid = fork();
+    if (pid < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
+                __func__, strerror(errno));
+        return -1;
+    }
+
+    if (pid == 0) {
+        const char *shellargv[] = { "/bin/sh", NULL };
+        setsid();
+
+        int tty = open(devname, O_RDWR);
+
+        if (tty < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open %s: %s\n",
+                    __func__, devname, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        dup2(tty, STDIN_FILENO);
+        dup2(tty, STDOUT_FILENO);
+        dup2(tty, STDERR_FILENO);
+
+        close(tty);
+
+        execv(shellargv[0], (char**)shellargv);
+        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
+                __func__, shellargv[0], strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+
+
 static gboolean start_dhcp(const gchar *devname, GError **error)
 {
     const gchar *argv[] = { "/sbin/dhclient", "--no-pid", devname, NULL };
@@ -1069,6 +1117,10 @@ int main(int argc, char **argv) {
 
     if (xorg &&
         start_xorg() < 0)
+        exit(EXIT_FAILURE);
+
+    if (gvir_sandbox_config_get_shell(config) &&
+        start_shell() < 0)
         exit(EXIT_FAILURE);
 
     if (!setup_network(config, &error))
