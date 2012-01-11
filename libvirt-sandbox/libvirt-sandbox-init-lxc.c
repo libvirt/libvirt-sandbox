@@ -53,7 +53,7 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
     set_debug();
 
     if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-lxc: ext2 mini initrd starting up\n");
+        fprintf(stderr, "libvirt-sandbox-init-lxc: starting up\n");
 
     pid_t pid = fork();
     if (pid < 0)
@@ -71,25 +71,20 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 #define STRACE_FILTER "trace=read,write,poll,close"
 #endif
 
-#ifdef STRACE
-#define BINARY STRACE
-#else
-#define BINARY PATH
-#endif
         const char *args[] = {
 #ifdef STRACE
             STRACE, "-f", "-e", STRACE_FILTER, "-s", "2000",
             PATH,
 #else
-            "init",
+            PATH,
 #endif
             NULL
         };
         if (debug)
             fprintf(stderr, "Running interactive\n");
-        execv(BINARY, (char**)args);
+        execv(args[0], (char**)args);
         fprintf(stderr, "libvirt-sandbox-init-lxc: %s: cannot execute %s: %s\n",
-                __func__, BINARY, strerror(errno));
+                __func__, args[0], strerror(errno));
         exit(EXIT_FAILURE);
     } else {
         int status;
