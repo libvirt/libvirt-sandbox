@@ -63,6 +63,7 @@ the libvirt sandbox
 
 %install
 rm -rf $RPM_BUILD_ROOT
+chmod a-x examples/*.py examples/*.pl examples/*.js
 %__make install  DESTDIR=$RPM_BUILD_ROOT
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.la
