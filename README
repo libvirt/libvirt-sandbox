@@ -1,0 +1,68 @@
+   libvirt Sandbox
+   ===============
+
+The libvirt-sandbox package provides an API for building application
+sandboxes using libvirt. Sandboxes can be based on either container
+or machine based virtualization technology. Also included is a simple
+command line tool for launching sandboxes for arbitrary commands.
+
+Installation
+------------
+
+The libvirt-sandbox package uses GNU autotools, so the build install
+process follows the standard process documented in the INSTALL file.
+As a quick start you can do
+
+  ./configure --prefix=/usr --sysconfdir=/etc \
+        --localstatedir=/var --libdir=/usr/lib
+  make
+  sudo make install
+
+Or to install into a private user specific location
+
+  ./configure --prefix=$HOME/libvirt-sandbox
+  make
+  make install
+
+The following mandatory dependancies are required in order to
+build libvirt-sandbox
+
+  libvirt-glib     >= 0.0.3
+  glib2            >= 2.28.0
+
+
+
+Communication
+-------------
+
+To communicate with the development team, or to post patches
+there is a technical mailing list:
+
+   https://www.redhat.com/mailman/listinfo/libvir-list
+
+End user support can be found at
+
+   https://www.redhat.com/mailman/listinfo/libvirt-users
+
+There is also a mailing list for new release announcements:
+
+  https://www.redhat.com/mailman/listinfo/libvirt-announce
+
+Bugs found when using an OS distribution's binary packages should
+be reported to the OS vendors' own bug tracker first.
+
+The latest libvirt-sandbox code can be found in GIT at:
+
+   http://libvirt.org/git/?p=libvirt-sandbox.git
+
+Licensing
+---------
+
+libvirt-sandbox is provided under the terms of the GNU Lesser General
+Public License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+Please see the COPYING file for the complete LGPLv2+ license
+terms, or visit <http://www.gnu.org/licenses/>.
+
+-- End of readme
