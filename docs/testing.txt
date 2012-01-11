@@ -75,4 +75,3 @@ For all tests, repeat with both KVM and LXC, eg
      c. UID/GID == 0, USER=root, HOME=/root, no capabilities
 
      d. UID/GID == 0, USER=root, HOME=/root, all capabilities
-
