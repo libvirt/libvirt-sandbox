@@ -1,6 +1,14 @@
       libvirt Sandbox News
       ====================
 
+0.0.2 2012-01-12
+
+ - Add ability to attach to an existing sandbox
+ - Update to require libvirt-gobject 0.0.4
+ - Add ability to run privileged apps
+ - Add support for an admin debug shell
+ - Switch to use /etc/libvirt-sandbox/scratch for config
+
 0.0.1 2012-01-11
 
  - First release

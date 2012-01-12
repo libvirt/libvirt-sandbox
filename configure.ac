@@ -1,4 +1,4 @@
-AC_INIT(libvirt-sandbox, 0.0.1)
+AC_INIT(libvirt-sandbox, 0.0.2)
 AC_CONFIG_SRCDIR(libvirt-sandbox/libvirt-sandbox.h)
 AM_CONFIG_HEADER(config.h)
 dnl Make automake keep quiet about wildcards & other GNUmake-isms
