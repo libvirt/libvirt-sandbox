@@ -21,12 +21,14 @@ static gchar *readall(const gchar *path, GError **error)
         goto cleanup;
 
     len = g_file_info_get_size(info);
-    ret = g_new0(gchar, len);
+    ret = g_new0(gchar, len+1);
     if (!(fis = g_file_read(f, NULL, error)))
         goto cleanup;
 
     if (!g_input_stream_read_all(G_INPUT_STREAM(fis), ret, len, NULL, NULL, error))
         goto cleanup;
+    ret[len] = '\0';
+
     *error = NULL;
 
 cleanup:
