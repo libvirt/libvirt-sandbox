@@ -413,6 +413,32 @@ error:
 }
 
 
+gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+
+    if (priv->domain) {
+        *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                             "%s", "A previously built sandbox still exists");
+        return FALSE;
+    }
+
+    if (!gvir_connection_fetch_domains(priv->connection, NULL, error))
+        return FALSE;
+
+    if (!(priv->domain = gvir_connection_find_domain_by_name(
+              priv->connection,
+              gvir_sandbox_config_get_name(priv->config)))) {
+        *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                             "Sandbox %s does not exist",
+                             gvir_sandbox_config_get_name(priv->config));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;

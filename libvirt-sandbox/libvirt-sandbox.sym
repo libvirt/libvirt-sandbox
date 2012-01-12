@@ -101,6 +101,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_console_attach_stdio;
 	gvir_sandbox_console_detach;
 
+	gvir_sandbox_context_attach;
 	gvir_sandbox_context_get_type;
 	gvir_sandbox_context_get_config;
 	gvir_sandbox_context_get_domain;
