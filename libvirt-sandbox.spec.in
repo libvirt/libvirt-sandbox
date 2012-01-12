@@ -82,6 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 %files libs
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
+%config %{_sysconfdir}/libvirt-sandbox/scratch/README
 %{_libexecdir}/libvirt-sandbox-init-common
 %{_libexecdir}/libvirt-sandbox-init-lxc
 %{_libexecdir}/libvirt-sandbox-init-qemu

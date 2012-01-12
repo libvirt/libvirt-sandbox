@@ -312,11 +312,11 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     MKNOD("/dev/input/mouse0", S_IFCHR |0777, makedev(13, 32));
     umask(0022);
 
-    mount_9pfs("sandbox:config", "/.config", 0755, 1);
+    mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
 
-    fp = fopen("/.config/mounts.cfg", "r");
+    fp = fopen(SANDBOXCONFIGDIR "/mounts.cfg", "r");
     if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open /.config/mounts.cfg: %s\n",
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/mounts.cfg: %s\n",
                 __func__, strerror(errno));
         exit_poweroff();
     }

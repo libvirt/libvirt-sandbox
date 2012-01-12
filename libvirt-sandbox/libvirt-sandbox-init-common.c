@@ -1044,10 +1044,12 @@ int main(int argc, char **argv) {
     g_option_context_free(context);
 
     config = gvir_sandbox_config_new("sandbox");
-    if (!gvir_sandbox_config_load_path(config, configfile ? configfile : "/.config/sandbox.cfg", &error)) {
+    if (!gvir_sandbox_config_load_path(config, configfile ? configfile :
+                                       SANDBOXCONFIGDIR "/sandbox.cfg", &error)) {
         g_printerr("%s: Unable to load config %s: %s\n",
                    argv[0],
-                   configfile ? configfile : "/.config/sandbox.cfg",
+                   configfile ? configfile :
+                   SANDBOXCONFIGDIR "/sandbox.cfg",
                    error->message);
         g_error_free(error);
         goto cleanup;

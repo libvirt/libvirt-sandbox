@@ -1,0 +1,8 @@
+This directory must not be deleted, not used for storing any
+important files on the host.
+
+This directory is used as the mount point to which the sandbox
+private configuration is attached.
+
+Without this directory being present, it will be impossible to
+start any sandboxes

@@ -10,11 +10,15 @@ libexec_PROGRAMS = \
 	libvirt-sandbox-init-lxc \
 	$(NULL)
 
+sandboxconfigdir = $(sysconfdir)/$(PACKAGE)/scratch
+sandboxconfig_DATA = README
+
 lib_LTLIBRARIES = libvirt-sandbox-1.0.la
 
 libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c
 libvirt_sandbox_init_common_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \
@@ -37,6 +41,7 @@ libvirt_sandbox_init_common_LDADD = \
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
 libvirt_sandbox_init_lxc_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
@@ -58,6 +63,7 @@ libvirt_sandbox_init_lxc_LDADD = \
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
 libvirt_sandbox_init_qemu_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_qemu_LDFLAGS = \
@@ -114,6 +120,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DDATADIR="\"$(datadir)\"" \
 			-DLIBVIRT_SANDBOX_BUILD \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \
