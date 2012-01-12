@@ -62,6 +62,7 @@ int main(int argc, char **argv) {
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
     gboolean shell = FALSE;
+    gboolean privileged = FALSE;
     GOptionContext *context;
     GOptionEntry options[] = {
         { "version", 'V', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -86,7 +87,9 @@ int main(int argc, char **argv) {
           N_("setup network interface properties"), "PATH", },
         { "security", 's', 0, G_OPTION_ARG_STRING, &security,
           N_("security properties"), "PATH", },
-        { "shell", '\0', 0, G_OPTION_ARG_NONE, &shell,
+        { "privileged", 'p', 0, G_OPTION_ARG_NONE, &privileged,
+          N_("run the command privileged"), NULL },
+        { "shell", 'l', 0, G_OPTION_ARG_NONE, &shell,
           N_("start a shell"), NULL, },
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
           NULL, "COMMAND-PATH [ARGS...]" },
@@ -136,6 +139,13 @@ int main(int argc, char **argv) {
 
     cfg = gvir_sandbox_config_new(name ? name : "sandbox");
     gvir_sandbox_config_set_command(cfg, cmdargs);
+
+    if (privileged) {
+        gvir_sandbox_config_set_userid(cfg, 0);
+        gvir_sandbox_config_set_groupid(cfg, 0);
+        gvir_sandbox_config_set_username(cfg, "root");
+    }
+
     if (mounts &&
         !gvir_sandbox_config_add_host_mount_strv(cfg, mounts, &error)) {
         g_printerr(_("Unable to parse host mounts: %s\n"),
