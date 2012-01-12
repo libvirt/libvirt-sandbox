@@ -861,7 +861,6 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
     }
     ret = TRUE;
 cleanup:
-    g_printerr("ret %d\n", ret);
     return ret;
 }
 
