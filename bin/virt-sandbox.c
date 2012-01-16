@@ -51,8 +51,8 @@ int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GError *error = NULL;
     gchar *name = NULL;
-    gchar **binds = NULL;
-    gchar **mounts = NULL;
+    gchar **guestBinds = NULL;
+    gchar **hostBinds = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
     gchar *uri = NULL;
@@ -75,9 +75,9 @@ int main(int argc, char **argv) {
           N_("connect to hypervisor"), "URI"},
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
-        { "bind", 'b', 0, G_OPTION_ARG_STRING_ARRAY, &binds,
+        { "guest-bind", 'b', 0, G_OPTION_ARG_STRING_ARRAY, &guestBinds,
           N_("bind guest locations together"), "DST-GUEST-PATH=SRC-GUEST-PATH" },
-        { "mount", 'M', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
+        { "host-bind", 'B', 0, G_OPTION_ARG_STRING_ARRAY, &hostBinds,
           N_("pass host locations through to the guest"), "GUEST-PATH=HOST-PATH" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
@@ -146,15 +146,15 @@ int main(int argc, char **argv) {
         gvir_sandbox_config_set_username(cfg, "root");
     }
 
-    if (mounts &&
-        !gvir_sandbox_config_add_host_mount_strv(cfg, mounts, &error)) {
-        g_printerr(_("Unable to parse host mounts: %s\n"),
+    if (hostBinds &&
+        !gvir_sandbox_config_add_host_bind_mount_strv(cfg, hostBinds, &error)) {
+        g_printerr(_("Unable to parse host bind mounts: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
-    if (binds &&
-        !gvir_sandbox_config_add_bind_mount_strv(cfg, binds, &error)) {
-        g_printerr(_("Unable to parse bind mounts: %s\n"),
+    if (guestBinds &&
+        !gvir_sandbox_config_add_guest_bind_mount_strv(cfg, guestBinds, &error)) {
+        g_printerr(_("Unable to parse guest bind mounts: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }

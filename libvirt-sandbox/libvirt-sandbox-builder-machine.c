@@ -260,7 +260,7 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                                               GVirConfigDomain *domain,
                                                               GError **error)
 {
-    if (!gvir_sandbox_builder_machine_write_mount_cfg(gvir_sandbox_config_get_host_mounts(config),
+    if (!gvir_sandbox_builder_machine_write_mount_cfg(gvir_sandbox_config_get_host_bind_mounts(config),
                                                       "filesys.cfg",
                                                       configdir,
                                                       cleaner,
@@ -407,7 +407,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
 
 
-    tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
     i = 0;
     while (tmp) {
         GVirSandboxConfigMount *mconfig = tmp->data;

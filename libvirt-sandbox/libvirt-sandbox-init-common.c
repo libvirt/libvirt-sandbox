@@ -597,7 +597,7 @@ static gboolean setup_bind_mounts(GVirSandboxConfig *config, GError **error)
     GList *mounts, *tmp;
     gboolean ret = FALSE;
 
-    mounts = tmp = gvir_sandbox_config_get_bind_mounts(config);
+    mounts = tmp = gvir_sandbox_config_get_guest_bind_mounts(config);
 
     while (tmp) {
         GVirSandboxConfigMount *mntconfig = tmp->data;
