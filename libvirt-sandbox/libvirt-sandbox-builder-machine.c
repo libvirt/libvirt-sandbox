@@ -193,14 +193,14 @@ static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner 
     return TRUE;
 }
 
-static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder *builder,
-                                                              GVirSandboxConfig *config,
-                                                              const gchar *configdir,
-                                                              GVirSandboxCleaner *cleaner,
-                                                              GVirConfigDomain *domain,
-                                                              GError **error)
+
+static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
+                                                             const gchar *filename,
+                                                             const gchar *configdir,
+                                                             GVirSandboxCleaner *cleaner,
+                                                             GError **error)
 {
-    gchar *mntfile = g_strdup_printf("%s/filesys.cfg", configdir);
+    gchar *mntfile = g_strdup_printf("%s/%s", configdir, filename);
     GFile *file = g_file_new_for_path(mntfile);
     GFileOutputStream *fos = g_file_replace(file,
                                             NULL,
@@ -209,14 +209,14 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                             NULL,
                                             error);
     gboolean ret = FALSE;
-    GList *tmp, *mounts = NULL;
+    GList *tmp = NULL;
     int i;
 
     if (!fos)
         goto cleanup;
 
     i = 0;
-    tmp = mounts = gvir_sandbox_config_get_host_mounts(config);
+    tmp = mounts;
     while (tmp) {
         GVirSandboxConfigMount *mount = tmp->data;
         gchar *key = g_strdup_printf("sandbox:mount%u=%s\n", i,
@@ -240,11 +240,6 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                               mntfile,
                                               g_free);
     mntfile = NULL;
-
-    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
-        construct_domain(builder, config, configdir, cleaner, domain, error))
-        goto cleanup;
-
     ret = TRUE;
 cleanup:
     g_list_free(mounts);
@@ -255,6 +250,28 @@ cleanup:
     g_object_unref(file);
     g_free(mntfile);
     return ret;
+}
+
+
+static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder *builder,
+                                                              GVirSandboxConfig *config,
+                                                              const gchar *configdir,
+                                                              GVirSandboxCleaner *cleaner,
+                                                              GVirConfigDomain *domain,
+                                                              GError **error)
+{
+    if (!gvir_sandbox_builder_machine_write_mount_cfg(gvir_sandbox_config_get_host_mounts(config),
+                                                      "filesys.cfg",
+                                                      configdir,
+                                                      cleaner,
+                                                      error))
+        return FALSE;
+
+    if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
+        construct_domain(builder, config, configdir, cleaner, domain, error))
+        return FALSE;
+
+    return TRUE;
 }
 
 static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder *builder,
