@@ -200,7 +200,7 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                                               GVirConfigDomain *domain,
                                                               GError **error)
 {
-    gchar *mntfile = g_strdup_printf("%s/mounts.cfg", configdir);
+    gchar *mntfile = g_strdup_printf("%s/filesys.cfg", configdir);
     GFile *file = g_file_new_for_path(mntfile);
     GFileOutputStream *fos = g_file_replace(file,
                                             NULL,

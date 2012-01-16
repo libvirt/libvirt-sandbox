@@ -317,9 +317,9 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
 
-    fp = fopen(SANDBOXCONFIGDIR "/mounts.cfg", "r");
+    fp = fopen(SANDBOXCONFIGDIR "/filesys.cfg", "r");
     if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/mounts.cfg: %s\n",
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/filesys.cfg: %s\n",
                 __func__, strerror(errno));
         exit_poweroff();
     }
