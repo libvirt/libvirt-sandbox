@@ -370,7 +370,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     gvir_config_domain_filesys_set_source(fs,
                                           gvir_sandbox_config_get_root(config));
     gvir_config_domain_filesys_set_target(fs, "sandbox:root");
-    //gvir_config_domain_filesys_set_readonly(fs, TRUE);
+    gvir_config_domain_filesys_set_readonly(fs, TRUE);
 
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
@@ -382,7 +382,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
     gvir_config_domain_filesys_set_source(fs, configdir);
     gvir_config_domain_filesys_set_target(fs, "sandbox:config");
-    //gvir_config_domain_filesys_set_readonly(fs, TRUE);
+    gvir_config_domain_filesys_set_readonly(fs, TRUE);
 
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(fs));
