@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     gvir_sandbox_config_set_username(cfg1, "superdevil");
     gvir_sandbox_config_set_homedir(cfg1, "/var/run/hell");
 
-    if (!gvir_sandbox_config_add_host_mount_strv(cfg1, (gchar**)mounts, &err))
+    if (!gvir_sandbox_config_add_host_bind_mount_strv(cfg1, (gchar**)mounts, &err))
         goto cleanup;
 
     if (!gvir_sandbox_config_add_host_include_strv(cfg1, (gchar**)includes, &err))
