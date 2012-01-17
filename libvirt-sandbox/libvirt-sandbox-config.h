@@ -116,6 +116,18 @@ gboolean gvir_sandbox_config_add_host_bind_mount_strv(GVirSandboxConfig *config,
                                                       gchar **mounts,
                                                       GError **error);
 
+
+void gvir_sandbox_config_add_host_image_mount(GVirSandboxConfig *config,
+                                              GVirSandboxConfigMount *mnt);
+GList *gvir_sandbox_config_get_host_image_mounts(GVirSandboxConfig *config);
+GVirSandboxConfigMount *gvir_sandbox_config_find_host_image_mount(GVirSandboxConfig *config,
+                                                                  const gchar *target);
+gboolean gvir_sandbox_config_add_host_image_mount_strv(GVirSandboxConfig *config,
+                                                       gchar **mounts,
+                                                       GError **error);
+gboolean gvir_sandbox_config_has_host_image_mounts(GVirSandboxConfig *config);
+
+
 void gvir_sandbox_config_add_guest_bind_mount(GVirSandboxConfig *config,
                                               GVirSandboxConfigMount *mnt);
 GList *gvir_sandbox_config_get_guest_bind_mounts(GVirSandboxConfig *config);

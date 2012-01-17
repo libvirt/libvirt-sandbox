@@ -259,6 +259,28 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     g_list_free(mounts);
 
 
+    tmp = mounts = gvir_sandbox_config_get_host_image_mounts(config);
+    while (tmp) {
+        GVirSandboxConfigMount *mconfig = tmp->data;
+
+        fs = gvir_config_domain_filesys_new();
+        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
+        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+        gvir_config_domain_filesys_set_source(fs,
+                                              gvir_sandbox_config_mount_get_root(mconfig));
+        gvir_config_domain_filesys_set_target(fs,
+                                              gvir_sandbox_config_mount_get_target(mconfig));
+
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
+        g_object_unref(fs);
+
+        tmp = tmp->next;
+    }
+    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
+    g_list_free(mounts);
+
+
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {
         iface = gvir_config_domain_interface_network_new();

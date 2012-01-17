@@ -51,6 +51,7 @@ static void set_debug(void);
 
 static int debug = 0;
 static char line[1024];
+static char line2[1024];
 
 static void exit_poweroff(void) __attribute__((noreturn));
 
@@ -170,6 +171,25 @@ mount_9pfs(const char *src, const char *dst, int mode, int readonly)
     }
 }
 
+static void
+mount_ext(const char *src, const char *dst, int mode, int readonly)
+{
+    int flags = 0;
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%d)\n", __func__, src, dst, readonly);
+
+    mount_mkdir(dst, mode);
+
+    if (readonly)
+        flags |= MS_RDONLY;
+
+    if (mount(src, dst, "ext4", flags, "") < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (ext4): %s\n",
+                __func__, src, dst, strerror(errno));
+        exit_poweroff();
+    }
+}
+
 #if 0
 static void
 bind_dir(const char *src, const char *dst, int mode)
@@ -201,6 +221,52 @@ bind_file(const char *src, const char *dst, int mode)
     }
 }
 #endif
+
+static int virtioblk_major = 0;
+static int
+create_virtioblk_device(const char *dev)
+{
+    int minor;
+
+    if (virtioblk_major == 0) {
+        FILE *fp = fopen("/proc/devices", "r");
+        if (!fp) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/devices: %s\n",
+                    __func__, strerror(errno));
+            return -1;
+        }
+        while (fgets(line2, sizeof line2, fp)) {
+            if (strstr(line2, "virtblk")) {
+                char *end;
+                long l = strtol(line2, &end, 10);
+                if (line2 == end) {
+                    fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot extract device major from '%s'\n",
+                            __func__, line2);
+                    fclose(fp);
+                    return -1;
+                }
+                virtioblk_major = l;
+                break;
+            }
+        }
+        fclose(fp);
+
+        if (virtioblk_major == 0) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot find virtioblk device major in /proc/devices\n",
+                    __func__);
+            return -1;
+        }
+    }
+
+    minor = (dev[strlen(dev)-1] - 'a') * 16;
+
+    if (mknod(dev, S_IFBLK |0700, makedev(virtioblk_major, minor)) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make dev '%s' '%llu': %s\n",
+                __func__, dev, makedev(virtioblk_major, minor), strerror(errno));
+        return -1;
+    }
+    return 0;
+}
 
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
@@ -317,6 +383,9 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
 
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: setting up filesystem mounts\n",
+                __func__);
     fp = fopen(SANDBOXCONFIGDIR "/filesys.cfg", "r");
     if (fp == NULL) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/filesys.cfg: %s\n",
@@ -335,6 +404,34 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     }
     fclose(fp);
 
+
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: setting up image mounts\n",
+                __func__);
+    fp = fopen(SANDBOXCONFIGDIR "/images.cfg", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/images.cfg: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
+    while (fgets(line, sizeof line, fp)) {
+        char *target = strchr(line, '=');
+        *target = '\0';
+        target++;
+        size_t n = strlen(target);
+        if (n > 0 && target[n-1] == '\n')
+            target[--n] = '\0';
+
+        if (create_virtioblk_device(line) < 0)
+            exit_poweroff();
+
+        mount_ext(line, target, 0755, 1);
+    }
+    fclose(fp);
+
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: preparing to launch common init\n",
+                __func__);
     /* Run /init from ext2 filesystem. */
     print_uptime();
 

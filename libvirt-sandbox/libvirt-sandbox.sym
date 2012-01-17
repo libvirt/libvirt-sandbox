@@ -52,6 +52,8 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_add_host_include_file;
 	gvir_sandbox_config_add_host_bind_mount;
 	gvir_sandbox_config_add_host_bind_mount_strv;
+	gvir_sandbox_config_add_host_image_mount;
+	gvir_sandbox_config_add_host_image_mount_strv;
 	gvir_sandbox_config_add_network;
 	gvir_sandbox_config_add_network_strv;
 	gvir_sandbox_config_get_command;
@@ -59,6 +61,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_homedir;
 	gvir_sandbox_config_get_guest_bind_mounts;
 	gvir_sandbox_config_get_host_bind_mounts;
+	gvir_sandbox_config_get_host_image_mounts;
 	gvir_sandbox_config_get_networks;
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
@@ -71,7 +74,9 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_userid;
 	gvir_sandbox_config_find_guest_bind_mount;
 	gvir_sandbox_config_find_host_bind_mount;
+	gvir_sandbox_config_find_host_image_mount;
 	gvir_sandbox_config_has_networks;
+	gvir_sandbox_config_has_host_image_mounts;
 	gvir_sandbox_config_load_path;
 	gvir_sandbox_config_new;
 	gvir_sandbox_config_save_path;

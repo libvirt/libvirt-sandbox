@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
     gchar *name = NULL;
     gchar **guestBinds = NULL;
     gchar **hostBinds = NULL;
+    gchar **hostImages = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
     gchar *uri = NULL;
@@ -79,6 +80,8 @@ int main(int argc, char **argv) {
           N_("bind guest locations together"), "DST-GUEST-PATH=SRC-GUEST-PATH" },
         { "host-bind", 'B', 0, G_OPTION_ARG_STRING_ARRAY, &hostBinds,
           N_("pass host locations through to the guest"), "GUEST-PATH=HOST-PATH" },
+        { "host-image", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &hostImages,
+          N_("pass host images through to the guest"), "GUEST-PATH=HOST-IMAGE-PATH" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
@@ -155,6 +158,12 @@ int main(int argc, char **argv) {
     if (guestBinds &&
         !gvir_sandbox_config_add_guest_bind_mount_strv(cfg, guestBinds, &error)) {
         g_printerr(_("Unable to parse guest bind mounts: %s\n"),
+                   error && error->message ? error->message : "unknown");
+        goto cleanup;
+    }
+    if (hostImages &&
+        !gvir_sandbox_config_add_host_image_mount_strv(cfg, hostImages, &error)) {
+        g_printerr(_("Unable to parse host image mounts: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
