@@ -242,6 +242,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
     mntfile = NULL;
     ret = TRUE;
 cleanup:
+    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
     g_list_free(mounts);
     if (fos)
         g_object_unref(fos);
@@ -428,6 +429,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         tmp = tmp->next;
         i++;
     }
+    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
+    g_list_free(mounts);
 
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
@@ -443,6 +446,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
         tmp = tmp->next;
     }
+    g_list_foreach(networks, (GFunc)g_object_unref, NULL);
+    g_list_free(networks);
 
 
     ball = gvir_config_domain_memballoon_new();

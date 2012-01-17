@@ -270,6 +270,8 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
         tmp = tmp->next;
     }
+    g_list_foreach(networks, (GFunc)g_object_unref, NULL);
+    g_list_free(networks);
 
 
     /* The first console is for stdio of the sandboxed app */
