@@ -385,7 +385,8 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
         goto error;
 
-    priv->console = gvir_sandbox_console_new(priv->connection, priv->domain);
+    priv->console = gvir_sandbox_console_new(priv->connection, priv->domain,
+                                             GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY);
 
     priv->active = TRUE;
     g_object_unref(config);
@@ -484,5 +485,26 @@ GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
+    if (!priv->console)
+        return NULL;
+
     return g_object_ref(priv->console);
+}
+
+
+/**
+ * gvir_sandbox_context_get_shell_console:
+ * @ctxt: (transfer none): the sandbox context
+ *
+ * Returns: (transfer full)(allow-none): the sandbox console (or NULL)
+ */
+GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+
+    if (!priv->domain)
+        return NULL;
+
+    return gvir_sandbox_console_new(priv->connection, priv->domain,
+                                    GVIR_SANDBOX_CONSOLE_TARGET_SHELL);
 }

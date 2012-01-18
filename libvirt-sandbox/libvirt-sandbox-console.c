@@ -26,7 +26,6 @@
 #include <termios.h>
 #include <errno.h>
 #include <string.h>
-#include <libvirt/libvirt.h>
 #include <libvirt-glib/libvirt-glib-error.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
@@ -57,6 +56,7 @@ struct _GVirSandboxConsolePrivate
     GVirDomain *domain;
 
     GVirStream *console;
+    GVirSandboxConsoleTarget target;
 
     GUnixInputStream *localStdin;
     GUnixOutputStream *localStdout;
@@ -93,6 +93,7 @@ enum {
 
     PROP_CONNECTION,
     PROP_DOMAIN,
+    PROP_TARGET,
 };
 
 enum {
@@ -110,9 +111,9 @@ gvir_sandbox_console_error_quark(void)
 }
 
 static void gvir_sandbox_console_get_property(GObject *object,
-                                             guint prop_id,
-                                             GValue *value,
-                                             GParamSpec *pspec)
+                                              guint prop_id,
+                                              GValue *value,
+                                              GParamSpec *pspec)
 {
     GVirSandboxConsole *console = GVIR_SANDBOX_CONSOLE(object);
     GVirSandboxConsolePrivate *priv = console->priv;
@@ -124,6 +125,10 @@ static void gvir_sandbox_console_get_property(GObject *object,
 
     case PROP_DOMAIN:
         g_value_set_object(value, priv->domain);
+        break;
+
+    case PROP_TARGET:
+        g_value_set_enum(value, priv->target);
         break;
 
     default:
@@ -151,6 +156,19 @@ static void gvir_sandbox_console_set_property(GObject *object,
         if (priv->domain)
             g_object_unref(priv->domain);
         priv->domain = g_value_dup_object(value);
+        break;
+
+    case PROP_TARGET:
+        priv->target = g_value_get_enum(value);
+        if (priv->target == GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY) {
+            priv->guestHandshake = FALSE;
+            priv->guestError = FALSE;
+        } else {
+            /* Non primary consoles don't do handshake, so pretend
+             * we've already done it */
+            priv->guestHandshake = TRUE;
+            priv->guestError = FALSE;
+        }
         break;
 
     default:
@@ -210,6 +228,19 @@ static void gvir_sandbox_console_class_init(GVirSandboxConsoleClass *klass)
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_TARGET,
+                                    g_param_spec_enum("target",
+                                                      "Target",
+                                                      "Target device",
+                                                      GVIR_SANDBOX_TYPE_CONSOLE_TARGET,
+                                                      GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY,
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
 
     g_signal_new("closed",
                  G_OBJECT_CLASS_TYPE(object_class),
@@ -235,17 +266,20 @@ static void gvir_sandbox_console_init(GVirSandboxConsole *console)
  * gvir_sandbox_console_new:
  * @connection: (transfer none): the libvirt connection
  * @domain: (transfer none): the libvirt domain whose console to run
+ * @target: which console to connect to
  *
  * Create a new sandbox console from the specified configuration
  *
  * Returns: (transfer full): a new sandbox console object
  */
 GVirSandboxConsole *gvir_sandbox_console_new(GVirConnection *connection,
-                                             GVirDomain *domain)
+                                             GVirDomain *domain,
+                                             GVirSandboxConsoleTarget target)
 {
     return GVIR_SANDBOX_CONSOLE(g_object_new(GVIR_SANDBOX_TYPE_CONSOLE,
                                              "connection", connection,
                                              "domain", domain,
+                                             "target", target,
                                              NULL));
 }
 
@@ -589,15 +623,14 @@ cleanup:
 
 
 gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
-                                      GUnixInputStream *localStdin,
-                                      GUnixOutputStream *localStdout,
-                                      GUnixOutputStream *localStderr,
-                                      GError **error)
+                                     GUnixInputStream *localStdin,
+                                     GUnixOutputStream *localStdout,
+                                     GUnixOutputStream *localStderr,
+                                     GError **error)
 {
     GVirSandboxConsolePrivate *priv = console->priv;
     gboolean ret = FALSE;
-    virDomainPtr dom;
-    virStreamPtr st;
+    const char *devname = NULL;
 
     if (priv->localStdin) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_ERROR, 0, "%s",
@@ -614,14 +647,12 @@ gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
 
     priv->console = gvir_connection_get_stream(priv->connection, 0);
 
-    g_object_get(priv->domain, "handle", &dom, NULL);
-    g_object_get(priv->console, "handle", &st, NULL);
-
-    if (virDomainOpenConsole(dom, NULL, st, 0) < 0) {
-        gvir_set_error(error, GVIR_SANDBOX_CONSOLE_ERROR, 0,
-                       "%s", "Cannot open console");
-        goto cleanup;
+    if (priv->target != GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY) {
+        devname = "console1";
     }
+
+    if (!gvir_domain_open_console(priv->domain, priv->console, devname, 0, error))
+        goto cleanup;
 
     priv->consoleToLocalLength = priv->localToConsoleLength = 4096;
     priv->consoleToLocal = g_new0(gchar, priv->consoleToLocalLength);

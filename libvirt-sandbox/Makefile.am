@@ -72,6 +72,16 @@ libvirt_sandbox_init_qemu_LDFLAGS = \
 			$(WARN_CFLAGS) \
 			$(NULL)
 
+SANDBOX_TEMPLATE_FILES = \
+			libvirt-sandbox-enum-types.h.template \
+			libvirt-sandbox-enum-types.c.template \
+			$(NULL)
+
+SANDBOX_GENERATED_FILES = \
+			libvirt-sandbox-enum-types.h \
+			libvirt-sandbox-enum-types.c \
+			$(NULL)
+
 SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
 			libvirt-sandbox-main.h \
@@ -115,6 +125,10 @@ libvirt_sandbox_1_0_la_HEADERS = \
 			$(SANDBOX_HEADER_FILES)
 libvirt_sandbox_1_0_la_SOURCES = \
 			$(SANDBOX_SOURCE_FILES)
+nodist_libvirt_sandbox_1_0_la_HEADERS = \
+			libvirt-sandbox-enum-types.h
+nodist_libvirt_sandbox_1_0_la_SOURCES = \
+			libvirt-sandbox-enum-types.c
 libvirt_sandbox_1_0_la_CFLAGS = \
 			-DBINDIR="\"$(bindir)\"" \
 			-DDATADIR="\"$(datadir)\"" \
@@ -144,6 +158,20 @@ libvirt_sandbox_1_0_la_LDFLAGS = \
 			-Wl,--version-script=$(srcdir)/libvirt-sandbox.sym \
 			-version-info $(LIBVIRT_SANDBOX_VERSION_INFO)
 
+EXTRA_DIST += $(SANDBOX_TEMPLATE_FILES)
+
+BUILT_SOURCES = $(SANDBOX_GENERATED_FILES)
+CLEANFILES += $(SANDBOX_GENERATED_FILES)
+
+libvirt-sandbox-enum-types.h: $(SANDBOX_HEADER_FILES) libvirt-sandbox-enum-types.h.template
+	$(AM_V_GEN) ( $(GLIB_MKENUMS) --template $(srcdir)/libvirt-sandbox-enum-types.h.template $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) ) | \
+            sed -e "s/G_TYPE_VIR_CONFIG/GVIR_CONFIG_TYPE/" -e "s/g_vir/gvir/" > libvirt-sandbox-enum-types.h
+
+libvirt-sandbox-enum-types.c: $(SANDBOX_HEADER_FILES) libvirt-sandbox-enum-types.c.template
+	$(AM_V_GEN) ( $(GLIB_MKENUMS) --template $(srcdir)/libvirt-sandbox-enum-types.c.template $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) ) | \
+            sed -e "s/G_TYPE_VIR_CONFIG/GVIR_CONFIG_TYPE/" -e "s/g_vir/gvir/" > libvirt-sandbox-enum-types.c
+
+
 if WITH_INTROSPECTION
 
 LibvirtSandbox-1.0.gir: libvirt-sandbox-1.0.la $(G_IR_SCANNER) Makefile.am
@@ -165,7 +193,9 @@ LibvirtSandbox-1.0.gir: libvirt-sandbox-1.0.la $(G_IR_SCANNER) Makefile.am
                 --pkg-export=libvirt-sandbox-1.0 \
                 $(srcdir)/libvirt-sandbox.h \
                 $(SANDBOX_SOURCE_FILES:%=$(srcdir)/%) \
-                $(SANDBOX_HEADER_FILES:%=$(srcdir)/%)
+                $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) \
+		$(SANDBOX_GENERATED_FILES:%=%) \
+		$(NULL)
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = LibvirtSandbox-1.0.gir

@@ -73,6 +73,7 @@ GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt);
 GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);
 
 GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt);
+GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt);
 
 G_END_DECLS
 

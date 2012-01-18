@@ -61,6 +61,10 @@ PKG_CHECK_MODULES(LIBVIRT_GOBJECT, libvirt-gobject-1.0 >= $LIBVIRT_GOBJECT_REQUI
 
 GTK_DOC_CHECK([1.10],[--flavour no-tmpl])
 
+# Setup GLIB_MKENUMS to use glib-mkenums even if GLib is uninstalled.
+GLIB_MKENUMS=`$PKG_CONFIG --variable=glib_mkenums glib-2.0`
+AC_SUBST(GLIB_MKENUMS)
+
 dnl Extra link-time flags for Cygwin.
 dnl Copied from libxml2 configure.in, but I removed mingw changes
 dnl for now since I'm not supporting mingw at present.  - RWMJ

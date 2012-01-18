@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 #define GVIR_SANDBOX_CONSOLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsoleClass))
 
 #define GVIR_SANDBOX_TYPE_CONSOLE_HANDLE      (gvir_sandbox_console_handle_get_type ())
+#define GVIR_SANDBOX_TYPE_CONSOLE_TARGET      (gvir_sandbox_console_target_get_type ())
 
 typedef struct _GVirSandboxConsole GVirSandboxConsole;
 typedef struct _GVirSandboxConsolePrivate GVirSandboxConsolePrivate;
@@ -61,19 +62,26 @@ struct _GVirSandboxConsoleClass
     void (*closed)(GVirSandboxConsole *console, gboolean err);
 };
 
+typedef enum {
+    GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY,
+    GVIR_SANDBOX_CONSOLE_TARGET_SHELL,
+} GVirSandboxConsoleTarget;
+
 GType gvir_sandbox_console_get_type(void);
 
+
 GVirSandboxConsole *gvir_sandbox_console_new(GVirConnection *connection,
-                                             GVirDomain *domain);
+                                             GVirDomain *domain,
+                                             GVirSandboxConsoleTarget target);
 
 gboolean gvir_sandbox_console_attach_stdio(GVirSandboxConsole *console,
-                                            GError **error);
+                                           GError **error);
 
 gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
-                                      GUnixInputStream *localStdin,
-                                      GUnixOutputStream *localStdout,
-                                      GUnixOutputStream *localStderr,
-                                      GError **error);
+                                     GUnixInputStream *localStdin,
+                                     GUnixOutputStream *localStdout,
+                                     GUnixOutputStream *localStderr,
+                                     GError **error);
 
 gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error);
