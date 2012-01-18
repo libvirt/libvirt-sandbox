@@ -1,6 +1,10 @@
 
 bin_PROGRAMS = virt-sandbox
 
+bin_SCRIPTS = virt-sandbox-service
+
+EXTRA_DIST = $(bin_SCRIPTS)
+
 man1_MANS = virt-sandbox.1
 
 POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
