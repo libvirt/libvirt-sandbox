@@ -89,13 +89,12 @@ class Container:
             name = self.name
 
         self.unitfile = "/etc/systemd/system/" + name
-            
         unit = """
 [Unit]
 Description=Secure Container %s for %s Server
 Requires=libvirtd.service
 After=libvirtd.service
-%s 
+%s
 [Service]
 Type=simple
 ExecStart=/usr/sbin/virt-sandbox-service start %s
@@ -121,12 +120,12 @@ WantedBy=multi-user.target
                 self.dirs.append(newd)
                 return
         self.dirs.append(newd)
-                
+
     def set_clone(self, clone):
         self.clone = clone
 
     def get_dynamic(self):
-        return self.dynamic 
+        return self.dynamic
 
     def set_dynamic(self, dynamic):
         self.dynamic = dynamic
@@ -172,7 +171,7 @@ WantedBy=multi-user.target
             self.config.add_bind_mount(mount)
         else:
             self.config.add_host_mount(mount)
-        
+
     def __gen_filesystems(self):
         if self.image:
             self.config.add_host_mount(LibvirtSandbox.ConfigMount.new(self.image,self.dest))
@@ -198,7 +197,7 @@ WantedBy=multi-user.target
             except OSError, e:
                 if not e.errno == errno.EEXIST:
                     raise e
-                
+
     def __umount(self):
         p = Popen(["/bin/umount", self.dest])
         p.communicate()
@@ -382,15 +381,15 @@ if __name__ == '__main__':
     group = parser_create.add_mutually_exclusive_group()
     group.add_argument("-l", "--level", dest="level", default=c.SELINUX_LEVEL,
                        help="MCS Level with which to run the container")
-    group.add_argument("-d", "--dynamic", dest="dynamic", default=False, action="store_true", 
+    group.add_argument("-d", "--dynamic", dest="dynamic", default=False, action="store_true",
                        help="Use dynamic MCS labeling for the container")
-    parser_create.add_argument("-i", "--image", dest="image", default=False, action="store_true", 
+    parser_create.add_argument("-i", "--image", dest="image", default=False, action="store_true",
                        help="use an image file for the container content")
     parser_create.add_argument("-s", "--size", dest="size", default=(10 * MB),
                        help="size of the image")
-    parser_create.add_argument("-c", "--clone", default=False, action="store_true", 
+    parser_create.add_argument("-c", "--clone", default=False, action="store_true",
                        help="copy /etc and /var directories that will be mounted in the container")
-    
+
     parser_create.set_defaults(func=create)
 
     parser_start = subparsers.add_parser("start", help="Start a security container")
@@ -403,7 +402,7 @@ if __name__ == '__main__':
     parser_stop.set_defaults(func=stop)
 
     parser.add_argument("name", help="name of the container")
-    
+
     args = parser.parse_args()
     try:
         args.func(args)
