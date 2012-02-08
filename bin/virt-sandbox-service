@@ -51,11 +51,13 @@ class Container:
     SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/run", "/home", "/root", "/var/spool" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
-    SELINUX_LEVEL = "s0-s0:c0.c1023"
+    SELINUX_LEVEL = "s0"
+    DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
+    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.image" 
 
-    def __init__(self, name=None, path = "/var/lib/libvirt/filesystems"):
+    def __init__(self, name=None, path = DEFAULT_PATH):
         self.clone = False
-        self.image = None
+        self.use_image = False
         self.name = name
         self.path = path
         self.service_files = []
@@ -71,6 +73,7 @@ class Container:
             try:
                 self.config = LibvirtSandbox.Config()
                 self.config.load_path(config)
+                mount = self.config.get_host_image_mounts()[0]
             except gi._glib.GError, e:
                 raise OSError(config + ": " + str(e))
 
@@ -137,8 +140,8 @@ WantedBy=multi-user.target
         self.security_level = security_level
 
     def set_image(self, size):
-        self.image = "/var/lib/libvirt/images/%s.image" % self.name
-        self.size = size
+        self.use_image = True
+        self.size = size * MB
 
     def set_path(self, path):
         self.path = path
@@ -167,14 +170,14 @@ WantedBy=multi-user.target
     def __add_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMount.new(dest)
         mount.set_root(source)
-        if self.image:
-            self.config.add_bind_mount(mount)
-        else:
-            self.config.add_host_mount(mount)
+        self.config.add_host_bind_mount(mount)
 
     def __gen_filesystems(self):
-        if self.image:
-            self.config.add_host_mount(LibvirtSandbox.ConfigMount.new(self.image,self.dest))
+        if self.use_image:
+            self.image = self.DEFAULT_IMAGE % self.name
+            mount = LibvirtSandbox.ConfigMount.new(self.dest)
+            mount.set_root(self.image)
+            self.config.add_host_image_mount(mount)
 
         for d in self.SYSTEM_DIRS + self.dirs:
             source = "%s%s" % ( self.dest, d)
@@ -235,9 +238,14 @@ WantedBy=multi-user.target
         dest = "%s/%s" % (self.path, self.name)
         if os.path.exists(dest):
             shutil.rmtree(dest)
+            mount = self.config.get_host_image_mounts()[0]
+            if mount.get_target() == dest:
+                os.remove(mount.get_root())
+
         config = self.CONFIG_PATH % self.name
         if os.path.exists(config):
             os.remove(config)
+
         unitfile = "/etc/systemd/system/%s.service" % self.name
         if os.path.exists(unitfile):
             os.remove(unitfile)
@@ -318,6 +326,24 @@ WantedBy=multi-user.target
         context.attach()
         context.stop()
 
+    def connect(self):
+        def closed(obj, error):
+            self.loop.quit()
+
+        self.__connect()
+        context = LibvirtSandbox.Context.new(self.conn, self.config)
+        context.attach()
+        print dir(context)
+        console = context.get_console()
+        console.connect("closed", closed)
+        console.attach_stdio()
+        self.loop = GLib.MainLoop()
+        self.loop.run()
+        try:
+            console.detach()
+        except:
+            pass
+
     def get_process_label(self):
         return "system_u:system_r:%s:%s" % (self.process_type, self.mcs)
 
@@ -342,6 +368,8 @@ def create(args):
 
     if args.image:
         container.set_image(args.size)
+        if not args.level:
+            container.set_mcs(args.dynamic)
 
     container.create(args.name, args.executable)
 
@@ -364,8 +392,19 @@ def stop(args):
     container = Container(args.name)
     container.stop()
 
+def connect(args):
+    container = Container(args.name)
+    container.connect()
+
+import argparse
+class SizeAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if namespace.image:
+            setattr(namespace, self.dest, int(values))
+        else:
+            raise ValueError(parser, "%s --size options requires --image option" % parser.prog)
+
 if __name__ == '__main__':
-    import argparse
     c = Container()
 
     parser = argparse.ArgumentParser(description='Secure Container Tool')
@@ -373,27 +412,29 @@ if __name__ == '__main__':
     parser_create = subparsers.add_parser("create", help="create a security container")
 
     parser_create.add_argument("-e", "--executable", required=True, dest="executable",  default=None,
-                       help="Executable to run in the container")
+                       help="executable to run within the container")
     parser_create.add_argument("-p", "--path", dest="path",  default=None,
-                       help="path name to store content")
+                       help="select path to store container content.  Default: %s" % c.DEFAULT_PATH)
     parser_create.add_argument("-t", "--type", dest="type", default=c.SELINUX_TYPE,
-                       help="SELinux type with which to run the container")
+                       help="SELinux type with which to run the container.  Default: %s" % c.SELINUX_TYPE)
     group = parser_create.add_mutually_exclusive_group()
-    group.add_argument("-l", "--level", dest="level", default=c.SELINUX_LEVEL,
+    group.add_argument("-l", "--level", dest="level", default=None,
                        help="MCS Level with which to run the container")
     group.add_argument("-d", "--dynamic", dest="dynamic", default=False, action="store_true",
-                       help="Use dynamic MCS labeling for the container")
-    parser_create.add_argument("-i", "--image", dest="image", default=False, action="store_true",
+                       help="use dynamic MCS labeling for the container")
+    image = parser_create.add_argument_group("Create On Disk Image File")
+
+    image.add_argument("-i", "--image", dest="image", default=False, action="store_true",
                        help="use an image file for the container content")
-    parser_create.add_argument("-s", "--size", dest="size", default=(10 * MB),
-                       help="size of the image")
+    image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction, 
+                       help="create image of this size. Requires --image option. Default 10m.")
     parser_create.add_argument("-c", "--clone", default=False, action="store_true",
-                       help="copy /etc and /var directories that will be mounted in the container")
+                       help="clone content from /etc and /var directories that will be mounted within the container")
 
     parser_create.set_defaults(func=create)
 
-    parser_start = subparsers.add_parser("start", help="Start a security container")
-    parser_start.set_defaults(func=start)
+    parser_connect = subparsers.add_parser("connect", help="Connect to a security container")
+    parser_connect.set_defaults(func=connect)
 
     parser_delete = subparsers.add_parser("delete", help="Delete a security container")
     parser_delete.set_defaults(func=delete)
@@ -401,9 +442,16 @@ if __name__ == '__main__':
     parser_stop = subparsers.add_parser("stop", help="Stop a security container")
     parser_stop.set_defaults(func=stop)
 
+    parser_start = subparsers.add_parser("start", help="Start a security container")
+    parser_start.set_defaults(func=start)
+
     parser.add_argument("name", help="name of the container")
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except ValueError, e:
+        usage(e[0], e[1])
+        
     try:
         args.func(args)
         sys.exit(0)
