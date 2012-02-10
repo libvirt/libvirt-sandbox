@@ -62,6 +62,7 @@ class Container:
         self.path = path
         self.service_files = []
         self.conn = None
+        self.image = None
         self.mcs = "s0"
         self.dynamic = False
         self.file_type = self.SELINUX_FILE_TYPE
@@ -73,7 +74,9 @@ class Container:
             try:
                 self.config = LibvirtSandbox.Config()
                 self.config.load_path(config)
-                mount = self.config.get_host_image_mounts()[0]
+                mounts = self.config.get_host_image_mounts()
+                if len(mounts):
+                    mount = self.config.get_host_image_mounts()[0]
             except gi._glib.GError, e:
                 raise OSError(config + ": " + str(e))
 
@@ -228,6 +231,12 @@ WantedBy=multi-user.target
         self.config.save_path(config)
         sys.stdout.write("Created sandbox config %s\n" % config)
 
+    def __get_image_path(self):
+            mounts = self.config.get_host_image_mounts()
+            if len(mounts) and mount[0].get_target() == self.dest:
+                return mount[0].get_root()
+            return None
+                
     def delete(self):
         # Stop service if it is running
         try:
@@ -235,12 +244,12 @@ WantedBy=multi-user.target
         except:
             pass
 
-        dest = "%s/%s" % (self.path, self.name)
-        if os.path.exists(dest):
-            shutil.rmtree(dest)
-            mount = self.config.get_host_image_mounts()[0]
-            if mount.get_target() == dest:
-                os.remove(mount.get_root())
+        self.dest = "%s/%s" % (self.path, self.name)
+        if os.path.exists(self.dest):
+            shutil.rmtree(self.dest)
+            mount_path = self.__get_image_path()
+            if mount_path:
+                os.remove(mount_path)
 
         config = self.CONFIG_PATH % self.name
         if os.path.exists(config):
@@ -361,7 +370,8 @@ def create(args):
     container.set_clone(args.clone)
     container.set_dynamic(args.dynamic)
     container.set_security_type(args.type)
-    container.set_security_level(args.level)
+    if args.level:
+        container.set_security_level(args.level)
 
     if args.level:
         container.set_mcs(args.level)
