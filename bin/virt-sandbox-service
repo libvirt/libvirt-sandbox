@@ -23,7 +23,6 @@ PROGNAME="sandboxcontainer"
 from gi.repository import LibvirtGObject
 from gi.repository import LibvirtSandbox
 from gi.repository import GLib
-#from gi.repository import Gtk
 import gi
 import os, sys, shutil, errno, stat
 import rpm
@@ -53,7 +52,7 @@ class Container:
     SELINUX_TYPE  = "svirt_lxc_net_t"
     SELINUX_LEVEL = "s0"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
-    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.image" 
+    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.image"
 
     def __init__(self, name=None, path = DEFAULT_PATH):
         self.clone = False
@@ -236,7 +235,7 @@ WantedBy=multi-user.target
             if len(mounts) and mount[0].get_target() == self.dest:
                 return mount[0].get_root()
             return None
-                
+
     def delete(self):
         # Stop service if it is running
         try:
@@ -436,7 +435,7 @@ if __name__ == '__main__':
 
     image.add_argument("-i", "--image", dest="image", default=False, action="store_true",
                        help="use an image file for the container content")
-    image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction, 
+    image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction,
                        help="create image of this size. Requires --image option. Default 10m.")
     parser_create.add_argument("-c", "--clone", default=False, action="store_true",
                        help="clone content from /etc and /var directories that will be mounted within the container")
@@ -455,13 +454,16 @@ if __name__ == '__main__':
     parser_start = subparsers.add_parser("start", help="Start a security container")
     parser_start.set_defaults(func=start)
 
+    parser_reload = subparsers.add_parser("reload", help="Reload a running security container")
+    parser_reload.set_defaults(func=reload)
+
     parser.add_argument("name", help="name of the container")
 
     try:
         args = parser.parse_args()
     except ValueError, e:
         usage(e[0], e[1])
-        
+
     try:
         args.func(args)
         sys.exit(0)
