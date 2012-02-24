@@ -3,9 +3,12 @@ bin_PROGRAMS = virt-sandbox
 
 bin_SCRIPTS = virt-sandbox-service
 
-EXTRA_DIST = $(bin_SCRIPTS)
+virtsandboxcompdir = $(sysconfdir)/bash_completion.d/
+virtsandboxcomp_DATA = virt-sandbox-service-bash-completion.sh
 
-man1_MANS = virt-sandbox.1
+EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh
+
+man1_MANS = virt-sandbox.1 virt-sandbox-service.1
 
 POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
 
