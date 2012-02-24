@@ -1,0 +1,102 @@
+.TH "virt-sandbox-service" "1" "2012-02-24q" "libvirt-sandbox-0.0.2" "Virtualization Support"
+.SH "NAME"
+virt-sandbox-service \- Secure container tool
+
+.SH "SYNOPSIS"
+.B positional arguments:
+
+create a security container
+
+.B    virt-sandbox-service create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i] [-s SIZE] [-c] NAME
+
+Connect to a security container
+
+.B    virt-sandbox-service connect [-h] NAME
+
+Delete a security container
+
+.B    virt-sandbox-service delete [-h] NAME
+
+Stop a security container
+
+.B    virt-sandbox-service stop [-h] NAME
+
+Start a security container
+
+.B    virt-sandbox-service start [-h] NAME
+
+Reload a security container
+
+.B    virt-sandbox-service reload [-h] NAME
+
+.SH "DESCRIPTION"
+virt-sandbox-service is used to manage secure linux containerized applications.
+These applications will be launched via libvirt and run within a Linux Container Namespace, secured by SELinux and resource separated using cgroups.
+
+.SH "OPTIONS"
+.TP
+.I  \-h, \-\-help
+Display help message
+.TP
+.I  \-e EXECUTABLE, \-\-executable EXECUTABLE
+Executable to run within the container.
+.TP
+.I  \-p PATH, \-\-path PATH
+Select path to store container content.
+.br
+Default: /var/lib/libvirt/filesystems.
+.TP
+.I  \-t TYPE, \-\-type TYPE
+SELinux type with which to run the container.
+.br
+Default: svirt_lxc_net_t
+.TP
+.I  \-l LEVEL, \-\-level LEVEL
+MCS Level with which to run the container.
+.TP
+.I  \-d, \-\-dynamic
+Use dynamic MCS labeling for the container
+.TP
+.I  \-c, \-\-clone
+Clone content from /etc and /var directories that will be mounted within the container.
+
+.TP
+Create On Disk Image File:
+
+.TP
+.I  \-i, \-\-image
+Use an image file for the container content.
+.TP
+.I  \-s SIZE, \-\-size SIZE
+Create image of this size. Requires \-\-image option.
+.br
+Default 10m.
+
+.SH EXAMPLE
+.nf
+.B Create httpd1 container
+# virt-sandbox-service create -c -e /usr/sbin/httpd httpd1
+Created container dir /var/lib/libvirt/filesystems/httpd1
+Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
+Created unit file /etc/systemd/system/httpd@httpd1.service
+
+.B Start httpd1 container
+# virt-sandbox-service start httpd1
+
+.I Note: systemd can also start the container
+systemctl start httpd@httpd1.service
+
+.B Connect to running httpd1 container
+# virt-sandbox-service start httpd1
+
+.SH "SEE ALSO"
+libvirt(8), selinux(8), systemd(8)
+
+.SH "FILES"
+Container content will be stored in subdirectories of /var/lib/libvirt/filesystems, by default.  You can manage the content in these directories outside of the container and processes within the container will see the content.
+
+.SH "AUTHORS"
+.br
+Daniel Walsh <dwalsh@redhat.com>
+.br
+Daniel P. Berrange <dan@berrange.com>
