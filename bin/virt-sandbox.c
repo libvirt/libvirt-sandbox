@@ -112,7 +112,6 @@ int main(int argc, char **argv) {
         g_printerr("%s\n%s\n",
                    error->message,
                    gettext(help_msg));
-        g_error_free(error);
         goto cleanup;
     }
 
