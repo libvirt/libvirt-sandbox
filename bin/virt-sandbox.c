@@ -300,7 +300,7 @@ Display the version number and exit
 
 Display verbose progress information
 
-=item B<-D>, B<--debug>
+=item B<-d>, B<--debug>
 
 Display debugging information
 
