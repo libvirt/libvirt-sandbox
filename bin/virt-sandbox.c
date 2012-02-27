@@ -112,7 +112,6 @@ int main(int argc, char **argv) {
         g_printerr("%s\n%s\n",
                    error->message,
                    gettext(help_msg));
-        g_error_free(error);
         goto cleanup;
     }
 
@@ -301,7 +300,7 @@ Display the version number and exit
 
 Display verbose progress information
 
-=item B<-D>, B<--debug>
+=item B<-d>, B<--debug>
 
 Display debugging information
 
