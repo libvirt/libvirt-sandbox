@@ -28,6 +28,8 @@ BuildRequires: gobject-introspection-devel
 %package libs
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
+# So we get the full libvirtd daemon, not just client libs
+Requires: libvirt
 
 %package devel
 Group: Development/Libraries
