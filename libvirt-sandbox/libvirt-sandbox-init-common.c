@@ -1066,6 +1066,7 @@ int main(int argc, char **argv) {
     const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
     GVirSandboxConfig *config;
     int ret = EXIT_FAILURE;
+    struct rlimit res = { 65536, 65536 };
 
     if (geteuid() != 0) {
         g_printerr("%s: must be launched as root\n", argv[0]);
@@ -1104,7 +1105,6 @@ int main(int argc, char **argv) {
     }
 
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
-    struct rlimit res = { 65536, 65536 };
     setrlimit(RLIMIT_NOFILE, &res);
 
     if (xorg &&
