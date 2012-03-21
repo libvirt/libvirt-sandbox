@@ -14,7 +14,7 @@ mkdir build
 cd build
 
 ../autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT \
-    --enable-compile-warnings=error --enable-gtk-doc
+    --enable-gtk-doc
 
 make
 make install

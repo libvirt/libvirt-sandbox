@@ -1,8 +1,11 @@
 AC_INIT(libvirt-sandbox, 0.0.2)
 AC_CONFIG_SRCDIR(libvirt-sandbox/libvirt-sandbox.h)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_MACRO_DIR([m4])
 dnl Make automake keep quiet about wildcards & other GNUmake-isms
 AM_INIT_AUTOMAKE([-Wno-portability])
+AM_MAINTAINER_MODE([enable])
 AC_CANONICAL_HOST
 
 AM_SILENT_RULES([yes])
@@ -35,7 +38,7 @@ AC_PROG_LIBTOOL
 
 AC_CONFIG_LIBOBJ_DIR([libvirt-sandbox])
 
-LIBVIRT_SANDBOX_COMPILE_WARNINGS(maximum)
+LIBVIRT_SANDBOX_COMPILE_WARNINGS
 
 # Autoconf 2.61a.99 and earlier don't support linking a file only
 # in VPATH builds.  But since GNUmakefile is for maintainer use
@@ -100,11 +103,14 @@ AC_ARG_ENABLE([test-coverage],
 enable_coverage=$enableval
 
 if test "${enable_coverage}" = yes; then
-  gl_COMPILER_FLAGS(-fprofile-arcs)
-  gl_COMPILER_FLAGS(-ftest-coverage)
-  AC_SUBST([COVERAGE_CFLAGS], [$COMPILER_FLAGS])
-  AC_SUBST([COVERAGE_LDFLAGS], [$COMPILER_FLAGS])
-  COMPILER_FLAGS=
+  save_WARN_CFLAGS=$WARN_CFLAGS
+  WARN_CFLAGS=
+  gl_WARN_ADD([-fprofile-arcs])
+  gl_WARN_ADD([-ftest-coverage])
+  COVERAGE_FLAGS=$WARN_CFLAGS
+  AC_SUBST([COVERAGE_CFLAGS], [$COVERAGE_FLAGS])
+  AC_SUBST([COVERAGE_LDFLAGS], [$COVERAGE_FLAGS])
+  WARN_CFLAGS=$save_WARN_CFLAGS
 fi
 
 AC_ARG_ENABLE([introspection],

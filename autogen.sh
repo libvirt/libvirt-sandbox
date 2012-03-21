@@ -31,14 +31,14 @@ if test "$DIE" -eq 1; then
 fi
 
 if test -z "$*"; then
-        echo "I am going to run ./configure with --enable-warnings - if you "
+        echo "I am going to run ./configure with no args - if you "
         echo "wish to pass any extra arguments to it, please specify them on "
         echo "the $0 command line."
 fi
 
 mkdir -p build-aux
 libtoolize --copy --force
-aclocal
+aclocal -I m4
 autoheader
 automake --add-missing
 autoconf
@@ -57,7 +57,7 @@ if test "x$1" = "x--system"; then
     EXTRA_ARGS="--prefix=$prefix --sysconfdir=$sysconfdir --localstatedir=$localstatedir --libdir=$libdir"
 fi
 
-$srcdir/configure --enable-compile-warnings=maximum $EXTRA_ARGS "$@" && {
+$srcdir/configure $EXTRA_ARGS "$@" && {
     echo
     echo "Now type 'make' to compile libvirt-sandbox."
 }
