@@ -24,6 +24,7 @@ libvirt_sandbox_init_common_CFLAGS = \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
+			$(CAPNG_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDFLAGS = \
@@ -32,6 +33,7 @@ libvirt_sandbox_init_common_LDFLAGS = \
 			$(GIO_UNIX_LIBS) \
 			$(LIBVIRT_GLIB_LIBS) \
 			$(LIBVIRT_GOBJECT_LIBS) \
+			$(CAPNG_LIBS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDADD = \

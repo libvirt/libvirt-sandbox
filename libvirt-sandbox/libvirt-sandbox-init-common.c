@@ -27,7 +27,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#if HAVE_CAPNG
+#ifdef HAVE_CAPNG
 #include <cap-ng.h>
 #endif
 #include <pwd.h>
@@ -634,7 +634,7 @@ static int change_user(const gchar *user,
     setenv("USERNAME", user, 1);
     setenv("LOGNAME", user, 1);
 
-#if HAVE_CAPNG
+#ifdef HAVE_CAPNG
     capng_clear(CAPNG_SELECT_BOTH);
     if (capng_change_id(uid, gid,
                         CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING)) {
