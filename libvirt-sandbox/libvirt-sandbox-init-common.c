@@ -838,7 +838,7 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
     while (1) {
         int i;
         struct pollfd fds[6];
-        int nfds = 0;
+        size_t nfds = 0;
 
         fds[nfds].fd = sigread;
         fds[nfds].events = POLLIN;
