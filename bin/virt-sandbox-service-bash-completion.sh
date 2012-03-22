@@ -36,18 +36,18 @@ _virt_sandbox_service () {
         local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
         local verb comps
         local -A VERBS=(
-	       [CONNECT]='connect'
-	       [CREATE]='create'
-	       [DELETE]='delete'
-	       [RELOAD]='reload'
-	       [START]='start'
-	       [STOP]='stop'
+               [CONNECT]='connect'
+               [CREATE]='create'
+               [DELETE]='delete'
+               [RELOAD]='reload'
+               [START]='start'
+               [STOP]='stop'
         )
 
-	local -A OPTS=(
-	    [ALL]='-h --help'
-	    [CREATE]='-e --executable -p --path -t --type -l --level -d --dynamic -c --clone -i --image -s --size'
-	)
+        local -A OPTS=(
+            [ALL]='-h --help'
+            [CREATE]='-e --executable -p --path -t --type -l --level -d --dynamic -c --clone -i --image -s --size'
+        )
 
         for ((i=0; $i <= $COMP_CWORD; i++)); do
                 if __contains_word "${COMP_WORDS[i]}" ${VERBS[*]} &&
@@ -57,36 +57,36 @@ _virt_sandbox_service () {
                 fi
         done
 
-	if   [ "$verb" = "" -a "$prev" = "virt-sandbox-service" ]; then
+        if test "$verb" = "" && test "$prev" = "virt-sandbox-service" ; then
                 comps="${VERBS[*]}"
-	elif [ "$verb" != "create" ]; then
-	    if ! __contains_word "${prev}" ${VERBS[*]} &&
-		    ! __contains_word "${prev}" ${OPTS[*]}; then
-		return 0
-	    fi
-	    COMPREPLY=( $(compgen -W "$( __get_all_containers ) " -- "$cur") )
-	    return 0
-	elif [ "$prev" = "-e" -o "$prev" = "--executable" ]; then
-	        COMPREPLY=( $( compgen -f -- "$cur") )
-		compopt -o filenames
-		return 0
-	elif [ "$prev" = "-p" -o "$prev" = "--path" ]; then
-	        COMPREPLY=( $( compgen -d -- "$cur") )
-		compopt -o filenames
-		return 0
-	elif [ "$prev" = "-t" -o "$prev" = "--type" ]; then
+        elif test "$verb" != "create" ; then
+            if ! __contains_word "${prev}" ${VERBS[*]} &&
+                    ! __contains_word "${prev}" ${OPTS[*]}; then
+                return 0
+            fi
+            COMPREPLY=( $(compgen -W "$( __get_all_containers ) " -- "$cur") )
+            return 0
+        elif test "$prev" = "-e" || test "$prev" = "--executable" ; then
+                COMPREPLY=( $( compgen -f -- "$cur") )
+                compopt -o filenames
+                return 0
+        elif test "$prev" = "-p" || test "$prev" = "--path" ; then
+                COMPREPLY=( $( compgen -d -- "$cur") )
+                compopt -o filenames
+                return 0
+        elif test "$prev" = "-t" || test "$prev" = "--type" ; then
                 COMPREPLY=( $(compgen -W "$( __get_all_types ) " -- "$cur") )
-		return 0
-	elif [ "$prev" = "-l" -o "$prev" = "--level" ]; then
-		return 0
-	elif [ "$prev" = "-s" -o "$prev" = "--size" ]; then
-		return 0
+                return 0
+        elif test "$prev" = "-l" || test "$prev" = "--level" ; then
+                return 0
+        elif test "$prev" = "-s" || test "$prev" = "--size" ; then
+                return 0
         elif __contains_word "$command" ${VERBS[CREATE]} ; then
                 COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[CREATE]}" -- "$cur") )
-		return 0
+                return 0
         elif __contains_word "${COMP_WORDS[i]}" ${VERBS[*]} ; then
                 COMPREPLY=( $(compgen -W "${OPTS[ALL]}" -- "$cur") )
-		return 0
+                return 0
         fi
         COMPREPLY=( $(compgen -W "$comps" -- "$cur") )
         return 0
