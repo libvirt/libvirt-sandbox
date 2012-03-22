@@ -67,6 +67,7 @@ int main(int argc, char **argv)
         "dhcp",
         "address=10.0.0.1/24%10.0.0.255",
         "address=10.0.0.1/24%10.0.0.255;route=192.168.1.0/24%10.0.0.3",
+        NULL,
     };
     const gchar *command[] = {
         "/bin/ls", "-l", "--color", NULL,
