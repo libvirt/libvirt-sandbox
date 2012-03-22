@@ -6,7 +6,7 @@ bin_SCRIPTS = virt-sandbox-service
 virtsandboxcompdir = $(sysconfdir)/bash_completion.d/
 virtsandboxcomp_DATA = virt-sandbox-service-bash-completion.sh
 
-EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh
+EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh virt-sandbox-service.1
 
 man1_MANS = virt-sandbox.1 virt-sandbox-service.1
 

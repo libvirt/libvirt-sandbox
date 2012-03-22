@@ -78,9 +78,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
+%{_sysconfdir}/bash_completion.d/virt-sandbox-service-bash-completion.sh
 %{_bindir}/virt-sandbox
 %{_bindir}/virt-sandbox-service
 %{_mandir}/man1/virt-sandbox.1*
+%{_mandir}/man1/virt-sandbox-service.1*
 
 %files libs
 %defattr(-,root,root,-)
