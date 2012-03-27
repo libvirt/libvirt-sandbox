@@ -271,6 +271,10 @@ create_virtioblk_device(const char *dev)
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
+    struct termios  rawattr;
+    const char *args[50];
+    int narg = 0;
+
     if (getpid() != 1) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: must be run as the 'init' program of a KVM guest\n");
         exit(EXIT_FAILURE);
@@ -437,67 +441,34 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     signal(SIGCHLD, sig_child);
 
-    pid_t pid = fork();
-    if (pid < 0)
-        goto cleanup;
-
-    if (pid == 0) {
-        struct termios  rawattr;
-        tcgetattr(STDIN_FILENO, &rawattr);
-        cfmakeraw(&rawattr);
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
+    tcgetattr(STDIN_FILENO, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
 
 #if 0
 #define STRACE "/usr/bin/strace"
 #define STRACE_FILTER "trace=read,write,poll,close"
 #endif
 
-        const char *args[50];
-        int narg = 0;
-        memset(&args, 0, sizeof(args));
+    memset(&args, 0, sizeof(args));
 #ifdef STRACE
-        args[narg++] = STRACE;
-        args[narg++] = "-q";
-        // args[narg++] = "-f";
-        args[narg++] = "-e";
-        args[narg++] = STRACE_FILTER;
+    args[narg++] = STRACE;
+    args[narg++] = "-q";
+    // args[narg++] = "-f";
+    args[narg++] = "-e";
+    args[narg++] = STRACE_FILTER;
 //    args[narg++] = "-s";
 //    args[narg++] = "2000";
 #endif
-        args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-        if (debug)
-            args[narg++] = "-d";
+    args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
+    if (debug)
+        args[narg++] = "-d";
 
-        if (debug)
-            fprintf(stderr, "libvirt-sandbox-init-qemu: Running common init %s\n", args[0]);
-        execv(args[0], (char**)args);
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot execute %s: %s\n",
-                __func__, args[0], strerror(errno));
-        exit_poweroff();
-    } else {
-        int status;
-        do {
-            if (waitpid(pid, &status, WUNTRACED | WCONTINUED) < 0) {
-                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot wait for %d: %s\n",
-                        __func__, pid, strerror(errno));
-                exit_poweroff();
-            }
-
-            if (debug) {
-                if (WIFEXITED(status)) {
-                    fprintf(stderr, "exited, status=%d\n", WEXITSTATUS(status));
-                } else if (WIFSIGNALED(status)) {
-                    fprintf(stderr, "killed by signal %d\n", WTERMSIG(status));
-                } else if (WIFSTOPPED(status)) {
-                    fprintf(stderr, "stopped by signal %d\n", WSTOPSIG(status));
-                } else if (WIFCONTINUED(status)) {
-                    fprintf(stderr, "continued\n");
-                }
-            }
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-    }
-
-cleanup:
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: Running common init %s\n", args[0]);
+    execv(args[0], (char**)args);
+    fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot execute %s: %s\n",
+            __func__, args[0], strerror(errno));
     exit_poweroff();
 }
 

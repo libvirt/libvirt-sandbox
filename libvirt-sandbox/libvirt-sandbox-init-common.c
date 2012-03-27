@@ -44,12 +44,24 @@
 #include <unistd.h>
 #include <limits.h>
 #include <grp.h>
+#include <sys/reboot.h>
 
 #define MAGIC "xoqpuɐs"
 
 static gboolean debug = FALSE;
 static gboolean verbose = FALSE;
+static gboolean poweroff = FALSE;
 static int sigwrite;
+
+static G_GNUC_NORETURN void doexit(int status)
+{
+    if (poweroff) {
+        sync();
+        reboot(RB_POWER_OFF);
+        perror("reboot");
+    }
+    exit(status);
+}
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
@@ -1057,6 +1069,8 @@ int main(int argc, char **argv) {
           libvirt_sandbox_version, N_("display version information"), NULL },
         { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
           N_("display verbose information"), NULL },
+        { "poweroff", 'p', 0, G_OPTION_ARG_NONE, &poweroff,
+          N_("poweroff machine after completion"), NULL },
         { "debug", 'd', 0, G_OPTION_ARG_NONE, &debug,
           N_("display debugging information"), NULL },
         { "config", 'c', 0, G_OPTION_ARG_STRING, &configfile,
@@ -1183,7 +1197,8 @@ int main(int argc, char **argv) {
 cleanup:
     if (error)
         g_error_free(error);
-    return ret;
+
+    doexit(ret);
 
 error:
     g_printerr("%s: %s",

@@ -45,6 +45,10 @@ static int debug = 0;
 int
 main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 {
+    struct termios  rawattr;
+    const char *args[50];
+    int narg = 0;
+
     if (getenv("LIBVIRT_LXC_UUID") == NULL) {
         fprintf(stderr, "libvirt-sandbox-init-lxc: must be run as the 'init' program of an LXC guest\n");
         exit(EXIT_FAILURE);
@@ -55,61 +59,34 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-lxc: starting up\n");
 
-    pid_t pid = fork();
-    if (pid < 0)
-        goto cleanup;
+    tcgetattr(STDIN_FILENO, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
 
-    if (pid == 0) {
-        struct termios  rawattr;
-        tcgetattr(STDIN_FILENO, &rawattr);
-        cfmakeraw(&rawattr);
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
-
-#define PATH LIBEXECDIR "/libvirt-sandbox-init-common"
 #if 0
 #define STRACE "/usr/bin/strace"
 #define STRACE_FILTER "trace=read,write,poll,close"
 #endif
 
-        const char *args[] = {
+    memset(&args, 0, sizeof(args));
 #ifdef STRACE
-            STRACE, "-f", "-e", STRACE_FILTER, "-s", "2000",
-            PATH,
-#else
-            PATH,
+    args[narg++] = STRACE;
+    args[narg++] = "-q";
+    // args[narg++] = "-f";
+    args[narg++] = "-e";
+    args[narg++] = STRACE_FILTER;
+//    args[narg++] = "-s";
+//    args[narg++] = "2000";
 #endif
-            NULL
-        };
-        if (debug)
-            fprintf(stderr, "Running interactive\n");
-        execv(args[0], (char**)args);
-        fprintf(stderr, "libvirt-sandbox-init-lxc: %s: cannot execute %s: %s\n",
-                __func__, args[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        int status;
-        do {
-            if (waitpid(pid, &status, WUNTRACED | WCONTINUED) < 0) {
-                fprintf(stderr, "libvirt-sandbox-init-lxc: %s: cannot wait for %d: %s\n",
-                        __func__, pid, strerror(errno));
-                exit(EXIT_FAILURE);
-            }
+    args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
+    if (debug)
+        args[narg++] = "-d";
 
-            if (debug) {
-                if (WIFEXITED(status)) {
-                    fprintf(stderr, "exited, status=%d\n", WEXITSTATUS(status));
-                } else if (WIFSIGNALED(status)) {
-                    fprintf(stderr, "killed by signal %d\n", WTERMSIG(status));
-                } else if (WIFSTOPPED(status)) {
-                    fprintf(stderr, "stopped by signal %d\n", WSTOPSIG(status));
-                } else if (WIFCONTINUED(status)) {
-                    fprintf(stderr, "continued\n");
-                }
-            }
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-    }
-
-cleanup:
+    if (debug)
+        fprintf(stderr, "Running interactive\n");
+    execv(args[0], (char**)args);
+    fprintf(stderr, "libvirt-sandbox-init-lxc: %s: cannot execute %s: %s\n",
+            __func__, args[0], strerror(errno));
     exit(EXIT_FAILURE);
 }
 
