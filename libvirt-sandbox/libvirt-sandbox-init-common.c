@@ -102,284 +102,6 @@ safewrite(int fd, const void *buf, size_t count)
 
 
 static int
-start_dbus_uuidgen(void)
-{
-    pid_t pid;
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        const char *dbusargv[] = { "/bin/dbus-uuidgen", "--ensure", NULL };
-        int null = open("/dev/null", O_RDWR);
-
-        if (null < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open /dev/null: %s\n",
-                    __func__, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        dup2(null, STDIN_FILENO);
-        dup2(null, STDOUT_FILENO);
-        dup2(null, STDERR_FILENO);
-
-        close(null);
-
-        execv(dbusargv[0], (char**)dbusargv);
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
-                __func__, dbusargv[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        while (1) {
-            int ret = waitpid(pid, NULL, 0);
-            if (ret == -1 || ret == pid)
-                break;
-        }
-    }
-
-    return 0;
-}
-
-static int
-start_dbus(void)
-{
-    pid_t pid;
-
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-common: starting dbus\n");
-
-    if (mount("none", "/var/lib/dbus", "tmpfs", 0, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/lib/dbus: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-    if (mount("none", "/var/run", "tmpfs", 0, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/run: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-    if (mkdir("/var/run/dbus", 0755) < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot create /var/run/dbus: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (start_dbus_uuidgen() < 0)
-        return -1;
-
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        const char *dbusargv[] = { "/bin/dbus-daemon", "--system", "--fork", NULL };
-        int null = open("/dev/null", O_RDWR);
-
-        if (null < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open /dev/null: %s\n",
-                    __func__, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        dup2(null, STDIN_FILENO);
-        dup2(null, STDOUT_FILENO);
-        dup2(null, STDERR_FILENO);
-
-        close(null);
-
-        execv(dbusargv[0], (char **)dbusargv);
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
-                __func__, dbusargv[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        const char *path = "/var/run/dbus/system_bus_socket";
-        struct stat sb;
-        int count = 0;
-        while (1) {
-            int ret = waitpid(pid, NULL, 0);
-            if (ret == -1 || ret == pid)
-                break;
-        }
-    retry:
-        if (stat(path, &sb) < 0) {
-            if (errno == ENOENT && count < 50) {
-                count++;
-                usleep(50*1000ll);
-                goto retry;
-            } else {
-                fprintf(stderr, "libvirt-sandbox-init-common: %s: socket %s did not show up: %s\n",
-                        __func__, path, strerror(errno));
-                return -1;
-            }
-        }
-    }
-
-    return 0;
-}
-
-static int
-start_consolekit(void)
-{
-    pid_t pid;
-
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-common: starting consolekit\n");
-
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        const char *ckitargv[] = { "/usr/sbin/console-kit-daemon", NULL };
-        int null = open("/dev/null", O_RDWR);
-
-        if (null < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open /dev/null: %s\n",
-                    __func__, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        dup2(null, STDIN_FILENO);
-        dup2(null, STDOUT_FILENO);
-        dup2(null, STDERR_FILENO);
-
-        close(null);
-
-        execv(ckitargv[0], (char**)ckitargv);
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
-                __func__, ckitargv[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        while (1) {
-            int ret = waitpid(pid, NULL, 0);
-            if (ret == -1 || ret == pid)
-                break;
-        }
-    }
-
-    return 0;
-}
-
-static int
-start_xorg(void)
-{
-    pid_t pid;
-
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-common: starting xorg\n");
-
-    if (mount("none", "/var/log", "tmpfs", 0, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/log: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (mount("none", "/var/lib/xkb", "tmpfs", 0, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot mount tmpfs on /var/lib/xkb: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        const char *xorgargv[] = { "/usr/bin/Xorg", NULL };
-        int null = open("/dev/null", O_RDWR);
-
-        if (null < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open /dev/null: %s\n",
-                    __func__, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-        dup2(null, STDIN_FILENO);
-        dup2(null, STDOUT_FILENO);
-        dup2(null, STDERR_FILENO);
-
-        close(null);
-
-        execv(xorgargv[0], (char**)xorgargv);
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
-                __func__, xorgargv[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    } else {
-        const char *path = "/tmp/.X11-unix/X0";
-        struct stat sb;
-        int count = 0;
-    retry:
-        if (stat(path, &sb) < 0) {
-            if (errno == ENOENT && count < 50) {
-                count++;
-                usleep(50*1000ll);
-                goto retry;
-            } else {
-                fprintf(stderr, "libvirt-sandbox-init-common: %s: socket %s did not show up: %s\n",
-                        __func__, path, strerror(errno));
-                return -1;
-            }
-        }
-    }
-
-    setenv("DISPLAY", ":0.0", 1);
-    return 0;
-}
-
-
-static int
-start_windowmanager(const char *path)
-{
-    pid_t pid;
-
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-common: starting windowmanager %s\n", path);
-
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        return -1;
-    }
-
-    if (pid == 0) {
-        char *wmargv[] = { (char*)path, NULL };
-        int null = open("/dev/null", O_RDWR);
-
-        if (null < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open /dev/null: %s\n",
-                    __func__, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        dup2(null, STDIN_FILENO);
-        dup2(null, STDOUT_FILENO);
-        dup2(null, STDERR_FILENO);
-
-        close(null);
-
-        execv(wmargv[0], wmargv);
-        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
-                __func__, wmargv[0], strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    return 0;
-}
-
-
-static int
 start_shell(void)
 {
     pid_t pid;
@@ -1054,8 +776,6 @@ static void libvirt_sandbox_version(void)
 
 
 int main(int argc, char **argv) {
-    int xorg = 0;
-    gchar *wm = NULL;
     int pid;
     int err;
     int appin;
@@ -1081,7 +801,6 @@ int main(int argc, char **argv) {
     GVirSandboxConfig *config;
     GVirSandboxConfigInteractive *iconfig;
     int ret = EXIT_FAILURE;
-    struct rlimit res = { 65536, 65536 };
 
     if (geteuid() != 0) {
         g_printerr("%s: must be launched as root\n", argv[0]);
@@ -1127,19 +846,6 @@ int main(int argc, char **argv) {
     iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
 
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
-    setrlimit(RLIMIT_NOFILE, &res);
-
-    if (xorg &&
-        start_dbus() < 0)
-        exit(EXIT_FAILURE);
-
-    if (xorg &&
-        start_consolekit() < 0)
-        exit(EXIT_FAILURE);
-
-    if (xorg &&
-        start_xorg() < 0)
-        exit(EXIT_FAILURE);
 
     if (gvir_sandbox_config_get_shell(config) &&
         start_shell() < 0)
@@ -1155,10 +861,6 @@ int main(int argc, char **argv) {
                     gvir_sandbox_config_get_userid(config),
                     gvir_sandbox_config_get_groupid(config),
                     gvir_sandbox_config_get_homedir(config)) < 0)
-        exit(EXIT_FAILURE);
-
-    if (wm &&
-        start_windowmanager(wm) < 0)
         exit(EXIT_FAILURE);
 
     if (pipe(sigpipe) < 0) {
