@@ -64,9 +64,6 @@ struct _GVirSandboxContextClass
 
 GType gvir_sandbox_context_get_type(void);
 
-GVirSandboxContext *gvir_sandbox_context_new(GVirConnection *connection,
-                                             GVirSandboxConfig *config);
-
 GVirSandboxConfig *gvir_sandbox_context_get_config(GVirSandboxContext *ctxt);
 GVirSandboxCleaner *gvir_sandbox_context_get_cleaner(GVirSandboxContext *ctxt);
 

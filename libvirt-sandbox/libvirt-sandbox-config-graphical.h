@@ -68,7 +68,7 @@ struct _GVirSandboxConfigGraphicalSize
 GType gvir_sandbox_config_graphical_get_type(void);
 GType gvir_sandbox_config_graphical_size_get_type(void);
 
-GVirSandboxConfigGraphical *gvir_sandbox_config_graphical_new(void);
+GVirSandboxConfigGraphical *gvir_sandbox_config_graphical_new(const gchar *name);
 
 void gvir_sandbox_config_graphical_set_window_manager(GVirSandboxConfigGraphical *config, const gchar *hostpath);
 const gchar *gvir_sandbox_config_graphical_get_window_manager(GVirSandboxConfigGraphical *config);

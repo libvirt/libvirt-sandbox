@@ -46,7 +46,6 @@ struct _GVirSandboxConfigPrivate
     gchar *name;
     gchar *root;
     gchar *arch;
-    gboolean tty;
     gboolean shell;
 
     guint uid;
@@ -59,13 +58,11 @@ struct _GVirSandboxConfigPrivate
     GList *guestBindMounts;
     GList *hostImageMounts;
 
-    gchar **command;
-
     gchar *secLabel;
     gboolean secDynamic;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
 
 
 enum {
@@ -74,7 +71,6 @@ enum {
     PROP_NAME,
     PROP_ROOT,
     PROP_ARCH,
-    PROP_TTY,
     PROP_SHELL,
 
     PROP_UID,
@@ -125,10 +121,6 @@ static void gvir_sandbox_config_get_property(GObject *object,
 
     case PROP_ARCH:
         g_value_set_string(value, priv->arch);
-        break;
-
-    case PROP_TTY:
-        g_value_set_boolean(value, priv->tty);
         break;
 
     case PROP_SHELL:
@@ -189,10 +181,6 @@ static void gvir_sandbox_config_set_property(GObject *object,
         priv->arch = g_value_dup_string(value);
         break;
 
-    case PROP_TTY:
-        priv->tty = g_value_get_boolean(value);
-        break;
-
     case PROP_SHELL:
         priv->shell = g_value_get_boolean(value);
         break;
@@ -247,7 +235,6 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_list_foreach(priv->networks, (GFunc)g_object_unref, NULL);
     g_list_free(priv->networks);
 
-    g_strfreev(priv->command);
 
     g_free(priv->name);
     g_free(priv->root);
@@ -298,17 +285,6 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                                         "Arch",
                                                         "The sandbox architecture",
                                                         NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
-    g_object_class_install_property(object_class,
-                                    PROP_TTY,
-                                    g_param_spec_string("tty",
-                                                        "TTY",
-                                                        "TTY",
-                                                        FALSE,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_STATIC_NAME |
@@ -414,31 +390,12 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->arch = g_strdup(uts.machine);
     priv->secLabel = g_strdup("system_u:system_r:svirt_t:s0:c0.c1023");
 
-    priv->command = g_new0(gchar *, 2);
-    priv->command[0] = g_strdup("/bin/sh");
-    priv->command[1] = NULL;
-
     priv->uid = geteuid();
     priv->gid = getegid();
     priv->username = g_strdup(g_get_user_name());
     priv->homedir = g_strdup(g_get_home_dir());
 }
 
-
-/**
- * gvir_sandbox_config_new:
- * @name: the sandbox name
- *
- * Create a new console application sandbox configuration
- *
- * Returns: (transfer full): a new sandbox config object
- */
-GVirSandboxConfig *gvir_sandbox_config_new(const gchar *name)
-{
-    return GVIR_SANDBOX_CONFIG(g_object_new(GVIR_SANDBOX_TYPE_CONFIG,
-                                            "name", name,
-                                            NULL));
-}
 
 /**
  * gvir_sandbox_config_get_name:
@@ -513,35 +470,6 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->arch;
-}
-
-
-/**
- * gvir_sandbox_config_set_tty:
- * @config: (transfer none): the sandbox config
- * @tty: (transfer none): true if the container should have a tty
- *
- * Set whether the container console should have a interactive tty.
- */
-void gvir_sandbox_config_set_tty(GVirSandboxConfig *config, gboolean tty)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    priv->tty = tty;
-}
-
-
-/**
- * gvir_sandbox_config_get_tty:
- * @config: (transfer none): the sandbox config
- *
- * Retrieves the sandbox tty flag
- *
- * Returns: (transfer none): the tty flag
- */
-gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    return priv->tty;
 }
 
 
@@ -1315,41 +1243,6 @@ cleanup:
 }
 
 /**
- * gvir_sandbox_config_set_command:
- * @config: (transfer none): the sandbox config
- * @argv: (transfer none)(array zero-terminated=1): the command path and arguments
- *
- * Set the path of the command to be run and its arguments. The @argv should
- * be a NULL terminated list
- */
-void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    guint len = g_strv_length(argv);
-    size_t i;
-    g_strfreev(priv->command);
-    priv->command = g_new0(gchar *, len + 1);
-    for (i = 0 ; i < len ; i++)
-        priv->command[i] = g_strdup(argv[i]);
-    priv->command[len] = NULL;
-}
-
-
-/**
- * gvir_sandbox_config_get_command:
- * @config: (transfer none): the sandbox config
- *
- * Retrieve the sandbox command and arguments
- *
- * Returns: (transfer none)(array zero-terminated=1): the command path and arguments
- */
-gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config)
-{
-    GVirSandboxConfigPrivate *priv = config->priv;
-    return priv->command;
-}
-
-/**
  * gvir_sandbox_config_set_security_label:
  * @config: (transfer none): the sandbox config
  * @label: (transfer none): the host directory
@@ -1624,9 +1517,6 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     guint i;
     GError *e = NULL;
     gboolean ret = FALSE;
-    gchar **argv = g_new0(gchar *, 1);
-    gsize argc = 0;
-    argv[0] = NULL;
 
     if ((str = g_key_file_get_string(file, "core", "name", NULL)) != NULL) {
         g_free(priv->name);
@@ -1639,13 +1529,6 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     if ((str = g_key_file_get_string(file, "core", "arch", NULL)) != NULL) {
         g_free(priv->arch);
         priv->arch = str;
-    }
-    b = g_key_file_get_boolean(file, "core", "tty", &e);
-    if (e) {
-        g_error_free(e);
-        e = NULL;
-    } else {
-        priv->tty = b;
     }
     b = g_key_file_get_boolean(file, "core", "shell", &e);
     if (e) {
@@ -1678,26 +1561,6 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
         g_free(priv->homedir);
         priv->homedir = str;
     }
-
-    for (i = 0 ; i < 1024 ; i++) {
-        gchar *key = g_strdup_printf("argv.%u", i);
-        if ((str = g_key_file_get_string(file, "command", key, &e)) == NULL) {
-            if (e->code == G_KEY_FILE_ERROR_KEY_NOT_FOUND) {
-                g_error_free(e);
-                e = NULL;
-                break;
-            }
-            g_propagate_error(error, e);
-            goto cleanup;
-        }
-
-        argv = g_renew(char *, argv, argc+2);
-        argv[argc++] = str;
-        argv[argc] = NULL;
-    }
-    g_strfreev(priv->command);
-    priv->command = argv;
-    argv = NULL;
 
     for (i = 0 ; i < 100 ; i++) {
         GVirSandboxConfigNetwork *network;
@@ -1753,8 +1616,6 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
 
     ret = TRUE;
 cleanup:
-    if (argv)
-        g_strfreev(argv);
     return ret;
 }
 
@@ -1880,26 +1741,18 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
                                             GKeyFile *file)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    guint argc, i;
+    guint i;
     GList *tmp;
 
     g_key_file_set_string(file, "core", "name", priv->name);
     g_key_file_set_string(file, "core", "root", priv->root);
     g_key_file_set_string(file, "core", "arch", priv->arch);
-    g_key_file_set_boolean(file, "core", "tty", priv->tty);
     g_key_file_set_boolean(file, "core", "shell", priv->shell);
 
     g_key_file_set_uint64(file, "identity", "uid", priv->uid);
     g_key_file_set_uint64(file, "identity", "gid", priv->gid);
     g_key_file_set_string(file, "identity", "username", priv->username);
     g_key_file_set_string(file, "identity", "homedir", priv->homedir);
-
-    argc = g_strv_length(priv->command);
-    for (i = 0 ; i < argc ; i++) {
-        gchar *key = g_strdup_printf("argv.%u", i);
-        g_key_file_set_string(file, "command", key, priv->command[i]);
-        g_free(key);
-    }
 
     i = 0;
     tmp = priv->hostBindMounts;
@@ -1953,30 +1806,69 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     g_key_file_set_boolean(file, "security", "dynamic", priv->secDynamic);
 }
 
-gboolean gvir_sandbox_config_load_path(GVirSandboxConfig *config,
-                                       const gchar *path,
-                                       GError **error)
+
+/**
+ * gvir_sandbox_config_load_config_mount:
+ * @path: the local path to load
+ * @error: the loader error
+ *
+ * Returns: (transfer full): the new config or NULL
+ */
+GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
+                                                      GError **error)
 {
-    GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+    GVirSandboxConfigClass *klass;
     GKeyFile *file = g_key_file_new();
-    gboolean ret = FALSE;
+    GVirSandboxConfig *config = NULL;
+    gchar *str = NULL;
+    GType type;
+
+    /** XXX hack */
+    GVIR_SANDBOX_TYPE_CONFIG_INTERACTIVE;
+    GVIR_SANDBOX_TYPE_CONFIG_GRAPHICAL;
+    GVIR_SANDBOX_TYPE_CONFIG_SERVICE;
 
     if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, error))
         goto cleanup;
 
-    if (!(klass->load_config(config, file, error)))
+    if ((str = g_key_file_get_string(file, "api", "class", NULL)) == NULL) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", "Missing class name in config file");
         goto cleanup;
+    }
 
-    ret = TRUE;
+    if (!(type = g_type_from_name(str))) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "Unknown type name '%s' in config file", str);
+        goto cleanup;
+    }
+
+    if (!g_type_is_a(type,
+                     GVIR_SANDBOX_TYPE_CONFIG)) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "Type name '%s' in config file had wrong parent", str);
+        goto cleanup;
+    }
+
+    config = g_object_new(type, NULL);
+
+    klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+    if (!(klass->load_config(config, file, error))) {
+        g_object_unref(config);
+        config = NULL;
+        goto cleanup;
+    }
+
 cleanup:
     g_key_file_free(file);
-    return ret;
+    g_free(str);
+    return config;
 }
 
 
-gboolean gvir_sandbox_config_save_path(GVirSandboxConfig *config,
-                                       const gchar *path,
-                                       GError **error)
+gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
+                                          const gchar *path,
+                                          GError **error)
 {
     GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
     GKeyFile *file = g_key_file_new();
@@ -1985,6 +1877,11 @@ gboolean gvir_sandbox_config_save_path(GVirSandboxConfig *config,
     GFile *f = g_file_new_for_path(path);
     GOutputStream *os = NULL;
     gsize len;
+
+    g_key_file_set_string(file, "api", "class",
+                          g_type_name(G_TYPE_FROM_CLASS(klass)));
+    g_key_file_set_string(file, "api", "version",
+                          VERSION);
 
     klass->save_config(config, file);
 

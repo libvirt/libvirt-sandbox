@@ -79,12 +79,14 @@ int main(int argc, char **argv)
     if (!gvir_init_object_check(&argc, &argv, &err))
         goto cleanup;
 
-    cfg1 = gvir_sandbox_config_new("demo");
+    cfg1 = GVIR_SANDBOX_CONFIG(gvir_sandbox_config_interactive_new("demo"));
     gvir_sandbox_config_set_root(cfg1, "/tmp");
     gvir_sandbox_config_set_arch(cfg1, "ia64");
-    gvir_sandbox_config_set_tty(cfg1, TRUE);
+    gvir_sandbox_config_interactive_set_tty(GVIR_SANDBOX_CONFIG_INTERACTIVE(cfg1),
+                                            TRUE);
 
-    gvir_sandbox_config_set_command(cfg1, (gchar**)command);
+    gvir_sandbox_config_interactive_set_command(GVIR_SANDBOX_CONFIG_INTERACTIVE(cfg1),
+                                                (gchar**)command);
 
     gvir_sandbox_config_set_userid(cfg1, 666);
     gvir_sandbox_config_set_groupid(cfg1, 666);
@@ -103,17 +105,15 @@ int main(int argc, char **argv)
     gvir_sandbox_config_set_security_dynamic(cfg1, FALSE);
     gvir_sandbox_config_set_security_label(cfg1, "devil_u:devil_r:devil_t:s666:c0.c1023");
 
-    cfg2 = gvir_sandbox_config_new("sandbox");
-
     unlink("test.cfg");
 
-    if (!gvir_sandbox_config_save_path(cfg1, "test1.cfg", &err))
+    if (!gvir_sandbox_config_save_to_path(cfg1, "test1.cfg", &err))
         goto cleanup;
 
-    if (!gvir_sandbox_config_load_path(cfg2, "test1.cfg", &err))
+    if (!(cfg2 = gvir_sandbox_config_load_from_path("test1.cfg", &err)))
         goto cleanup;
 
-    if (!gvir_sandbox_config_save_path(cfg2, "test2.cfg", &err))
+    if (!gvir_sandbox_config_save_to_path(cfg2, "test2.cfg", &err))
         goto cleanup;
 
     if (!(f1 = readall("test1.cfg", &err)))

@@ -34,7 +34,7 @@
  * Provides an object to store configuration details for a graphical config
  *
  * The GVirSandboxConfigGraphical object extends #GVirSandboxConfig to store
- * the extra information required to setup a graphical desktop application
+ * the extra information required to setup a _graphical desktop application
  * sandbox.
  */
 
@@ -198,14 +198,16 @@ static void gvir_sandbox_config_graphical_init(GVirSandboxConfigGraphical *confi
 
 /**
  * gvir_sandbox_config_graphical_new:
+ * @name: the sandbox name
  *
  * Create a new graphical application sandbox configuration
  *
  * Returns: (transfer full): a new graphical sandbox config object
  */
-GVirSandboxConfigGraphical *gvir_sandbox_config_graphical_new(void)
+GVirSandboxConfigGraphical *gvir_sandbox_config_graphical_new(const gchar *name)
 {
     return GVIR_SANDBOX_CONFIG_GRAPHICAL(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_GRAPHICAL,
+                                                      "name", name,
                                                       NULL));
 }
 

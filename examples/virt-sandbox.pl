@@ -11,7 +11,7 @@ Glib::Object::Introspection->setup(basename => 'LibvirtSandbox', version => '1.0
 
 LibvirtGObject::init_object_check(undef);
 
-my $cfg = LibvirtSandbox::Config->new("sandbox");
+my $cfg = LibvirtSandbox::ConfigInteractive->new("sandbox");
 if (int(@ARGV) > 0) {
     $cfg->set_command(@ARGV);
 }
@@ -22,7 +22,7 @@ if (-t STDIN) {
 my $conn = LibvirtGObject::Connection->new("qemu:///session");
 $conn->open(undef);
 
-my $ctxt = LibvirtSandbox::Context->new($conn, $cfg);
+my $ctxt = LibvirtSandbox::ContextInteractive->new($conn, $cfg);
 $ctxt->start();
 
 my $con = $ctxt->get_console();

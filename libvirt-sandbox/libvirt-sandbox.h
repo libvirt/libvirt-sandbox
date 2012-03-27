@@ -34,8 +34,10 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network.h>
 #include <libvirt-sandbox/libvirt-sandbox-config.h>
-#include <libvirt-sandbox/libvirt-sandbox-config-graphical.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-initrd.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-graphical.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-interactive.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-service.h>
 #include <libvirt-sandbox/libvirt-sandbox-cleaner.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-initrd.h>
@@ -44,5 +46,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-console.h>
 #include <libvirt-sandbox/libvirt-sandbox-context.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-graphical.h>
+#include <libvirt-sandbox/libvirt-sandbox-context-interactive.h>
+#include <libvirt-sandbox/libvirt-sandbox-context-service.h>
 
 #endif /* __LIBVIRT_SANDBOX_H__ */

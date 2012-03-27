@@ -11,7 +11,7 @@ args = sys.argv[1:]
 
 LibvirtGObject.init_object_check(None)
 
-cfg = LibvirtSandbox.Config.new("sandbox")
+cfg = LibvirtSandbox.ConfigInteractive.new("sandbox")
 if len(args) > 0:
     cfg.set_command(args)
 if os.isatty(sys.stdin.fileno()):
@@ -20,7 +20,7 @@ if os.isatty(sys.stdin.fileno()):
 conn = LibvirtGObject.Connection.new("qemu:///session")
 conn.open(None)
 
-ctxt = LibvirtSandbox.Context.new(conn, cfg)
+ctxt = LibvirtSandbox.ContextInteractive.new(conn, cfg)
 ctxt.start()
 
 con = ctxt.get_console()

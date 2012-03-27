@@ -1,5 +1,5 @@
 /*
- * libvirt-sandbox-context-graphical.c: libvirt sandbox contexturation
+ * libvirt-sandbox-context-graphical.c: libvirt sandbox graphical context
  *
  * Copyright (C) 2011 Red Hat, Inc.
  *
@@ -135,7 +135,7 @@ static void gvir_sandbox_context_graphical_init(GVirSandboxContextGraphical *con
  * Returns: (transfer full): a new graphical sandbox context object
  */
 GVirSandboxContextGraphical *gvir_sandbox_context_graphical_new(GVirConnection *connection,
-                                                                GVirSandboxConfig *config)
+                                                                GVirSandboxConfigGraphical *config)
 {
     return GVIR_SANDBOX_CONTEXT_GRAPHICAL(g_object_new(GVIR_SANDBOX_TYPE_CONTEXT_GRAPHICAL,
                                                        "connection", connection,

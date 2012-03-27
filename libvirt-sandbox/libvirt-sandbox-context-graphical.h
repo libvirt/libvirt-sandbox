@@ -1,5 +1,5 @@
 /*
- * libvirt-sandbox-context-graphical.h: libvirt sandbox contexturation
+ * libvirt-sandbox-context-graphical.h: libvirt sandbox graphical context
  *
  * Copyright (C) 2011 Red Hat, Inc.
  *
@@ -58,7 +58,7 @@ struct _GVirSandboxContextGraphicalClass
 GType gvir_sandbox_context_graphical_get_type(void);
 
 GVirSandboxContextGraphical *gvir_sandbox_context_graphical_new(GVirConnection *connection,
-                                                                GVirSandboxConfig *config);
+                                                                GVirSandboxConfigGraphical *config);
 
 #if 0
 GVirSandboxGraphics *gvir_sandbox_context_get_graphics(GVirSandboxContext *ctxt);

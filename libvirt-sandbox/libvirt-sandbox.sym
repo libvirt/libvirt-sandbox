@@ -11,6 +11,20 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_graphical_set_window_size;
 	gvir_sandbox_config_graphical_size_get_type;
 
+	gvir_sandbox_config_service_get_type;
+	gvir_sandbox_config_service_get_executable;
+	gvir_sandbox_config_service_get_unit;
+	gvir_sandbox_config_service_new;
+	gvir_sandbox_config_service_set_executable;
+	gvir_sandbox_config_service_set_unit;
+
+	gvir_sandbox_config_interactive_get_type;
+	gvir_sandbox_config_interactive_get_command;
+	gvir_sandbox_config_interactive_get_tty;
+	gvir_sandbox_config_interactive_new;
+	gvir_sandbox_config_interactive_set_command;
+	gvir_sandbox_config_interactive_set_tty;
+
 	gvir_sandbox_config_mount_add_include;
 	gvir_sandbox_config_mount_get_includes;
 	gvir_sandbox_config_mount_get_root;
@@ -56,7 +70,6 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_add_host_image_mount_strv;
 	gvir_sandbox_config_add_network;
 	gvir_sandbox_config_add_network_strv;
-	gvir_sandbox_config_get_command;
 	gvir_sandbox_config_get_groupid;
 	gvir_sandbox_config_get_homedir;
 	gvir_sandbox_config_get_guest_bind_mounts;
@@ -65,7 +78,6 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_networks;
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
-	gvir_sandbox_config_get_tty;
 	gvir_sandbox_config_get_shell;
 	gvir_sandbox_config_get_security_level;
 	gvir_sandbox_config_get_security_type;
@@ -77,12 +89,9 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_find_host_image_mount;
 	gvir_sandbox_config_has_networks;
 	gvir_sandbox_config_has_host_image_mounts;
-	gvir_sandbox_config_load_path;
-	gvir_sandbox_config_new;
-	gvir_sandbox_config_save_path;
-	gvir_sandbox_config_set_command;
+	gvir_sandbox_config_load_from_path;
+	gvir_sandbox_config_save_to_path;
 	gvir_sandbox_config_set_root;
-	gvir_sandbox_config_set_tty;
 	gvir_sandbox_config_set_shell;
 	gvir_sandbox_config_set_arch;
 	gvir_sandbox_config_set_userid;
@@ -116,12 +125,17 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_context_get_connection;
 	gvir_sandbox_context_get_console;
 	gvir_sandbox_context_get_shell_console;
-	gvir_sandbox_context_new;
 	gvir_sandbox_context_start;
 	gvir_sandbox_context_stop;
 
 	gvir_sandbox_context_graphical_get_type;
 	gvir_sandbox_context_graphical_new;
+
+	gvir_sandbox_context_service_get_type;
+	gvir_sandbox_context_service_new;
+
+	gvir_sandbox_context_interactive_get_type;
+	gvir_sandbox_context_interactive_new;
 
 	gvir_sandbox_cleaner_get_type;
 	gvir_sandbox_cleaner_new;

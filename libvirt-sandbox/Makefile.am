@@ -88,12 +88,14 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
 			libvirt-sandbox-main.h \
 			libvirt-sandbox-config.h \
-			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-network.h \
 			libvirt-sandbox-config-network-address.h \
 			libvirt-sandbox-config-network-route.h \
 			libvirt-sandbox-config-mount.h \
 			libvirt-sandbox-config-initrd.h \
+			libvirt-sandbox-config-graphical.h \
+			libvirt-sandbox-config-interactive.h \
+			libvirt-sandbox-config-service.h \
 			libvirt-sandbox-cleaner.h \
 			libvirt-sandbox-builder.h \
 			libvirt-sandbox-builder-initrd.h \
@@ -102,16 +104,20 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-console.h \
 			libvirt-sandbox-context.h \
 			libvirt-sandbox-context-graphical.h \
+			libvirt-sandbox-context-interactive.h \
+			libvirt-sandbox-context-service.h \
 			$(NULL)
 SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-main.c \
 			libvirt-sandbox-config.c \
-			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-network.c \
 			libvirt-sandbox-config-network-address.c \
 			libvirt-sandbox-config-network-route.c \
 			libvirt-sandbox-config-mount.c \
 			libvirt-sandbox-config-initrd.c \
+			libvirt-sandbox-config-graphical.c \
+			libvirt-sandbox-config-interactive.c \
+			libvirt-sandbox-config-service.c \
 			libvirt-sandbox-cleaner.c \
 			libvirt-sandbox-builder.c \
 			libvirt-sandbox-builder-initrd.c \
@@ -120,6 +126,8 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-console.c \
 			libvirt-sandbox-context.c \
 			libvirt-sandbox-context-graphical.c \
+			libvirt-sandbox-context-interactive.c \
+			libvirt-sandbox-context-service.c \
 			$(NULL)
 
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox

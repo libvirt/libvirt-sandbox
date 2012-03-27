@@ -71,8 +71,7 @@ class Container:
         if self.name:
             config = self.CONFIG_PATH % self.name
             try:
-                self.config = LibvirtSandbox.Config()
-                self.config.load_path(config)
+                self.config = LibvirtSandbox.Config.load_from_path(config)
                 mounts = self.config.get_host_image_mounts()
                 if len(mounts):
                     mount = self.config.get_host_image_mounts()[0]
@@ -227,7 +226,7 @@ WantedBy=multi-user.target
         config = self.CONFIG_PATH % self.name
         if os.path.exists(config):
             os.remove(config)
-        self.config.save_path(config)
+        self.config.save_to_path(config)
         sys.stdout.write("Created sandbox config %s\n" % config)
 
     def __get_image_path(self):
@@ -263,7 +262,7 @@ WantedBy=multi-user.target
         if os.path.exists(self.dest):
             raise OSError("%s already exists" % self.dest)
 
-        self.config = LibvirtSandbox.Config.new(name)
+        self.config = LibvirtSandbox.ConfigService.new(name)
         self.config.set_security_label("system_u:system_r:%s:%s" % (self.security_type, self.security_level))
         self.config.set_security_dynamic(self.dynamic)
         net = LibvirtSandbox.ConfigNetwork().new()
@@ -271,8 +270,7 @@ WantedBy=multi-user.target
         self.config.add_network(net)
         self.name = name
         self.executable = executable
-        self.config.set_command([ self.executable ])
-        self.config.set_tty(True)
+        self.config.set_executable(self.executable)
         self.config.set_shell(True)
 
         self.__extract_rpm()
@@ -312,7 +310,7 @@ WantedBy=multi-user.target
             self.loop.quit()
 
         self.__connect()
-        context = LibvirtSandbox.Context.new(self.conn, self.config)
+        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
         context.start()
         console = context.get_console()
         console.connect("closed", closed)
@@ -330,7 +328,7 @@ WantedBy=multi-user.target
 
     def stop(self):
         self.__connect()
-        context = LibvirtSandbox.Context.new(self.conn, self.config)
+        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
         context.attach()
         context.stop()
 
@@ -339,7 +337,7 @@ WantedBy=multi-user.target
             self.loop.quit()
 
         self.__connect()
-        context = LibvirtSandbox.Context.new(self.conn, self.config)
+        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
         context.attach()
         print dir(context)
         console = context.get_console()

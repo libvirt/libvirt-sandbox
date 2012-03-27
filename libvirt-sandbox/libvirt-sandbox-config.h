@@ -36,8 +36,6 @@ G_BEGIN_DECLS
 #define GVIR_SANDBOX_IS_CONFIG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GVIR_SANDBOX_TYPE_CONFIG))
 #define GVIR_SANDBOX_CONFIG_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GVIR_SANDBOX_TYPE_CONFIG, GVirSandboxConfigClass))
 
-#define GVIR_SANDBOX_TYPE_CONFIG_HANDLE      (gvir_sandbox_config_handle_get_type ())
-
 typedef struct _GVirSandboxConfig GVirSandboxConfig;
 typedef struct _GVirSandboxConfigPrivate GVirSandboxConfigPrivate;
 typedef struct _GVirSandboxConfigClass GVirSandboxConfigClass;
@@ -64,14 +62,11 @@ struct _GVirSandboxConfigClass
 
 GType gvir_sandbox_config_get_type(void);
 
-GVirSandboxConfig *gvir_sandbox_config_new(const gchar *name);
-
-gboolean gvir_sandbox_config_load_path(GVirSandboxConfig *config,
-                                       const gchar *path,
-                                       GError **error);
-gboolean gvir_sandbox_config_save_path(GVirSandboxConfig *config,
-                                       const gchar *path,
-                                       GError **error);
+GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
+                                                      GError **error);
+gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
+                                          const gchar *path,
+                                          GError **error);
 
 const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config);
 
@@ -80,9 +75,6 @@ const gchar *gvir_sandbox_config_get_root(GVirSandboxConfig *config);
 
 void gvir_sandbox_config_set_arch(GVirSandboxConfig *config, const gchar *arch);
 const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config);
-
-void gvir_sandbox_config_set_tty(GVirSandboxConfig *config, gboolean tty);
-gboolean gvir_sandbox_config_get_tty(GVirSandboxConfig *config);
 
 void gvir_sandbox_config_set_shell(GVirSandboxConfig *config, gboolean shell);
 gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config);
@@ -143,9 +135,6 @@ gboolean gvir_sandbox_config_add_host_include_strv(GVirSandboxConfig *config,
 gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
                                                    gchar *includefile,
                                                    GError **error);
-
-void gvir_sandbox_config_set_command(GVirSandboxConfig *config, gchar **argv);
-gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config);
 
 void gvir_sandbox_config_set_security_label(GVirSandboxConfig *config, const gchar *label);
 const gchar *gvir_sandbox_config_get_security_label(GVirSandboxConfig *config);

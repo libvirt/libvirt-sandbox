@@ -1065,6 +1065,7 @@ int main(int argc, char **argv) {
     };
     const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
     GVirSandboxConfig *config;
+    GVirSandboxConfigInteractive *iconfig;
     int ret = EXIT_FAILURE;
     struct rlimit res = { 65536, 65536 };
 
@@ -1092,9 +1093,8 @@ int main(int argc, char **argv) {
 
     g_option_context_free(context);
 
-    config = gvir_sandbox_config_new("sandbox");
-    if (!gvir_sandbox_config_load_path(config, configfile ? configfile :
-                                       SANDBOXCONFIGDIR "/sandbox.cfg", &error)) {
+    if (!(config = gvir_sandbox_config_load_from_path(configfile ? configfile :
+                                                      SANDBOXCONFIGDIR "/sandbox.cfg", &error))) {
         g_printerr("%s: Unable to load config %s: %s\n",
                    argv[0],
                    configfile ? configfile :
@@ -1103,6 +1103,14 @@ int main(int argc, char **argv) {
         g_error_free(error);
         goto cleanup;
     }
+
+    if (!(GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config))) {
+        g_printerr("%s: Only interactive configs supported\n",
+                   argv[0]);
+        goto cleanup;
+    }
+
+    iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
 
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
     setrlimit(RLIMIT_NOFILE, &res);
@@ -1148,8 +1156,8 @@ int main(int argc, char **argv) {
 
     signal(SIGCHLD, sig_child);
 
-    if ((pid = run_command(gvir_sandbox_config_get_tty(config),
-                           gvir_sandbox_config_get_command(config),
+    if ((pid = run_command(gvir_sandbox_config_interactive_get_tty(iconfig),
+                           gvir_sandbox_config_interactive_get_command(iconfig),
                            &appin, &appout)) < 0)
         exit(EXIT_FAILURE);
 

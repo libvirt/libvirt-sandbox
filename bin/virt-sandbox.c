@@ -46,7 +46,9 @@ int main(int argc, char **argv) {
     int ret = EXIT_FAILURE;
     GVirConnection *hv = NULL;
     GVirSandboxConfig *cfg = NULL;
+    GVirSandboxConfigInteractive *icfg = NULL;
     GVirSandboxContext *ctx = NULL;
+    GVirSandboxContextInteractive *ictx = NULL;
     GVirSandboxConsole *con = NULL;
     GMainLoop *loop = NULL;
     GError *error = NULL;
@@ -139,8 +141,9 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    cfg = gvir_sandbox_config_new(name ? name : "sandbox");
-    gvir_sandbox_config_set_command(cfg, cmdargs);
+    icfg = gvir_sandbox_config_interactive_new(name ? name : "sandbox");
+    cfg = GVIR_SANDBOX_CONFIG(icfg);
+    gvir_sandbox_config_interactive_set_command(icfg, cmdargs);
 
     if (privileged) {
         gvir_sandbox_config_set_userid(cfg, 0);
@@ -195,9 +198,10 @@ int main(int argc, char **argv) {
         gvir_sandbox_config_set_shell(cfg, TRUE);
 
     if (isatty(STDIN_FILENO))
-        gvir_sandbox_config_set_tty(cfg, TRUE);
+        gvir_sandbox_config_interactive_set_tty(icfg, TRUE);
 
-    ctx = gvir_sandbox_context_new(hv, cfg);
+    ictx = gvir_sandbox_context_interactive_new(hv, icfg);
+    ctx = GVIR_SANDBOX_CONTEXT(ictx);
 
     if (!gvir_sandbox_context_start(ctx, &error)) {
         g_printerr(_("Unable to start sandbox: %s\n"),

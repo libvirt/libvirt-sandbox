@@ -53,7 +53,7 @@ struct _GVirSandboxContextPrivate
     GVirSandboxCleaner *cleaner;
 };
 
-G_DEFINE_TYPE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
 
 
 enum {
@@ -218,25 +218,6 @@ static void gvir_sandbox_context_init(GVirSandboxContext *ctxt)
     priv = ctxt->priv = GVIR_SANDBOX_CONTEXT_GET_PRIVATE(ctxt);
 
     priv->cleaner = gvir_sandbox_cleaner_new();
-}
-
-
-/**
- * gvir_sandbox_context_new:
- * @connection: (transfer none): the libvirt connection
- * @config: (transfer none): the initial configuratoion
- *
- * Create a new sandbox context from the specified configuration
- *
- * Returns: (transfer full): a new sandbox context object
- */
-GVirSandboxContext *gvir_sandbox_context_new(GVirConnection *connection,
-                                             GVirSandboxConfig *config)
-{
-    return GVIR_SANDBOX_CONTEXT(g_object_new(GVIR_SANDBOX_TYPE_CONTEXT,
-                                             "connection", connection,
-                                             "config", config,
-                                             NULL));
 }
 
 
