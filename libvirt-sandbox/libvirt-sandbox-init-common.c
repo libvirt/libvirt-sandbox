@@ -767,21 +767,100 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
     return 0;
 }
 
+
+static int
+run_interactive(GVirSandboxConfigInteractive *config)
+{
+    pid_t pid;
+    int sigpipe[2] = { -1, -1 };
+    int ret = -1;
+    int appin;
+    int appout;
+    struct termios  rawattr;
+
+    tcgetattr(STDIN_FILENO, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
+
+    if (pipe(sigpipe) < 0) {
+        g_printerr("libvirt-sandbox-init-common: unable to create signal pipe: %s",
+                   strerror(errno));
+        return -1;
+    }
+
+    sigwrite = sigpipe[1];
+    signal(SIGCHLD, sig_child);
+
+    if ((pid = run_command(gvir_sandbox_config_interactive_get_tty(config),
+                           gvir_sandbox_config_interactive_get_command(config),
+                           &appin, &appout)) < 0)
+        goto cleanup;
+
+    if (debug)
+        g_printerr("Got %d %d\n", appin, appout);
+
+    if (run_io(pid, sigpipe[0], appin, appout) < 0)
+        goto cleanup;
+
+    ret = 0;
+
+cleanup:
+    signal(SIGCHLD, SIG_DFL);
+
+    if (sigpipe[0] != -1)
+        close(sigpipe[0]);
+    if (sigpipe[1] != -1)
+        close(sigpipe[1]);
+
+    return ret;
+}
+
+
+static int
+run_service(GVirSandboxConfigService *config)
+{
+    const char *initargv[] = {
+        "/bin/systemd",
+        "--unit",
+        "sandbox.service",
+        "--system",
+        NULL,
+    };
+    const char *shargv[] = {
+        "/bin/sh",
+        NULL,
+    };
+
+    if (mount(SANDBOXCONFIGDIR "/systemd", "/lib/systemd/system", NULL, MS_BIND, NULL) < 0) {
+        g_printerr("%s", "Cannot bind " SANDBOXCONFIGDIR "/systemd to /lib/systemd/system");
+        return FALSE;
+    }
+
+    if (mount(SANDBOXCONFIGDIR "/empty", "/etc/systemd/system", NULL, MS_BIND, NULL) < 0) {
+        g_printerr("%s", "Cannot bind " SANDBOXCONFIGDIR "/empty to /etc/systemd/system");
+        return FALSE;
+    }
+
+    if (debug)
+        execv(shargv[0], (char **)shargv);
+    else
+        execv(initargv[0], (char**)initargv);
+    g_printerr("libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
+               __func__, debug ? shargv[0] : initargv[0], strerror(errno));
+    return -1;
+}
+
+
 static void libvirt_sandbox_version(void)
 {
-        g_print(_("%s version %s\n"), PACKAGE, VERSION);
+    g_print(_("%s version %s\n"), PACKAGE, VERSION);
 
-        exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 
 int main(int argc, char **argv) {
-    int pid;
-    int err;
-    int appin;
-    int appout;
     gchar *configfile = NULL;
-    int sigpipe[2] = { -1, -1 };
     GError *error = NULL;
     GOptionContext *context;
     GOptionEntry options[] = {
@@ -799,7 +878,6 @@ int main(int argc, char **argv) {
     };
     const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
     GVirSandboxConfig *config;
-    GVirSandboxConfigInteractive *iconfig;
     int ret = EXIT_FAILURE;
 
     if (geteuid() != 0) {
@@ -837,14 +915,6 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if (!(GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config))) {
-        g_printerr("%s: Only interactive configs supported\n",
-                   argv[0]);
-        goto cleanup;
-    }
-
-    iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
-
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
 
     if (gvir_sandbox_config_get_shell(config) &&
@@ -863,36 +933,18 @@ int main(int argc, char **argv) {
                     gvir_sandbox_config_get_homedir(config)) < 0)
         exit(EXIT_FAILURE);
 
-    if (pipe(sigpipe) < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: unable to create signal pipe: %s",
-                strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-    sigwrite = sigpipe[1];
-
-    signal(SIGCHLD, sig_child);
-
-    if ((pid = run_command(gvir_sandbox_config_interactive_get_tty(iconfig),
-                           gvir_sandbox_config_interactive_get_command(iconfig),
-                           &appin, &appout)) < 0)
-        exit(EXIT_FAILURE);
-
-    if (debug) {
-        fprintf(stderr, "Got %d %d\n",
-                appin, appout);
-    }
-
-    err = run_io(pid, sigpipe[0], appin, appout);
-
-    //while (waitpid(pid, NULL, 0) != pid);
-
-    if (sigpipe[0] != -1)
-        close(sigpipe[0]);
-    if (sigpipe[1] != -1)
-        close(sigpipe[1]);
-
-    if (err < 0)
+    if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
+        if (run_interactive(GVIR_SANDBOX_CONFIG_INTERACTIVE(config)) < 0)
+            goto cleanup;
+    } else if (GVIR_SANDBOX_IS_CONFIG_SERVICE(config)) {
+        if (run_service(GVIR_SANDBOX_CONFIG_SERVICE(config)) < 0)
+            goto cleanup;
+    } else {
+        GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+        g_printerr("Unsupported configuration type %s",
+                   g_type_name(G_TYPE_FROM_CLASS(klass)));
         goto cleanup;
+    }
 
     ret = EXIT_SUCCESS;
 

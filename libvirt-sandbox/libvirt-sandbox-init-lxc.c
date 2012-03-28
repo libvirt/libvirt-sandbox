@@ -45,7 +45,6 @@ static int debug = 0;
 int
 main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 {
-    struct termios  rawattr;
     const char *args[50];
     int narg = 0;
 
@@ -58,10 +57,6 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-lxc: starting up\n");
-
-    tcgetattr(STDIN_FILENO, &rawattr);
-    cfmakeraw(&rawattr);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
 
 #if 0
 #define STRACE "/usr/bin/strace"

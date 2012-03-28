@@ -271,7 +271,6 @@ create_virtioblk_device(const char *dev)
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
-    struct termios  rawattr;
     const char *args[50];
     int narg = 0;
 
@@ -441,10 +440,6 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     signal(SIGCHLD, sig_child);
 
-    tcgetattr(STDIN_FILENO, &rawattr);
-    cfmakeraw(&rawattr);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
-
 #if 0
 #define STRACE "/usr/bin/strace"
 #define STRACE_FILTER "trace=read,write,poll,close"
@@ -461,6 +456,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 //    args[narg++] = "2000";
 #endif
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
+        args[narg++] = "-p";
     if (debug)
         args[narg++] = "-d";
 
