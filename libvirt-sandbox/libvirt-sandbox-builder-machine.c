@@ -292,8 +292,12 @@ static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder 
         construct_basic(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
-    gvir_config_domain_set_virt_type(domain,
-                                     GVIR_CONFIG_DOMAIN_VIRT_KVM);
+    if (access("/dev/kvm", W_OK) == 0)
+        gvir_config_domain_set_virt_type(domain,
+                                         GVIR_CONFIG_DOMAIN_VIRT_KVM);
+    else
+        gvir_config_domain_set_virt_type(domain,
+                                         GVIR_CONFIG_DOMAIN_VIRT_QEMU);
 
     return TRUE;
 }
