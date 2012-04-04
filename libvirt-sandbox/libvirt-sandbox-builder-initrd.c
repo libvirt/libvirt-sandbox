@@ -378,6 +378,7 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
     GFile *modlist = NULL;
     gchar *modlistpath = NULL;
     GOutputStream *modlistos = NULL;
+    GError *e = NULL;
 
     if (!gvir_sandbox_builder_initrd_copy_file(
             gvir_sandbox_config_initrd_get_init(config),
@@ -385,7 +386,11 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
         return FALSE;
 
     modnames = gvir_sandbox_config_initrd_get_modules(config);
-    modfiles = gvir_sandbox_builder_initrd_find_modules(modnames, config, error);
+    modfiles = gvir_sandbox_builder_initrd_find_modules(modnames, config, &e);
+    if (e) {
+        g_propagate_error(error, e);
+        goto cleanup;
+    }
 
     tmp = modfiles;
     while (tmp) {
