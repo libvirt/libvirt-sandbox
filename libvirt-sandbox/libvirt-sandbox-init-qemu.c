@@ -501,32 +501,79 @@ cleanup:
     exit_poweroff();
 }
 
+/* This is a function exported by glibc, but not in any header :-) */
+extern long init_module(const void *mem, unsigned long len, const char *args);
+
+#define READ_SIZE (1024 * 16)
+
+static char *readall(const char *filename, size_t *len)
+{
+    char *data = NULL, *tmp;
+    int fd;
+    size_t capacity;
+    size_t offset;
+    ssize_t got;
+
+    *len = capacity = offset = 0;
+
+    if ((fd = open(filename, O_RDONLY)) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open %s\n",
+                __func__, filename);
+        exit_poweroff();
+    }
+
+    for (;;) {
+        if ((capacity - offset) < 1024) {
+            if (!(tmp = realloc(data, capacity + 2048))) {
+                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: out of memory\n",
+                        __func__);
+                exit_poweroff();
+            }
+            data = tmp;
+            capacity += 2048;
+        }
+
+        if ((got = read(fd, data + offset, capacity - offset)) < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: error reading %s: %s\n",
+                    __func__, filename, strerror(errno));
+            exit_poweroff();
+        }
+        if (got == 0)
+            break;
+
+        offset += got;
+    }
+    *len = offset;
+    close(fd);
+    return data;
+}
+
 static void
 insmod(const char *filename)
 {
+    char *data;
+    size_t len;
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, filename);
 
-    pid_t pid = fork ();
-    if (pid < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot fork: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
+    data = readall(filename, &len);
 
-    if (pid == 0) { /* Child. */
-        execl("/insmod.static", "insmod.static", filename, NULL);
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot run /insmod.static: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-
-    /* Parent. */
-    int status;
-    if (wait(&status) < 0 ||
-        WEXITSTATUS(status) != 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot wait for %d: %s\n",
-                __func__, pid, strerror(errno));
+    if (init_module(data, (unsigned long)len, "") < 0) {
+        const char *msg;
+        switch (errno) {
+        case ENOEXEC:
+            msg = "Invalid module format";
+        case ENOENT:
+            msg = "Unknown symbol in module";
+        case ESRCH:
+            msg = "Module has wrong symbol version";
+        case EINVAL:
+            msg = "Invalid parameters";
+        default:
+            msg = strerror(errno);
+        }
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: error loading %s: %s\n",
+                __func__, filename, msg);
         exit_poweroff();
     }
 }

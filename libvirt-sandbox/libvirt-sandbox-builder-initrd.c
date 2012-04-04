@@ -384,10 +384,6 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
             tmpdir, "init", error))
         return FALSE;
 
-    if (!gvir_sandbox_builder_initrd_copy_file(
-            "/sbin/insmod.static", tmpdir, "insmod.static", error))
-        return FALSE;
-
     modnames = gvir_sandbox_config_initrd_get_modules(config);
     modfiles = gvir_sandbox_builder_initrd_find_modules(modnames, config, error);
 
