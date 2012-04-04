@@ -7,27 +7,27 @@ virt-sandbox-service \- Secure container tool
 
 create a security container
 
-.B    virt-sandbox-service create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i] [-s SIZE] [-c] NAME
+.B    virt-sandbox-service [-c URI] create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i] [-s SIZE] [-n] NAME
 
 Connect to a security container
 
-.B    virt-sandbox-service connect [-h] NAME
+.B    virt-sandbox-service [-c URI] connect [-h] NAME
 
 Delete a security container
 
-.B    virt-sandbox-service delete [-h] NAME
+.B    virt-sandbox-service [-c URI] delete [-h] NAME
 
 Stop a security container
 
-.B    virt-sandbox-service stop [-h] NAME
+.B    virt-sandbox-service [-c URI]  stop [-h] NAME
 
 Start a security container
 
-.B    virt-sandbox-service start [-h] NAME
+.B    virt-sandbox-service [-c URI]  start [-h] NAME
 
 Reload a security container
 
-.B    virt-sandbox-service reload [-h] NAME
+.B    virt-sandbox-service [-c URI]  reload [-h] NAME
 
 .SH "DESCRIPTION"
 virt-sandbox-service is used to manage secure linux containerized applications.
@@ -37,6 +37,9 @@ These applications will be launched via libvirt and run within a Linux Container
 .TP
 .I  \-h, \-\-help
 Display help message
+.TP
+.I  \-c URI, \-\-connect URI
+Executable to run within the container.
 .TP
 .I  \-e EXECUTABLE, \-\-executable EXECUTABLE
 Executable to run within the container.
@@ -57,7 +60,7 @@ MCS Level with which to run the container.
 .I  \-d, \-\-dynamic
 Use dynamic MCS labeling for the container
 .TP
-.I  \-c, \-\-clone
+.I  \-n, \-\-clone
 Clone content from /etc and /var directories that will be mounted within the container.
 
 .TP

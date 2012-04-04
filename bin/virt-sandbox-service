@@ -54,7 +54,8 @@ class Container:
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.image"
 
-    def __init__(self, name=None, path = DEFAULT_PATH):
+    def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH):
+        self.uri = uri
         self.clone = False
         self.use_image = False
         self.name = name
@@ -302,7 +303,7 @@ WantedBy=multi-user.target
 
     def __connect(self):
         if not self.conn:
-            self.conn=LibvirtGObject.Connection.new("lxc:///")
+            self.conn=LibvirtGObject.Connection.new(self.uri)
             self.conn.open(None)
 
     def start(self):
@@ -388,19 +389,19 @@ def usage(parser, msg):
     sys.exit(1)
 
 def start(args):
-    container = Container(args.name)
+    container = Container(args.name, args.uri)
     container.start()
 
 def reload(args):
-    container = Container(args.name)
+    container = Container(args.name, args.uri)
     container.reload()
 
 def stop(args):
-    container = Container(args.name)
+    container = Container(args.name, args.uri)
     container.stop()
 
 def connect(args):
-    container = Container(args.name)
+    container = Container(args.name, args.uri)
     container.connect()
 
 import argparse
@@ -415,6 +416,9 @@ if __name__ == '__main__':
     c = Container()
 
     parser = argparse.ArgumentParser(description='Secure Container Tool')
+    parser.add_argument("-c", "--connect", required=False, dest="uri",  default="lxc:///",
+                        help="libvirt connection URI to use (lxc:/// [default] or qemu:///session)")
+
     subparsers = parser.add_subparsers(help="commands")
     parser_create = subparsers.add_parser("create", help="create a security container")
 
@@ -435,7 +439,7 @@ if __name__ == '__main__':
                        help="use an image file for the container content")
     image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction,
                        help="create image of this size. Requires --image option. Default 10m.")
-    parser_create.add_argument("-c", "--clone", default=False, action="store_true",
+    parser_create.add_argument("-n", "--clone", default=False, action="store_true",
                        help="clone content from /etc and /var directories that will be mounted within the container")
 
     parser_create.set_defaults(func=create)
