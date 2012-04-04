@@ -24,6 +24,7 @@ BuildRequires: libvirt-gobject-devel >= 0.0.4
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
+BuildRequires: glibc-static
 
 %package libs
 Group: Development/Libraries
