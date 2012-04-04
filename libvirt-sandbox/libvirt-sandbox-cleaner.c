@@ -198,6 +198,66 @@ void gvir_sandbox_cleaner_add_action_post_stop(GVirSandboxCleaner *cleaner,
 }
 
 
+static gboolean gvir_sandbox_cleaner_rmdir(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                           GError **error G_GNUC_UNUSED,
+                                           gpointer opaque)
+{
+    gchar *dir = opaque;
+    rmdir(dir);
+    return TRUE;
+}
+
+static gboolean gvir_sandbox_cleaner_rmfile(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
+                                            GError **error G_GNUC_UNUSED,
+                                            gpointer opaque)
+{
+    gchar *file = opaque;
+    unlink(file);
+    return TRUE;
+}
+
+
+
+void gvir_sandbox_cleaner_add_rmfile_post_start(GVirSandboxCleaner *cleaner,
+                                                const gchar *file)
+{
+    gvir_sandbox_cleaner_add_action_post_start(cleaner,
+                                               gvir_sandbox_cleaner_rmfile,
+                                               g_strdup(file),
+                                               g_free);
+}
+
+
+void gvir_sandbox_cleaner_add_rmdir_post_start(GVirSandboxCleaner *cleaner,
+                                               const gchar *dir)
+{
+    gvir_sandbox_cleaner_add_action_post_start(cleaner,
+                                               gvir_sandbox_cleaner_rmdir,
+                                               g_strdup(dir),
+                                               g_free);
+}
+
+
+void gvir_sandbox_cleaner_add_rmfile_post_stop(GVirSandboxCleaner *cleaner,
+                                               const gchar *file)
+{
+    gvir_sandbox_cleaner_add_action_post_stop(cleaner,
+                                              gvir_sandbox_cleaner_rmfile,
+                                              g_strdup(file),
+                                              g_free);
+}
+
+
+void gvir_sandbox_cleaner_add_rmdir_post_stop(GVirSandboxCleaner *cleaner,
+                                              const gchar *dir)
+{
+    gvir_sandbox_cleaner_add_action_post_stop(cleaner,
+                                              gvir_sandbox_cleaner_rmdir,
+                                              g_strdup(dir),
+                                              g_free);
+}
+
+
 gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *cleaner, GError **error)
 {
     GVirSandboxCleanerPrivate *priv = cleaner->priv;

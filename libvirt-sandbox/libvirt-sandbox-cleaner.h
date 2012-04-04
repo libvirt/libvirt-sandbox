@@ -75,8 +75,17 @@ void gvir_sandbox_cleaner_add_action_post_stop(GVirSandboxCleaner *ctxt,
                                                gpointer opaque,
                                                GDestroyNotify ff);
 
-gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *ctxt, GError **error);
-gboolean gvir_sandbox_cleaner_run_post_stop(GVirSandboxCleaner *ctxt, GError **error);
+void gvir_sandbox_cleaner_add_rmfile_post_start(GVirSandboxCleaner *cleaner,
+                                                const gchar *file);
+void gvir_sandbox_cleaner_add_rmdir_post_start(GVirSandboxCleaner *cleaner,
+                                               const gchar *dir);
+void gvir_sandbox_cleaner_add_rmfile_post_stop(GVirSandboxCleaner *cleaner,
+                                               const gchar *file);
+void gvir_sandbox_cleaner_add_rmdir_post_stop(GVirSandboxCleaner *cleaner,
+                                              const gchar *dir);
+
+gboolean gvir_sandbox_cleaner_run_post_start(GVirSandboxCleaner *cleaner, GError **error);
+gboolean gvir_sandbox_cleaner_run_post_stop(GVirSandboxCleaner *cleaner, GError **error);
 
 G_END_DECLS
 

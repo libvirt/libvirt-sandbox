@@ -186,16 +186,6 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
 }
 
 
-static gboolean gvir_sandbox_builder_machine_delete(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
-                                                    GError **error G_GNUC_UNUSED,
-                                                    gpointer opaque)
-{
-    gchar *path = opaque;
-    unlink(path);
-    return TRUE;
-}
-
-
 static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
                                                              gboolean isDisk,
                                                              const gchar *filename,
@@ -244,11 +234,9 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
     if (!g_output_stream_close(G_OUTPUT_STREAM(fos), NULL, error))
         goto cleanup;
 
-    gvir_sandbox_cleaner_add_action_post_stop(cleaner,
-                                              gvir_sandbox_builder_machine_delete,
-                                              mntfile,
-                                              g_free);
-    mntfile = NULL;
+    gvir_sandbox_cleaner_add_rmfile_post_stop(cleaner,
+                                              mntfile);
+
     ret = TRUE;
 cleanup:
     g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
@@ -336,10 +324,8 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
-    gvir_sandbox_cleaner_add_action_post_start(cleaner,
-                                               gvir_sandbox_builder_machine_delete,
-                                               initrd,
-                                               g_free);
+    gvir_sandbox_cleaner_add_rmfile_post_start(cleaner,
+                                               initrd);
 
     os = gvir_config_domain_os_new();
     gvir_config_domain_os_set_os_type(os,
@@ -354,7 +340,7 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
 
     g_free(kernel);
     g_free(cmdline);
-    /* initrd is free'd by the cleaner */
+    g_free(initrd);
 
     return TRUE;
 }

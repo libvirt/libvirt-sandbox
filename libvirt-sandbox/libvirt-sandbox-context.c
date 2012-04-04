@@ -299,25 +299,6 @@ GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt)
 }
 
 
-static gboolean gvir_sandbox_context_cleandir(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
-                                              GError **error G_GNUC_UNUSED,
-                                              gpointer opaque)
-{
-    gchar *dir = opaque;
-    rmdir(dir);
-    return TRUE;
-}
-
-static gboolean gvir_sandbox_context_cleanfile(GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
-                                               GError **error G_GNUC_UNUSED,
-                                               gpointer opaque)
-{
-    gchar *file = opaque;
-    unlink(file);
-    return TRUE;
-}
-
-
 gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
@@ -326,6 +307,7 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     gchar *tmpdir;
     gchar *configdir;
     gchar *configfile;
+    gboolean ret = FALSE;
 
     if (priv->domain) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
@@ -345,28 +327,19 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
 
     g_mkdir_with_parents(tmpdir, 0700);
-    if (0)
-    gvir_sandbox_cleaner_add_action_post_stop(priv->cleaner,
-                                              gvir_sandbox_context_cleandir,
-                                              tmpdir,
-                                              g_free);
+    gvir_sandbox_cleaner_add_rmdir_post_stop(priv->cleaner,
+                                             tmpdir);
 
     g_mkdir_with_parents(configdir, 0700);
-    if (0)
-    gvir_sandbox_cleaner_add_action_post_stop(priv->cleaner,
-                                              gvir_sandbox_context_cleandir,
-                                              configdir,
-                                              g_free);
+    gvir_sandbox_cleaner_add_rmdir_post_stop(priv->cleaner,
+                                             configdir);
 
     unlink(configfile);
     if (!gvir_sandbox_config_save_path(priv->config, configfile, error))
         goto error;
 
-    if (0)
-    gvir_sandbox_cleaner_add_action_post_stop(priv->cleaner,
-                                              gvir_sandbox_context_cleanfile,
-                                              configfile,
-                                              g_free);
+    gvir_sandbox_cleaner_add_rmfile_post_stop(priv->cleaner,
+                                              configfile);
 
     if (!(config = gvir_sandbox_builder_construct(priv->builder,
                                                   priv->config,
@@ -389,12 +362,18 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
                                              GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY);
 
     priv->active = TRUE;
-    g_object_unref(config);
-    return TRUE;
+    ret = TRUE;
+cleanup:
 
-error:
+    g_free(tmpdir);
+    g_free(configfile);
+    g_free(configdir);
     if (config)
         g_object_unref(config);
+
+    return ret;
+
+error:
     if (priv->builder) {
         g_object_unref(priv->builder);
         priv->builder = NULL;
@@ -410,7 +389,7 @@ error:
 
     g_object_unref(priv->cleaner);
     priv->cleaner = gvir_sandbox_cleaner_new();
-    return FALSE;
+    goto cleanup;
 }
 
 
