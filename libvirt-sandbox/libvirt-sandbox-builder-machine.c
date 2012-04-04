@@ -181,6 +181,13 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
     g_string_append(str, " pci=noearly");
     /* Running QEMU inside KVM makes APIC unreliable */
     g_string_append(str, " noapic");
+    /* Reboot immediately on panic */
+    g_string_append(str, " panic=-1");
+    /* Disable SELinux, since the program we're about to run
+     * is likely to be unconfined anyway */
+    /* XXX re-visit this to see if we can use it with
+     * service based sandboxes */
+    g_string_append(str, " selinux=0");
 
     ret = str->str;
     g_string_free(str, FALSE);
@@ -300,6 +307,16 @@ static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder 
     else
         gvir_config_domain_set_virt_type(domain,
                                          GVIR_CONFIG_DOMAIN_VIRT_QEMU);
+
+    gvir_config_domain_set_lifecycle(domain,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_POWEROFF,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
+    gvir_config_domain_set_lifecycle(domain,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_REBOOT,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
+    gvir_config_domain_set_lifecycle(domain,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_ON_CRASH,
+                                     GVIR_CONFIG_DOMAIN_LIFECYCLE_DESTROY);
 
     return TRUE;
 }

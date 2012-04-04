@@ -337,7 +337,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     mount_other("/root", "tmpfs", 0755);
     mount_other("/sys", "sysfs", 0755);
     mount_other("/proc", "proc", 0755);
-    mount_other("/selinux", "selinuxfs", 0755);
+    //mount_other("/selinux", "selinuxfs", 0755);
     mount_other("/dev/shm", "tmpfs", 01777);
 
     if (mkdir("/dev/input", 0777) < 0) {
