@@ -1808,7 +1808,7 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
 
 
 /**
- * gvir_sandbox_config_load_config_mount:
+ * gvir_sandbox_config_load_from_path:
  * @path: the local path to load
  * @error: the loader error
  *
