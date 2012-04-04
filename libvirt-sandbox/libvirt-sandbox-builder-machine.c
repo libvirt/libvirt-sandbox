@@ -179,6 +179,8 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
     g_string_append(str, " noreplace-smp");
     g_string_append(str, " cgroup_disable=memory");
     g_string_append(str, " pci=noearly");
+    /* Running QEMU inside KVM makes APIC unreliable */
+    g_string_append(str, " noapic");
 
     ret = str->str;
     g_string_free(str, FALSE);
