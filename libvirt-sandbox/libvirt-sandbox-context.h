@@ -55,6 +55,11 @@ struct _GVirSandboxContextClass
 {
     GObjectClass parent_class;
 
+    gboolean (*prestart)(GVirSandboxContext *ctxt,
+                         const gchar *configdir,
+                         GError **error);
+
+    /* XXX padding */
 };
 
 GType gvir_sandbox_context_get_type(void);
