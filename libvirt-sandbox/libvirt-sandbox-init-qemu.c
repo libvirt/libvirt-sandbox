@@ -403,7 +403,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         if (n > 0 && target[n-1] == '\n')
             target[--n] = '\0';
 
-        mount_9pfs(line, target, 0755, 1);
+        mount_9pfs(line, target, 0755, 0);
     }
     fclose(fp);
 
@@ -428,7 +428,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         if (create_virtioblk_device(line) < 0)
             exit_poweroff();
 
-        mount_ext(line, target, 0755, 1);
+        mount_ext(line, target, 0755, 0);
     }
     fclose(fp);
 
