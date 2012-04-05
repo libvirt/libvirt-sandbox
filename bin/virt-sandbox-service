@@ -47,7 +47,7 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/%s.sandbox"
-    SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/run", "/home", "/root", "/var/spool" ]
+    SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
     SELINUX_LEVEL = "s0"
