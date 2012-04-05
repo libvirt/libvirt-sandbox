@@ -180,7 +180,7 @@ static gchar *gvir_sandbox_context_service_get_unitdata(GVirSandboxContext *ctxt
         gvir_sandbox_config_get_homedir(config),
         gvir_sandbox_config_get_username(config),
         gvir_sandbox_config_service_get_executable(sconfig));
-    fprintf(stderr, "%s\n", ret);
+
     return ret;
 }
 
