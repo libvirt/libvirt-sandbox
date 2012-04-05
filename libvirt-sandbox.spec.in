@@ -25,7 +25,6 @@ BuildRequires: libvirt-gobject-devel >= 0.0.7
 BuildRequires: gobject-introspection-devel
 %endif
 BuildRequires: glibc-static
-Requires: libvirt-daemon-lxc
 
 %package libs
 Group: Development/Libraries
