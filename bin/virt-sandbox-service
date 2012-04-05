@@ -469,12 +469,6 @@ if __name__ == '__main__':
     try:
         args.func(args)
         sys.exit(0)
-    except gi._glib.GError, e:
-        usage(parser,e)
-    except OSError, e:
-        usage(parser,e)
-    except KeyError, e:
-        usage(parser,e)
     except KeyboardInterrupt, e:
         sys.exit(0)
     except ValueError, e:
