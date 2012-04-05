@@ -46,7 +46,7 @@ _virt_sandbox_service () {
 
         local -A OPTS=(
             [ALL]='-h --help'
-            [CREATE]='-e --executable -p --path -t --type -l --level -d --dynamic -c --clone -i --image -s --size'
+            [CREATE]='-e --executable -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
         )
 
         for ((i=0; $i <= $COMP_CWORD; i++)); do
