@@ -102,6 +102,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-builder-machine.h \
 			libvirt-sandbox-builder-container.h \
 			libvirt-sandbox-console.h \
+			libvirt-sandbox-console-raw.h \
 			libvirt-sandbox-context.h \
 			libvirt-sandbox-context-graphical.h \
 			libvirt-sandbox-context-interactive.h \
@@ -124,6 +125,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-builder-machine.c \
 			libvirt-sandbox-builder-container.c \
 			libvirt-sandbox-console.c \
+			libvirt-sandbox-console-raw.c \
 			libvirt-sandbox-context.c \
 			libvirt-sandbox-context-graphical.c \
 			libvirt-sandbox-context-interactive.c \

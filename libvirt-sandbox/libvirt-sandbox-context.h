@@ -71,11 +71,14 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error);
 
-GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt);
+GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
+                                            GError **error);
 GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);
 
-GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt);
-GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt);
+GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt,
+                                                     GError **error);
+GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt,
+                                                           GError **error);
 
 G_END_DECLS
 

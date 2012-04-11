@@ -46,8 +46,6 @@
 #include <grp.h>
 #include <sys/reboot.h>
 
-#define MAGIC "xoqpuɐs"
-
 static gboolean debug = FALSE;
 static gboolean verbose = FALSE;
 static gboolean poweroff = FALSE;
@@ -78,26 +76,6 @@ static void sig_child(int sig ATTR_UNUSED)
     char ignore = '1';
     if (write(sigwrite, &ignore, 1) != 1)
         abort();
-}
-
-static ssize_t
-safewrite(int fd, const void *buf, size_t count)
-{
-    size_t nwritten = 0;
-    while (count > 0) {
-        ssize_t r = write(fd, buf, count);
-
-        if (r < 0 && errno == EINTR)
-            continue;
-        if (r < 0)
-            return r;
-        if (r == 0)
-            return nwritten;
-        buf = (const char *)buf + r;
-        count -= r;
-        nwritten += r;
-    }
-    return nwritten;
 }
 
 
@@ -482,11 +460,6 @@ static int run_command(gboolean interactive, gchar **argv,
                 abort();
         }
 
-        if (safewrite(STDOUT_FILENO, MAGIC, sizeof(MAGIC)) != sizeof(MAGIC)) {
-            fprintf(stderr, "Cannot send handshake magic %s\n", MAGIC);
-            abort();
-        }
-
         execv(argv[0], argv);
         fprintf(stderr, "Cannot execute '%s': %s\n", argv[0], strerror(errno));
         exit(EXIT_FAILURE);
@@ -568,8 +541,6 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
     int hostin = STDIN_FILENO;
     int hostout = STDOUT_FILENO;
 
-    int inescape = 0;
-
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: running I/O loop %d %d", appin, appout);
 
@@ -599,8 +570,8 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
         /* If app is using a PTY & still open */
         if ((appin == appout) && appin != -1) {
             fds[nfds].events = 0;
-            /* If we have data to transmit & don't have an escape seq */
-            if (hostToAppLen > 0 && !inescape)
+            /* If we have data to transmit */
+            if (hostToAppLen > 0)
                 fds[nfds].events |= POLLOUT;
 
             /* If we have space to received more data */
@@ -615,8 +586,8 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
 
         /* If app is using a pair of pipes */
         if (appin != appout) {
-            /* If appin is still open & we have pending data & don't have an escape seq */
-            if (appin != -1 && hostToAppLen > 0 && !inescape) {
+            /* If appin is still open & we have pending data */
+            if (appin != -1 && hostToAppLen > 0) {
                 fds[nfds].fd = appin;
                 fds[nfds].events |= POLLOUT;
                 nfds++;
@@ -708,29 +679,6 @@ static int run_io(pid_t child, int sigread, int appin, int appout)
                 }
             }
         }
-
-        int n;
-        for (n = 0, i = 0 ; i < hostToAppLen ; i++) {
-            if (inescape) {
-                if (hostToApp[i] == '9') {
-                    close(hostin);
-                    hostin = -1;
-                } else {
-                    hostToApp[n] = hostToApp[i];
-                    n++;
-                }
-                inescape = 0;
-            } else {
-                if (hostToApp[i] == '\\') {
-                    inescape = 1;
-                } else {
-                    if (n < i)
-                        hostToApp[n] = hostToApp[i];
-                    n++;
-                }
-            }
-        }
-        hostToAppLen = n;
 
         if ((hostin == -1) &&
             (hostToAppLen == 0) &&

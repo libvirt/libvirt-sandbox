@@ -22,6 +22,8 @@
 
 #include <config.h>
 
+#include <string.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -261,12 +263,18 @@ GVirSandboxCleaner *gvir_sandbox_context_get_cleaner(GVirSandboxContext *ctxt)
  *
  * Returns: (transfer full): the current domain or NULL
  */
-GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt)
+GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
+                                            GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
-    if (priv->domain)
-        g_object_ref(priv->domain);
-    return priv->domain;
+
+    if (!priv->domain) {
+        g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                    "Domain is not currently running");
+        return NULL;
+    }
+
+    return g_object_ref(priv->domain);
 }
 
 /**
@@ -370,8 +378,8 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
         goto error;
 
-    priv->console = gvir_sandbox_console_new(priv->connection, priv->domain,
-                                             GVIR_SANDBOX_CONSOLE_TARGET_PRIMARY);
+    priv->console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection, priv->domain,
+                                                                      NULL));
 
     priv->active = TRUE;
     ret = TRUE;
@@ -470,12 +478,16 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
  *
  * Returns: (transfer full)(allow-none): the sandbox console (or NULL)
  */
-GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt)
+GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt,
+                                                     GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (!priv->console)
+    if (!priv->console) {
+        g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                    "Domain is not currently running");
         return NULL;
+    }
 
     return g_object_ref(priv->console);
 }
@@ -487,13 +499,26 @@ GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt)
  *
  * Returns: (transfer full)(allow-none): the sandbox console (or NULL)
  */
-GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt)
+GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt,
+                                                           GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
+    GVirSandboxConsole *console;
+    const char *devname = NULL;
 
-    if (!priv->domain)
+    if (!priv->domain) {
+        g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                    "Domain is not currently running");
         return NULL;
+    }
 
-    return gvir_sandbox_console_new(priv->connection, priv->domain,
-                                    GVIR_SANDBOX_CONSOLE_TARGET_SHELL);
+    /* XXX get from config */
+    if (strstr(gvir_connection_get_uri(priv->connection), "lxc"))
+        devname = "console0";
+    else
+        devname = "serial0";
+
+    console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection, priv->domain,
+                                                                devname));
+    return console;
 }

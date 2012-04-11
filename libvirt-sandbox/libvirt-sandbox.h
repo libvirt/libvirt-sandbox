@@ -44,6 +44,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-builder-machine.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-container.h>
 #include <libvirt-sandbox/libvirt-sandbox-console.h>
+#include <libvirt-sandbox/libvirt-sandbox-console-raw.h>
 #include <libvirt-sandbox/libvirt-sandbox-context.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-graphical.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-interactive.h>
