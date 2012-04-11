@@ -46,6 +46,8 @@
 #include <grp.h>
 #include <sys/reboot.h>
 
+#include "libvirt-sandbox-rpcpacket.h"
+
 static gboolean debug = FALSE;
 static gboolean verbose = FALSE;
 static gboolean poweroff = FALSE;
@@ -387,14 +389,16 @@ static int change_user(const gchar *user,
     return 0;
 }
 
-static int run_command(gboolean interactive, gchar **argv,
-                       int *appin, int *appout)
+static gboolean run_command(gboolean interactive, gchar **argv,
+                            pid_t *child,
+                            int *appin, int *appout, int *apperr)
 {
     int pid;
     int master = -1;
     int slave = -1;
     int pipein[2] = { -1, -1};
     int pipeout[2] = { -1, -1};
+    int pipeerr[2] = { -1, -1};
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: running command %s %d\n",
@@ -411,15 +415,18 @@ static int run_command(gboolean interactive, gchar **argv,
 
         *appin = master;
         *appout = master;
+        *apperr = master;
     } else {
         if (pipe(pipein) < 0 ||
-            pipe(pipeout) < 0) {
+            pipe(pipeout) < 0 ||
+            pipe(pipeerr) < 0) {
             fprintf(stderr, "Cannot open pipe for child: %s\n",
                     strerror(errno));
             goto error;
         }
         *appin = pipein[1];
         *appout = pipeout[0];
+        *apperr = pipeerr[0];
     }
 
     if ((pid = fork()) < 0) {
@@ -448,6 +455,7 @@ static int run_command(gboolean interactive, gchar **argv,
         } else {
             close(pipein[1]);
             close(pipeout[0]);
+            close(pipeerr[0]);
             close(STDIN_FILENO);
             close(STDOUT_FILENO);
             close(STDERR_FILENO);
@@ -456,7 +464,7 @@ static int run_command(gboolean interactive, gchar **argv,
                 abort();
             if (dup2(pipeout[1], STDOUT_FILENO) != STDOUT_FILENO)
                 abort();
-            if (dup2(pipeout[1], STDERR_FILENO) != STDERR_FILENO)
+            if (dup2(pipeerr[1], STDERR_FILENO) != STDERR_FILENO)
                 abort();
         }
 
@@ -470,9 +478,11 @@ static int run_command(gboolean interactive, gchar **argv,
     else {
         close(pipein[0]);
         close(pipeout[1]);
+        close(pipeerr[1]);
     }
 
-    return pid;
+    *child = pid;
+    return TRUE;
 
 error:
     if (interactive) {
@@ -489,245 +499,606 @@ error:
             close(pipeout[0]);
         if (pipeout[1] < 0)
             close(pipeout[1]);
+        if (pipeerr[0] < 0)
+            close(pipeerr[0]);
+        if (pipeerr[1] < 0)
+            close(pipeerr[1]);
     }
-    *appin = *appout = -1;
-    return -1;
+    *appin = *appout = *apperr = -1;
+    return FALSE;
 }
 
-static ssize_t read_data(int fd, char *buf, size_t *len, size_t max)
+static GVirSandboxRPCPacket *gvir_sandbox_encode_stdout(const gchar *data,
+                                                        gsize len,
+                                                        unsigned int serial,
+                                                        GError **error)
 {
-    size_t avail = max - *len;
-    ssize_t got;
+    GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
 
-    got = read(fd, buf + *len, avail);
+    pkt->header.proc = GVIR_SANDBOX_PROTOCOL_PROC_STDOUT;
+    pkt->header.status = GVIR_SANDBOX_PROTOCOL_STATUS_OK;
+    pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_DATA;
+    pkt->header.serial = serial;
+
+    if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
+        goto error;
+    if (!gvir_sandbox_rpcpacket_encode_payload_raw(pkt, data, len, error))
+        goto error;
+
+    if (debug)
+        fprintf(stderr, "Ready to send %zu %zu %zu\n",
+                len, pkt->bufferLength, pkt->bufferOffset);
+    return pkt;
+
+error:
+    gvir_sandbox_rpcpacket_free(pkt);
+    return NULL;
+}
+
+
+static GVirSandboxRPCPacket *gvir_sandbox_encode_stderr(const gchar *data,
+                                                        gsize len,
+                                                        unsigned int serial,
+                                                        GError **error)
+{
+    GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
+
+    pkt->header.proc = GVIR_SANDBOX_PROTOCOL_PROC_STDERR;
+    pkt->header.status = GVIR_SANDBOX_PROTOCOL_STATUS_OK;
+    pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_DATA;
+    pkt->header.serial = serial;
+
+    if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
+        goto error;
+    if (!gvir_sandbox_rpcpacket_encode_payload_raw(pkt, data, len, error))
+        goto error;
+
+    return pkt;
+
+error:
+    gvir_sandbox_rpcpacket_free(pkt);
+    return NULL;
+}
+
+
+static GVirSandboxRPCPacket *gvir_sandbox_encode_exit(int status,
+                                                      unsigned int serial,
+                                                      GError **error)
+{
+    GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
+    GVirSandboxProtocolMessageExit msg;
+
+    memset(&msg, 0, sizeof(msg));
+    msg.status = status;
+
+    pkt->header.proc = GVIR_SANDBOX_PROTOCOL_PROC_EXIT;
+    pkt->header.status = GVIR_SANDBOX_PROTOCOL_STATUS_OK;
+    pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_MESSAGE;
+    pkt->header.serial = serial;
+
+    if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
+        goto error;
+    if (!gvir_sandbox_rpcpacket_encode_payload_msg(pkt,
+                                                   (xdrproc_t)xdr_GVirSandboxProtocolMessageExit,
+                                                   (void*)&msg,
+                                                   error))
+        goto error;
+
+    return pkt;
+
+error:
+    gvir_sandbox_rpcpacket_free(pkt);
+    return NULL;
+}
+
+
+
+
+static gssize read_data(int fd, char *buf, size_t len)
+{
+    gssize got;
+
+reread:
+    got = read(fd, buf, len);
     if (got < 0) {
         if (errno == EAGAIN)
             return 0;
-        fprintf(stderr, "Unable to read data: %s\n", strerror(errno));
+        if (errno == EINTR)
+            goto reread;
+        if (debug)
+            fprintf(stderr, "Unable to read data: %s\n", strerror(errno));
         return -1;
     }
-
-    *len += got;
 
     return got;
 }
 
-static ssize_t write_data(int fd, char *buf, size_t *len)
+static gssize write_data(int fd, const char *buf, size_t len)
 {
-    ssize_t got;
+    gssize got;
 
-    got = write(fd, buf, *len);
+rewrite:
+    got = write(fd, buf, len);
     if (got < 0) {
         if (errno == EAGAIN)
             return 0;
-        fprintf(stderr, "Unable to write data: %s\n", strerror(errno));
+        if (errno == EINTR)
+            goto rewrite;
+        if (debug)
+            fprintf(stderr, "Unable to write data: %s\n", strerror(errno));
         return -1;
     }
-
-    memmove(buf, buf+got, *len-got);
-    *len -= got;
 
     return got;
 }
 
+typedef enum {
+    GVIR_SANDBOX_CONSOLE_STATE_WAITING,
+    GVIR_SANDBOX_CONSOLE_STATE_SYNCING,
+    GVIR_SANDBOX_CONSOLE_STATE_RUNNING,
+} GVirSandboxConsoleState;
 
-static int run_io(pid_t child, int sigread, int appin, int appout)
+static gboolean eventloop(gboolean interactive,
+                          gchar **appargv,
+                          gboolean withshell,
+                          int sigread)
 {
-    char hostToApp[1024];
-    size_t hostToAppLen = 0;
-    char appToHost[1024];
-    size_t appToHostLen = 0;
-
-    int hostin = STDIN_FILENO;
-    int hostout = STDOUT_FILENO;
+    GVirSandboxRPCPacket *rx = NULL;
+    GVirSandboxRPCPacket *tx = NULL;
+    gboolean quit = FALSE;
+    gboolean appOutEOF = FALSE;
+    gboolean appErrEOF = FALSE;
+    gboolean appQuit = FALSE;
+    int exitstatus = 0;
+    gchar *hostToStdin = NULL;
+    gsize hostToStdinLength = 0;
+    gsize hostToStdinOffset = 0;
+    unsigned int serial = 0;
+    pid_t child = 0;
+    int appin = -1;
+    int appout = -1;
+    int apperr = -1;
+    gboolean ret = FALSE;
+    int host;
+    const gchar *devname;
+    GVirSandboxConsoleState state = GVIR_SANDBOX_CONSOLE_STATE_WAITING;
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: running I/O loop %d %d", appin, appout);
 
-    while (1) {
+    /* XXX lame hack */
+    if (getenv("LIBVIRT_LXC_NAME")) {
+        if (withshell)
+            devname = "/dev/tty3";
+        else
+            devname = "/dev/tty2";
+    } else {
+        devname = "/dev/hvc0";
+    }
+
+    if ((host = open(devname, O_RDWR)) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-common: cannot open %s: %s",
+                devname, strerror(errno));
+        return FALSE;
+    }
+    struct termios  rawattr;
+
+    tcgetattr(host, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(host, TCSAFLUSH, &rawattr);
+
+
+    rx = gvir_sandbox_rpcpacket_new(FALSE);
+    rx->bufferLength = 1; /* Ready to get a sync packet */
+
+    while (!quit) {
         int i;
         struct pollfd fds[6];
         size_t nfds = 0;
+        int appinEv = 0;
+        int appoutEv = 0;
+        int apperrEv = 0;
+        int hostEv = 0;
 
         fds[nfds].fd = sigread;
         fds[nfds].events = POLLIN;
         nfds++;
 
-        /* If hostin is still open & we have space to store data */
-        if (hostin != -1 && hostToAppLen < sizeof(hostToApp)) {
-            fds[nfds].fd = hostin;
-            fds[nfds].events = POLLIN;
-            nfds++;
-        }
-
-        /* If hostout is still open & we have pending data to send */
-        if (hostout != -1 && appToHostLen > 0) {
-            fds[nfds].fd = hostout;
-            fds[nfds].events = POLLOUT;
-            nfds++;
-        }
-
-        /* If app is using a PTY & still open */
-        if ((appin == appout) && appin != -1) {
-            fds[nfds].events = 0;
-            /* If we have data to transmit */
-            if (hostToAppLen > 0)
-                fds[nfds].events |= POLLOUT;
-
-            /* If we have space to received more data */
-            if (appToHostLen < sizeof(appToHost))
-                fds[nfds].events |= POLLIN;
-
-            if (fds[nfds].events != 0) {
-                fds[nfds].fd = appin;
-                nfds++;
-            }
-        }
-
-        /* If app is using a pair of pipes */
-        if (appin != appout) {
-            /* If appin is still open & we have pending data */
-            if (appin != -1 && hostToAppLen > 0) {
-                fds[nfds].fd = appin;
-                fds[nfds].events |= POLLOUT;
-                nfds++;
-            }
-
-            /* If appout is still open & we have space for more data */
-            if (appout != -1 && appToHostLen < sizeof(appToHost)) {
-                fds[nfds].fd = appout;
-                fds[nfds].events = POLLIN;
-                nfds++;
-            }
-        }
-
-        /* This shouldn't actually happen, but for some reason... */
-        if (nfds == 0)
+        switch (state) {
+        case GVIR_SANDBOX_CONSOLE_STATE_WAITING:
+            hostEv = POLLIN;
             break;
+        case GVIR_SANDBOX_CONSOLE_STATE_SYNCING:
+            hostEv = POLLIN;
+            if (tx)
+                hostEv |= POLLOUT;
+            break;
+        case GVIR_SANDBOX_CONSOLE_STATE_RUNNING:
+            if (hostToStdin && appin != -1)
+                appinEv |= POLLOUT;
+            else if (rx != NULL)
+                hostEv |= POLLIN;
+
+            if (tx != NULL)
+                hostEv |= POLLOUT;
+            else {
+                if (!appOutEOF && appout != -1)
+                    appoutEv |= POLLIN;
+                if ((appout != apperr) && !appErrEOF && apperr != -1)
+                    apperrEv |= POLLIN;
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (appinEv) {
+            fds[nfds].fd = appin;
+            fds[nfds].events = appinEv;
+            nfds++;
+        }
+        if (appoutEv) {
+            fds[nfds].fd = appout;
+            fds[nfds].events = appoutEv;
+            nfds++;
+        }
+        if (apperrEv) {
+            fds[nfds].fd = apperr;
+            fds[nfds].events = apperrEv;
+            nfds++;
+        }
+        if (hostEv) {
+            fds[nfds].fd = host;
+            fds[nfds].events = hostEv;
+            nfds++;
+        }
 
     repoll:
         if (poll(fds, nfds, -1) < 0) {
             if (errno == EINTR)
                 goto repoll;
-            fprintf(stderr, "Poll error:%s\n",
-                    strerror(errno));
+            if (debug)
+                fprintf(stderr, "Poll error:%s\n",
+                        strerror(errno));
             return -1;
         }
 
         for (i = 0 ; i < nfds ; i++) {
-            ssize_t got;
+            gssize got;
 
             if (fds[i].fd == sigread) {
                 if (fds[i].revents) {
                     char ignore;
+                    int rv;
                     if (read(sigread, &ignore, 1) != 1)
-                        abort();
-                    waitpid(child, NULL, WNOHANG);
+                        goto cleanup;
+                    do {
+                        rv = waitpid(child, &exitstatus, 0);
+                    } while (rv != -1 && rv != child);
+                    appQuit = TRUE;
+                    if (appErrEOF && appOutEOF &&
+                        !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                        goto cleanup;
                 }
-            } else if (fds[i].fd == hostin) {
-                if (fds[i].revents) {
-                    got = read_data(hostin, hostToApp, &hostToAppLen, sizeof(hostToApp));
-                    if (got <= 0) { /* On EOF or error, close */
-                        close(hostin);
-                        hostin = -1;
-                    }
-                }
-            } else if (fds[i].fd == hostout) {
-                if (fds[i].revents) {
-                    got = write_data(hostout, appToHost, &appToHostLen);
-                    if (got < 0) {
-                        close(hostout);
-                        hostout = -1;
-                    }
-                }
-            } else if (fds[i].fd == appin && fds[i].fd == appout) {
+            } else if (fds[i].fd == host) {
                 if (fds[i].revents & POLLIN) {
-                    got = read_data(appin, appToHost, &appToHostLen, sizeof(appToHost));
-                    if (got <= 0) {
-                        close(appin);
-                        appin = appout = -1;
+                    if (debug)
+                        fprintf(stderr, "host readable\n");
+                    if (rx) {
+                    readmore:
+                        got = read_data(host,
+                                        rx->buffer + rx->bufferOffset,
+                                        rx->bufferLength - rx->bufferOffset);
+                        if (debug)
+                            fprintf(stderr, "read %zd %zu %zu\n", got, rx->bufferLength, rx->bufferOffset);
+                        if (got <= 0) {
+                            gvir_sandbox_rpcpacket_free(rx);
+                            rx = NULL;
+                            quit = TRUE;
+                        } else {
+                            rx->bufferOffset += got;
+                            if (rx->bufferLength == rx->bufferOffset) {
+                                switch (state) {
+                                case GVIR_SANDBOX_CONSOLE_STATE_WAITING:
+                                    /* We now expect a 'wait' byte. Anything else is bad */
+                                    if (rx->buffer[0] != GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT) {
+                                        if (debug)
+                                            fprintf(stderr, "Unexpected syntax byte %d",
+                                                    rx->buffer[0]);
+                                        goto cleanup;
+                                    }
+                                    state = GVIR_SANDBOX_CONSOLE_STATE_SYNCING;
+                                    if (debug)
+                                        fprintf(stderr, "Sending sync confirm\n");
+
+                                    /* Great, we can sync with the host now */
+                                    tx = gvir_sandbox_rpcpacket_new(FALSE);
+                                    tx->buffer[0] = GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC;
+                                    tx->bufferLength = 1;
+                                    tx->bufferOffset = 0;
+
+                                    rx->bufferLength = 1;
+                                    rx->bufferOffset = 0;
+                                    break;
+
+                                case GVIR_SANDBOX_CONSOLE_STATE_SYNCING:
+                                    /* We now expect a 'sync' byte. We might still get a few
+                                     * 'wait' bytes which we need to ignore. Anything else is bad
+                                     */
+                                    if (rx->buffer[0] != GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT &&
+                                        rx->buffer[0] != GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC) {
+                                        if (debug)
+                                            fprintf(stderr, "Unexpected syntax byte %d",
+                                                    rx->buffer[0]);
+                                        goto cleanup;
+                                    }
+                                    /* We've got a 'sync' from the host. Now we can launch
+                                     * the command we know neither side will loose any I/O
+                                     */
+                                    if (rx->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC) {
+                                        if (debug)
+                                            fprintf(stderr, "Running command\n");
+                                        if (!run_command(interactive,
+                                                         appargv,
+                                                         &child,
+                                                         &appin,
+                                                         &appout,
+                                                         &apperr)) {
+                                            if (debug)
+                                                fprintf(stderr, "Failed to run command\n");
+                                            goto cleanup;
+                                        }
+                                        state = GVIR_SANDBOX_CONSOLE_STATE_RUNNING;
+                                        rx->bufferLength = 4;
+                                        rx->bufferOffset = 0;
+                                    } else {
+                                        if (debug)
+                                            fprintf(stderr, "Ignoring delayed wait\n");
+                                        rx->bufferLength = 1;
+                                        rx->bufferOffset = 0;
+                                    }
+                                    break;
+
+                                case GVIR_SANDBOX_CONSOLE_STATE_RUNNING:
+                                    if (debug)
+                                        fprintf(stderr, "Read packet %zu\n", rx->bufferLength);
+                                    if (rx->bufferLength == GVIR_SANDBOX_PROTOCOL_LEN_MAX) {
+                                        GError *error = NULL;
+                                        if (!gvir_sandbox_rpcpacket_decode_length(rx, &error)) {
+                                            if (debug)
+                                                fprintf(stderr, "Cannot decode length %zu: %s\n",
+                                                        rx->bufferLength, error->message);
+                                            goto cleanup;
+                                        }
+                                        goto readmore;
+                                    } else {
+                                        if (!gvir_sandbox_rpcpacket_decode_header(rx, NULL)) {
+                                            if (debug)
+                                                fprintf(stderr, "Cannot decode header %zu\n", rx->bufferLength);
+                                            goto cleanup;
+                                        }
+
+                                        switch (rx->header.proc) {
+                                        case GVIR_SANDBOX_PROTOCOL_PROC_STDIN:
+                                            if (rx->bufferLength - rx->bufferOffset) {
+                                                hostToStdinOffset = 0;
+                                                hostToStdinLength = rx->bufferLength - rx->bufferOffset;
+                                                hostToStdin = g_new0(gchar, hostToStdinLength);
+                                                memcpy(hostToStdin,
+                                                       rx->buffer + rx->bufferOffset,
+                                                       hostToStdinLength);
+                                                if (debug)
+                                                    fprintf(stderr, "Processed stdin %zu\n", hostToStdinLength);
+                                            } else {
+                                                close(appin);
+                                                appin = -1;
+                                            }
+                                            break;
+
+                                        case GVIR_SANDBOX_PROTOCOL_PROC_QUIT:
+                                            quit = TRUE;
+                                            break;
+
+                                        case GVIR_SANDBOX_PROTOCOL_PROC_STDOUT:
+                                        case GVIR_SANDBOX_PROTOCOL_PROC_STDERR:
+                                        case GVIR_SANDBOX_PROTOCOL_PROC_EXIT:
+                                        default:
+                                            if (debug)
+                                                fprintf(stderr, "Unexpected proc %u\n", rx->header.proc);
+                                            goto cleanup;
+                                        }
+                                    }
+                                    gvir_sandbox_rpcpacket_free(rx);
+                                    rx = NULL;
+                                    break;
+                                default:
+                                    if (debug)
+                                        fprintf(stderr, "Unexpected state %d\n", state);
+                                    break;
+                                }
+                            }
+                        }
                     }
                     fds[i].revents &= ~(POLLIN);
                 }
                 if (fds[i].revents & POLLOUT) {
-                    got = write_data(appin, hostToApp, &hostToAppLen);
-                    if (got < 0) {
-                        close(appin);
-                        appin = appout = -1;
+                    if (debug)
+                        fprintf(stderr, "Host writable\n");
+                    if (tx) {
+                        got = write_data(host,
+                                         tx->buffer + tx->bufferOffset,
+                                         tx->bufferLength - tx->bufferOffset);
+                        if (got < 0) {
+                            if (debug)
+                                fprintf(stderr, "Cannot write packet to host %s\n",
+                                        strerror(errno));
+                            gvir_sandbox_rpcpacket_free(tx);
+                            tx = NULL;
+                            quit = TRUE;
+                        } else {
+                            tx->bufferOffset += got;
+                            if (tx->bufferOffset == tx->bufferLength) {
+                                if (debug)
+                                    fprintf(stderr, "Wrote packet %zu to host",
+                                            tx->bufferOffset);
+                                gvir_sandbox_rpcpacket_free(tx);
+                                tx = NULL;
+                            }
+                        }
                     }
                     fds[i].revents &= ~(POLLOUT);
                 }
                 if (fds[i].revents) {
-                    close(appin);
-                    appin = appout = -1;
+                    quit = TRUE;
+                }
+            } else if (fds[i].fd == appin &&
+                       fds[i].fd == appout) {
+                if (fds[i].revents & POLLIN) {
+                    if (!tx) {
+                        gsize len = 4096;
+                        gchar *buf = g_new0(gchar, len);
+                        got = read_data(appout, buf, len);
+                        if (got <= 0) {
+                            if (got < 0 && debug)
+                                fprintf(stderr, "Failed to read from app %s\n",
+                                        strerror(errno));
+                            appOutEOF = TRUE;
+                            appErrEOF = TRUE;
+                            if (appQuit &&
+                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                goto cleanup;
+                        } else {
+                            if (!(tx = gvir_sandbox_encode_stdout(buf, got, serial++, NULL))) {
+                                g_free(buf);
+                                if (debug)
+                                    fprintf(stderr, "Failed to encode stdout\n");
+                                goto cleanup;
+                            }
+                        }
+                        g_free(buf);
+                    }
+                    fds[i].revents &= ~(POLLIN);
+                }
+                if (fds[i].revents & POLLOUT) {
+                    if (hostToStdin) {
+                        got = write_data(appin,
+                                         hostToStdin + hostToStdinOffset,
+                                         hostToStdinLength - hostToStdinOffset);
+                        if (got < 0) {
+                            if (debug)
+                                fprintf(stderr, "Failed to write to app %s\n",
+                                        strerror(errno));
+                            g_free(hostToStdin);
+                            hostToStdin = NULL;
+                            hostToStdinLength = hostToStdinOffset = 0;
+                        } else {
+                            hostToStdinOffset += got;
+                            if (hostToStdinOffset == hostToStdinLength) {
+                                g_free(hostToStdin);
+                                hostToStdin = NULL;
+                                hostToStdinLength = hostToStdinOffset = 0;
+                                rx = gvir_sandbox_rpcpacket_new(TRUE);
+                            }
+                        }
+                    }
+                    fds[i].revents &= ~(POLLOUT);
+                }
+                if (fds[i].revents & POLLHUP) {
+                    appOutEOF = TRUE;
+                    appErrEOF = TRUE;
+                    if (appQuit &&
+                        !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                        goto cleanup;
                 }
             } else if (fds[i].fd == appin) {
-                if (fds[i].revents) {
-                    got = write_data(appin, hostToApp, &hostToAppLen);
+                if (fds[i].revents && hostToStdin) {
+                    got = write_data(appin,
+                                     hostToStdin + hostToStdinOffset,
+                                     hostToStdinLength - hostToStdinOffset);
                     if (got < 0) {
-                        close(appin);
-                        appin = -1;
+                        g_free(hostToStdin);
+                        hostToStdin = NULL;
+                        hostToStdinLength = hostToStdinOffset = 0;
+                    } else {
+                        hostToStdinOffset += got;
+                        if (hostToStdinOffset == hostToStdinLength) {
+                            g_free(hostToStdin);
+                            hostToStdin = NULL;
+                            hostToStdinLength = hostToStdinOffset = 0;
+                            rx = gvir_sandbox_rpcpacket_new(TRUE);
+                        }
                     }
                 }
             } else if (fds[i].fd == appout) {
-                if (fds[i].revents) {
-                    got = read_data(appout, appToHost, &appToHostLen, sizeof(appToHost));
-                    if (got <= 0) {
-                        close(appout);
-                        appout = -1;
+                if (fds[i].revents && !tx) {
+                    if (!tx) {
+                        gsize len = 4096;
+                        gchar *buf = g_new0(gchar, len);
+                        got = read_data(appout, buf, len);
+                        if (got <= 0) {
+                            appOutEOF = TRUE;
+                            if (appErrEOF && appQuit &&
+                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                goto cleanup;
+                        } else {
+                            if (!(tx = gvir_sandbox_encode_stdout(buf, got, serial++, NULL))) {
+                                g_free(buf);
+                                goto cleanup;
+                            }
+                        }
+                        g_free(buf);
+                    }
+                }
+            } else if (fds[i].fd == apperr) {
+                if (fds[i].revents && !tx) {
+                    if (!tx) {
+                        gsize len = 4096;
+                        gchar *buf = g_new0(gchar, len);
+                        got = read_data(apperr, buf, len);
+                        if (got <= 0) {
+                            appErrEOF = TRUE;
+                            if (appOutEOF && appQuit &&
+                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                goto cleanup;
+                        } else {
+                            if (!(tx = gvir_sandbox_encode_stderr(buf, got, serial++, NULL))) {
+                                g_free(buf);
+                                goto cleanup;
+                            }
+                        }
+                        g_free(buf);
                     }
                 }
             }
         }
 
-        if ((hostin == -1) &&
-            (hostToAppLen == 0) &&
-            (appin != -1)) {
-            close(appin);
-            if (appin == appout)
-                appout = -1;
-            appin = -1;
-        }
-        if ((appout == -1) &&
-            (appToHostLen == 0) &&
-            (hostout != -1)) {
-            close(hostout);
-            hostout = -1;
-        }
-
-        /* See if we've closed all streams */
-        if (hostin == -1 &&
-            hostout == -1 &&
-            appout == -1 &&
-            appin == -1)
-            break;
-
-        /* If child has gone away we've no more data to send back to host */
-        if ((kill(child, 0) < 0) &&
-            (appToHostLen == 0))
-            break;
+        if (appQuit && appOutEOF && appErrEOF && !tx)
+            quit = TRUE;
     }
 
-    if (hostin != -1)
-        close(hostin);
-    if (hostout != -1)
-        close(hostout);
-    if (appin != -1)
-        close(appout);
+    ret = TRUE;
+
+cleanup:
+    if (appin != -1) {
+        close(appin);
+        if (appin == appout)
+            appout = -1;
+        if (appin == apperr)
+            apperr = -1;
+    }
     if (appout != -1)
         close(appout);
-    return 0;
+    if (apperr != -1)
+        close(apperr);
+    return ret;
 }
 
 
 static int
 run_interactive(GVirSandboxConfigInteractive *config)
 {
-    pid_t pid;
     int sigpipe[2] = { -1, -1 };
     int ret = -1;
-    int appin;
-    int appout;
     struct termios  rawattr;
 
     tcgetattr(STDIN_FILENO, &rawattr);
@@ -743,15 +1114,10 @@ run_interactive(GVirSandboxConfigInteractive *config)
     sigwrite = sigpipe[1];
     signal(SIGCHLD, sig_child);
 
-    if ((pid = run_command(gvir_sandbox_config_interactive_get_tty(config),
-                           gvir_sandbox_config_interactive_get_command(config),
-                           &appin, &appout)) < 0)
-        goto cleanup;
-
-    if (debug)
-        g_printerr("Got %d %d\n", appin, appout);
-
-    if (run_io(pid, sigpipe[0], appin, appout) < 0)
+    if (!eventloop(gvir_sandbox_config_interactive_get_tty(config),
+                   gvir_sandbox_config_interactive_get_command(config),
+                   gvir_sandbox_config_get_shell(GVIR_SANDBOX_CONFIG(config)),
+                   sigpipe[0]))
         goto cleanup;
 
     ret = 0;

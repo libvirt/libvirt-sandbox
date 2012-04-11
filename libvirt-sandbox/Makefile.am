@@ -10,12 +10,141 @@ libexec_PROGRAMS = \
 	libvirt-sandbox-init-lxc \
 	$(NULL)
 
+PROTOCOL_GENERATOR = libvirt-sandbox-protocol-generator.pl
+
+EXTRA_DIST += $(PROTOCOL_GENERATOR)
+
 sandboxconfigdir = $(sysconfdir)/$(PACKAGE)/scratch
 sandboxconfig_DATA = README
 
 lib_LTLIBRARIES = libvirt-sandbox-1.0.la
 
-libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c
+SANDBOX_TEMPLATE_FILES = \
+			libvirt-sandbox-enum-types.h.template \
+			libvirt-sandbox-enum-types.c.template \
+			$(NULL)
+
+SANDBOX_GENERATED_ENUM_FILES = \
+			libvirt-sandbox-enum-types.h \
+			libvirt-sandbox-enum-types.c \
+			$(NULL)
+
+SANDBOX_GENERATED_RPC_FILES = \
+			libvirt-sandbox-protocol.h \
+			libvirt-sandbox-protocol.c \
+			$(NULL)
+
+SANDBOX_PROTOCOL_FILES = \
+			libvirt-sandbox-protocol.x \
+			$(NULL)
+
+SANDBOX_GENERATED_FILES = \
+			$(SANDBOX_GENERATED_ENUM_FILES) \
+			$(SANDBOX_GENERATED_RPC_FILES) \
+			$(NULL)
+
+SANDBOX_RPC_FILES = \
+			libvirt-sandbox-rpcpacket.c \
+			libvirt-sandbox-rpcpacket.h \
+			$(NULL)
+
+SANDBOX_HEADER_FILES = \
+			libvirt-sandbox.h \
+			libvirt-sandbox-main.h \
+			libvirt-sandbox-config.h \
+			libvirt-sandbox-config-network.h \
+			libvirt-sandbox-config-network-address.h \
+			libvirt-sandbox-config-network-route.h \
+			libvirt-sandbox-config-mount.h \
+			libvirt-sandbox-config-initrd.h \
+			libvirt-sandbox-config-graphical.h \
+			libvirt-sandbox-config-interactive.h \
+			libvirt-sandbox-config-service.h \
+			libvirt-sandbox-cleaner.h \
+			libvirt-sandbox-builder.h \
+			libvirt-sandbox-builder-initrd.h \
+			libvirt-sandbox-builder-machine.h \
+			libvirt-sandbox-builder-container.h \
+			libvirt-sandbox-console.h \
+			libvirt-sandbox-console-raw.h \
+			libvirt-sandbox-console-rpc.h \
+			libvirt-sandbox-context.h \
+			libvirt-sandbox-context-graphical.h \
+			libvirt-sandbox-context-interactive.h \
+			libvirt-sandbox-context-service.h \
+			$(NULL)
+SANDBOX_SOURCE_FILES = \
+			libvirt-sandbox-main.c \
+			libvirt-sandbox-config.c \
+			libvirt-sandbox-config-network.c \
+			libvirt-sandbox-config-network-address.c \
+			libvirt-sandbox-config-network-route.c \
+			libvirt-sandbox-config-mount.c \
+			libvirt-sandbox-config-initrd.c \
+			libvirt-sandbox-config-graphical.c \
+			libvirt-sandbox-config-interactive.c \
+			libvirt-sandbox-config-service.c \
+			libvirt-sandbox-cleaner.c \
+			libvirt-sandbox-builder.c \
+			libvirt-sandbox-builder-initrd.c \
+			libvirt-sandbox-builder-machine.c \
+			libvirt-sandbox-builder-container.c \
+			libvirt-sandbox-console.c \
+			libvirt-sandbox-console-raw.c \
+			libvirt-sandbox-console-rpc.c \
+			libvirt-sandbox-context.c \
+			libvirt-sandbox-context-graphical.c \
+			libvirt-sandbox-context-interactive.c \
+			libvirt-sandbox-context-service.c \
+			$(NULL)
+
+libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
+libvirt_sandbox_1_0_la_HEADERS = \
+			$(SANDBOX_HEADER_FILES)
+libvirt_sandbox_1_0_la_SOURCES = \
+			$(SANDBOX_SOURCE_FILES) \
+			$(SANDBOX_RPC_FILES)
+nodist_libvirt_sandbox_1_0_la_HEADERS = \
+			libvirt-sandbox-enum-types.h
+			$(NULL)
+nodist_libvirt_sandbox_1_0_la_SOURCES = \
+			libvirt-sandbox-enum-types.c \
+			libvirt-sandbox-protocol.h \
+			libvirt-sandbox-protocol.c \
+			$(NULL)
+libvirt_sandbox_1_0_la_CFLAGS = \
+			-DBINDIR="\"$(bindir)\"" \
+			-DDATADIR="\"$(datadir)\"" \
+			-DLIBVIRT_SANDBOX_BUILD \
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			$(COVERAGE_CFLAGS) \
+			-I$(top_srcdir) \
+			$(GIO_UNIX_CFLAGS) \
+			$(LIBVIRT_GLIB_CFLAGS) \
+			$(LIBVIRT_GOBJECT_CFLAGS) \
+			$(WARN_CFLAGS) \
+			$(NULL)
+libvirt_sandbox_1_0_la_LIBADD = \
+			$(GIO_UNIX_LIBS) \
+			$(LIBVIRT_GLIB_LIBS) \
+			$(LIBVIRT_GOBJECT_LIBS) \
+			$(CYGWIN_EXTRA_LIBADD) \
+			$(NULL)
+libvirt_sandbox_1_0_la_DEPENDENCIES = \
+                        libvirt-sandbox.sym
+libvirt_sandbox_1_0_la_LDFLAGS = \
+			$(WARN_CFLAGS) \
+			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+			$(CYGWIN_EXTRA_LDFLAGS) \
+			$(MINGW_EXTRA_LDFLAGS) \
+			-Wl,--version-script=$(srcdir)/libvirt-sandbox.sym \
+			-version-info $(LIBVIRT_SANDBOX_VERSION_INFO)
+
+libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c \
+			$(SANDBOX_GENERATED_RPC_FILES) \
+			$(SANDBOX_RPC_FILES) \
+			$(NULL)
 libvirt_sandbox_init_common_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
@@ -74,103 +203,8 @@ libvirt_sandbox_init_qemu_LDFLAGS = \
 			$(WARN_CFLAGS) \
 			$(NULL)
 
-SANDBOX_TEMPLATE_FILES = \
-			libvirt-sandbox-enum-types.h.template \
-			libvirt-sandbox-enum-types.c.template \
-			$(NULL)
 
-SANDBOX_GENERATED_FILES = \
-			libvirt-sandbox-enum-types.h \
-			libvirt-sandbox-enum-types.c \
-			$(NULL)
-
-SANDBOX_HEADER_FILES = \
-			libvirt-sandbox.h \
-			libvirt-sandbox-main.h \
-			libvirt-sandbox-config.h \
-			libvirt-sandbox-config-network.h \
-			libvirt-sandbox-config-network-address.h \
-			libvirt-sandbox-config-network-route.h \
-			libvirt-sandbox-config-mount.h \
-			libvirt-sandbox-config-initrd.h \
-			libvirt-sandbox-config-graphical.h \
-			libvirt-sandbox-config-interactive.h \
-			libvirt-sandbox-config-service.h \
-			libvirt-sandbox-cleaner.h \
-			libvirt-sandbox-builder.h \
-			libvirt-sandbox-builder-initrd.h \
-			libvirt-sandbox-builder-machine.h \
-			libvirt-sandbox-builder-container.h \
-			libvirt-sandbox-console.h \
-			libvirt-sandbox-console-raw.h \
-			libvirt-sandbox-context.h \
-			libvirt-sandbox-context-graphical.h \
-			libvirt-sandbox-context-interactive.h \
-			libvirt-sandbox-context-service.h \
-			$(NULL)
-SANDBOX_SOURCE_FILES = \
-			libvirt-sandbox-main.c \
-			libvirt-sandbox-config.c \
-			libvirt-sandbox-config-network.c \
-			libvirt-sandbox-config-network-address.c \
-			libvirt-sandbox-config-network-route.c \
-			libvirt-sandbox-config-mount.c \
-			libvirt-sandbox-config-initrd.c \
-			libvirt-sandbox-config-graphical.c \
-			libvirt-sandbox-config-interactive.c \
-			libvirt-sandbox-config-service.c \
-			libvirt-sandbox-cleaner.c \
-			libvirt-sandbox-builder.c \
-			libvirt-sandbox-builder-initrd.c \
-			libvirt-sandbox-builder-machine.c \
-			libvirt-sandbox-builder-container.c \
-			libvirt-sandbox-console.c \
-			libvirt-sandbox-console-raw.c \
-			libvirt-sandbox-context.c \
-			libvirt-sandbox-context-graphical.c \
-			libvirt-sandbox-context-interactive.c \
-			libvirt-sandbox-context-service.c \
-			$(NULL)
-
-libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
-libvirt_sandbox_1_0_la_HEADERS = \
-			$(SANDBOX_HEADER_FILES)
-libvirt_sandbox_1_0_la_SOURCES = \
-			$(SANDBOX_SOURCE_FILES)
-nodist_libvirt_sandbox_1_0_la_HEADERS = \
-			libvirt-sandbox-enum-types.h
-nodist_libvirt_sandbox_1_0_la_SOURCES = \
-			libvirt-sandbox-enum-types.c
-libvirt_sandbox_1_0_la_CFLAGS = \
-			-DBINDIR="\"$(bindir)\"" \
-			-DDATADIR="\"$(datadir)\"" \
-			-DLIBVIRT_SANDBOX_BUILD \
-			-DLIBEXECDIR="\"$(libexecdir)\"" \
-			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
-			$(COVERAGE_CFLAGS) \
-			-I$(top_srcdir) \
-			$(GIO_UNIX_CFLAGS) \
-			$(LIBVIRT_GLIB_CFLAGS) \
-			$(LIBVIRT_GOBJECT_CFLAGS) \
-			$(WARN_CFLAGS) \
-			$(NULL)
-libvirt_sandbox_1_0_la_LIBADD = \
-			$(GIO_UNIX_LIBS) \
-			$(LIBVIRT_GLIB_LIBS) \
-			$(LIBVIRT_GOBJECT_LIBS) \
-			$(CYGWIN_EXTRA_LIBADD) \
-			$(NULL)
-libvirt_sandbox_1_0_la_DEPENDENCIES = \
-                        libvirt-sandbox.sym
-libvirt_sandbox_1_0_la_LDFLAGS = \
-			$(WARN_CFLAGS) \
-			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
-			$(CYGWIN_EXTRA_LDFLAGS) \
-			$(MINGW_EXTRA_LDFLAGS) \
-			-Wl,--version-script=$(srcdir)/libvirt-sandbox.sym \
-			-version-info $(LIBVIRT_SANDBOX_VERSION_INFO)
-
-EXTRA_DIST += $(SANDBOX_TEMPLATE_FILES)
+EXTRA_DIST += $(SANDBOX_TEMPLATE_FILES) $(SANDBOX_PROTOCOL_FILES)
 
 BUILT_SOURCES = $(SANDBOX_GENERATED_FILES)
 CLEANFILES += $(SANDBOX_GENERATED_FILES)
@@ -182,6 +216,13 @@ libvirt-sandbox-enum-types.h: $(SANDBOX_HEADER_FILES) libvirt-sandbox-enum-types
 libvirt-sandbox-enum-types.c: $(SANDBOX_HEADER_FILES) libvirt-sandbox-enum-types.c.template
 	$(AM_V_GEN) ( $(GLIB_MKENUMS) --template $(srcdir)/libvirt-sandbox-enum-types.c.template $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) ) | \
             sed -e "s/G_TYPE_VIR_CONFIG/GVIR_CONFIG_TYPE/" -e "s/g_vir/gvir/" > libvirt-sandbox-enum-types.c
+
+
+libvirt-sandbox-protocol.c: $(srcdir)/$(PROTOCOL_GENERATOR) $(SANDBOX_PROTOCOL_FILES)
+	$(AM_V_GEN)$(PERL) -w $(srcdir)/$(PROTOCOL_GENERATOR) $(RPCGEN) -c $(SANDBOX_PROTOCOL_FILES:%=$(srcdir)/%) $@
+
+libvirt-sandbox-protocol.h: $(srcdir)/$(PROTOCOL_GENERATOR) $(SANDBOX_PROTOCOL_FILES)
+	$(AM_V_GEN)$(PERL) -w $(srcdir)/$(PROTOCOL_GENERATOR) $(RPCGEN) -h $(SANDBOX_PROTOCOL_FILES:%=$(srcdir)/%) $@
 
 
 if WITH_INTROSPECTION
@@ -206,7 +247,7 @@ LibvirtSandbox-1.0.gir: libvirt-sandbox-1.0.la $(G_IR_SCANNER) Makefile.am
                 $(srcdir)/libvirt-sandbox.h \
                 $(SANDBOX_SOURCE_FILES:%=$(srcdir)/%) \
                 $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) \
-		$(SANDBOX_GENERATED_FILES:%=%) \
+		$(SANDBOX_GENERATED_ENUM_FILES:%=%) \
 		$(NULL)
 
 girdir = $(datadir)/gir-1.0

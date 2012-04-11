@@ -333,6 +333,7 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     gchar *tmpdir;
     gchar *configdir;
     gboolean ret = FALSE;
+    const gchar *devname;
 
     if (priv->domain) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
@@ -378,9 +379,15 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     if (!(gvir_sandbox_cleaner_run_post_start(priv->cleaner, NULL)))
         goto error;
 
+    /* XXX get from config */
+    if (strstr(gvir_connection_get_uri(priv->connection), "lxc"))
+        devname = "console0";
+    else
+        devname = "serial0";
+
     priv->console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection,
                                                                       priv->domain,
-                                                                      NULL));
+                                                                      devname));
 
     priv->active = TRUE;
     ret = TRUE;
@@ -515,9 +522,9 @@ GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *c
 
     /* XXX get from config */
     if (strstr(gvir_connection_get_uri(priv->connection), "lxc"))
-        devname = "console0";
+        devname = "console1";
     else
-        devname = "serial0";
+        devname = "serial1";
 
     console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection, priv->domain,
                                                                 devname));

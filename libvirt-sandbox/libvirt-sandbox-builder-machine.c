@@ -410,7 +410,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     GVirConfigDomainInterfaceUser *iface;
     GVirConfigDomainMemballoon *ball;
     GVirConfigDomainGraphicsSpice *graph;
-    GVirConfigDomainSerial *con;
+    GVirConfigDomainConsole *con;
+    GVirConfigDomainSerial *ser;
     GVirConfigDomainChardevSourcePty *src;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
     int i;
@@ -521,26 +522,47 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
     /* The first serial is for stdio of the sandboxed app */
     src = gvir_config_domain_chardev_source_pty_new();
-    con = gvir_config_domain_serial_new();
+    con = gvir_config_domain_console_new();
+    gvir_config_domain_console_set_target_type(GVIR_CONFIG_DOMAIN_CONSOLE(con),
+                                               GVIR_CONFIG_DOMAIN_CONSOLE_TARGET_SERIAL);
     gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
                                           GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
     gvir_config_domain_add_device(domain,
                                   GVIR_CONFIG_DOMAIN_DEVICE(con));
     g_object_unref(con);
 
+    src = gvir_config_domain_chardev_source_pty_new();
+    ser = gvir_config_domain_serial_new();
+    gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(ser),
+                                          GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+    gvir_config_domain_add_device(domain,
+                                  GVIR_CONFIG_DOMAIN_DEVICE(ser));
+    g_object_unref(ser);
+
 
     /* Optional second serial is for a interactive shell (useful for
      * troubleshooting stuff */
     if (gvir_sandbox_config_get_shell(config)) {
         src = gvir_config_domain_chardev_source_pty_new();
-        con = gvir_config_domain_serial_new();
+        ser = gvir_config_domain_serial_new();
+        gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(ser),
+                                              GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(ser));
+        g_object_unref(ser);
+    }
+
+    if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
+        src = gvir_config_domain_chardev_source_pty_new();
+        con = gvir_config_domain_console_new();
+        gvir_config_domain_console_set_target_type(GVIR_CONFIG_DOMAIN_CONSOLE(con),
+                                                   GVIR_CONFIG_DOMAIN_CONSOLE_TARGET_VIRTIO);
         gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
                                               GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(con));
         g_object_unref(con);
     }
-
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
         graph = gvir_config_domain_graphics_spice_new();

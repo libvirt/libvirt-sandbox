@@ -60,6 +60,9 @@ GType gvir_sandbox_context_interactive_get_type(void);
 GVirSandboxContextInteractive *gvir_sandbox_context_interactive_new(GVirConnection *connection,
                                                                     GVirSandboxConfigInteractive *config);
 
+GVirSandboxConsole *gvir_sandbox_context_interactive_get_app_console(GVirSandboxContextInteractive *ctxt,
+                                                                     GError **error);
+
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONTEXT_INTERACTIVE_H__ */

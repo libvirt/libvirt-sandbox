@@ -34,6 +34,15 @@ static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
     return FALSE;
 }
 
+static gboolean do_exited(GVirSandboxConsole *con G_GNUC_UNUSED,
+                          int status,
+                          gpointer opaque)
+{
+    int *ret = opaque;
+    *ret = WEXITSTATUS(status);
+    return FALSE;
+}
+
 static void libvirt_sandbox_version(void)
 {
     g_print(_("%s version %s\n"), PACKAGE, VERSION);
@@ -49,6 +58,7 @@ int main(int argc, char **argv) {
     GVirSandboxConfigInteractive *icfg = NULL;
     GVirSandboxContext *ctx = NULL;
     GVirSandboxContextInteractive *ictx = NULL;
+    GVirSandboxConsole *log = NULL;
     GVirSandboxConsole *con = NULL;
     GMainLoop *loop = NULL;
     GError *error = NULL;
@@ -209,12 +219,26 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if (!(con = gvir_sandbox_context_get_log_console(ctx, &error))) {
+    if (!(log = gvir_sandbox_context_get_log_console(ctx, &error))) {
         g_printerr(_("Unable to get log console: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }
+    g_signal_connect(log, "closed", (GCallback)do_close, loop);
+
+    if (!(gvir_sandbox_console_attach_stderr(log, &error))) {
+        g_printerr(_("Unable to attach sandbox console: %s\n"),
+                   error && error->message ? error->message : "unknown");
+        goto cleanup;
+    }
+
+    if (!(con = gvir_sandbox_context_interactive_get_app_console(ictx, &error))) {
+        g_printerr(_("Unable to get app console: %s\n"),
+                   error && error->message ? error->message : "unknown");
+        goto cleanup;
+    }
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
+    g_signal_connect(con, "exited", (GCallback)do_exited, &ret);
 
     if (!(gvir_sandbox_console_attach_stdio(con, &error))) {
         g_printerr(_("Unable to attach sandbox console: %s\n"),
@@ -223,8 +247,6 @@ int main(int argc, char **argv) {
     }
 
     g_main_loop_run(loop);
-
-    ret = EXIT_SUCCESS;
 
 cleanup:
     if (error)
@@ -241,6 +263,7 @@ cleanup:
         g_main_loop_unref(loop);
     if (hv)
         g_object_unref(hv);
+
     return ret;
 }
 

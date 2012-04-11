@@ -302,7 +302,7 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     g_list_free(networks);
 
 
-    /* The first console is for stdio of the sandboxed app */
+    /* The first console is for debug messages from stdout/err of the guest init/kernel */
     src = gvir_config_domain_chardev_source_pty_new();
     con = gvir_config_domain_console_new();
     gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
@@ -323,6 +323,18 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
                                       GVIR_CONFIG_DOMAIN_DEVICE(con));
         g_object_unref(con);
     }
+
+    if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
+        /* The third console is for stdio of the sandboxed app */
+        src = gvir_config_domain_chardev_source_pty_new();
+        con = gvir_config_domain_console_new();
+        gvir_config_domain_chardev_set_source(GVIR_CONFIG_DOMAIN_CHARDEV(con),
+                                              GVIR_CONFIG_DOMAIN_CHARDEV_SOURCE(src));
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(con));
+        g_object_unref(con);
+    }
+
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_CONTAINER_ERROR, 0,

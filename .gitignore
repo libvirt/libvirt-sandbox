@@ -38,6 +38,8 @@ libvirt-sandbox/libvirt-sandbox-init-common
 libvirt-sandbox/libvirt-sandbox-init-qemu
 libvirt-sandbox/libvirt-sandbox-enum-types.h
 libvirt-sandbox/libvirt-sandbox-enum-types.c
+libvirt-sandbox/libvirt-sandbox-protocol.c
+libvirt-sandbox/libvirt-sandbox-protocol.h
 libvirt-sandbox/tests/*.cfg
 libvirt-sandbox/tests/test-config
 bin/virt-sandbox

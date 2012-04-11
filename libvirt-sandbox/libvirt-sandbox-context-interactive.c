@@ -142,3 +142,41 @@ GVirSandboxContextInteractive *gvir_sandbox_context_interactive_new(GVirConnecti
                                                          "config", config,
                                                          NULL));
 }
+
+
+/**
+ * gvir_sandbox_context_interactive_get_app_console:
+ * @ctxt: (transfer none): the sandbox context
+ *
+ * Returns: (transfer full)(allow-none): the sandbox console (or NULL)
+ */
+GVirSandboxConsole *gvir_sandbox_context_interactive_get_app_console(GVirSandboxContextInteractive *ctxt,
+                                                                     GError **error)
+{
+    GVirSandboxConsole *console;
+    const char *devname = NULL;
+    GVirDomain *domain;
+    GVirConnection *conn;
+
+    if (!(domain = gvir_sandbox_context_get_domain(GVIR_SANDBOX_CONTEXT(ctxt), error)))
+        return NULL;
+
+    conn = gvir_sandbox_context_get_connection(GVIR_SANDBOX_CONTEXT(ctxt));
+
+    /* XXX get from config + shell */
+    if (strstr(gvir_connection_get_uri(conn), "lxc")) {
+        GVirSandboxConfig *config = gvir_sandbox_context_get_config(GVIR_SANDBOX_CONTEXT(ctxt));
+        if (gvir_sandbox_config_get_shell(config))
+            devname = "console2";
+        else
+            devname = "console1";
+    } else {
+        devname = "console1";
+    }
+
+    console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_rpc_new(conn,
+                                                                domain,
+                                                                devname));
+    g_object_unref(domain);
+    return console;
+}
