@@ -370,6 +370,10 @@ static int change_user(const gchar *user,
 
 #ifdef HAVE_CAPNG
     capng_clear(CAPNG_SELECT_BOTH);
+    /* XXX refactor this code so in child process everything is dropped,
+     * while this helper just returns BOOT*/
+    capng_update(CAPNG_ADD, CAPNG_EFFECTIVE|CAPNG_PERMITTED, CAP_SYS_BOOT|CAP_SETUID);
+
     if (capng_change_id(uid, gid,
                         CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING)) {
         fprintf(stderr, "Cannot change ID to %d:%d: %s\n",
