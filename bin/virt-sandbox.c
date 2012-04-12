@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     };
     const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
 
-    if (!gvir_init_object_check(&argc, &argv, &error))
+    if (!gvir_sandbox_init_check(&argc, &argv, &error))
         exit(EXIT_FAILURE);
 
     g_set_application_name(_("Libvirt Sandbox"));
