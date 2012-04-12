@@ -315,7 +315,7 @@ WantedBy=multi-user.target
         context.start()
         console = context.get_console()
         console.connect("closed", closed)
-        console.attach_stdio()
+        console.attach_stderr()
         self.loop = GLib.MainLoop()
         self.loop.run()
         try:

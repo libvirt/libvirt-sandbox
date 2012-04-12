@@ -69,6 +69,23 @@ gboolean gvir_sandbox_console_attach_stdio(GVirSandboxConsole *console_,
 }
 
 
+gboolean gvir_sandbox_console_attach_stderr(GVirSandboxConsole *console_,
+                                           GError **error)
+{
+    GOutputStream *localStderr = g_unix_output_stream_new(STDERR_FILENO, FALSE);
+    gboolean ret;
+
+    ret = gvir_sandbox_console_attach(console_,
+                                      NULL, NULL,
+                                      G_UNIX_OUTPUT_STREAM(localStderr),
+                                      error);
+
+    g_object_unref(localStderr);
+
+    return ret;
+}
+
+
 gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error)
 {

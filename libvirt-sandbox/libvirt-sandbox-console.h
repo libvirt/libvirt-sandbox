@@ -63,6 +63,9 @@ GType gvir_sandbox_console_get_type(void);
 gboolean gvir_sandbox_console_attach_stdio(GVirSandboxConsole *console,
                                            GError **error);
 
+gboolean gvir_sandbox_console_attach_stderr(GVirSandboxConsole *console,
+                                            GError **error);
+
 gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
                                      GUnixInputStream *localStdin,
                                      GUnixOutputStream *localStdout,
