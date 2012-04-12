@@ -118,10 +118,16 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config G
 {
     GString *str = g_string_new("");
     gchar *ret;
+    gchar *tmp;
 
     /* Now kernel args */
     if (getenv("LIBVIRT_SANDBOX_DEBUG"))
         g_string_append(str, "debug");
+
+    if ((tmp = getenv("LIBVIRT_SANDBOX_STRACE"))) {
+        g_string_append(str, " strace=");
+        g_string_append(str, tmp);
+    }
 
     ret = str->str;
     g_string_free(str, FALSE);

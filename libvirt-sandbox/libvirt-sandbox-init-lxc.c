@@ -39,6 +39,8 @@
 #include <errno.h>
 
 static void set_debug(void);
+static int has_command_arg(const char *name,
+                           char **val);
 
 static int debug = 0;
 
@@ -47,6 +49,7 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
 {
     const char *args[50];
     int narg = 0;
+    char *strace = NULL;
 
     if (getenv("LIBVIRT_LXC_UUID") == NULL) {
         fprintf(stderr, "libvirt-sandbox-init-lxc: must be run as the 'init' program of an LXC guest\n");
@@ -58,23 +61,24 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-lxc: starting up\n");
 
-#if 0
-#define STRACE "/usr/bin/strace"
-#define STRACE_FILTER "trace=read,write,poll,close"
-#endif
-
     memset(&args, 0, sizeof(args));
-#ifdef STRACE
-    args[narg++] = STRACE;
-    args[narg++] = "-q";
-    // args[narg++] = "-f";
-    args[narg++] = "-e";
-    args[narg++] = STRACE_FILTER;
-//    args[narg++] = "-s";
-//    args[narg++] = "2000";
-#endif
+    if (has_command_arg("strace=", &strace) == 0) {
+        args[narg++] = "/usr/bin/strace";
+        args[narg++] = "-q";
+        args[narg++] = "-o";
+        args[narg++] = "/tmp/sandbox.log";
+        args[narg++] = "-f";
+        args[narg++] = "-ff";
+        if (strace && !g_str_equal(strace, "1")) {
+            args[narg++] = "-e";
+            args[narg++] = strace;
+        }
+        args[narg++] = "-s";
+        args[narg++] = "1000";
+    }
+
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-    if (debug)
+    if (debug && 0)
         args[narg++] = "-d";
 
     if (debug)
@@ -93,4 +97,34 @@ static void set_debug(void)
     if (env &&
         strstr(env, "debug"))
         debug=1;
+}
+
+static int
+has_command_arg(const char *name,
+                char **val)
+{
+    char *cmdline = getenv("LIBVIRT_LXC_CMDLINE");
+    char *start, *end;
+
+    if (!cmdline)
+        return -1;
+
+    start = strstr(cmdline, name);
+    if (!start)
+        return -1;
+
+    start += strlen(name);
+    if (start[0] == '\n' ||
+        start[0] == ' ') {
+        *val = NULL;
+        return 0;
+    }
+    end = strstr(start, " ");
+    if (!end)
+        end = strstr(start, "\n");
+    if (end)
+        *val = strndup(start, end-start);
+    else
+        *val = strdup(start);
+    return 0;
 }

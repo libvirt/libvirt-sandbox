@@ -165,6 +165,7 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
 {
     GString *str = g_string_new("");
     gchar *ret;
+    gchar *tmp;
 
     /* Now kernel args */
     g_string_append(str, " console=ttyS0");
@@ -172,6 +173,14 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
         g_string_append(str, " debug loglevel=10 earlyprintk=ttyS0");
     else
         g_string_append(str, " quiet loglevel=0");
+
+    if ((tmp = getenv("LIBVIRT_SANDBOX_STRACE"))) {
+        g_string_append(str, " strace");
+        if (!g_str_equal(tmp, "1")) {
+            g_string_append(str, " =");
+            g_string_append(str, tmp);
+        }
+    }
 
     /* These make boot a little bit faster */
     g_string_append(str, " edd=off");

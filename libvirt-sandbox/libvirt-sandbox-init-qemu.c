@@ -48,6 +48,8 @@
 static void print_uptime (void);
 static void insmod (const char *filename);
 static void set_debug(void);
+static int has_command_arg(const char *name,
+                           char **val);
 
 static int debug = 0;
 static char line[1024];
@@ -273,6 +275,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
     const char *args[50];
     int narg = 0;
+    char *strace = NULL;
 
     if (getpid() != 1) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: must be run as the 'init' program of a KVM guest\n");
@@ -371,6 +374,8 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     MKNOD("/dev/ttyS2", S_IFCHR |0777, makedev(4, 66));
     MKNOD("/dev/ttyS3", S_IFCHR |0777, makedev(4, 67));
     MKNOD("/dev/hvc0", S_IFCHR |0777, makedev(229, 0));
+    MKNOD("/dev/hvc1", S_IFCHR |0777, makedev(229, 1));
+    MKNOD("/dev/hvc2", S_IFCHR |0777, makedev(229, 2));
     MKNOD("/dev/fb", S_IFCHR |0700, makedev(29, 0));
     MKNOD("/dev/fb0", S_IFCHR |0700, makedev(29, 0));
     MKNOD("/dev/mem", S_IFCHR |0600, makedev(1, 1));
@@ -440,23 +445,24 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     signal(SIGCHLD, sig_child);
 
-#if 0
-#define STRACE "/usr/bin/strace"
-#define STRACE_FILTER "trace=read,write,poll,close"
-#endif
-
     memset(&args, 0, sizeof(args));
-#ifdef STRACE
-    args[narg++] = STRACE;
-    args[narg++] = "-q";
-    // args[narg++] = "-f";
-    args[narg++] = "-e";
-    args[narg++] = STRACE_FILTER;
-//    args[narg++] = "-s";
-//    args[narg++] = "2000";
-#endif
+    if (has_command_arg("strace=", &strace) == 0) {
+        args[narg++] = "/usr/bin/strace";
+        args[narg++] = "-q";
+        args[narg++] = "-o";
+        args[narg++] = "/tmp/sandbox.log";
+        args[narg++] = "-f";
+        args[narg++] = "-ff";
+        if (strace) {
+            args[narg++] = "-e";
+            args[narg++] = strace;
+        }
+        args[narg++] = "-s";
+        args[narg++] = "1000";
+    }
+
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-        args[narg++] = "-p";
+    args[narg++] = "-p";
     if (debug)
         args[narg++] = "-d";
 
@@ -589,4 +595,44 @@ static void set_debug(void)
                 __func__, strerror(errno));
         exit_poweroff();
     }
+}
+
+static int
+has_command_arg(const char *name,
+                char **val)
+{
+    FILE *fp = fopen("/proc/cmdline", "r");
+    char *start, *end;
+
+    if (fp == NULL) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open /proc/cmdline: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
+
+    if (!fgets(line, sizeof line, fp)) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/cmdline: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
+    fclose(fp);
+
+    start = strstr(line, name);
+    if (!start)
+        return -1;
+
+    start += strlen(name);
+    if (start[0] == '\n' ||
+        start[0] == ' ') {
+        *val = NULL;
+        return 0;
+    }
+    end = strstr(start, " ");
+    if (!end)
+        end = strstr(start, "\n");
+    if (end)
+        *val = strndup(start, end-start);
+    else
+        *val = strdup(start);
+    return 0;
 }
