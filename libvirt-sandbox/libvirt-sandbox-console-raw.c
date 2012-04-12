@@ -351,26 +351,28 @@ static void do_console_raw_update_events(GVirSandboxConsoleRaw *console)
     GVirSandboxConsoleRawPrivate *priv = console->priv;
     GVirStreamIOCondition cond = 0;
 
-    if (!priv->localStdin) /* Closed */
+    if (!priv->console) /* Closed */
         return;
 
-    if ((priv->localToConsoleOffset < priv->localToConsoleLength) &&
-        (!priv->localEOF)) {
-        if (priv->localStdinSource == NULL) {
-            priv->localStdinSource = g_pollable_input_stream_create_source
-                (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
-            g_source_set_callback(priv->localStdinSource,
-                                  (GSourceFunc)do_console_raw_local_read,
-                                  console,
-                                  NULL);
-            g_source_attach(priv->localStdinSource,
-                            g_main_context_default());
-        }
-    } else {
-        if (priv->localStdinSource) {
-            g_source_destroy(priv->localStdinSource);
-            g_source_unref(priv->localStdinSource);
-            priv->localStdinSource = NULL;
+    if (priv->localStdin) {
+        if ((priv->localToConsoleOffset < priv->localToConsoleLength) &&
+            (!priv->localEOF)) {
+            if (priv->localStdinSource == NULL) {
+                priv->localStdinSource = g_pollable_input_stream_create_source
+                    (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
+                g_source_set_callback(priv->localStdinSource,
+                                      (GSourceFunc)do_console_raw_local_read,
+                                      console,
+                                      NULL);
+                g_source_attach(priv->localStdinSource,
+                                g_main_context_default());
+            }
+        } else {
+            if (priv->localStdinSource) {
+                g_source_destroy(priv->localStdinSource);
+                g_source_unref(priv->localStdinSource);
+                priv->localStdinSource = NULL;
+            }
         }
     }
 
@@ -378,22 +380,43 @@ static void do_console_raw_update_events(GVirSandboxConsoleRaw *console)
      * With raw consoles we can't distinguish stdout/stderr, so everything
      * goes to stdout
      */
-    if (priv->consoleToLocalOffset) {
-        if (priv->localStdoutSource == NULL) {
-            priv->localStdoutSource = g_pollable_output_stream_create_source
-                (G_POLLABLE_OUTPUT_STREAM(priv->localStdout), NULL);
-            g_source_set_callback(priv->localStdoutSource,
-                                  (GSourceFunc)do_console_raw_local_write,
-                                  console,
-                                  NULL);
-            g_source_attach(priv->localStdoutSource,
-                            g_main_context_default());
+    if (priv->localStdout) {
+        if (priv->consoleToLocalOffset) {
+            if (priv->localStdoutSource == NULL) {
+                priv->localStdoutSource = g_pollable_output_stream_create_source
+                    (G_POLLABLE_OUTPUT_STREAM(priv->localStdout), NULL);
+                g_source_set_callback(priv->localStdoutSource,
+                                      (GSourceFunc)do_console_raw_local_write,
+                                      console,
+                                      NULL);
+                g_source_attach(priv->localStdoutSource,
+                                g_main_context_default());
+            }
+        } else {
+            if (priv->localStdoutSource) {
+                g_source_destroy(priv->localStdoutSource);
+                g_source_unref(priv->localStdoutSource);
+                priv->localStdoutSource = NULL;
+            }
         }
     } else {
-        if (priv->localStdoutSource) {
-            g_source_destroy(priv->localStdoutSource);
-            g_source_unref(priv->localStdoutSource);
-            priv->localStdoutSource = NULL;
+        if (priv->consoleToLocalOffset) {
+            if (priv->localStderrSource == NULL) {
+                priv->localStderrSource = g_pollable_output_stream_create_source
+                    (G_POLLABLE_OUTPUT_STREAM(priv->localStderr), NULL);
+                g_source_set_callback(priv->localStderrSource,
+                                      (GSourceFunc)do_console_raw_local_write,
+                                      console,
+                                      NULL);
+                g_source_attach(priv->localStderrSource,
+                                g_main_context_default());
+            }
+        } else {
+            if (priv->localStderrSource) {
+                g_source_destroy(priv->localStderrSource);
+                g_source_unref(priv->localStderrSource);
+                priv->localStderrSource = NULL;
+            }
         }
     }
 
@@ -443,6 +466,7 @@ static gboolean do_console_raw_stream_readwrite(GVirStream *stream,
                 g_error_free(err);
                 goto done;
             } else {
+                g_debug("Error from stream recv %s", err ? err->message : "");
                 do_console_raw_close(console, err);
                 g_error_free(err);
                 goto cleanup;
@@ -462,6 +486,7 @@ static gboolean do_console_raw_stream_readwrite(GVirStream *stream,
                                       NULL,
                                       &err);
         if (ret < 0) {
+            g_debug("Error from stream send %s", err ? err->message : "");
             do_console_raw_close(console, err);
             g_error_free(err);
             goto cleanup;
@@ -496,6 +521,7 @@ static gboolean do_console_raw_local_read(GObject *stream,
          priv->localToConsoleLength - priv->localToConsoleOffset,
          NULL, &err);
     if (ret < 0) {
+        g_debug("Error from local read %s", err ? err->message : "");
         do_console_raw_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -527,6 +553,7 @@ static gboolean do_console_raw_local_write(GObject *stream,
          priv->consoleToLocalOffset,
          NULL, &err);
     if (ret < 0) {
+        g_debug("Error from local write %s", err ? err->message : "");
         do_console_raw_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -554,18 +581,19 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
     GVirSandboxConsoleRawPrivate *priv = GVIR_SANDBOX_CONSOLE_RAW(console)->priv;
     gboolean ret = FALSE;
 
-    if (priv->localStdin) {
+    if (priv->console) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0, "%s",
-                    "ConsoleRaw is already attached to a stream");
+                    "Console is already attached to a stream");
         return FALSE;
     }
 
-    if (!gvir_sandbox_console_raw_start_term(GVIR_SANDBOX_CONSOLE_RAW(console),
+    if (localStdin &&
+        !gvir_sandbox_console_raw_start_term(GVIR_SANDBOX_CONSOLE_RAW(console),
                                              localStdin, error))
         return FALSE;
 
-    priv->localStdin = g_object_ref(localStdin);
-    priv->localStdout = g_object_ref(localStdout);
+    priv->localStdin = localStdin ? g_object_ref(localStdin) : NULL;
+    priv->localStdout = localStdout ? g_object_ref(localStdout) : NULL;
     priv->localStderr = g_object_ref(localStderr);
 
     priv->console = gvir_connection_get_stream(priv->connection, 0);
@@ -574,15 +602,18 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
                                   priv->devname, 0, error))
         goto cleanup;
 
-    priv->consoleToLocalLength = priv->localToConsoleLength = 4096;
+    priv->consoleToLocalLength = 4096;
     priv->consoleToLocal = g_new0(gchar, priv->consoleToLocalLength);
-    priv->localToConsole = g_new0(gchar, priv->localToConsoleLength);
+    if (localStdin) {
+        priv->localToConsoleLength = 4096;
+        priv->localToConsole = g_new0(gchar, priv->localToConsoleLength);
+    }
 
     do_console_raw_update_events(GVIR_SANDBOX_CONSOLE_RAW(console));
 
     ret = TRUE;
 cleanup:
-    if (!ret)
+    if (!ret && localStdin)
         gvir_sandbox_console_raw_stop_term(GVIR_SANDBOX_CONSOLE_RAW(console),
                                            localStdin, NULL);
     return ret;
@@ -594,16 +625,17 @@ static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
 {
     GVirSandboxConsoleRawPrivate *priv = GVIR_SANDBOX_CONSOLE_RAW(console)->priv;
     gboolean ret = FALSE;
-    if (!priv->localStdin) {
+    if (!priv->console) {
         return TRUE;
 #if 0
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0, "%s",
-                    "ConsoleRaw is not attached to a stream");
+                    "Console is not attached to a stream");
         return FALSE;
 #endif
     }
 
-    if (!gvir_sandbox_console_raw_stop_term(GVIR_SANDBOX_CONSOLE_RAW(console),
+    if (priv->localStdin &&
+        !gvir_sandbox_console_raw_stop_term(GVIR_SANDBOX_CONSOLE_RAW(console),
                                             priv->localStdin, error))
         return FALSE;
 
@@ -628,8 +660,10 @@ static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
     priv->localStdinSource = priv->localStdoutSource = priv->localStderrSource = NULL;
     priv->consoleWatch = 0;
 
-    g_object_unref(priv->localStdin);
-    g_object_unref(priv->localStdout);
+    if (priv->localStdin)
+        g_object_unref(priv->localStdin);
+    if (priv->localStdout)
+        g_object_unref(priv->localStdout);
     g_object_unref(priv->localStderr);
     priv->localStdin = NULL;
     priv->localStdout = NULL;
