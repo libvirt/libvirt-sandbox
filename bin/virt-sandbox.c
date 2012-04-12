@@ -36,9 +36,9 @@ static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
 
 static void libvirt_sandbox_version(void)
 {
-        g_print(_("%s version %s\n"), PACKAGE, VERSION);
+    g_print(_("%s version %s\n"), PACKAGE, VERSION);
 
-        exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 
