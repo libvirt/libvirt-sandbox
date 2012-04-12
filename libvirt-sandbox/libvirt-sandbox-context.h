@@ -75,8 +75,8 @@ GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
                                             GError **error);
 GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);
 
-GVirSandboxConsole *gvir_sandbox_context_get_console(GVirSandboxContext *ctxt,
-                                                     GError **error);
+GVirSandboxConsole *gvir_sandbox_context_get_log_console(GVirSandboxContext *ctxt,
+                                                         GError **error);
 GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *ctxt,
                                                            GError **error);
 

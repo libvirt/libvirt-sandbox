@@ -124,7 +124,7 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_context_get_config;
 	gvir_sandbox_context_get_domain;
 	gvir_sandbox_context_get_connection;
-	gvir_sandbox_context_get_console;
+	gvir_sandbox_context_get_log_console;
 	gvir_sandbox_context_get_shell_console;
 	gvir_sandbox_context_start;
 	gvir_sandbox_context_stop;

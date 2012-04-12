@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if (!(con = gvir_sandbox_context_get_console(ctx, &error))) {
+    if (!(con = gvir_sandbox_context_get_log_console(ctx, &error))) {
         g_printerr(_("Unable to get log console: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
