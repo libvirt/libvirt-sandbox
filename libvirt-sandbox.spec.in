@@ -30,7 +30,7 @@ BuildRequires: glibc-static
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
-Requires: libvirt
+Requires: libvirt >= 0.9.11
 
 %package devel
 Group: Development/Libraries
@@ -80,6 +80,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_sysconfdir}/bash_completion.d/virt-sandbox-service-bash-completion.sh
+%dir %{_sysconfdir}/libvirt-sandbox/services
 %{_bindir}/virt-sandbox
 %{_bindir}/virt-sandbox-service
 %{_mandir}/man1/virt-sandbox.1*
@@ -88,6 +89,8 @@ rm -rf $RPM_BUILD_ROOT
 %files libs
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
+%dir %{_sysconfdir}/libvirt-sandbox
+%dir %{_sysconfdir}/libvirt-sandbox/scratch
 %config %{_sysconfdir}/libvirt-sandbox/scratch/README
 %{_libexecdir}/libvirt-sandbox-init-common
 %{_libexecdir}/libvirt-sandbox-init-lxc

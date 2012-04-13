@@ -46,13 +46,13 @@ except IOError:
 
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
-    CONFIG_PATH   = "/etc/libvirt-sandbox/%s.sandbox"
+    CONFIG_PATH   = "/etc/libvirt-sandbox/services/%s.sandbox"
     SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
     SELINUX_LEVEL = "s0"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
-    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.image"
+    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
 
     def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH):
         self.uri = uri

@@ -33,3 +33,10 @@ virt_sandbox_LDFLAGS = \
 		../libvirt-sandbox/libvirt-sandbox-1.0.la \
 		$(WARN_CFLAGS) \
 		$(NULL)
+
+install-data-local:
+		$(MKDIR_P) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services
+
+uninstall-local:
+		$(rmdir) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services ||:
+		$(rmdir) $(DESTDIR)$(sysconfdir)/libvirt-sandbox ||:
