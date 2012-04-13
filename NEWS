@@ -1,7 +1,30 @@
       libvirt Sandbox News
       ====================
 
+0.0.3 2012-04-13
+----------------
+
+ - Ensure root/config filesystems are readonly in KVM
+ - Add support for mounting host disk images in guests
+ - Add support for binding guest filesystems to new locations
+ - Add support for an optional interactive shell for debugging
+   or administrative purposes
+ - Add a virt-sandbox-service script for preparing sandboxes
+   for system services, integrating with systemd
+ - Misc compiler warning fixes
+ - Replace invocation of insmod with direct syscalls
+ - Refactor API to separate interactive sandbox functionality
+   from base class & service sandbox functionality
+ - Rewrite host/guest I/O handling to separate stdout from
+   stderr correctly, improve reliability of startup/shutdown
+   handshakes and propagate exit status back to host
+ - Exec away the first hypervisor specific init process,
+   so generic init process get PID 1
+ - Turn on reboot-on-panic in KVM to ensure guest exists on
+   fatal problems
+
 0.0.2 2012-01-12
+----------------
 
  - Add ability to attach to an existing sandbox
  - Update to require libvirt-gobject 0.0.4
@@ -10,5 +33,6 @@
  - Switch to use /etc/libvirt-sandbox/scratch for config
 
 0.0.1 2012-01-11
+----------------
 
  - First release
