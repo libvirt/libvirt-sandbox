@@ -462,7 +462,6 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     }
 
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-    args[narg++] = "-p";
     if (debug)
         args[narg++] = "-d";
 

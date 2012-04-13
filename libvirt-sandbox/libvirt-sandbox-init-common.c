@@ -44,24 +44,12 @@
 #include <unistd.h>
 #include <limits.h>
 #include <grp.h>
-#include <sys/reboot.h>
 
 #include "libvirt-sandbox-rpcpacket.h"
 
 static gboolean debug = FALSE;
 static gboolean verbose = FALSE;
-static gboolean poweroff = FALSE;
 static int sigwrite;
-
-static G_GNUC_NORETURN void doexit(int status)
-{
-    if (poweroff) {
-        sync();
-        reboot(RB_POWER_OFF);
-        perror("reboot");
-    }
-    exit(status);
-}
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
@@ -350,10 +338,6 @@ static int change_user(const gchar *user,
 
 #ifdef HAVE_CAPNG
     capng_clear(CAPNG_SELECT_BOTH);
-    /* XXX refactor this code so in child process everything is dropped,
-     * while this helper just returns BOOT*/
-    capng_update(CAPNG_ADD, CAPNG_EFFECTIVE|CAPNG_PERMITTED, CAP_SYS_BOOT|CAP_SETUID);
-
     if (capng_change_id(uid, gid,
                         CAPNG_DROP_SUPP_GRP | CAPNG_CLEAR_BOUNDING)) {
         fprintf(stderr, "Cannot change ID to %d:%d: %s\n",
@@ -1186,8 +1170,6 @@ int main(int argc, char **argv) {
           libvirt_sandbox_version, N_("display version information"), NULL },
         { "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
           N_("display verbose information"), NULL },
-        { "poweroff", 'p', 0, G_OPTION_ARG_NONE, &poweroff,
-          N_("poweroff machine after completion"), NULL },
         { "debug", 'd', 0, G_OPTION_ARG_NONE, &debug,
           N_("display debugging information"), NULL },
         { "config", 'c', 0, G_OPTION_ARG_STRING, &configfile,
@@ -1270,7 +1252,7 @@ cleanup:
     if (error)
         g_error_free(error);
 
-    doexit(ret);
+    return ret;
 
 error:
     g_printerr("%s: %s",
