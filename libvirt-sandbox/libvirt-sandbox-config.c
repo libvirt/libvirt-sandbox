@@ -668,8 +668,9 @@ GList *gvir_sandbox_config_get_networks(GVirSandboxConfig *config)
  * instances for each element.
  *
  *  dhcp
- *  address=192.168.122.1/24%129.168.122.255;
- *  address=192.168.122.1/24%129.168.122.255;address=2001:212::204.2/64
+ *  address=192.168.122.1/24%192.168.122.255;
+ *  address=192.168.122.1/24%192.168.122.255;address=2001:212::204.2/64
+ *  route=192.168.122.255/24%192.168.1.1
  */
 gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                               gchar **networks,

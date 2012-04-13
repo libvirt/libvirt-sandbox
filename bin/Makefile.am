@@ -6,7 +6,7 @@ bin_SCRIPTS = virt-sandbox-service
 virtsandboxcompdir = $(sysconfdir)/bash_completion.d/
 virtsandboxcomp_DATA = virt-sandbox-service-bash-completion.sh
 
-EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh virt-sandbox-service.1
+EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh virt-sandbox-service.pod
 
 man1_MANS = virt-sandbox.1 virt-sandbox-service.1
 
@@ -15,7 +15,10 @@ POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
 virt-sandbox.1: virt-sandbox.c Makefile
 	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
 
-CLEANFILES = virt-sandbox.1
+virt-sandbox-service.1: virt-sandbox-service.pod Makefile
+	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
+
+CLEANFILES = $(man1_MANS)
 
 virt_sandbox_SOURCES = virt-sandbox.c
 virt_sandbox_CFLAGS = \

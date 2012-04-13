@@ -89,15 +89,15 @@ int main(int argc, char **argv) {
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
         { "guest-bind", 'b', 0, G_OPTION_ARG_STRING_ARRAY, &guestBinds,
-          N_("bind guest locations together"), "DST-GUEST-PATH=SRC-GUEST-PATH" },
+          N_("bind guest locations together"), "DST-GUEST-DIR=SRC-GUEST-DIR" },
         { "host-bind", 'B', 0, G_OPTION_ARG_STRING_ARRAY, &hostBinds,
-          N_("pass host locations through to the guest"), "GUEST-PATH=HOST-PATH" },
+          N_("pass host locations through to the guest"), "DST-GUEST-DIR=SRC-HOST-DIR" },
         { "host-image", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &hostImages,
-          N_("pass host images through to the guest"), "GUEST-PATH=HOST-IMAGE-PATH" },
+          N_("pass host images through to the guest"), "DST-GUEST-DIR=SRC-HOST-FILE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
-          N_("file contain list of files to include"), "PATH" },
+          N_("file contain list of files to include"), "FILE" },
         { "network", 'N', 0, G_OPTION_ARG_STRING_ARRAY, &networks,
           N_("setup network interface properties"), "PATH", },
         { "security", 's', 0, G_OPTION_ARG_STRING, &security,
@@ -300,6 +300,34 @@ labels.
 Set the libvirt connection URI, defaults to qemu:///session if
 omitted. Currently only the QEMU and LXC drivers are supported.
 
+=item B<-n NAME>, B<--name=NAME>
+
+Set the unique name for the sandbox. This defaults to B<sandbox>
+but this will need to be changed if more than one sandbox is to
+be run concurrently. This is used as the name of the libvirt
+virtual machine or container.
+
+=item B<-b DST-GUEST-DIR=SRC-GUEST-DIR>, B<--guest-bind DST-GUEST-DIR=SRC-GUEST-DIR>
+
+Binds the guest location B<SRC-GUEST-DIR> to the location B<DST-GUEST-DIR>
+such that their contents are indistinguishable. This option may be
+repeated multiple times
+
+=item B<-B DST-GUEST-DIR=SRC-HOST-DIR>, B<--guest-bind DST-GUEST-DIR=SRC-HOST-DIR>
+
+Binds the host location B<SRC-HOST-DIR> to the location B<DST-GUEST-DIR>
+such that their contents are indistinguishable. If C<SRC-HOST-DIR> is the
+empty string, then a temporary (empty) directory is created on the host
+before starting the sandbox and deleted afterwards. The C<--include> option
+is useful for populating these temporary directories with copies of host
+files. This option may be repeated multiple times.
+
+=item B<-m DST-GUEST-DIR=SRC-HOST-FILE>, B<--host-image DST-GUEST-DIR=SRC-HOST-FILE>
+
+Treats the host file B<SRC-HOST-FILE> as a virtual disk image and mounts it in
+the guest at B<DST-GUEST-DIR>. The disk image should be in raw format. This option
+may be repeated multiple times.
+
 =item B<-i HOST-PATH>, B<--include=HOST-PATH>
 
 Copy this file from the host into the same location in the guest.
@@ -311,17 +339,65 @@ be repeated multiple times.
 Copy all files listed in inputfile into the
 appropriate temporary sandbox directories.
 
-=item B<-M GUEST-PATH=HOST-PATH>, B<--mount GUEST-PATH=HOST-PATH>
+=item B<-N NETWORK-OPTIONS>, B<--network NETWORK-OPTIONS>
 
-Overrides the contents of GUEST-PATH to instead contain the
-content from HOST-PATH. If HOST-PATH is omitted, then an
-empty temporary directory will be created. This may be repeated
-multiple time.
+Add a network interface to the sandbox. NETWORK-OPTIONS is a set of
+key=val pairs, separated by commas. The following options are valid
+
+=over 4
+
+=item dhcp
+
+Configure the network interface using dhcp. This key takes no value.
+No other keys may be specified.
+
+=item address=IP-ADDRESS/PREFIX%BROADCAST
+
+Configure the network interface with the static IPv4 or IPv6 address
+B<IP-ADDRESS>. The B<PREFIX> value is the length of the network
+prefix in B<IP-ADDRESS>. The optional B<BROADCAST> parameter
+specifies the broadcast address. Some examples
+
+  address=192.168.122.1/24
+  address=192.168.122.1/24%192.168.122.255
+  address=2001:212::204.2/64
+
+=item route=IP-NETWORK/PREFIX%GATEWAY
+
+Configure the network interface with the static IPv4 or IPv6 route
+B<IP-NETWORK>. The B<PREFIX> value is the length of the network
+prefix in B<IP-NETWORK>. The optional B<GATEWAY> parameter
+specifies the address of the gateway. Some examples
+
+  route=192.168.122.255/24%192.168.1.1
+
+=back
 
 =item B<-s SECURITY-OPTIONS>, B<--security=SECURITY-OPTIONS>
 
 Use alternative security options. SECURITY-OPTIONS is a set of key=val pairs,
 separated by commas. The following options are valid for SELinux
+
+=over 4
+
+=item type=TYPE
+
+The SELinux security type, defaults to sandbox_t
+
+=item level=LEVEL
+
+The SELinux MCS level, defaults to a randomly allocated level
+
+=back
+
+=item B<-p>, B<--privileged>
+
+Retain root privileges inside the sandbox, rather than dropping privileges
+to match the current user identity.
+
+=item B<-l>, B<--shell>
+
+Launch an interactive shell on a secondary console device
 
 =item B<-V>, B<--version>
 
@@ -339,24 +415,19 @@ Display debugging information
 
 Display help information
 
-=over 4
-
-=item type=TYPE
-
-The SELinux security type, defaults to sandbox_t
-
-=item level=LEVEL
-
-The SELinux MCS level, defaults to a randomly allocated level
-
 =back
 
-=item B<-T TMPDIR>, B<--tmpdir=DIR>
+=head1 EXAMPLES
 
-Use  alternate  temporary  directory  to mount on /tmp.  Defaults to
-tmpfs. Requires -X or -M.
+Run an interactive shell under LXC, replace $HOME with the contents
+of $HOME/scratch
 
-=back
+  # mkdir $HOME/scratch
+  # virt-sandbox -c lxc:/// --host-bind $HOME=$HOME/scratch /bin/sh
+
+Convert an OGG file to WAV inside QEMU
+
+  # virt-sandbox -c qemu:///session  -- /usr/bin/oggdec -Q -o - - < somefile.ogg > somefile.wav
 
 =head1 SEE ALSO
 
@@ -369,6 +440,7 @@ Daniel P. Berrange <dan@berrange.com>
 =head1 COPYRIGHT
 
 Copyright (C) 2011 Daniel P. Berrange <dan@berrange.com>
+Copyright (C) 2011-2012 Red Hat, Inc.
 
 =head1 LICENSE
 
