@@ -328,28 +328,34 @@ WantedBy=multi-user.target
             pass
 
     def stop(self):
-        self.__connect()
-        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-        context.attach()
-        context.stop()
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            context.stop()
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def connect(self):
         def closed(obj, error):
             self.loop.quit()
 
-        self.__connect()
-        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-        context.attach()
-        print dir(context)
-        console = context.get_shell_console()
-        console.connect("closed", closed)
-        console.attach_stdio()
-        self.loop = GLib.MainLoop()
-        self.loop.run()
         try:
-            console.detach()
-        except:
-            pass
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            print dir(context)
+            console = context.get_shell_console()
+            console.connect("closed", closed)
+            console.attach_stdio()
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def get_process_label(self):
         return "system_u:system_r:%s:%s" % (self.process_type, self.mcs)
@@ -474,4 +480,10 @@ if __name__ == '__main__':
     except ValueError, e:
         for line in e:
             for l in line:
-                print l
+                sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
+        sys.stderr.flush()
+        sys.exit(1)
+    except OSError, e:
+        sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
+        sys.stderr.flush()
+        sys.exit(1)
