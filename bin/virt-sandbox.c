@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
           NULL, "COMMAND-PATH [ARGS...]" },
         { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
     };
-    const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
+    const char *help_msg = N_("Run 'virt-sandbox --help' to see a full list of available command line options");
 
     if (!gvir_sandbox_init_check(&argc, &argv, &error))
         exit(EXIT_FAILURE);
