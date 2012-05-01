@@ -47,7 +47,7 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/%s.sandbox"
-    SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool" ]
+    SYSTEM_DIRS   = [ "/run", "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
     SELINUX_LEVEL = "s0"
@@ -162,7 +162,8 @@ WantedBy=multi-user.target
         for rec in h.fiFromHeader():
             f = rec[0]
             for b in self.DEFAULT_DIRS:
-                if f.startswith(b):
+                # /var/run is a symbolic link to /run
+                if f.startswith(b) and not f.startswith("/var/run/"):
                     if os.path.isdir(f):
                         self.__add_dir(f)
 
@@ -181,9 +182,20 @@ WantedBy=multi-user.target
             mount.set_root(self.image)
             self.config.add_host_image_mount(mount)
 
-        for d in self.SYSTEM_DIRS + self.dirs:
+        for d in self.SYSTEM_DIRS:
             source = "%s%s" % ( self.dest, d)
             self.__add_mount(source, d)
+
+        for d in self.dirs:
+            found = False
+            # Dont add dirs whos parents are in SYSTEM_DIRS
+            for s in self.SYSTEM_DIRS:
+                if d.startswith(s):
+                    found = True
+                    break
+            if not found:
+                source = "%s%s" % ( self.dest, d)
+                self.__add_mount(source, d)
 
     def __get_init_path(self):
         return "%s/%s/init" % (self.path, self.name)
