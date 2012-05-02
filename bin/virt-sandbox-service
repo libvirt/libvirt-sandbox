@@ -47,7 +47,7 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/%s.sandbox"
-    SYSTEM_DIRS   = [ "/run", "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
+    SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
     SELINUX_LEVEL = "s0"
@@ -136,10 +136,20 @@ WantedBy=multi-user.target
         self.dynamic = dynamic
 
     def set_security_type(self, security_type):
-        self.security_type = security_type
+        test = "system_u:system_r:%s:%s" % (security_type, self.security_level)
+        try:
+            selinux.security_check_context(test)
+            self.security_type = security_type
+        except OSError, e:
+            raise OSError("Invalid Security Type %s: %s " %  (security_type, e))
 
     def set_security_level(self, security_level):
-        self.security_level = security_level
+        test = "system_u:system_r:%s:%s" % (self.security_type, security_level)
+        try:
+            selinux.security_check_context(test)
+            self.security_level = security_level
+        except OSError, e:
+            raise OSError("Invalid Security Level %s: %s " %  (security_level, e))
 
     def set_image(self, size):
         self.use_image = True
@@ -322,22 +332,25 @@ WantedBy=multi-user.target
         def closed(obj, error):
             self.loop.quit()
 
-        self.__connect()
-        context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-        context.start()
-        console = context.get_log_console()
-        console.connect("closed", closed)
-        console.attach_stderr()
-        self.loop = GLib.MainLoop()
-        self.loop.run()
         try:
-            console.detach()
-        except:
-            pass
-        try:
-            context.stop()
-        except:
-            pass
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.start()
+            console = context.get_log_console()
+            console.connect("closed", closed)
+            console.attach_stderr()
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+            try:
+                context.stop()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def stop(self):
         try:
