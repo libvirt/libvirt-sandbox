@@ -118,6 +118,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLIBVIRT_SANDBOX_BUILD \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			-DLOCALSTATEDIR="\"$(localstatedir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \

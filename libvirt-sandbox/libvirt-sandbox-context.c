@@ -345,7 +345,7 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
                                                               error)))
         return FALSE;
 
-    cachedir = g_get_user_cache_dir();
+    cachedir = (getuid() ? g_get_user_cache_dir() : LOCALSTATEDIR);
     tmpdir = g_build_filename(cachedir, "libvirt-sandbox",
                               gvir_sandbox_config_get_name(priv->config),
                               NULL);
