@@ -4,6 +4,8 @@ CLEANFILES =
 
 SUBDIRS = tests
 
+RUNDIR = $(localstatedir)/run
+
 libexec_PROGRAMS = \
 	libvirt-sandbox-init-common \
 	libvirt-sandbox-init-qemu \
@@ -118,7 +120,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLIBVIRT_SANDBOX_BUILD \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
-			-DLOCALSTATEDIR="\"$(localstatedir)\"" \
+			-DRUNDIR="\"$(rundir)\"" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \
