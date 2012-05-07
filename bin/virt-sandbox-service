@@ -46,7 +46,7 @@ except IOError:
 
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
-    CONFIG_PATH   = "/etc/libvirt-sandbox/services/%s.sandbox"
+    CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
     SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     SELINUX_TYPE  = "svirt_lxc_net_t"
@@ -54,7 +54,7 @@ class Container:
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
 
-    def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH):
+    def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH, config=None):
         self.uri = uri
         self.clone = False
         self.use_image = False
@@ -69,13 +69,15 @@ class Container:
         self.security_type = self.SELINUX_TYPE
         self.security_level = self.SELINUX_LEVEL
         self.size = 10 * MB
-        if self.name:
-            config = self.CONFIG_PATH % self.name
+        self.config = None
+        self.rpm_name = None
+        if name:
+            config = self.get_config_path()
+
+        if config:
             try:
                 self.config = LibvirtSandbox.Config.load_from_path(config)
-                mounts = self.config.get_host_image_mounts()
-                if len(mounts):
-                    mount = self.config.get_host_image_mounts()[0]
+                self.name = self.config.get_name()
             except gi._glib.GError, e:
                 raise OSError(config + ": " + str(e))
 
@@ -96,7 +98,7 @@ class Container:
         self.unitfile = "/etc/systemd/system/" + name
         unit = """
 [Unit]
-Description=Secure Container %s for %s Server
+Description=Secure Sandbox Container %s for %s Server
 Requires=libvirtd.service
 After=libvirtd.service
 %s
@@ -125,6 +127,12 @@ WantedBy=multi-user.target
                 self.dirs.append(newd)
                 return
         self.dirs.append(newd)
+
+    def get_config_path(self):
+        return self.CONFIG_PATH + self.name + ".sandbox"
+
+    def get_name(self):
+        return self.name
 
     def set_clone(self, clone):
         self.clone = clone
@@ -165,20 +173,23 @@ WantedBy=multi-user.target
         self.all_dirs = []
         self.dirs = []
 
-        ts = rpm.ts()
-        mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.executable)
-        h = mi.next()
-        self.rpm_name=h['name']
-        for rec in h.fiFromHeader():
-            f = rec[0]
-            for b in self.DEFAULT_DIRS:
-                # /var/run is a symbolic link to /run
-                if f.startswith(b) and not f.startswith("/var/run/"):
-                    if os.path.isdir(f):
-                        self.__add_dir(f)
-
-            if f.endswith(".service"):
-                self.service_files.append(f)
+        try:
+            ts = rpm.ts()
+            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.executable)
+            h = mi.next()
+            self.rpm_name=h['name']
+            for rec in h.fiFromHeader():
+                f = rec[0]
+                for b in self.DEFAULT_DIRS:
+                    # /var/run is a symbolic link to /run
+                    if f.startswith(b) and not f.startswith("/var/run/"):
+                        if os.path.isdir(f):
+                            self.__add_dir(f)
+                            
+                if f.endswith(".service"):
+                    self.service_files.append(f)
+        except StopIteration:
+            pass
 
     def __add_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMount.new(dest)
@@ -246,7 +257,7 @@ WantedBy=multi-user.target
             raise OSError("Failed to mount image %s on %s " %  (self.image, self.dest))
 
     def __save(self):
-        config = self.CONFIG_PATH % self.name
+        config = self.get_config_path()
         if os.path.exists(config):
             os.remove(config)
         self.config.save_to_path(config)
@@ -272,7 +283,7 @@ WantedBy=multi-user.target
             if mount_path:
                 os.remove(mount_path)
 
-        config = self.CONFIG_PATH % self.name
+        config = self.get_config_path()
         if os.path.exists(config):
             os.remove(config)
 
@@ -299,7 +310,7 @@ WantedBy=multi-user.target
         self.__extract_rpm()
         self.__gen_filesystems()
         os.mkdir(self.dest)
-        sys.stdout.write("Created container dir %s\n" % self.dest)
+        sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
         if self.image:
             self.__create_image()
             self.__gen_dirs()
@@ -328,6 +339,21 @@ WantedBy=multi-user.target
             self.conn=LibvirtGObject.Connection.new(self.uri)
             self.conn.open(None)
 
+    def __disconnect(self):
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+
+    def running(self):
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            self.__disconnect()
+            return 1
+        except gi._glib.GError, e:
+            return 0
+        
     def start(self):
         def closed(obj, error):
             self.loop.quit()
@@ -381,6 +407,29 @@ WantedBy=multi-user.target
         except gi._glib.GError, e:
             raise OSError(str(e))
 
+    def execute(self, command):
+        def closed(obj, error):
+            self.loop.quit()
+
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            console = context.get_shell_console()
+            console.connect("closed", closed)
+            console.attach_stdio()
+            print "not currently implemented"
+            console.detach()
+            return
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
+
     def get_process_label(self):
         return "system_u:system_r:%s:%s" % (self.process_type, self.mcs)
 
@@ -422,6 +471,23 @@ def start(args):
     container = Container(args.name, args.uri)
     container.start()
 
+def list(args):
+    container = Container()
+    import glob
+    g = glob.glob(container.CONFIG_PATH + "*.sandbox")
+    for gc in g:
+        try:
+            c = Container(config = gc)
+            if args.running:
+                if c.running():
+                    print c.get_name()
+            else:
+                print c.get_name()
+
+        except OSError, e:
+            print "Invalid container %s: %s", (gc, e)
+        
+
 def reload(args):
     container = Container(args.name, args.uri)
     container.reload()
@@ -434,6 +500,10 @@ def connect(args):
     container = Container(args.name, args.uri)
     container.connect()
 
+def execute(args):
+    container = Container(args.name, args.uri)
+    container.execute(args.command)
+
 import argparse
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -445,56 +515,67 @@ class SizeAction(argparse.Action):
 if __name__ == '__main__':
     c = Container()
 
-    parser = argparse.ArgumentParser(description='Secure Container Tool')
+    parser = argparse.ArgumentParser(description='Sandbox Container Tool')
     parser.add_argument("-c", "--connect", required=False, dest="uri",  default="lxc:///",
                         help="libvirt connection URI to use (lxc:/// [default] or qemu:///session)")
 
     subparsers = parser.add_subparsers(help="commands")
-    parser_create = subparsers.add_parser("create", help="create a security container")
+    parser_create = subparsers.add_parser("create", help="create a sandbox container")
 
     parser_create.add_argument("-e", "--executable", required=True, dest="executable",  default=None,
-                       help="executable to run within the container")
+                               help="executable to run within the sandbox")
     parser_create.add_argument("-p", "--path", dest="path",  default=None,
-                       help="select path to store container content.  Default: %s" % c.DEFAULT_PATH)
+                               help="select path to store sandbox content.  Default: %s" % c.DEFAULT_PATH)
     parser_create.add_argument("-t", "--type", dest="type", default=c.SELINUX_TYPE,
-                       help="SELinux type with which to run the container.  Default: %s" % c.SELINUX_TYPE)
+                               help="SELinux type with which to run the sandbox.  Default: %s" % c.SELINUX_TYPE)
     group = parser_create.add_mutually_exclusive_group()
     group.add_argument("-l", "--level", dest="level", default=None,
-                       help="MCS Level with which to run the container")
+                       help="MCS Level with which to run the sandbox")
     group.add_argument("-d", "--dynamic", dest="dynamic", default=False, action="store_true",
-                       help="use dynamic MCS labeling for the container")
+                       help="use dynamic MCS labeling for the sandbox")
     image = parser_create.add_argument_group("Create On Disk Image File")
-
+    
     image.add_argument("-i", "--image", dest="image", default=False, action="store_true",
-                       help="use an image file for the container content")
+                       help="use an image file for the sandbox content")
     image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction,
                        help="create image of this size. Requires --image option. Default 10m.")
     parser_create.add_argument("-n", "--clone", default=False, action="store_true",
-                       help="clone content from /etc and /var directories that will be mounted within the container")
+                               help="clone content from /etc and /var directories that will be mounted within the sandbox")
 
     parser_create.set_defaults(func=create)
-
-    parser_connect = subparsers.add_parser("connect", help="Connect to a security container")
+    parser_create.add_argument("name", help="name of the sandbox container")
+    
+    parser_connect = subparsers.add_parser("connect", help="Connect to a sandbox container")
     parser_connect.set_defaults(func=connect)
-
-    parser_delete = subparsers.add_parser("delete", help="Delete a security container")
+    parser_connect.add_argument("name", help="name of the sandbox container")
+    
+    parser_execute = subparsers.add_parser("execute", help="Execute a command within a sandbox container")
+    parser_execute.set_defaults(func=execute)
+    parser_execute.add_argument("-C", "--command", required=True, dest="command", default=None, help="command to execute within the sandbox")
+    parser_execute.add_argument("name", help="name of the sandbox container")
+    
+    parser_delete = subparsers.add_parser("delete", help="Delete a sandbox container")
     parser_delete.set_defaults(func=delete)
-
-    parser_stop = subparsers.add_parser("stop", help="Stop a security container")
+    parser_delete.add_argument("name", help="name of the sandbox container")
+    
+    parser_stop = subparsers.add_parser("stop", help="Stop a sandbox container")
     parser_stop.set_defaults(func=stop)
-
-    parser_start = subparsers.add_parser("start", help="Start a security container")
+    parser_stop.add_argument("name", help="name of the sandbox container")
+    
+    parser_start = subparsers.add_parser("start", help="Start a sandbox container")
     parser_start.set_defaults(func=start)
-
-    parser_reload = subparsers.add_parser("reload", help="Reload a running security container")
+    parser_start.add_argument("name", help="name of the sandbox container")
+    
+    parser_reload = subparsers.add_parser("reload", help="Reload a running sandbox container")
     parser_reload.set_defaults(func=reload)
+    parser_reload.add_argument("name", help="name of the sandbox container")
 
-    parser.add_argument("name", help="name of the container")
+    parser_list = subparsers.add_parser("list", help="List all sandbox container")
+    parser_list.set_defaults(func=list)
+    parser_list.add_argument("-r", "--running", dest="running", default=False, action="store_true",
+                             help="list only running sandbox containers")
 
-    try:
-        args = parser.parse_args()
-    except ValueError, e:
-        usage(e[0], e[1])
+    args = parser.parse_args()
 
     try:
         args.func(args)
