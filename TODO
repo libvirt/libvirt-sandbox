@@ -1,13 +1,13 @@
-         libvirt-sandbox TODO list
-         =================
+	 libvirt-sandbox TODO list
+	 =================
 
-systemd-tmpfiles --create needs to be run within the container, before any 
+systemd-tmpfiles --create needs to be run within the container, before any
 apps are started, since it will populate /run
 
 CGROUPFS: integration so libvirt does it rather then systemd within the container
 	 We need kernel labeling support for cgroupfs so we can allow systemd to write to its section of the cgroupfs.
 
-SYSLOG:  Currently syslog messages are going no where within the container.  
+SYSLOG:  Currently syslog messages are going no where within the container.
 If we run a syslog within the container will it get messages from the outside?  Should we just use systemd-journal.  I think sysadmins will want to be able to look in /var/log/messages within the container.
 
 EXECUTE:
@@ -19,6 +19,5 @@ HOSTNAME:
 virt-sandbox-service connect NAME hangs when you attempt to end the connection.
 ^d should bring you back to the host terminal.
 
-Need a mechanism to allow admins to specify additional services to run within 
+Need a mechanism to allow admins to specify additional services to run within
 the container.  For example you may want to run mysql and apache within the same container.
-
