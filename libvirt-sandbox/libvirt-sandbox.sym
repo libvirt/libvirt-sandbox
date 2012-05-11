@@ -78,12 +78,12 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_get_networks;
 	gvir_sandbox_config_get_name;
 	gvir_sandbox_config_get_root;
+	gvir_sandbox_config_get_security_dynamic;
+	gvir_sandbox_config_get_security_label;
 	gvir_sandbox_config_get_shell;
-	gvir_sandbox_config_get_security_level;
-	gvir_sandbox_config_get_security_type;
 	gvir_sandbox_config_get_type;
-	gvir_sandbox_config_get_username;
 	gvir_sandbox_config_get_userid;
+	gvir_sandbox_config_get_username;
 	gvir_sandbox_config_find_guest_bind_mount;
 	gvir_sandbox_config_find_host_bind_mount;
 	gvir_sandbox_config_find_host_image_mount;
