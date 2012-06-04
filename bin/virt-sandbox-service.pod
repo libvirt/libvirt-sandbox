@@ -4,21 +4,33 @@ virt-sandbox-service - Secure container tool
 
 =head1 SYNOPSIS
 
-Create a security container
+Clone a security container
 
-  virt-sandbox-service [-c URI] create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i] [-s SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] clone [-h] [-l LEVEL] -s SOURCE DEST
 
 Connect to a security container console
 
   virt-sandbox-service [-c URI] connect [-h] NAME
 
+Create a security container
+
+  virt-sandbox-service [-c URI] create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i SIZE] [-n] NAME
+
 Delete a security container
 
   virt-sandbox-service [-c URI] delete [-h] NAME
 
+Execute a command within a security container
+
+  virt-sandbox-service [-c URI] execute [-h] -C COMMAND NAME
+
 Stop a security container
 
   virt-sandbox-service [-c URI]  stop [-h] NAME
+
+List security containers
+
+  virt-sandbox-service [-c URI]  list [-h] [-r]
 
 Start a security container
 
@@ -77,15 +89,17 @@ Use dynamic MCS labeling for the container
 
 Clone content from /etc and /var directories that will be mounted within the container.
 
-=item B<-i>, B<--image>
+=item B<-i SIZE>, B<--image SIZE>
 
-Use an image file for the container content.
+Create file system image file of this size to store container content.
 
-=item B<-s SIZE>, B<--size SIZE>
+=item B<-r>, B<--running>
 
-Create image of this size. Requires B<--image> option.
+List running containers.
 
-Default 10m.
+=item B<-u unitfile>, B<--unitfile unitfile>
+
+systemd Unit file to run within the container
 
 =back
 
@@ -93,7 +107,7 @@ Default 10m.
 
 Create httpd1 container
 
- # virt-sandbox-service create -n -e /usr/sbin/httpd httpd1
+ # virt-sandbox-service create -n -u /lib/systemd/service/httpd.service -e /usr/sbin/httpd httpd1
  Created container dir /var/lib/libvirt/filesystems/httpd1
  Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
  Created unit file /etc/systemd/system/httpd@httpd1.service
