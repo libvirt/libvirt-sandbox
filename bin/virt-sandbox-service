@@ -265,8 +265,8 @@ WantedBy=multi-user.target
 
     def __get_image_path(self):
 	    mounts = self.config.get_host_image_mounts()
-	    if len(mounts) and mount[0].get_target() == self.dest:
-		return mount[0].get_root()
+	    if len(mounts) and mounts[0].get_target() == self.dest:
+		return mounts[0].get_root()
 	    return None
 
     def delete(self):
