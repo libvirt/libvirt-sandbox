@@ -4,7 +4,7 @@ CLEANFILES =
 
 SUBDIRS = tests
 
-RUNDIR = $(localstatedir)/run
+rundir = $(localstatedir)/run
 
 libexec_PROGRAMS = \
 	libvirt-sandbox-init-common \
