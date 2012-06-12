@@ -391,7 +391,7 @@ static gboolean gvir_sandbox_builder_machine_construct_features(GVirSandboxBuild
         construct_features(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
-    features = g_new0(gchar *, 1);
+    features = g_new0(gchar *, 2);
     features[0] = g_strdup("acpi");
     gvir_config_domain_set_features(domain, features);
     g_strfreev(features);
