@@ -1,4 +1,4 @@
-       libvirt-sandbox Authors
+B       libvirt-sandbox Authors
        =======================
 
 The primary maintainers of libvirt-sandbox are:
@@ -8,5 +8,7 @@ The primary maintainers of libvirt-sandbox are:
    Guido Günther <agx@sigxcpu.org>
 
 Patches have been received from:
+
+   Radu Caragea <sinaelgl@gmail.com>
 
    ... send patches to get your name added ...
