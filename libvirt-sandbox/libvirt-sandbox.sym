@@ -94,6 +94,8 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_set_root;
 	gvir_sandbox_config_set_shell;
 	gvir_sandbox_config_set_arch;
+	gvir_sandbox_config_set_kernrelease;
+	gvir_sandbox_config_set_kernpath;
 	gvir_sandbox_config_set_userid;
 	gvir_sandbox_config_set_groupid;
 	gvir_sandbox_config_set_username;

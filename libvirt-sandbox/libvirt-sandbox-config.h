@@ -76,6 +76,12 @@ const gchar *gvir_sandbox_config_get_root(GVirSandboxConfig *config);
 void gvir_sandbox_config_set_arch(GVirSandboxConfig *config, const gchar *arch);
 const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_set_kernrelease(GVirSandboxConfig *config, const gchar *kernrelease);
+const gchar *gvir_sandbox_config_get_kernrelease(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_kernpath(GVirSandboxConfig *config, const gchar *kernpath);
+const gchar *gvir_sandbox_config_get_kernpath(GVirSandboxConfig *config);
+
 void gvir_sandbox_config_set_shell(GVirSandboxConfig *config, gboolean shell);
 gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config);
 

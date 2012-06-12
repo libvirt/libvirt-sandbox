@@ -46,6 +46,8 @@ struct _GVirSandboxConfigPrivate
     gchar *name;
     gchar *root;
     gchar *arch;
+    gchar *kernrelease;
+    gchar *kernpath;
     gboolean shell;
 
     guint uid;
@@ -72,6 +74,8 @@ enum {
     PROP_ROOT,
     PROP_ARCH,
     PROP_SHELL,
+    PROP_KERNRELEASE,
+    PROP_KERNPATH,
 
     PROP_UID,
     PROP_GID,
@@ -121,6 +125,14 @@ static void gvir_sandbox_config_get_property(GObject *object,
 
     case PROP_ARCH:
         g_value_set_string(value, priv->arch);
+        break;
+
+    case PROP_KERNRELEASE:
+        g_value_set_string(value, priv->kernrelease);
+        break;
+
+    case PROP_KERNPATH:
+        g_value_set_string(value, priv->kernpath);
         break;
 
     case PROP_SHELL:
@@ -181,6 +193,16 @@ static void gvir_sandbox_config_set_property(GObject *object,
         priv->arch = g_value_dup_string(value);
         break;
 
+    case PROP_KERNRELEASE:
+        g_free(priv->kernrelease);
+        priv->kernrelease = g_value_dup_string(value);
+        break;
+
+    case PROP_KERNPATH:
+        g_free(priv->kernpath);
+        priv->kernpath = g_value_dup_string(value);
+        break;
+
     case PROP_SHELL:
         priv->shell = g_value_get_boolean(value);
         break;
@@ -239,6 +261,8 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_free(priv->name);
     g_free(priv->root);
     g_free(priv->arch);
+    g_free(priv->kernrelease);
+    g_free(priv->kernpath);
     g_free(priv->secLabel);
 
     G_OBJECT_CLASS(gvir_sandbox_config_parent_class)->finalize(object);
@@ -284,6 +308,28 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                     g_param_spec_string("arch",
                                                         "Arch",
                                                         "The sandbox architecture",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_KERNRELEASE,
+                                    g_param_spec_string("kernrelease",
+                                                        "Kernrelease",
+                                                        "The kernel release version",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_KERNPATH,
+                                    g_param_spec_string("kernpath",
+                                                        "Kernpath",
+                                                        "The kernel image path",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -388,6 +434,8 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->name = g_strdup("sandbox");
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
+    priv->kernrelease = g_strdup(uts.release);
+    priv->kernpath = g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease);
     priv->secLabel = g_strdup("system_u:system_r:svirt_t:s0:c0.c1023");
 
     priv->uid = geteuid();
@@ -470,6 +518,70 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->arch;
+}
+
+
+/**
+ * gvir_sandbox_config_set_kernrelease:
+ * @config: (transfer none): the sandbox config
+ * @kernrelease: (transfer none): the host directory
+ *
+ * Set the kernel release version to use in the sandbox. If none is provided,
+ * it will default to matching the current running kernel.
+ * Also sets the default kernel path as /boot/vmlinuz-<release>
+ */
+void gvir_sandbox_config_set_kernrelease(GVirSandboxConfig *config, const gchar *kernrelease)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->kernrelease);
+    priv->kernrelease = g_strdup(kernrelease);
+    gvir_sandbox_config_set_kernpath(config, g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease));
+
+}
+
+
+/**
+ * gvir_sandbox_config_get_kernrelease:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox kernel release version
+ *
+ * Returns: (transfer none): the current kernel release version
+ */
+const gchar *gvir_sandbox_config_get_kernrelease(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->kernrelease;
+}
+/**
+ * gvir_sandbox_config_set_kernpath:
+ * @config: (transfer none): the sandbox config
+ * @kernpath: (transfer none): the host directory
+ *
+ * Set the kernel image path to use in the sandbox. If none is provided,
+ * it will default to matching /boot/vmlinuz-<kernel release>.
+ */
+
+void gvir_sandbox_config_set_kernpath(GVirSandboxConfig *config, const gchar *kernpath)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->kernpath);
+    priv->kernpath = g_strdup(kernpath);
+}
+
+
+/**
+ * gvir_sandbox_config_get_kernpath:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox kernel image path
+ *
+ * Returns: (transfer none): the current kernel image path
+ */
+const gchar *gvir_sandbox_config_get_kernpath(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->kernpath;
 }
 
 
@@ -1531,6 +1643,14 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
         g_free(priv->arch);
         priv->arch = str;
     }
+    if ((str = g_key_file_get_string(file, "core", "kernrelease", NULL)) != NULL) {
+        g_free(priv->kernrelease);
+        priv->kernrelease = str;
+    }
+    if ((str = g_key_file_get_string(file, "core", "kernpath", NULL)) != NULL) {
+        g_free(priv->kernpath);
+        priv->kernpath = str;
+    }
     b = g_key_file_get_boolean(file, "core", "shell", &e);
     if (e) {
         g_error_free(e);
@@ -1748,6 +1868,8 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     g_key_file_set_string(file, "core", "name", priv->name);
     g_key_file_set_string(file, "core", "root", priv->root);
     g_key_file_set_string(file, "core", "arch", priv->arch);
+    g_key_file_set_string(file, "core", "kernrelease", priv->kernrelease);
+    g_key_file_set_string(file, "core", "kernpath", priv->kernpath);
     g_key_file_set_boolean(file, "core", "shell", priv->shell);
 
     g_key_file_set_uint64(file, "identity", "uid", priv->uid);

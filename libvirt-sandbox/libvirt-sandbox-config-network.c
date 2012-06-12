@@ -22,7 +22,6 @@
 
 #include <config.h>
 #include <string.h>
-#include <sys/utsname.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 

@@ -22,7 +22,6 @@
 
 #include <config.h>
 #include <string.h>
-#include <sys/utsname.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -161,12 +160,8 @@ static void gvir_sandbox_config_initrd_class_init(GVirSandboxConfigInitrdClass *
 static void gvir_sandbox_config_initrd_init(GVirSandboxConfigInitrd *config)
 {
     GVirSandboxConfigInitrdPrivate *priv = config->priv;
-    struct utsname uts;
     priv = config->priv = GVIR_SANDBOX_CONFIG_INITRD_GET_PRIVATE(config);
-
     priv->init = g_strdup(LIBEXECDIR "/libvirt-sandbox-init-qemu");
-    uname(&uts);
-    priv->kver = g_strdup(uts.release);
 }
 
 

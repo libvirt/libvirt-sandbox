@@ -22,7 +22,6 @@
 
 #include <config.h>
 #include <string.h>
-#include <sys/utsname.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -116,7 +115,6 @@ static void gvir_sandbox_builder_machine_finalize(GObject *object)
 
 
 static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
-                                                    const gchar *kver,
                                                     GError **error)
 {
     GVirSandboxConfigInitrd *initrd = gvir_sandbox_config_initrd_new();
@@ -124,7 +122,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     gchar *targetfile = g_strdup_printf("/tmp/libvirt-sandbox-initrd-XXXXXX");
     int fd = -1;
 
-    gvir_sandbox_config_initrd_set_kver(initrd, kver);
+    gvir_sandbox_config_initrd_set_kver(initrd, gvir_sandbox_config_get_kernrelease(config));
     gvir_sandbox_config_initrd_set_init(initrd, LIBEXECDIR "/libvirt-sandbox-init-qemu");
 
     gvir_sandbox_config_initrd_add_module(initrd, "fscache.ko");
@@ -341,19 +339,16 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     gchar *kernel = NULL;
     gchar *initrd = NULL;
     gchar *cmdline = NULL;
-    struct utsname uts;
     GVirConfigDomainOs *os;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
         construct_os(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
-    uname(&uts);
-
-    if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(config, uts.release, error)))
+    if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(config, error)))
         return FALSE;
 
-    kernel = g_strdup_printf("/boot/vmlinuz-%s", uts.release);
+    kernel = g_strdup(gvir_sandbox_config_get_kernpath(config));
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
     gvir_sandbox_cleaner_add_rmfile_post_start(cleaner,
