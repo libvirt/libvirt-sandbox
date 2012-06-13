@@ -402,8 +402,13 @@ static gboolean gvir_sandbox_console_rpc_start_term(GVirSandboxConsoleRpc *conso
                                                     GError **error)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
-    int fd = g_unix_input_stream_get_fd(localStdin);
+    int fd;
     struct termios ios;
+
+    if (!localStdin)
+        return TRUE;
+
+    fd = g_unix_input_stream_get_fd(localStdin);
 
     if (!isatty(fd))
         return TRUE;
@@ -443,7 +448,12 @@ static gboolean gvir_sandbox_console_rpc_stop_term(GVirSandboxConsoleRpc *consol
                                                    GError **error)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
-    int fd = g_unix_input_stream_get_fd(localStdin);
+    int fd;
+
+    if (!localStdin)
+        return TRUE;
+
+    fd = g_unix_input_stream_get_fd(localStdin);
 
     if (!isatty(fd))
         return TRUE;
@@ -483,7 +493,7 @@ static void do_console_rpc_update_events(GVirSandboxConsoleRpc *console)
         /* If nothing is waiting to be sent to guest, we can read
          * some more of stdin */
         if (!priv->tx && !priv->localEOF) {
-            if (priv->localStdinSource == NULL) {
+            if (priv->localStdinSource == NULL && priv->localStdin) {
                 priv->localStdinSource = g_pollable_input_stream_create_source
                     (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
                 g_source_set_callback(priv->localStdinSource,
@@ -926,7 +936,9 @@ static gboolean gvir_sandbox_console_rpc_attach(GVirSandboxConsole *console,
                                              localStdin, error))
         return FALSE;
 
-    priv->localStdin = g_object_ref(localStdin);
+    if (localStdin)
+        priv->localStdin = g_object_ref(localStdin);
+
     priv->localStdout = g_object_ref(localStdout);
     priv->localStderr = g_object_ref(localStderr);
 
@@ -983,7 +995,8 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
     priv->localStdinSource = priv->localStdoutSource = priv->localStderrSource = NULL;
     priv->consoleWatch = 0;
 
-    g_object_unref(priv->localStdin);
+    if (priv->localStdin)
+        g_object_unref(priv->localStdin);
     g_object_unref(priv->localStdout);
     g_object_unref(priv->localStderr);
     priv->localStdin = NULL;
