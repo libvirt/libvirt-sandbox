@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -246,12 +247,23 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
     while (tmp) {
         GVirSandboxConfigMount *mconfig = tmp->data;
+        const char *source = gvir_sandbox_config_mount_get_root(mconfig);
+        struct stat sb;
 
         fs = gvir_config_domain_filesys_new();
         gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+        if ((stat(source, &sb) == 0)) {
+                if (S_ISREG(sb.st_mode)) {
+                        printf("File Source = %s\n", source);
+                        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
+                }
+                if (S_ISBLK(sb.st_mode)) {
+                        printf("BLK Source = %s\n", source);
+                        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_BLOCK);
+                }
+        }
         gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
-        gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_get_root(mconfig));
+        gvir_config_domain_filesys_set_source(fs, source);
         gvir_config_domain_filesys_set_target(fs,
                                               gvir_sandbox_config_mount_get_target(mconfig));
 
