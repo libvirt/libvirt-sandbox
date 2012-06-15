@@ -219,7 +219,7 @@ WantedBy=multi-user.target
             ts = rpm.ts()
             mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
             h = mi.next()
-            self.rpm_name=h['name']
+            self.rpm_name = h['name']
 
     def __extract_rpm(self):
         self.all_dirs = []
