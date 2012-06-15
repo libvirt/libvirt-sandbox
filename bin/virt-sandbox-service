@@ -573,7 +573,7 @@ if __name__ == '__main__':
                                dest="executable",  default=None,
                                help=_("Executable to run within the sandbox container"))
     parser_create.add_argument("-u", "--unitfile", required=True,
-                               dest="unitfiles",  action='append', 
+                               dest="unitfiles",  action='append',
                                help=_("Systemd Unit file to run within the sandbox container"))
     parser_create.add_argument("-p", "--path", dest="path",  default=None,
                                help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
