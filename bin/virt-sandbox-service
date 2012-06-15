@@ -19,7 +19,8 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-PROGNAME="sandboxcontainer"
+PROGNAME="virt-sandbox-service"
+
 from gi.repository import LibvirtGObject
 from gi.repository import LibvirtSandbox
 from gi.repository import GLib
@@ -37,9 +38,9 @@ gettext.bindtextdomain(PROGNAME, "/usr/share/locale")
 gettext.textdomain(PROGNAME)
 try:
     gettext.install(PROGNAME,
-		    localedir="/usr/share/locale",
-		    unicode=False,
-		    codeset = 'utf-8')
+                    localedir="/usr/share/locale",
+                    unicode=False,
+                    codeset = 'utf-8')
 except IOError:
     import __builtin__
     __builtin__.__dict__['_'] = unicode
@@ -48,393 +49,438 @@ class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
     SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
+#    SYSTEM_FILES   = [ "/etc/machine-id" ]
+    SYSTEM_FILES   = []
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
-    SELINUX_TYPE  = "svirt_lxc_net_t"
-    SELINUX_LEVEL = "s0"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
 
-    def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH, config=None):
-	self.uri = uri
-	self.clone = False
-	self.use_image = False
-	self.name = name
-	self.path = path
-	self.service_files = []
-	self.conn = None
-	self.image = None
-	self.mcs = "s0"
-	self.dynamic = False
-	self.file_type = self.SELINUX_FILE_TYPE
-	self.security_type = self.SELINUX_TYPE
-	self.security_level = self.SELINUX_LEVEL
-	self.size = 10 * MB
-	self.config = None
-	self.rpm_name = None
-	if name:
-	    config = self.get_config_path()
+    def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH, config=None, create=False):
+        self.uri = uri
+        self.clone = False
+        self.use_image = False
+        self.path = path
+        self.service_files = []
+        self.conn = None
+        self.image = None
+        self.size = 10 * MB
+        self.config = None
+        self.rpm_name = None
+        self.file_type = self.SELINUX_FILE_TYPE
+        self.unit_file = []
 
-	if config:
-	    try:
-		self.config = LibvirtSandbox.Config.load_from_path(config)
-		self.name = self.config.get_name()
-	    except gi._glib.GError, e:
-		raise OSError(config + ": " + str(e))
+        if name:
+            config = self.get_config_path(name)
+
+        if create:
+            if config and os.path.exists(config):
+                raise ValueError(["Container already exists"])
+
+            self.config = LibvirtSandbox.ConfigService.new(name)
+            return
+
+        if config:
+            try:
+                self.config = LibvirtSandbox.Config.load_from_path(config)
+                self.__gen_rpm_name()
+                self.unitfile = self.__gen_unit_file_name()
+            except gi._glib.GError, e:
+                raise OSError(config + ": " + str(e))
 
     def __follow_units(self):
-	unitst=""
-	for i in self.service_files:
-	    unitst += "#ReloadPropagatedFrom=%s\n" % i
+        unitst=""
+        for i in self.service_files:
+            unitst += "#ReloadPropagatedFrom=%s\n" % i
 
-	return unitst
+        return unitst
+
+    def __gen_unit_file_name(self):
+        if self.rpm_name:
+            name = "%s@%s.service" % (self.rpm_name, self.config.get_name())
+        else:
+            name = "%s.service" % self.config.get_name()
+
+        return "/etc/systemd/system/" + name
+
+
+    def add_unit_file(self, unit_file):
+        if unit_file not in self.unit_file_list:
+            self.unit_file_list.append(unit_file)
+
+    def delete_unit_file(self, unit_file):
+        self.unit_file_list.delete(unit_file)
+
+    def get_unit_file(self, unit_file):
+        return self.unit_file_list
+
+    def set_unit_file_list(self, unit_file_list):
+        self.unit_file_list = unit_file_list
 
     def __create_system_unit(self):
-
-	if self.rpm_name:
-	    name = "%s@%s.service" % (self.rpm_name, self.name)
-	else:
-	    name = self.name
-
-	self.unitfile = "/etc/systemd/system/" + name
-	unit = """
+        self.unitfile = self.__gen_unit_file_name()
+        name = self.config.get_name()
+        unit = r"""
 [Unit]
-Description=Secure Sandbox Container %s for %s Server
+Description=Secure Sandbox Container %(NAME)s for %(EXEC)s Server
 Requires=libvirtd.service
 After=libvirtd.service
-%s
+%(FOLLOW)s
 [Service]
 Type=simple
-ExecStart=/usr/sbin/virt-sandbox-service start %s
-ExecReload=/usr/sbin/virt-sandbox-service reload %s
-ExecStop=/usr/sbin/virt-sandbox-service stop %s
+ExecStart=/usr/bin/virt-sandbox-service start %(NAME)s
+ExecReload=/usr/bin/virt-sandbox-service reload %(NAME)s
+ExecStop=/usr/bin/virt-sandbox-service stop %(NAME)s
 
 [Install]
 WantedBy=multi-user.target
-""" % ( self.name , self.executable, self.__follow_units(), self.name, self.name, self.name)
-	fd = open(self.unitfile, "w")
-	fd.write(unit)
-	fd.close()
-	sys.stdout.write("Created unit file %s\n" % self.unitfile)
+""" % { 'NAME':name, 'EXEC':self.config.get_executable(), 'FOLLOW':self.__follow_units() }
+        fd = open(self.unitfile, "w")
+        fd.write(unit)
+        fd.close()
+        sys.stdout.write("Created unit file %s\n" % self.unitfile)
 
     def __add_dir(self, newd):
-	self.all_dirs.append(newd)
-	tmp = self.dirs
-	for d in tmp:
-	    if newd.startswith(d):
-		return
-	    if d.startswith(newd):
-		self.dirs.remove(d)
-		self.dirs.append(newd)
-		return
-	self.dirs.append(newd)
+        self.all_dirs.append(newd)
+        tmp = self.dirs
+        for d in tmp:
+            if newd.startswith(d):
+                return
+            if d.startswith(newd):
+                self.dirs.remove(d)
+                self.dirs.append(newd)
+                return
+        self.dirs.append(newd)
 
-    def get_config_path(self):
-	return self.CONFIG_PATH + self.name + ".sandbox"
+    def get_config_path(self, name = None):
+        if not name:
+            name = self.get_name()
+        return self.CONFIG_PATH + name + ".sandbox"
 
     def get_name(self):
-	return self.name
+        if self.config:
+            return self.config.get_name()
+        raise ValueError(["Name not configured"])
 
     def set_clone(self, clone):
-	self.clone = clone
+        self.clone = clone
 
     def get_dynamic(self):
-	return self.dynamic
+        return self.config.get_security_dynamic()
 
-    def set_dynamic(self, dynamic):
-	self.dynamic = dynamic
+    def set_dynamic(self, val):
+        return self.config.set_security_dynamic(val)
+
+    def get_security_type(self):
+        if self.config:
+            con = self.config.get_security_label().split(':')
+            return con[2]
+        else:
+            return "svirt_lxc_net_t"
+
+    def get_security_level(self):
+        if self.config:
+            con = self.config.get_security_label().split(':')
+            return ":".join(con[3:])
+        else:
+            return "s0"
 
     def set_security_type(self, security_type):
-	test = "system_u:system_r:%s:%s" % (security_type, self.security_level)
-	try:
-	    selinux.security_check_context(test)
-	    self.security_type = security_type
-	except OSError, e:
-	    raise OSError("Invalid Security Type %s: %s " %  (security_type, e))
+        label = "system_u:system_r:%s:%s" % (security_type, self.get_security_level())
+        try:
+            selinux.security_check_context(label)
+            self.config.set_security_label(label)
+        except OSError, e:
+            raise OSError("Invalid Security Type %s: %s " %  (security_type, e))
 
     def set_security_level(self, security_level):
-	test = "system_u:system_r:%s:%s" % (self.security_type, security_level)
-	try:
-	    selinux.security_check_context(test)
-	    self.security_level = security_level
-	except OSError, e:
-	    raise OSError("Invalid Security Level %s: %s " %  (security_level, e))
+        label = "system_u:system_r:%s:%s" % (self.get_security_type(), security_level)
+        try:
+            selinux.security_check_context(label)
+            self.config.set_security_label(label)
+        except OSError, e:
+            raise OSError("Invalid Security Level %s: %s " %  (security_level, e))
 
     def set_image(self, size):
-	self.use_image = True
-	self.size = size * MB
+        self.use_image = True
+        self.size = size * MB
 
     def set_path(self, path):
-	self.path = path
+        self.path = path
 
-    def set_mcs(self, mcs):
-	self.mcs = mcs
+    def set_executable(self,executable):
+        self.config.set_executable(executable)
+
+    def set_name(self, name):
+        if self.config:
+            raise ValueError(["Can not modify Name"])
+        self.config = LibvirtSandbox.ConfigService.new(name)
+
+    def __gen_rpm_name(self):
+            ts = rpm.ts()
+            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
+            h = mi.next()
+            self.rpm_name=h['name']
 
     def __extract_rpm(self):
-	self.all_dirs = []
-	self.dirs = []
+        self.all_dirs = []
+        self.dirs = []
 
-	try:
-	    ts = rpm.ts()
-	    mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.executable)
-	    h = mi.next()
-	    self.rpm_name=h['name']
-	    for rec in h.fiFromHeader():
-		f = rec[0]
-		for b in self.DEFAULT_DIRS:
-		    # /var/run is a symbolic link to /run
-		    if f.startswith(b) and not f.startswith("/var/run/"):
-			if os.path.isdir(f):
-			    self.__add_dir(f)
+        try:
+            ts = rpm.ts()
+            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
+            h = mi.next()
+            self.rpm_name=h['name']
+            for rec in h.fiFromHeader():
+                f = rec[0]
+                for b in self.DEFAULT_DIRS:
+                    # /var/run is a symbolic link to /run
+                    if f.startswith(b) and not f.startswith("/var/run/"):
+                        if os.path.isdir(f):
+                            self.__add_dir(f)
 
-		if f.endswith(".service"):
-		    self.service_files.append(f)
-	except StopIteration:
-	    pass
+                if f.endswith(".service"):
+                    self.service_files.append(f)
+        except StopIteration:
+            pass
 
     def __add_mount(self, source, dest):
-	mount = LibvirtSandbox.ConfigMount.new(dest)
-	mount.set_root(source)
-	self.config.add_host_bind_mount(mount)
+        mount = LibvirtSandbox.ConfigMount.new(dest)
+        mount.set_root(source)
+        self.config.add_host_bind_mount(mount)
 
     def __gen_filesystems(self):
-	if self.use_image:
-	    self.image = self.DEFAULT_IMAGE % self.name
-	    mount = LibvirtSandbox.ConfigMount.new(self.dest)
-	    mount.set_root(self.image)
-	    self.config.add_host_image_mount(mount)
+        if self.use_image:
+            self.image = self.DEFAULT_IMAGE % self.get_name()
+            mount = LibvirtSandbox.ConfigMount.new(self.dest)
+            mount.set_root(self.image)
+            self.config.add_host_image_mount(mount)
 
-	for d in self.SYSTEM_DIRS:
-	    source = "%s%s" % ( self.dest, d)
-	    self.__add_mount(source, d)
+        for d in self.SYSTEM_DIRS:
+            source = "%s%s" % ( self.dest, d)
+            self.__add_mount(source, d)
 
-	for d in self.dirs:
-	    found = False
-	    # Dont add dirs whos parents are in SYSTEM_DIRS
-	    for s in self.SYSTEM_DIRS:
-		if d.startswith(s):
-		    found = True
-		    break
-	    if not found:
-		source = "%s%s" % ( self.dest, d)
-		self.__add_mount(source, d)
+        for f in self.SYSTEM_FILES:
+            source = "%s%s" % ( self.dest, f)
+            self.__add_mount(source, f)
+
+        for d in self.dirs:
+            found = False
+            # Dont add dirs whos parents are in SYSTEM_DIRS
+            for s in self.SYSTEM_DIRS:
+                if d.startswith(s):
+                    found = True
+                    break
+            if not found:
+                source = "%s%s" % ( self.dest, d)
+                self.__add_mount(source, d)
 
     def __get_init_path(self):
-	return "%s/%s/init" % (self.path, self.name)
+        return "%s/%s/init" % (self.path, self.get_name())
 
     def __gen_dirs(self):
-	if self.clone:
-	    for d in self.dirs:
-		shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
-	else:
-	    for d in self.all_dirs:
-		os.makedirs("%s%s" % (self.dest, d))
+        if self.clone:
+            for d in self.dirs:
+                shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
+        else:
+            for d in self.all_dirs:
+                os.makedirs("%s%s" % (self.dest, d))
 
-	for d in self.SYSTEM_DIRS:
-	    try:
-		os.makedirs("%s%s" % (self.dest, d))
-	    except OSError, e:
-		if not e.errno == errno.EEXIST:
-		    raise e
+        for d in self.SYSTEM_DIRS:
+            try:
+                os.makedirs("%s%s" % (self.dest, d))
+            except OSError, e:
+                if not e.errno == errno.EEXIST:
+                    raise e
+
+        for f in self.SYSTEM_FILES:
+            try:
+                fd=open("%s%s" % (self.dest, f), "w")
+                fd.close()
+            except OSError, e:
+                if not e.errno == errno.EEXIST:
+                    raise e
 
     def __umount(self):
-	p = Popen(["/bin/umount", self.dest])
-	p.communicate()
-	if p.returncode and p.returncode != 0:
-	    raise OSError("Failed to unmount image %s from %s " %  (self.image, self.dest))
+        p = Popen(["/bin/umount", self.dest])
+        p.communicate()
+        if p.returncode and p.returncode != 0:
+            raise OSError("Failed to unmount image %s from %s " %  (self.image, self.dest))
 
     def __create_image(self):
-	fd = open(self.image, "w")
-	fd.truncate(self.size)
-	fd.close()
-	p = Popen(["/sbin/mkfs","-F", "-t", "ext4", self.image],stdout=PIPE, stderr=PIPE)
-	p.communicate()
-	if p.returncode and p.returncode != 0:
-	    raise OSError("Failed to build image %s" % self.image )
+        fd = open(self.image, "w")
+        fd.truncate(self.size)
+        fd.close()
+        p = Popen(["/sbin/mkfs","-F", "-t", "ext4", self.image],stdout=PIPE, stderr=PIPE)
+        p.communicate()
+        if p.returncode and p.returncode != 0:
+            raise OSError("Failed to build image %s" % self.image )
 
-	p = Popen(["/bin/mount", self.image, self.dest])
-	p.communicate()
-	if p.returncode and p.returncode != 0:
-	    raise OSError("Failed to mount image %s on %s " %  (self.image, self.dest))
+        p = Popen(["/bin/mount", self.image, self.dest])
+        p.communicate()
+        if p.returncode and p.returncode != 0:
+            raise OSError("Failed to mount image %s on %s " %  (self.image, self.dest))
 
-    def __save(self):
-	config = self.get_config_path()
-	if os.path.exists(config):
-	    os.remove(config)
-	self.config.save_to_path(config)
-	sys.stdout.write("Created sandbox config %s\n" % config)
+    def save_config(self):
+        config = self.get_config_path()
+        if os.path.exists(config):
+            os.remove(config)
+        self.config.save_to_path(config)
+        sys.stdout.write("Created sandbox config %s\n" % config)
 
     def __get_image_path(self):
-	    mounts = self.config.get_host_image_mounts()
-	    if len(mounts) and mounts[0].get_target() == self.dest:
-		return mounts[0].get_root()
-	    return None
+            mounts = self.config.get_host_image_mounts()
+            if len(mounts) and mounts[0].get_target() == self.dest:
+                return mounts[0].get_root()
+            return None
 
     def delete(self):
-	# Stop service if it is running
-	try:
-	    self.stop()
-	except:
-	    pass
+        # Stop service if it is running
+        try:
+            self.stop()
+        except:
+            pass
 
-	self.dest = "%s/%s" % (self.path, self.name)
-	if os.path.exists(self.dest):
-	    shutil.rmtree(self.dest)
-	    mount_path = self.__get_image_path()
-	    if mount_path:
-		os.remove(mount_path)
+        self.dest = "%s/%s" % (self.path, self.get_name())
+        if os.path.exists(self.dest):
+            shutil.rmtree(self.dest)
+            mount_path = self.__get_image_path()
+            if mount_path:
+                os.remove(mount_path)
 
-	config = self.get_config_path()
-	if os.path.exists(config):
-	    os.remove(config)
+        config = self.get_config_path()
+        if os.path.exists(config):
+            os.remove(config)
 
-	unitfile = "/etc/systemd/system/%s.service" % self.name
-	if os.path.exists(unitfile):
-	    os.remove(unitfile)
+        if os.path.exists(self.unitfile):
+            os.remove(self.unitfile)
 
-    def create(self, name, executable):
-	self.dest = "%s/%s" % (self.path, name)
-	if os.path.exists(self.dest):
-	    raise OSError("%s already exists" % self.dest)
+    def create(self, executable):
+        self.dest = "%s/%s" % (self.path, self.get_name())
+        if os.path.exists(self.dest):
+            raise OSError("%s already exists" % self.dest)
 
-	self.config = LibvirtSandbox.ConfigService.new(name)
-	self.config.set_security_label("system_u:system_r:%s:%s" % (self.security_type, self.security_level))
-	self.config.set_security_dynamic(self.dynamic)
-	net = LibvirtSandbox.ConfigNetwork().new()
-	net.set_dhcp(True)
-	self.config.add_network(net)
-	self.name = name
-	self.executable = executable
-	self.config.set_executable(self.executable)
-	self.config.set_shell(True)
+        net = LibvirtSandbox.ConfigNetwork().new()
+        net.set_dhcp(True)
+        self.config.add_network(net)
+        self.set_executable(executable)
+        self.config.set_shell(True)
 
-	self.__extract_rpm()
-	self.__gen_filesystems()
-	os.mkdir(self.dest)
-	sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
-	if self.image:
-	    self.__create_image()
-	    self.__gen_dirs()
-	    self.__umount()
-	else:
-	    self.__gen_dirs()
-	    selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (self.file_type, self.security_level), True)
+        self.__extract_rpm()
+        self.__gen_filesystems()
+        os.mkdir(self.dest)
+        sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
+        if self.image:
+            self.__create_image()
+            self.__gen_dirs()
+            self.__umount()
+        else:
+            self.__gen_dirs()
+            selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (self.file_type, self.get_security_level()), True)
 
-#        resolv_conf = self.dest + "/etc/resolv.conf"
-#        mount = LibvirtSandbox.ConfigMount.new("/etc/resolv.conf")
-#        mount.set_root(resolv_conf)
-#        self.config.add_host_mount(mount)
-#        fd = open(resolv_conf,"w")
-#        fd.close()
-
-	self.__save()
-	self.__create_system_unit()
+        self.save_config()
+        self.__create_system_unit()
 
     def reload(self):
-	# Crude way of doing this.
-	self.stop()
-	self.start()
+        # Crude way of doing this.
+        self.stop()
+        self.start()
+        # self.execute("systemctl reload %s.service" % self.get_name())
 
     def __connect(self):
-	if not self.conn:
-	    self.conn=LibvirtGObject.Connection.new(self.uri)
-	    self.conn.open(None)
+        if not self.conn:
+            self.conn=LibvirtGObject.Connection.new(self.uri)
+            self.conn.open(None)
 
     def __disconnect(self):
-	if self.conn:
-	    self.conn.close()
-	    self.conn = None
+        if self.conn:
+            self.conn.close()
+            self.conn = None
 
     def running(self):
-	try:
-	    self.__connect()
-	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.attach()
-	    self.__disconnect()
-	    return 1
-	except gi._glib.GError, e:
-	    return 0
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            self.__disconnect()
+            return 1
+        except gi._glib.GError, e:
+            return 0
 
     def start(self):
-	def closed(obj, error):
-	    self.loop.quit()
+        def closed(obj, error):
+            self.loop.quit()
 
-	try:
-	    self.__connect()
-	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.start()
-	    console = context.get_log_console()
-	    console.connect("closed", closed)
-	    console.attach_stderr()
-	    self.loop = GLib.MainLoop()
-	    self.loop.run()
-	    try:
-		console.detach()
-	    except:
-		pass
-	    try:
-		context.stop()
-	    except:
-		pass
-	except gi._glib.GError, e:
-	    raise OSError(str(e))
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.start()
+            console = context.get_log_console()
+            console.connect("closed", closed)
+            console.attach_stderr()
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+            try:
+                context.stop()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def stop(self):
-	try:
-	    self.__connect()
-	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.attach()
-	    context.stop()
-	except gi._glib.GError, e:
-	    raise OSError(str(e))
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            context.stop()
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def connect(self):
-	def closed(obj, error):
-	    self.loop.quit()
+        def closed(obj, error):
+            self.loop.quit()
 
-	try:
-	    self.__connect()
-	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.attach()
-	    console = context.get_shell_console()
-	    console.connect("closed", closed)
-	    console.attach_stdio()
-	    self.loop = GLib.MainLoop()
-	    self.loop.run()
-	    try:
-		console.detach()
-	    except:
-		pass
-	except gi._glib.GError, e:
-	    raise OSError(str(e))
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            console = context.get_shell_console()
+            console.connect("closed", closed)
+            console.attach_stdio()
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
     def execute(self, command):
-	def closed(obj, error):
-	    self.loop.quit()
+        def closed(obj, error):
+            self.loop.quit()
 
-	try:
-	    self.__connect()
-	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.attach()
-	    console = context.get_shell_console()
-	    console.connect("closed", closed)
-	    console.attach_stdio()
-	    print "not currently implemented"
-	    console.detach()
-	    return
-	    self.loop = GLib.MainLoop()
-	    self.loop.run()
-	    try:
-		console.detach()
-	    except:
-		pass
-	except gi._glib.GError, e:
-	    raise OSError(str(e))
-
-    def get_process_label(self):
-	return "system_u:system_r:%s:%s" % (self.process_type, self.mcs)
-
-    def get_file_label(self):
-	return "system_u:object_r:%s:%s" % (self.file_type, self.mcs)
+        try:
+            self.__connect()
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context.attach()
+            console = context.get_shell_console()
+            console.connect("closed", closed)
+            console.attach_stdio()
+            print "not currently implemented"
+            console.detach()
+            return
+            self.loop = GLib.MainLoop()
+            self.loop.run()
+            try:
+                console.detach()
+            except:
+                pass
+        except gi._glib.GError, e:
+            raise OSError(str(e))
 
 MB = int(1000000)
 
@@ -443,22 +489,18 @@ def delete(args):
     container.delete()
 
 def create(args):
-    container = Container()
+    container = Container(name = args.name, create = True)
     container.set_clone(args.clone)
     container.set_dynamic(args.dynamic)
     container.set_security_type(args.type)
+    container.set_unit_file_list(args.unitfiles)
     if args.level:
-	container.set_security_level(args.level)
+        container.set_security_level(args.level)
 
-    if args.level:
-	container.set_mcs(args.level)
+    if args.imagesize:
+        container.set_image(args.imagesize)
 
-    if args.image:
-	container.set_image(args.size)
-	if not args.level:
-	    container.set_mcs(args.dynamic)
-
-    container.create(args.name, args.executable)
+    container.create(args.executable)
 
 def usage(parser, msg):
     parser.print_help()
@@ -471,24 +513,24 @@ def start(args):
     container = Container(args.name, args.uri)
     container.start()
 
-def list(args):
-    container = Container()
+def sandbox_list(args):
     import glob
+    container = Container()
     g = glob.glob(container.CONFIG_PATH + "*.sandbox")
     for gc in g:
-	try:
-	    c = Container(config = gc)
-	    if args.running:
-		if c.running():
-		    print c.get_name()
-	    else:
-		print c.get_name()
+        try:
+            c = Container(config = gc)
+            if args.running:
+                if c.running():
+                    print c.get_name()
+            else:
+                print c.get_name()
 
-	except OSError, e:
-	    print "Invalid container %s: %s", (gc, e)
+        except OSError, e:
+            print "Invalid container %s: %s", (gc, e)
 
 
-def reload(args):
+def sandbox_reload(args):
     container = Container(args.name, args.uri)
     container.reload()
 
@@ -504,91 +546,129 @@ def execute(args):
     container = Container(args.name, args.uri)
     container.execute(args.command)
 
+def clone(args):
+    container = Container(args.source, args.uri)
+    if args.level:
+        container.set_security_level(args.level)
+    container.set_name(args.dest)
+    container.save_config()
+
 import argparse
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-	if namespace.image:
-	    setattr(namespace, self.dest, int(values))
-	else:
-	    raise ValueError(parser, "%s --size options requires --image option" % parser.prog)
+        setattr(namespace, self.dest, int(values))
 
 if __name__ == '__main__':
     c = Container()
 
     parser = argparse.ArgumentParser(description='Sandbox Container Tool')
     parser.add_argument("-c", "--connect", required=False, dest="uri",  default="lxc:///",
-			help="libvirt connection URI to use (lxc:/// [default] or qemu:///session)")
+                        help=_("libvirt connection URI to use (lxc:/// [default] or qemu:///session)"))
 
-    subparsers = parser.add_subparsers(help="commands")
-    parser_create = subparsers.add_parser("create", help="create a sandbox container")
+    subparsers = parser.add_subparsers(help=_("commands"))
+    parser_create = subparsers.add_parser("create",
+                                          help=_("create a sandbox container"))
 
-    parser_create.add_argument("-e", "--executable", required=True, dest="executable",  default=None,
-			       help="executable to run within the sandbox")
+    parser_create.add_argument("-e", "--executable", required=True,
+                               dest="executable",  default=None,
+                               help=_("Executable to run within the sandbox container"))
+    parser_create.add_argument("-u", "--unitfile", required=True,
+                               dest="unitfiles",  action='append', 
+                               help=_("Systemd Unit file to run within the sandbox container"))
     parser_create.add_argument("-p", "--path", dest="path",  default=None,
-			       help="select path to store sandbox content.  Default: %s" % c.DEFAULT_PATH)
-    parser_create.add_argument("-t", "--type", dest="type", default=c.SELINUX_TYPE,
-			       help="SELinux type with which to run the sandbox.  Default: %s" % c.SELINUX_TYPE)
+                               help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
+    parser_create.add_argument("-t", "--type", dest="type",
+                               default=c.get_security_type(),
+                               help=_("SELinux type with which to run the sandbox.  Default: %s") % c.get_security_type())
     group = parser_create.add_mutually_exclusive_group()
     group.add_argument("-l", "--level", dest="level", default=None,
-		       help="MCS Level with which to run the sandbox")
-    group.add_argument("-d", "--dynamic", dest="dynamic", default=False, action="store_true",
-		       help="use dynamic MCS labeling for the sandbox")
+                       help=_("MCS Level with which to run the sandbox"))
+    group.add_argument("-d", "--dynamic", dest="dynamic", default=False,
+                       action="store_true",
+                       help=_("use dynamic MCS labeling for the sandbox"))
     image = parser_create.add_argument_group("Create On Disk Image File")
 
-    image.add_argument("-i", "--image", dest="image", default=False, action="store_true",
-		       help="use an image file for the sandbox content")
-    image.add_argument("-s", "--size", dest="size", default=(10 * MB), action=SizeAction,
-		       help="create image of this size. Requires --image option. Default 10m.")
-    parser_create.add_argument("-n", "--clone", default=False, action="store_true",
-			       help="clone content from /etc and /var directories that will be mounted within the sandbox")
+    image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
+                       action=SizeAction,
+                       help=_("create image of this many megabytes."))
+    parser_create.add_argument("-n", "--clone", default=False,
+                               action="store_true",
+                               help=_("clone content from /etc and /var directories that will be mounted within the sandbox"))
 
     parser_create.set_defaults(func=create)
-    parser_create.add_argument("name", help="name of the sandbox container")
+    parser_create.add_argument("name",
+                               help=_("name of the sandbox container"))
 
-    parser_connect = subparsers.add_parser("connect", help="Connect to a sandbox container")
+    parser_connect = subparsers.add_parser("connect",
+                                           help=_("Connect to a sandbox container"))
     parser_connect.set_defaults(func=connect)
-    parser_connect.add_argument("name", help="name of the sandbox container")
+    parser_connect.add_argument("name",
+                                help=_("name of the sandbox container"))
 
-    parser_execute = subparsers.add_parser("execute", help="Execute a command within a sandbox container")
+    parser_clone = subparsers.add_parser("clone",
+                                         help=_("Clone an existing sandbox container"))
+    parser_clone.set_defaults(func=clone)
+    parser_clone.add_argument("-l", "--level", dest="level", default=None,
+                              help=_("MCS Level with which to run the sandbox"))
+    parser_clone.add_argument("-s", "--source", required=True,
+                              dest="source", default=None,
+                              help=_("source sandbox container name"))
+    parser_clone.add_argument("dest",
+                              help=("dest name of the new sandbox container"))
+
+    parser_execute = subparsers.add_parser("execute",
+                                           help=("Execute a command within a sandbox container"))
     parser_execute.set_defaults(func=execute)
-    parser_execute.add_argument("-C", "--command", required=True, dest="command", default=None, help="command to execute within the sandbox")
-    parser_execute.add_argument("name", help="name of the sandbox container")
+    parser_execute.add_argument("-C", "--command", required=True,
+                                dest="command", default=None,
+                                help=_("command to execute within the sandbox"))
+    parser_execute.add_argument("name",
+                                help=_("name of the sandbox container"))
 
-    parser_delete = subparsers.add_parser("delete", help="Delete a sandbox container")
+    parser_delete = subparsers.add_parser("delete",
+                                          help=_("Delete a sandbox container"))
     parser_delete.set_defaults(func=delete)
-    parser_delete.add_argument("name", help="name of the sandbox container")
+    parser_delete.add_argument("name",
+                               help=_("name of the sandbox container"))
 
-    parser_stop = subparsers.add_parser("stop", help="Stop a sandbox container")
+    parser_stop = subparsers.add_parser("stop",
+                                        help=_("Stop a sandbox container"))
     parser_stop.set_defaults(func=stop)
-    parser_stop.add_argument("name", help="name of the sandbox container")
+    parser_stop.add_argument("name",
+                             help=_("name of the sandbox container"))
 
-    parser_start = subparsers.add_parser("start", help="Start a sandbox container")
+    parser_start = subparsers.add_parser("start",
+                                         help=_("Start a sandbox container"))
     parser_start.set_defaults(func=start)
-    parser_start.add_argument("name", help="name of the sandbox container")
+    parser_start.add_argument("name",
+                              help=_("name of the sandbox container"))
 
-    parser_reload = subparsers.add_parser("reload", help="Reload a running sandbox container")
-    parser_reload.set_defaults(func=reload)
-    parser_reload.add_argument("name", help="name of the sandbox container")
+    parser_reload = subparsers.add_parser("reload",
+                                          help=_("Reload a running sandbox container"))
+    parser_reload.set_defaults(func=sandbox_reload)
+    parser_reload.add_argument("name",
+                               help=_("name of the sandbox container"))
 
-    parser_list = subparsers.add_parser("list", help="List all sandbox container")
-    parser_list.set_defaults(func=list)
-    parser_list.add_argument("-r", "--running", dest="running", default=False, action="store_true",
-			     help="list only running sandbox containers")
-
-    args = parser.parse_args()
+    parser_list = subparsers.add_parser("list",
+                                        help=_("List all sandbox container"))
+    parser_list.set_defaults(func=sandbox_list)
+    parser_list.add_argument("-r", "--running", dest="running",
+                             default=False, action="store_true",
+                             help=_("list only running sandbox containers"))
 
     try:
-	args.func(args)
-	sys.exit(0)
+        args = parser.parse_args()
+        args.func(args)
+        sys.exit(0)
     except KeyboardInterrupt, e:
-	sys.exit(0)
+        sys.exit(0)
     except ValueError, e:
-	for line in e:
-	    for l in line:
-		sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
-	sys.stderr.flush()
-	sys.exit(1)
+        for line in e:
+            for l in line:
+                sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
+        sys.stderr.flush()
+        sys.exit(1)
     except OSError, e:
-	sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
-	sys.stderr.flush()
-	sys.exit(1)
+        sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
+        sys.stderr.flush()
+        sys.exit(1)

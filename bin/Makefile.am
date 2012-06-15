@@ -6,7 +6,10 @@ bin_SCRIPTS = virt-sandbox-service
 virtsandboxcompdir = $(sysconfdir)/bash_completion.d/
 virtsandboxcomp_DATA = virt-sandbox-service-bash-completion.sh
 
-EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh virt-sandbox-service.pod
+crondailydir = $(sysconfdir)/cron.daily
+crondaily_SCRIPTS = virt-sandbox-service.logrotate
+
+EXTRA_DIST = $(bin_SCRIPTS) virt-sandbox-service-bash-completion.sh virt-sandbox-service.pod virt-sandbox-service.logrotate
 
 man1_MANS = virt-sandbox.1 virt-sandbox-service.1
 
