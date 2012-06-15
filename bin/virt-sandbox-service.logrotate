@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in `/usr/bin/virt-sandbox-service list --running`; do
+for i in `/usr/bin/virt-sandbox-service list --running`; do 
     /usr/bin/virt-sandbox-service execute -C /etc/cron.daily/logrotate $i
 done
 exit 0
