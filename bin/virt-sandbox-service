@@ -212,7 +212,7 @@ WantedBy=multi-user.target
 
     def set_name(self, name):
         if self.config:
-            raise ValueError(["Can not modify Name"])
+            raise ValueError(["Cannot modify Name"])
         self.config = LibvirtSandbox.ConfigService.new(name)
 
     def __gen_rpm_name(self):
