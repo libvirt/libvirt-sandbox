@@ -387,6 +387,12 @@ cleanup:
     return FALSE;
 }
 
+/*
+ * Convert given character to control character.
+ * Basically, we assume ASCII, and take lower 6 bits.
+ */
+#define CONTROL(c) ((c) ^ 0x40)
+
 static gboolean do_console_raw_local_read(GObject *stream,
                                           gpointer opaque)
 {
@@ -409,6 +415,11 @@ static gboolean do_console_raw_local_read(GObject *stream,
 
     if (ret == 0)
         priv->localEOF = TRUE;
+    else if (priv->localToConsole[priv->localToConsoleOffset] ==
+             CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console)))) {
+        do_console_raw_close(console, err);
+        goto cleanup;
+    }
 
     priv->localToConsoleOffset += ret;
 

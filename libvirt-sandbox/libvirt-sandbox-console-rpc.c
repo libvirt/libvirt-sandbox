@@ -669,6 +669,12 @@ cleanup:
     return FALSE;
 }
 
+/*
+ * Convert given character to control character.
+ * Basically, we assume ASCII, and take lower 6 bits.
+ */
+#define CONTROL(c) ((c) ^ 0x40)
+
 #define MAX_IO 4096
 
 static gboolean do_console_rpc_stdin_read(GObject *stream,
@@ -693,6 +699,11 @@ static gboolean do_console_rpc_stdin_read(GObject *stream,
 
     if (ret == 0)
         priv->localEOF = TRUE;
+    else if (buf[0] ==
+             CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console)))) {
+        do_console_rpc_close(console, err);
+        goto cleanup;
+    }
 
     if (!gvir_sandbox_console_rpc_send_stdin(console, buf, ret, &err)) {
         g_debug("Error from RPC encode send %s", err ? err->message : "");

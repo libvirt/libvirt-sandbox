@@ -47,6 +47,7 @@ struct _GVirSandboxConsolePrivate
     GVirConnection *connection;
     GVirDomain *domain;
     gchar *devname;
+    gchar escape;
 };
 
 
@@ -58,6 +59,7 @@ enum {
     PROP_CONNECTION,
     PROP_DOMAIN,
     PROP_DEVNAME,
+    PROP_ESCAPE,
 };
 
 enum {
@@ -85,6 +87,10 @@ static void gvir_sandbox_console_get_property(GObject *object,
 
     case PROP_DEVNAME:
         g_value_set_string(value, priv->devname);
+        break;
+
+    case PROP_ESCAPE:
+        g_value_set_schar(value, priv->escape);
         break;
 
     default:
@@ -116,6 +122,10 @@ static void gvir_sandbox_console_set_property(GObject *object,
 
     case PROP_DEVNAME:
         priv->devname = g_value_dup_string(value);
+        break;
+
+    case PROP_ESCAPE:
+        priv->escape = g_value_get_schar(value);
         break;
 
     default:
@@ -184,6 +194,20 @@ static void gvir_sandbox_console_class_init(GVirSandboxConsoleClass *klass)
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_ESCAPE,
+                                    g_param_spec_char("escape",
+                                                      "Escape",
+                                                      "Escape character",
+                                                      0,
+                                                      127,
+                                                      ']',
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
 
     g_signal_new("closed",
                  G_OBJECT_CLASS_TYPE(object_class),
@@ -257,4 +281,17 @@ gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error)
 {
     return GVIR_SANDBOX_CONSOLE_GET_CLASS(console)->detach(console, error);
+}
+
+
+void gvir_sandbox_console_set_escape(GVirSandboxConsole *console,
+                                     gchar escape)
+{
+    console->priv->escape = escape;
+}
+
+
+gchar gvir_sandbox_console_get_escape(GVirSandboxConsole *console)
+{
+    return console->priv->escape;
 }
