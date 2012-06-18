@@ -47,13 +47,17 @@
 #define GVIR_SANDBOX_CONSOLE_RAW_GET_PRIVATE(obj)                       \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONSOLE_RAW, GVirSandboxConsoleRawPrivate))
 
+static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
+                                                GUnixInputStream *localStdin,
+                                                GUnixOutputStream *localStdout,
+                                                GUnixOutputStream *localStderr,
+                                                GError **error);
+static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
+                                                GError **error);
+
 struct _GVirSandboxConsoleRawPrivate
 {
-    GVirConnection *connection;
-    GVirDomain *domain;
-
     GVirStream *console;
-    gchar *devname;
 
     GUnixInputStream *localStdin;
     GUnixOutputStream *localStdout;
@@ -78,21 +82,7 @@ struct _GVirSandboxConsoleRawPrivate
     gint consoleWatch;
 };
 
-static void gvir_sandbox_console_raw_interface_init(gpointer g_iface,
-                                                    gpointer iface_data);
-
-G_DEFINE_TYPE_EXTENDED(GVirSandboxConsoleRaw, gvir_sandbox_console_raw, G_TYPE_OBJECT, 0,
-                       G_IMPLEMENT_INTERFACE(GVIR_SANDBOX_TYPE_CONSOLE,
-                                             gvir_sandbox_console_raw_interface_init));
-
-
-enum {
-    PROP_0,
-
-    PROP_CONNECTION,
-    PROP_DOMAIN,
-    PROP_DEVNAME,
-};
+G_DEFINE_TYPE(GVirSandboxConsoleRaw, gvir_sandbox_console_raw, GVIR_SANDBOX_TYPE_CONSOLE);
 
 enum {
     LAST_SIGNAL
@@ -108,63 +98,6 @@ gvir_sandbox_console_raw_error_quark(void)
     return g_quark_from_static_string("gvir-sandbox-console-raw");
 }
 
-static void gvir_sandbox_console_raw_get_property(GObject *object,
-                                                  guint prop_id,
-                                                  GValue *value,
-                                                  GParamSpec *pspec)
-{
-    GVirSandboxConsoleRaw *console = GVIR_SANDBOX_CONSOLE_RAW(object);
-    GVirSandboxConsoleRawPrivate *priv = console->priv;
-
-    switch (prop_id) {
-    case PROP_CONNECTION:
-        g_value_set_object(value, priv->connection);
-        break;
-
-    case PROP_DOMAIN:
-        g_value_set_object(value, priv->domain);
-        break;
-
-    case PROP_DEVNAME:
-        g_value_set_string(value, priv->devname);
-        break;
-
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-    }
-}
-
-
-static void gvir_sandbox_console_raw_set_property(GObject *object,
-                                                  guint prop_id,
-                                                  const GValue *value,
-                                                  GParamSpec *pspec)
-{
-    GVirSandboxConsoleRaw *console = GVIR_SANDBOX_CONSOLE_RAW(object);
-    GVirSandboxConsoleRawPrivate *priv = console->priv;
-
-    switch (prop_id) {
-    case PROP_CONNECTION:
-        if (priv->connection)
-            g_object_unref(priv->connection);
-        priv->connection = g_value_dup_object(value);
-        break;
-
-    case PROP_DOMAIN:
-        if (priv->domain)
-            g_object_unref(priv->domain);
-        priv->domain = g_value_dup_object(value);
-        break;
-
-    case PROP_DEVNAME:
-        priv->devname = g_value_dup_string(value);
-        break;
-
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-    }
-}
-
 
 static void gvir_sandbox_console_raw_finalize(GObject *object)
 {
@@ -176,13 +109,6 @@ static void gvir_sandbox_console_raw_finalize(GObject *object)
 
     /* All other private fields are free'd by the detach call */
 
-    if (priv->domain)
-        g_object_unref(priv->domain);
-    if (priv->connection)
-        g_object_unref(priv->connection);
-
-    g_free(priv->devname);
-
     G_OBJECT_CLASS(gvir_sandbox_console_raw_parent_class)->finalize(object);
 }
 
@@ -190,57 +116,11 @@ static void gvir_sandbox_console_raw_finalize(GObject *object)
 static void gvir_sandbox_console_raw_class_init(GVirSandboxConsoleRawClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    GVirSandboxConsoleClass *console_class = GVIR_SANDBOX_CONSOLE_CLASS(klass);
 
     object_class->finalize = gvir_sandbox_console_raw_finalize;
-    object_class->get_property = gvir_sandbox_console_raw_get_property;
-    object_class->set_property = gvir_sandbox_console_raw_set_property;
-
-    g_object_class_install_property(object_class,
-                                    PROP_CONNECTION,
-                                    g_param_spec_object("connection",
-                                                        "Connection",
-                                                        "The sandbox connection",
-                                                        GVIR_TYPE_CONNECTION,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
-    g_object_class_install_property(object_class,
-                                    PROP_DOMAIN,
-                                    g_param_spec_object("domain",
-                                                        "Domain",
-                                                        "The sandbox domain",
-                                                        GVIR_TYPE_DOMAIN,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
-    g_object_class_install_property(object_class,
-                                    PROP_DEVNAME,
-                                    g_param_spec_string("devname",
-                                                        "Devicename",
-                                                        "Device name",
-                                                        NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_CONSTRUCT_ONLY |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
-
-    g_signal_new("closed",
-                 G_OBJECT_CLASS_TYPE(object_class),
-                 G_SIGNAL_RUN_FIRST,
-                 G_STRUCT_OFFSET(GVirSandboxConsoleRawClass, closed),
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__BOOLEAN,
-                 G_TYPE_NONE,
-                 1,
-                 G_TYPE_BOOLEAN);
+    console_class->attach = gvir_sandbox_console_raw_attach;
+    console_class->detach = gvir_sandbox_console_raw_detach;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConsoleRawPrivate));
 }
@@ -580,6 +460,9 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
 {
     GVirSandboxConsoleRawPrivate *priv = GVIR_SANDBOX_CONSOLE_RAW(console)->priv;
     gboolean ret = FALSE;
+    GVirConnection *conn = NULL;
+    GVirDomain *dom = NULL;
+    gchar *devname = NULL;
 
     if (priv->console) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0, "%s",
@@ -596,10 +479,16 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
     priv->localStdout = localStdout ? g_object_ref(localStdout) : NULL;
     priv->localStderr = g_object_ref(localStderr);
 
-    priv->console = gvir_connection_get_stream(priv->connection, 0);
+    g_object_get(console,
+                 "connection", &conn,
+                 "domain", &dom,
+                 "devname", &devname,
+                 NULL);
 
-    if (!gvir_domain_open_console(priv->domain, priv->console,
-                                  priv->devname, 0, error))
+    priv->console = gvir_connection_get_stream(conn, 0);
+
+    if (!gvir_domain_open_console(dom, priv->console,
+                                  devname, 0, error))
         goto cleanup;
 
     priv->consoleToLocalLength = 4096;
@@ -616,6 +505,12 @@ cleanup:
     if (!ret && localStdin)
         gvir_sandbox_console_raw_stop_term(GVIR_SANDBOX_CONSOLE_RAW(console),
                                            localStdin, NULL);
+
+    if (conn)
+        g_object_unref(conn);
+    if (dom)
+        g_object_unref(dom);
+    g_free(devname);
     return ret;
 }
 
@@ -673,13 +568,4 @@ static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
 
 //cleanup:
     return ret;
-}
-
-
-static void gvir_sandbox_console_raw_interface_init(gpointer g_iface,
-                                                    gpointer iface_data)
-{
-    GVirSandboxConsoleInterface *iface = g_iface;
-    iface->attach = gvir_sandbox_console_raw_attach;
-    iface->detach = gvir_sandbox_console_raw_detach;
 }

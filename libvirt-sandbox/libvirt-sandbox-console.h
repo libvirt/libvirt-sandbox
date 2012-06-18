@@ -34,18 +34,35 @@ G_BEGIN_DECLS
 
 #define GVIR_SANDBOX_TYPE_CONSOLE            (gvir_sandbox_console_get_type ())
 #define GVIR_SANDBOX_CONSOLE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsole))
+#define GVIR_SANDBOX_CONSOLE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsoleClass))
 #define GVIR_SANDBOX_IS_CONSOLE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GVIR_SANDBOX_TYPE_CONSOLE))
-#define GVIR_SANDBOX_CONSOLE_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsoleInterface))
+#define GVIR_SANDBOX_IS_CONSOLE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GVIR_SANDBOX_TYPE_CONSOLE))
+#define GVIR_SANDBOX_CONSOLE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsoleClass))
+
 
 #define GVIR_SANDBOX_TYPE_CONSOLE_HANDLE      (gvir_sandbox_console_handle_get_type ())
 
-typedef struct _GVirSandboxConsole GVirSandboxConsole; /* dummy object */
-typedef struct _GVirSandboxConsoleInterface GVirSandboxConsoleInterface;
+typedef struct _GVirSandboxConsole GVirSandboxConsole;
+typedef struct _GVirSandboxConsolePrivate GVirSandboxConsolePrivate;
+typedef struct _GVirSandboxConsoleClass GVirSandboxConsoleClass;
 
-struct _GVirSandboxConsoleInterface
+struct _GVirSandboxConsole
 {
-    GTypeInterface parent;
+    GObject parent;
 
+    GVirSandboxConsolePrivate *priv;
+
+    /* Do not add fields to this struct */
+};
+
+struct _GVirSandboxConsoleClass
+{
+    GObjectClass parent_class;
+
+    /* signals */
+    void (*closed)(GVirSandboxConsole *console, gboolean err);
+
+    /* class methods */
     gboolean (*attach)(GVirSandboxConsole *console,
                        GUnixInputStream *localStdin,
                        GUnixOutputStream *localStdout,
@@ -53,9 +70,8 @@ struct _GVirSandboxConsoleInterface
                        GError **error);
     gboolean (*detach)(GVirSandboxConsole *console,
                        GError **error);
-
-    /* Do not add fields to this struct */
 };
+
 
 GType gvir_sandbox_console_get_type(void);
 

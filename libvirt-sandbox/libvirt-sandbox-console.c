@@ -38,13 +38,180 @@
  *
  */
 
+#define GVIR_SANDBOX_CONSOLE_GET_PRIVATE(obj)                       \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsolePrivate))
+
+
+struct _GVirSandboxConsolePrivate
+{
+    GVirConnection *connection;
+    GVirDomain *domain;
+    gchar *devname;
+};
+
+
+G_DEFINE_ABSTRACT_TYPE(GVirSandboxConsole, gvir_sandbox_console, G_TYPE_OBJECT);
+
+enum {
+    PROP_0,
+
+    PROP_CONNECTION,
+    PROP_DOMAIN,
+    PROP_DEVNAME,
+};
+
+enum {
+    LAST_SIGNAL
+};
+
+//static gint signals[LAST_SIGNAL];
+
+static void gvir_sandbox_console_get_property(GObject *object,
+                                              guint prop_id,
+                                              GValue *value,
+                                              GParamSpec *pspec)
+{
+    GVirSandboxConsole *console = GVIR_SANDBOX_CONSOLE(object);
+    GVirSandboxConsolePrivate *priv = console->priv;
+
+    switch (prop_id) {
+    case PROP_CONNECTION:
+        g_value_set_object(value, priv->connection);
+        break;
+
+    case PROP_DOMAIN:
+        g_value_set_object(value, priv->domain);
+        break;
+
+    case PROP_DEVNAME:
+        g_value_set_string(value, priv->devname);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
+
+static void gvir_sandbox_console_set_property(GObject *object,
+                                              guint prop_id,
+                                              const GValue *value,
+                                              GParamSpec *pspec)
+{
+    GVirSandboxConsole *console = GVIR_SANDBOX_CONSOLE(object);
+    GVirSandboxConsolePrivate *priv = console->priv;
+
+    switch (prop_id) {
+    case PROP_CONNECTION:
+        if (priv->connection)
+            g_object_unref(priv->connection);
+        priv->connection = g_value_dup_object(value);
+        break;
+
+    case PROP_DOMAIN:
+        if (priv->domain)
+            g_object_unref(priv->domain);
+        priv->domain = g_value_dup_object(value);
+        break;
+
+    case PROP_DEVNAME:
+        priv->devname = g_value_dup_string(value);
+        break;
+
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
+
+static void gvir_sandbox_console_finalize(GObject *object)
+{
+    GVirSandboxConsole *console = GVIR_SANDBOX_CONSOLE(object);
+    GVirSandboxConsolePrivate *priv = console->priv;
+
+    if (priv->domain)
+        g_object_unref(priv->domain);
+    if (priv->connection)
+        g_object_unref(priv->connection);
+
+    g_free(priv->devname);
+
+    G_OBJECT_CLASS(gvir_sandbox_console_parent_class)->finalize(object);
+}
+
+
+static void gvir_sandbox_console_class_init(GVirSandboxConsoleClass *klass)
+{
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+    object_class->finalize = gvir_sandbox_console_finalize;
+    object_class->get_property = gvir_sandbox_console_get_property;
+    object_class->set_property = gvir_sandbox_console_set_property;
+
+    g_object_class_install_property(object_class,
+                                    PROP_CONNECTION,
+                                    g_param_spec_object("connection",
+                                                        "Connection",
+                                                        "The sandbox connection",
+                                                        GVIR_TYPE_CONNECTION,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_DOMAIN,
+                                    g_param_spec_object("domain",
+                                                        "Domain",
+                                                        "The sandbox domain",
+                                                        GVIR_TYPE_DOMAIN,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_DEVNAME,
+                                    g_param_spec_string("devname",
+                                                        "Devicename",
+                                                        "Device name",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+
+    g_signal_new("closed",
+                 G_OBJECT_CLASS_TYPE(object_class),
+                 G_SIGNAL_RUN_FIRST,
+                 G_STRUCT_OFFSET(GVirSandboxConsoleClass, closed),
+                 NULL, NULL,
+                 g_cclosure_marshal_VOID__BOOLEAN,
+                 G_TYPE_NONE,
+                 1,
+                 G_TYPE_BOOLEAN);
+
+    g_type_class_add_private(klass, sizeof(GVirSandboxConsolePrivate));
+}
+
+
+static void gvir_sandbox_console_init(GVirSandboxConsole *console)
+{
+    console->priv = GVIR_SANDBOX_CONSOLE_GET_PRIVATE(console);
+}
+
+
 gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
                                      GUnixInputStream *localStdin,
                                      GUnixOutputStream *localStdout,
                                      GUnixOutputStream *localStderr,
                                      GError **error)
 {
-    return GVIR_SANDBOX_CONSOLE_GET_INTERFACE(console)->attach(console, localStdin, localStdout, localStderr, error);
+    return GVIR_SANDBOX_CONSOLE_GET_CLASS(console)->attach(console, localStdin, localStdout, localStderr, error);
 }
 
 gboolean gvir_sandbox_console_attach_stdio(GVirSandboxConsole *console_,
@@ -89,22 +256,5 @@ gboolean gvir_sandbox_console_attach_stderr(GVirSandboxConsole *console_,
 gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error)
 {
-    return GVIR_SANDBOX_CONSOLE_GET_INTERFACE(console)->detach(console, error);
-}
-
-GType
-gvir_sandbox_console_get_type (void)
-{
-    static GType console_type = 0;
-
-    if (!console_type) {
-        console_type =
-            g_type_register_static_simple(G_TYPE_INTERFACE, "GVirSandboxConsole",
-                                          sizeof (GVirSandboxConsoleInterface),
-                                          NULL, 0, NULL, 0);
-
-        g_type_interface_add_prerequisite(console_type, G_TYPE_OBJECT);
-    }
-
-    return console_type;
+    return GVIR_SANDBOX_CONSOLE_GET_CLASS(console)->detach(console, error);
 }

@@ -42,7 +42,7 @@ typedef struct _GVirSandboxConsoleRawClass GVirSandboxConsoleRawClass;
 
 struct _GVirSandboxConsoleRaw
 {
-    GObject parent;
+    GVirSandboxConsole parent;
 
     GVirSandboxConsoleRawPrivate *priv;
 
@@ -51,7 +51,7 @@ struct _GVirSandboxConsoleRaw
 
 struct _GVirSandboxConsoleRawClass
 {
-    GObjectClass parent_class;
+    GVirSandboxConsoleClass parent_class;
 
     void (*closed)(GVirSandboxConsoleRaw *console, gboolean err);
 };
