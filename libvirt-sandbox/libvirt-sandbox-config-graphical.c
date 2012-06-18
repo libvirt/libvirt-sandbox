@@ -258,7 +258,7 @@ void gvir_sandbox_config_graphical_set_window_size(GVirSandboxConfigGraphical *c
 
 
 /**
- * gvir_sandbox_config_set_window_size:
+ * gvir_sandbox_config_get_window_size:
  * @config: (transfer none): the sandbox config
  *
  * Retrieves the graphical window size
