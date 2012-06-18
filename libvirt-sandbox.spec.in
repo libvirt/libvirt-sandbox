@@ -80,6 +80,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %{_sysconfdir}/bash_completion.d/virt-sandbox-service-bash-completion.sh
+%config(noreplace) %{_sysconfdir}/cron.daily/virt-sandbox-service.logrotate
 %dir %{_sysconfdir}/libvirt-sandbox/services
 %{_bindir}/virt-sandbox
 %{_bindir}/virt-sandbox-service
