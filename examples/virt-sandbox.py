@@ -23,7 +23,7 @@ conn.open(None)
 ctxt = LibvirtSandbox.ContextInteractive.new(conn, cfg)
 ctxt.start()
 
-con = ctxt.get_console()
+con = ctxt.get_app_console()
 
 def closed(obj, error):
     Gtk.main_quit()
