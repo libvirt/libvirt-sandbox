@@ -48,6 +48,7 @@ struct _GVirSandboxConfigPrivate
     gchar *arch;
     gchar *kernrelease;
     gchar *kernpath;
+    gchar *kmodpath;
     gboolean shell;
 
     guint uid;
@@ -76,6 +77,7 @@ enum {
     PROP_SHELL,
     PROP_KERNRELEASE,
     PROP_KERNPATH,
+    PROP_KMODPATH,
 
     PROP_UID,
     PROP_GID,
@@ -133,6 +135,10 @@ static void gvir_sandbox_config_get_property(GObject *object,
 
     case PROP_KERNPATH:
         g_value_set_string(value, priv->kernpath);
+        break;
+
+    case PROP_KMODPATH:
+        g_value_set_string(value, priv->kmodpath);
         break;
 
     case PROP_SHELL:
@@ -203,6 +209,11 @@ static void gvir_sandbox_config_set_property(GObject *object,
         priv->kernpath = g_value_dup_string(value);
         break;
 
+    case PROP_KMODPATH:
+        g_free(priv->kmodpath);
+        priv->kmodpath = g_value_dup_string(value);
+        break;
+
     case PROP_SHELL:
         priv->shell = g_value_get_boolean(value);
         break;
@@ -263,6 +274,7 @@ static void gvir_sandbox_config_finalize(GObject *object)
     g_free(priv->arch);
     g_free(priv->kernrelease);
     g_free(priv->kernpath);
+    g_free(priv->kmodpath);
     g_free(priv->secLabel);
 
     G_OBJECT_CLASS(gvir_sandbox_config_parent_class)->finalize(object);
@@ -330,6 +342,17 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                     g_param_spec_string("kernpath",
                                                         "Kernpath",
                                                         "The kernel image path",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_KMODPATH,
+                                    g_param_spec_string("kmodpath",
+                                                        "Kmodpath",
+                                                        "Kernel modules path",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -436,6 +459,7 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->arch = g_strdup(uts.machine);
     priv->kernrelease = g_strdup(uts.release);
     priv->kernpath = g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease);
+    priv->kmodpath = g_strdup_printf("/lib/modules");
     priv->secLabel = g_strdup("system_u:system_r:svirt_t:s0:c0.c1023");
 
     priv->uid = geteuid();
@@ -553,6 +577,7 @@ const gchar *gvir_sandbox_config_get_kernrelease(GVirSandboxConfig *config)
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->kernrelease;
 }
+
 /**
  * gvir_sandbox_config_set_kernpath:
  * @config: (transfer none): the sandbox config
@@ -582,6 +607,39 @@ const gchar *gvir_sandbox_config_get_kernpath(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->kernpath;
+}
+
+/**
+ * gvir_sandbox_config_set_kmodpath:
+ * @config: (transfer none): the sandbox config
+ * @kmodpath: (transfer none): the kernel modules path
+ *
+ * Sets the generic path to the kernel modules directory.
+ * It will default to "/lib/modules", modules being searched in
+ * /lib/modules/<kernel release>. If "/path" is given as argument
+ * modules will be searched in /path/<kernel release>
+ */
+
+void gvir_sandbox_config_set_kmodpath(GVirSandboxConfig *config, const gchar *kmodpath)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->kmodpath);
+    priv->kmodpath = g_strdup(kmodpath);
+}
+
+
+/**
+ * gvir_sandbox_config_get_kmodpath:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox kernel modules path
+ *
+ * Returns: (transfer none): the current kernel modules path
+ */
+const gchar *gvir_sandbox_config_get_kmodpath(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->kmodpath;
 }
 
 
@@ -1651,6 +1709,10 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
         g_free(priv->kernpath);
         priv->kernpath = str;
     }
+    if ((str = g_key_file_get_string(file, "core", "kmodpath", NULL)) != NULL) {
+        g_free(priv->kmodpath);
+        priv->kmodpath = str;
+    }
     b = g_key_file_get_boolean(file, "core", "shell", &e);
     if (e) {
         g_error_free(e);
@@ -1870,6 +1932,7 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     g_key_file_set_string(file, "core", "arch", priv->arch);
     g_key_file_set_string(file, "core", "kernrelease", priv->kernrelease);
     g_key_file_set_string(file, "core", "kernpath", priv->kernpath);
+    g_key_file_set_string(file, "core", "kmodpath", priv->kmodpath);
     g_key_file_set_boolean(file, "core", "shell", priv->shell);
 
     g_key_file_set_uint64(file, "identity", "uid", priv->uid);

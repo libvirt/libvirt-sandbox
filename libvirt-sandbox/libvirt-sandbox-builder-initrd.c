@@ -331,8 +331,8 @@ static GList *gvir_sandbox_builder_initrd_find_modules(GList *modnames,
                                                        GVirSandboxConfigInitrd *config,
                                                        GError **error)
 {
-    gchar *moddirpath = g_strdup_printf("/lib/modules/%s/kernel",
-                                        gvir_sandbox_config_initrd_get_kver(config));
+    gchar *moddirpath = g_strdup_printf("%s",
+                                        gvir_sandbox_config_initrd_get_kmoddir(config));
     GFile *moddir = g_file_new_for_path(moddirpath);
 
     GList *modfiles = gvir_sandbox_builder_initrd_find_files(modnames,
@@ -340,6 +340,10 @@ static GList *gvir_sandbox_builder_initrd_find_modules(GList *modnames,
                                                              error);
 
     GList *tmp1 = modnames;
+
+    if (!modfiles)
+        goto cleanup;
+
     while (tmp1) {
         gboolean found = FALSE;
         GList *tmp2 = modfiles;

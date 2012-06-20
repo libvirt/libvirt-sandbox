@@ -44,6 +44,7 @@ struct _GVirSandboxConfigInitrdPrivate
 {
     gchar *kver;
     gchar *init;
+    gchar *kmoddir;
     GList *modules;
 };
 
@@ -53,6 +54,7 @@ G_DEFINE_TYPE(GVirSandboxConfigInitrd, gvir_sandbox_config_initrd, G_TYPE_OBJECT
 enum {
     PROP_0,
     PROP_KVER,
+    PROP_KMODDIR,
     PROP_INIT,
 };
 
@@ -74,6 +76,10 @@ static void gvir_sandbox_config_initrd_get_property(GObject *object,
     switch (prop_id) {
     case PROP_KVER:
         g_value_set_string(value, priv->kver);
+        break;
+
+    case PROP_KMODDIR:
+        g_value_set_string(value, priv->kmoddir);
         break;
 
     case PROP_INIT:
@@ -98,6 +104,11 @@ static void gvir_sandbox_config_initrd_set_property(GObject *object,
     case PROP_KVER:
         g_free(priv->kver);
         priv->kver = g_value_dup_string(value);
+        break;
+
+    case PROP_KMODDIR:
+        g_free(priv->kmoddir);
+        priv->kmoddir = g_value_dup_string(value);
         break;
 
     case PROP_INIT:
@@ -135,6 +146,17 @@ static void gvir_sandbox_config_initrd_class_init(GVirSandboxConfigInitrdClass *
                                     g_param_spec_string("kver",
                                                         "Kernel version",
                                                         "The host kernel version",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_KMODDIR,
+                                    g_param_spec_string("kmoddir",
+                                                        "Kmoddir",
+                                                        "Kernel modules directory",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -207,6 +229,34 @@ const gchar *gvir_sandbox_config_initrd_get_kver(GVirSandboxConfigInitrd *config
 {
     GVirSandboxConfigInitrdPrivate *priv = config->priv;
     return priv->kver;
+}
+
+/**
+ * gvir_sandbox_config_initrd_set_kmoddir:
+ * @config: (transfer none): the sandbox initrd config
+ * @kmoddir: (transfer none): the full path to the kernel modules directory
+ *
+ * Sets the full path to where the kernel modules will be looked up
+ */
+void gvir_sandbox_config_initrd_set_kmoddir(GVirSandboxConfigInitrd *config, const gchar *kmoddir)
+{
+    GVirSandboxConfigInitrdPrivate *priv = config->priv;
+    g_free(priv->kmoddir);
+    priv->kmoddir = g_strdup(kmoddir);
+}
+
+/**
+ * gvir_sandbox_config_initrd_get_kmoddir:
+ * @config: (transfer none): the full path to the kernel modules directory
+ *
+ * Retrieves the current kernel modules directory
+ *
+ * Returns: (transfer none): the full path to the kernel modules directory
+ */
+const gchar *gvir_sandbox_config_initrd_get_kmoddir(GVirSandboxConfigInitrd *config)
+{
+    GVirSandboxConfigInitrdPrivate *priv = config->priv;
+    return priv->kmoddir;
 }
 
 

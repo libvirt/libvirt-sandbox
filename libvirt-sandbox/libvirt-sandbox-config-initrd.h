@@ -64,6 +64,9 @@ GVirSandboxConfigInitrd *gvir_sandbox_config_initrd_new(void);
 void gvir_sandbox_config_initrd_set_kver(GVirSandboxConfigInitrd *config, const gchar *version);
 const gchar *gvir_sandbox_config_initrd_get_kver(GVirSandboxConfigInitrd *config);
 
+void gvir_sandbox_config_initrd_set_kmoddir(GVirSandboxConfigInitrd *config, const gchar *kmoddir);
+const gchar *gvir_sandbox_config_initrd_get_kmoddir(GVirSandboxConfigInitrd *config);
+
 void gvir_sandbox_config_initrd_set_init(GVirSandboxConfigInitrd *config, const gchar *hostpath);
 const gchar *gvir_sandbox_config_initrd_get_init(GVirSandboxConfigInitrd *config);
 

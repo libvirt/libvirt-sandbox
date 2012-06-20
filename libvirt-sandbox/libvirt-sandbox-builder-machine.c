@@ -123,6 +123,10 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     int fd = -1;
 
     gvir_sandbox_config_initrd_set_kver(initrd, gvir_sandbox_config_get_kernrelease(config));
+    gchar *kmoddir = g_strdup_printf("%s/%s/kernel", gvir_sandbox_config_get_kmodpath(config),
+                    gvir_sandbox_config_get_kernrelease(config));
+    gvir_sandbox_config_initrd_set_kmoddir(initrd, kmoddir);
+
     gvir_sandbox_config_initrd_set_init(initrd, LIBEXECDIR "/libvirt-sandbox-init-qemu");
 
     gvir_sandbox_config_initrd_add_module(initrd, "fscache.ko");
@@ -153,6 +157,7 @@ cleanup:
         g_free(targetfile);
         targetfile = NULL;
     }
+    g_free(kmoddir);
     g_object_unref(initrd);
     g_object_unref(builder);
     return targetfile;
