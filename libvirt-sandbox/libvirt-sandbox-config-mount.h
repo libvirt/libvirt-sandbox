@@ -1,7 +1,7 @@
 /*
  * libvirt-sandbox-config-mount.h: libvirt sandbox configuration
  *
- * Copyright (C) 2011 Red Hat, Inc.
+ * Copyright (C) 2011-2012 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -59,12 +59,7 @@ struct _GVirSandboxConfigMountClass
 
 GType gvir_sandbox_config_mount_get_type(void);
 
-GVirSandboxConfigMount *gvir_sandbox_config_mount_new(const gchar *targetdir);
-
 const gchar *gvir_sandbox_config_mount_get_target(GVirSandboxConfigMount *config);
-
-void gvir_sandbox_config_mount_set_root(GVirSandboxConfigMount *config, const gchar *hostdir);
-const gchar *gvir_sandbox_config_mount_get_root(GVirSandboxConfigMount *config);
 
 void gvir_sandbox_config_mount_add_include(GVirSandboxConfigMount *config,
                                            const gchar *srcpath, const gchar *dstpath);

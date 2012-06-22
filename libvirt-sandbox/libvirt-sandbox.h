@@ -30,6 +30,10 @@
 #include <libvirt-sandbox/libvirt-sandbox-main.h>
 #include <libvirt-sandbox/libvirt-sandbox-enum-types.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-mount-file.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-mount-host-bind.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-mount-host-image.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-mount-guest-bind.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-address.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network.h>

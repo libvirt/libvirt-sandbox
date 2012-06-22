@@ -58,6 +58,10 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config-network-address.h \
 			libvirt-sandbox-config-network-route.h \
 			libvirt-sandbox-config-mount.h \
+			libvirt-sandbox-config-mount-file.h \
+			libvirt-sandbox-config-mount-host-bind.h \
+			libvirt-sandbox-config-mount-host-image.h \
+			libvirt-sandbox-config-mount-guest-bind.h \
 			libvirt-sandbox-config-initrd.h \
 			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-interactive.h \
@@ -82,6 +86,10 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config-network-address.c \
 			libvirt-sandbox-config-network-route.c \
 			libvirt-sandbox-config-mount.c \
+			libvirt-sandbox-config-mount-file.c \
+			libvirt-sandbox-config-mount-host-bind.c \
+			libvirt-sandbox-config-mount-host-image.c \
+			libvirt-sandbox-config-mount-guest-bind.c \
 			libvirt-sandbox-config-initrd.c \
 			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-interactive.c \

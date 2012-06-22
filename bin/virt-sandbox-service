@@ -244,15 +244,13 @@ WantedBy=multi-user.target
             pass
 
     def __add_mount(self, source, dest):
-        mount = LibvirtSandbox.ConfigMount.new(dest)
-        mount.set_root(source)
+        mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
         self.config.add_host_bind_mount(mount)
 
     def __gen_filesystems(self):
         if self.use_image:
             self.image = self.DEFAULT_IMAGE % self.get_name()
-            mount = LibvirtSandbox.ConfigMount.new(self.dest)
-            mount.set_root(self.image)
+            mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest)
             self.config.add_host_image_mount(mount)
 
         for d in self.SYSTEM_DIRS:

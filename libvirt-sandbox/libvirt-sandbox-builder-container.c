@@ -245,15 +245,15 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
     tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
     while (tmp) {
-        GVirSandboxConfigMount *mconfig = tmp->data;
+        GVirSandboxConfigMountFile *mconfig = tmp->data;
 
         fs = gvir_config_domain_filesys_new();
         gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
         gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
         gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_get_root(mconfig));
+                                              gvir_sandbox_config_mount_file_get_source(mconfig));
         gvir_config_domain_filesys_set_target(fs,
-                                              gvir_sandbox_config_mount_get_target(mconfig));
+                                              gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(mconfig)));
 
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(fs));
@@ -267,15 +267,15 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
     tmp = mounts = gvir_sandbox_config_get_host_image_mounts(config);
     while (tmp) {
-        GVirSandboxConfigMount *mconfig = tmp->data;
+        GVirSandboxConfigMountFile *mconfig = tmp->data;
 
         fs = gvir_config_domain_filesys_new();
         gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
         gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
         gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_get_root(mconfig));
+                                              gvir_sandbox_config_mount_file_get_source(mconfig));
         gvir_config_domain_filesys_set_target(fs,
-                                              gvir_sandbox_config_mount_get_target(mconfig));
+                                              gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(mconfig)));
 
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(fs));

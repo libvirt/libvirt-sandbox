@@ -449,14 +449,14 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
     i = 0;
     while (tmp) {
-        GVirSandboxConfigMount *mconfig = tmp->data;
+        GVirSandboxConfigMountFile *mconfig = tmp->data;
         gchar *target = g_strdup_printf("sandbox:mount%d", i);
 
         fs = gvir_config_domain_filesys_new();
         gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
         gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_MAPPED);
         gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_get_root(mconfig));
+                                              gvir_sandbox_config_mount_file_get_source(mconfig));
         gvir_config_domain_filesys_set_target(fs, target);
 
         gvir_config_domain_add_device(domain,
@@ -474,13 +474,13 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     tmp = mounts = gvir_sandbox_config_get_host_image_mounts(config);
     i = 0;
     while (tmp) {
-        GVirSandboxConfigMount *mconfig = tmp->data;
+        GVirSandboxConfigMountFile *mconfig = tmp->data;
         gchar *target = g_strdup_printf("vd%c", 'a' + i);
 
         disk = gvir_config_domain_disk_new();
         gvir_config_domain_disk_set_type(disk, GVIR_CONFIG_DOMAIN_DISK_FILE);
         gvir_config_domain_disk_set_source(disk,
-                                           gvir_sandbox_config_mount_get_root(mconfig));
+                                           gvir_sandbox_config_mount_file_get_source(mconfig));
         gvir_config_domain_disk_set_target_dev(disk, target);
 
         gvir_config_domain_add_device(domain,

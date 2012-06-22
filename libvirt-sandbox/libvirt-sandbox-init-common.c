@@ -279,10 +279,10 @@ cleanup:
 }
 
 
-static gboolean setup_bind_mount(GVirSandboxConfigMount *config, GError **error)
+static gboolean setup_bind_mount(GVirSandboxConfigMountFile *config, GError **error)
 {
-    const gchar *src = gvir_sandbox_config_mount_get_root(config);
-    const gchar *tgt = gvir_sandbox_config_mount_get_target(config);
+    const gchar *src = gvir_sandbox_config_mount_file_get_source(config);
+    const gchar *tgt = gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(config));
 
     if (mount(src, tgt, NULL, MS_BIND, NULL) < 0) {
         g_set_error(error, GVIR_SANDBOX_INIT_COMMON_ERROR, 0,
@@ -302,7 +302,7 @@ static gboolean setup_bind_mounts(GVirSandboxConfig *config, GError **error)
     mounts = tmp = gvir_sandbox_config_get_guest_bind_mounts(config);
 
     while (tmp) {
-        GVirSandboxConfigMount *mntconfig = tmp->data;
+        GVirSandboxConfigMountFile *mntconfig = tmp->data;
 
         if (!setup_bind_mount(mntconfig, error))
             goto cleanup;

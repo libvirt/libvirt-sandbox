@@ -1,7 +1,7 @@
 /*
  * libvirt-sandbox-config-mount.c: libvirt sandbox configuration
  *
- * Copyright (C) 2011 Red Hat, Inc.
+ * Copyright (C) 2011-2012 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,17 +46,15 @@
 struct _GVirSandboxConfigMountPrivate
 {
     gchar *target;
-    gchar *root;
     GHashTable *includes;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigMount, gvir_sandbox_config_mount, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfigMount, gvir_sandbox_config_mount, G_TYPE_OBJECT);
 
 
 enum {
     PROP_0,
     PROP_TARGET,
-    PROP_ROOT,
 };
 
 enum {
@@ -75,10 +73,6 @@ static void gvir_sandbox_config_mount_get_property(GObject *object,
     GVirSandboxConfigMountPrivate *priv = config->priv;
 
     switch (prop_id) {
-    case PROP_ROOT:
-        g_value_set_string(value, priv->root);
-        break;
-
     case PROP_TARGET:
         g_value_set_string(value, priv->target);
         break;
@@ -98,11 +92,6 @@ static void gvir_sandbox_config_mount_set_property(GObject *object,
     GVirSandboxConfigMountPrivate *priv = config->priv;
 
     switch (prop_id) {
-    case PROP_ROOT:
-        g_free(priv->root);
-        priv->root = g_value_dup_string(value);
-        break;
-
     case PROP_TARGET:
         g_free(priv->target);
         priv->target = g_value_dup_string(value);
@@ -119,7 +108,6 @@ static void gvir_sandbox_config_mount_finalize(GObject *object)
     GVirSandboxConfigMount *config = GVIR_SANDBOX_CONFIG_MOUNT(object);
     GVirSandboxConfigMountPrivate *priv = config->priv;
 
-    g_free(priv->root);
     g_free(priv->target);
 
     G_OBJECT_CLASS(gvir_sandbox_config_mount_parent_class)->finalize(object);
@@ -146,17 +134,6 @@ static void gvir_sandbox_config_mount_class_init(GVirSandboxConfigMountClass *kl
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-    g_object_class_install_property(object_class,
-                                    PROP_ROOT,
-                                    g_param_spec_string("root",
-                                                        "Root",
-                                                        "The host root directory",
-                                                        NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountPrivate));
 }
@@ -175,22 +152,6 @@ static void gvir_sandbox_config_mount_init(GVirSandboxConfigMount *config)
 
 
 /**
- * gvir_sandbox_config_mount_new:
- * @targetdir: (transfer none): the target directory
- *
- * Create a new custom mount mapped to the directory @targetdir
- *
- * Returns: (transfer full): a new sandbox mount object
- */
-GVirSandboxConfigMount *gvir_sandbox_config_mount_new(const gchar *targetdir)
-{
-    return GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_MOUNT,
-                                                  "target", targetdir,
-                                                  NULL));
-}
-
-
-/**
  * gvir_sandbox_config_mount_get_target:
  * @config: (transfer none): the sandbox mount config
  *
@@ -202,37 +163,6 @@ const gchar *gvir_sandbox_config_mount_get_target(GVirSandboxConfigMount *config
 {
     GVirSandboxConfigMountPrivate *priv = config->priv;
     return priv->target;
-}
-
-
-/**
- * gvir_sandbox_config_mount_set_root:
- * @config: (transfer none): the sandbox mount config
- * @hostdir: (transfer none): the host directory
- *
- * Sets the host directory to map to the custom mount. If no host
- * directory is specified, an empty temporary directory will
- * be created
- */
-void gvir_sandbox_config_mount_set_root(GVirSandboxConfigMount *config, const gchar *hostdir)
-{
-    GVirSandboxConfigMountPrivate *priv = config->priv;
-    g_free(priv->root);
-    priv->root = g_strdup(hostdir);
-}
-
-/**
- * gvir_sandbox_config_mount_get_root:
- * @config: (transfer none): the sandbox mount config
- *
- * Retrieves the host directory mapped to the mount (if any)
- *
- * Returns: (transfer none): the root directory
- */
-const gchar *gvir_sandbox_config_mount_get_root(GVirSandboxConfigMount *config)
-{
-    GVirSandboxConfigMountPrivate *priv = config->priv;
-    return priv->root;
 }
 
 
