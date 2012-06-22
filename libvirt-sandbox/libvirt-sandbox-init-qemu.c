@@ -383,6 +383,9 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
             else
                 mount_mkfile(target, 644);
         } else {
+            if (strcmp(type, "tmpfs"))
+                flags |= MS_NOSUID | MS_NODEV;
+
             mount_mkdir(target, 0755);
         }
 

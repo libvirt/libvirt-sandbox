@@ -235,23 +235,29 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
         GVirSandboxConfigMount *mconfig = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
         const gchar *fstype;
         gchar *source;
-        const gchar *options;
+        gchar *options;
         const gchar *target;
         gchar *line;
 
         if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_BIND(mconfig)) {
             source = g_strdup_printf("sandbox:mount%zu", nHostBind++);
             fstype = "9p";
-            options = "trans=virtio";
+            options = g_strdup("trans=virtio");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
             source = g_strdup_printf("vd%c", (char)('a' + nHostImage++));
             fstype = "ext3";
-            options = "";
+            options = g_strdup("");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_GUEST_BIND(mconfig)) {
             GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
             source = g_strdup(gvir_sandbox_config_mount_file_get_source(mfile));
             fstype = "";
-            options = "";
+            options = g_strdup("");
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_RAM(mconfig)) {
+            GVirSandboxConfigMountRam *mram = GVIR_SANDBOX_CONFIG_MOUNT_RAM(mconfig);
+            source = g_strdup("tmpfs");
+            fstype = "tmpfs";
+            options = g_strdup_printf("size=%" G_GUINT64_FORMAT "k",
+                                      gvir_sandbox_config_mount_ram_get_usage(mram)/1024);
         } else {
             g_assert_not_reached();
         }
@@ -260,6 +266,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
         line = g_strdup_printf("%s\t%s\t%s\t%s\n",
                                source, target, fstype, options);
         g_free(source);
+        g_free(options);
 
         if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos),
                                        line, strlen(line),

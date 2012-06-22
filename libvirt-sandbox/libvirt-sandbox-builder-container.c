@@ -289,8 +289,21 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
             gvir_config_domain_add_device(domain,
                                           GVIR_CONFIG_DOMAIN_DEVICE(fs));
             g_object_unref(fs);
-        }
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_RAM(mconfig)) {
+            GVirSandboxConfigMountRam *mram = GVIR_SANDBOX_CONFIG_MOUNT_RAM(mconfig);
 
+            fs = gvir_config_domain_filesys_new();
+            gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_RAM);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+            gvir_config_domain_filesys_set_ram_usage(fs,
+                                                     gvir_sandbox_config_mount_ram_get_usage(mram));
+            gvir_config_domain_filesys_set_target(fs,
+                                                  gvir_sandbox_config_mount_get_target(mconfig));
+
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(fs));
+            g_object_unref(fs);
+        }
 
         tmp = tmp->next;
     }

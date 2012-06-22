@@ -34,6 +34,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-host-bind.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-host-image.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-guest-bind.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-mount-ram.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-address.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network.h>

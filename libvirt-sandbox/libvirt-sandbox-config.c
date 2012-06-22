@@ -1090,6 +1090,8 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
             type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE;
         } else if (strncmp(mounts[i], "guest-bind", (tmp - mounts[i])) == 0) {
             type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_GUEST_BIND;
+        } else if (strncmp(mounts[i], "ram", (tmp - mounts[i])) == 0) {
+            type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM;
         } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                         "Unknown mount type prefix on %s", mounts[i]);
@@ -1103,10 +1105,30 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
             source = tmp + 1;
         }
 
-        mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
-                                                     "target", target,
-                                                     "source", source,
-                                                     NULL));
+        if (type == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
+            gint size;
+            gchar *end;
+            gchar *sizestr;
+            *tmp = '\0';
+            sizestr = tmp + 1;
+            size = strtol(sizestr, &end, 10);
+
+            if (end) {
+                if (g_str_equal(end, "KiB") || g_str_equal(end, "K"))
+                    size *= 1024;
+                else if (g_str_equal(end, "MiB") || g_str_equal(end, "M"))
+                    size *= 1024 * 1024;
+                else if (g_str_equal(end, "GiB") || g_str_equal(end, "G"))
+                    size *= 1024 * 1024 * 1024;
+            }
+            mnt = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_ram_new(target,
+                                                                              size));
+        } else {
+            mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
+                                                         "target", target,
+                                                         "source", source,
+                                                         NULL));
+        }
         gvir_sandbox_config_add_mount(config, mnt);
         g_object_unref(mnt);
         g_free(target);
@@ -1383,16 +1405,12 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
                     "%s", "Missing mount type in config file");
         goto cleanup;
     }
-    if ((source = g_key_file_get_string(file, key, "source", NULL)) == NULL) {
-        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "%s", "Missing mount source in config file");
-        goto error;
-    }
 
     /* Force initialization of types we care about */
     gvir_sandbox_config_mount_host_bind_get_type();
     gvir_sandbox_config_mount_host_image_get_type();
     gvir_sandbox_config_mount_guest_bind_get_type();
+    gvir_sandbox_config_mount_ram_get_type();
 
     if ((mountType = g_type_from_name(type)) == 0) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
@@ -1400,10 +1418,27 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
         goto error;
     }
 
-    config = g_object_new(mountType,
-                          "target", target,
-                          "source", source,
-                          NULL);
+    if (mountType == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
+        if ((source = g_key_file_get_string(file, key, "usage", NULL)) == NULL) {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "%s", "Missing mount usage in config file");
+            goto error;
+        }
+        gint usage = strtol(source, NULL, 10);
+
+        config = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_ram_new(target, usage));
+    } else {
+        if ((source = g_key_file_get_string(file, key, "source", NULL)) == NULL) {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "%s", "Missing mount source in config file");
+            goto error;
+        }
+
+        config = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(mountType,
+                                                        "target", target,
+                                                        "source", source,
+                                                        NULL));
+    }
 
     for (j = 0 ; j < 1024 ; j++) {
         gchar *inckey = g_strdup_printf("mount.%u.include.%u", i, j);
@@ -1676,9 +1711,17 @@ static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config
                           g_type_name(type));
     g_key_file_set_string(file, key, "target",
                           gvir_sandbox_config_mount_get_target(config));
-    g_key_file_set_string(file, key, "source",
-                          gvir_sandbox_config_mount_file_get_source(
-                              GVIR_SANDBOX_CONFIG_MOUNT_FILE(config)));
+    if (GVIR_SANDBOX_IS_CONFIG_MOUNT_RAM(config)) {
+        GVirSandboxConfigMountRam *mram = GVIR_SANDBOX_CONFIG_MOUNT_RAM(config);
+        gchar *tmp = g_strdup_printf("%" G_GUINT64_FORMAT,
+                                     gvir_sandbox_config_mount_ram_get_usage(mram));
+        g_key_file_set_string(file, key, "usage", tmp);
+        g_free(tmp);
+    } else {
+        g_key_file_set_string(file, key, "source",
+                              gvir_sandbox_config_mount_file_get_source(
+                                  GVIR_SANDBOX_CONFIG_MOUNT_FILE(config)));
+    }
     g_free(key);
 
     includes = gvir_sandbox_config_mount_get_includes(config);
@@ -1816,7 +1859,7 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     i = 0;
     tmp = priv->networks;
     while (tmp) {
-        gvir_sandbox_config_save_config_network(tmp->data,
+        gvir_sandbox_config_save_config_network(GVIR_SANDBOX_CONFIG_NETWORK(tmp->data),
                                                 file,
                                                 i);
 

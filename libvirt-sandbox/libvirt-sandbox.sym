@@ -43,6 +43,11 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_mount_guest_bind_get_type;
 	gvir_sandbox_config_mount_guest_bind_new;
 
+	gvir_sandbox_config_mount_ram_get_usage;
+	gvir_sandbox_config_mount_ram_get_type;
+	gvir_sandbox_config_mount_ram_new;
+	gvir_sandbox_config_mount_ram_set_usage;
+
 	gvir_sandbox_config_network_add_address;
 	gvir_sandbox_config_network_add_route;
 	gvir_sandbox_config_network_get_type;
