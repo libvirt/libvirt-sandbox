@@ -52,9 +52,9 @@ int main(int argc, char **argv)
     gchar *f2 = NULL;
     int ret = EXIT_FAILURE;
     const gchar *mounts[] = {
-        "/var/run/hell=/tmp/home",
-        "/etc=/tmp/home",
-        "/tmp=",
+        "host-bind:/var/run/hell=/tmp/home",
+        "host-image:/etc=/tmp/home",
+        "host-bind:/tmp=",
         NULL
     };
     const gchar *includes[] = {
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
     gvir_sandbox_config_set_username(cfg1, "superdevil");
     gvir_sandbox_config_set_homedir(cfg1, "/var/run/hell");
 
-    if (!gvir_sandbox_config_add_host_bind_mount_strv(cfg1, (gchar**)mounts, &err))
+    if (!gvir_sandbox_config_add_mount_strv(cfg1, (gchar**)mounts, &err))
         goto cleanup;
 
     if (!gvir_sandbox_config_add_host_include_strv(cfg1, (gchar**)includes, &err))

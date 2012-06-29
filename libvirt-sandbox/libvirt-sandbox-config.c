@@ -1084,11 +1084,11 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
                         "No mount type prefix on %s", mounts[i]);
             return FALSE;
         }
-        if (strncmp(tmp, "host-bind", (tmp - mounts[i])) == 0) {
+        if (strncmp(mounts[i], "host-bind", (tmp - mounts[i])) == 0) {
             type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND;
-        } else if (strncmp(tmp, "host-image", (tmp - mounts[i])) == 0) {
+        } else if (strncmp(mounts[i], "host-image", (tmp - mounts[i])) == 0) {
             type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE;
-        } else if (strncmp(tmp, "guest-bind", (tmp - mounts[i])) == 0) {
+        } else if (strncmp(mounts[i], "guest-bind", (tmp - mounts[i])) == 0) {
             type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_GUEST_BIND;
         } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
@@ -1389,7 +1389,12 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
         goto error;
     }
 
-    if ((mountType = g_type_from_name(type)) == G_TYPE_NONE) {
+    /* Force initialization of types we care about */
+    gvir_sandbox_config_mount_host_bind_get_type();
+    gvir_sandbox_config_mount_host_image_get_type();
+    gvir_sandbox_config_mount_guest_bind_get_type();
+
+    if ((mountType = g_type_from_name(type)) == 0) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                     "Unknown mount type %s in config file", type);
         goto error;

@@ -53,14 +53,6 @@ static int sigwrite;
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
-#define GVIR_SANDBOX_INIT_COMMON_ERROR gvir_sandbox_init_common_error_quark()
-
-static GQuark
-gvir_sandbox_init_common_error_quark(void)
-{
-    return g_quark_from_static_string("gvir-sandbox-init-common");
-}
-
 static void sig_child(int sig ATTR_UNUSED)
 {
     char ignore = '1';
@@ -275,46 +267,6 @@ cleanup:
     g_free(devname);
     g_list_foreach(nets, (GFunc)g_object_unref, NULL);
     g_list_free(nets);
-    return ret;
-}
-
-
-static gboolean setup_bind_mount(GVirSandboxConfigMountFile *config, GError **error)
-{
-    const gchar *src = gvir_sandbox_config_mount_file_get_source(config);
-    const gchar *tgt = gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(config));
-
-    if (mount(src, tgt, NULL, MS_BIND, NULL) < 0) {
-        g_set_error(error, GVIR_SANDBOX_INIT_COMMON_ERROR, 0,
-                    "Cannot bind %s to %s", src, tgt);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-static gboolean setup_bind_mounts(GVirSandboxConfig *config, GError **error)
-{
-    GList *mounts, *tmp;
-    gboolean ret = FALSE;
-
-    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
-                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_GUEST_BIND);
-    while (tmp) {
-        GVirSandboxConfigMountFile *mntconfig = tmp->data;
-
-        if (!setup_bind_mount(mntconfig, error))
-            goto cleanup;
-
-        tmp = tmp->next;
-    }
-
-    ret = TRUE;
-
-cleanup:
-    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(mounts);
     return ret;
 }
 
@@ -1222,9 +1174,6 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
 
     if (!setup_network(config, &error))
-        goto error;
-
-    if (!setup_bind_mounts(config, &error))
         goto error;
 
     if (change_user(gvir_sandbox_config_get_username(config),

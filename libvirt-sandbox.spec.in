@@ -20,7 +20,7 @@ License: LGPLv2+
 URL: http://libvirt.org/
 Source0: http://libvirt.org/%{name}/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: libvirt-gobject-devel >= 0.0.7
+BuildRequires: libvirt-gobject-devel >= 0.0.9
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
@@ -31,7 +31,7 @@ Requires: glib2-devel >= 2.32.0
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
-Requires: libvirt >= 0.9.11
+Requires: libvirt >= 0.9.12
 
 %package devel
 Group: Development/Libraries

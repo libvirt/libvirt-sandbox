@@ -208,14 +208,12 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
 }
 
 
-static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
-                                                             gboolean isDisk,
-                                                             const gchar *filename,
+static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *config,
                                                              const gchar *configdir,
                                                              GVirSandboxCleaner *cleaner,
                                                              GError **error)
 {
-    gchar *mntfile = g_strdup_printf("%s/%s", configdir, filename);
+    gchar *mntfile = g_strdup_printf("%s/mounts.cfg", configdir);
     GFile *file = g_file_new_for_path(mntfile);
     GFileOutputStream *fos = g_file_replace(file,
                                             NULL,
@@ -224,32 +222,53 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GList *mounts,
                                             NULL,
                                             error);
     gboolean ret = FALSE;
+    GList *mounts = gvir_sandbox_config_get_mounts(config);
     GList *tmp = NULL;
-    int i;
+    size_t nHostBind = 0;
+    size_t nHostImage = 0;
 
     if (!fos)
         goto cleanup;
 
-    i = 0;
     tmp = mounts;
     while (tmp) {
-        GVirSandboxConfigMount *mount = tmp->data;
-        gchar *key;
+        GVirSandboxConfigMount *mconfig = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
+        const gchar *fstype;
+        gchar *source;
+        const gchar *options;
+        const gchar *target;
+        gchar *line;
 
-        if (isDisk)
-            key = g_strdup_printf("/dev/vd%c=%s", 'a' + i,
-                                  gvir_sandbox_config_mount_get_target(mount));
-        else
-            key = g_strdup_printf("sandbox:mount%u=%s\n", i,
-                                  gvir_sandbox_config_mount_get_target(mount));
+        if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_BIND(mconfig)) {
+            source = g_strdup_printf("sandbox:mount%zu", nHostBind++);
+            fstype = "9p";
+            options = "trans=virtio";
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
+            source = g_strdup_printf("vd%c", (char)('a' + nHostImage++));
+            fstype = "ext3";
+            options = "";
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_GUEST_BIND(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
+            source = g_strdup(gvir_sandbox_config_mount_file_get_source(mfile));
+            fstype = "";
+            options = "";
+        } else {
+            g_assert_not_reached();
+        }
+        target = gvir_sandbox_config_mount_get_target(mconfig);
 
-        if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos), key, strlen(key),
+        line = g_strdup_printf("%s\t%s\t%s\t%s\n",
+                               source, target, fstype, options);
+        g_free(source);
+
+        if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos),
+                                       line, strlen(line),
                                        NULL, NULL, error)) {
-            g_free(key);
+            g_free(line);
             goto cleanup;
         }
+        g_free(line);
 
-        i++;
         tmp = tmp->next;
     }
 
@@ -280,39 +299,17 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                                               GVirConfigDomain *domain,
                                                               GError **error)
 {
-    GList *hostBind = gvir_sandbox_config_get_mounts_with_type(config,
-                                                               GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
-    GList *hostImage = gvir_sandbox_config_get_mounts_with_type(config,
-                                                                GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
-    gboolean ret = FALSE;
-
-    if (!gvir_sandbox_builder_machine_write_mount_cfg(hostBind,
-                                                      FALSE,
-                                                      "filesys.cfg",
+    if (!gvir_sandbox_builder_machine_write_mount_cfg(config,
                                                       configdir,
                                                       cleaner,
                                                       error))
-        goto cleanup;
-
-    if (!gvir_sandbox_builder_machine_write_mount_cfg(hostImage,
-                                                      TRUE,
-                                                      "images.cfg",
-                                                      configdir,
-                                                      cleaner,
-                                                      error))
-        goto cleanup;
+        return FALSE;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
         construct_domain(builder, config, configdir, cleaner, domain, error))
-        goto cleanup;
+        return FALSE;
 
-    ret = TRUE;
-cleanup:
-    g_list_foreach(hostBind, (GFunc)g_object_unref, NULL);
-    g_list_foreach(hostImage, (GFunc)g_object_unref, NULL);
-    g_list_free(hostBind);
-    g_list_free(hostImage);
-    return ret;
+    return TRUE;
 }
 
 static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder *builder,
@@ -427,7 +424,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     GVirConfigDomainSerial *ser;
     GVirConfigDomainChardevSourcePty *src;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
-    int i;
+    size_t nHostBind = 0;
+    size_t nHostImage = 0;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
         construct_devices(builder, config, configdir, cleaner, domain, error))
@@ -458,57 +456,46 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     g_object_unref(fs);
 
 
-
-    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
-                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
-    i = 0;
+    tmp = mounts = gvir_sandbox_config_get_mounts(config);
     while (tmp) {
-        GVirSandboxConfigMountFile *mconfig = tmp->data;
-        gchar *target = g_strdup_printf("sandbox:mount%d", i);
+        GVirSandboxConfigMount *mconfig = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
 
-        fs = gvir_config_domain_filesys_new();
-        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
-        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_MAPPED);
-        gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_file_get_source(mconfig));
-        gvir_config_domain_filesys_set_target(fs, target);
+        if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_BIND(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
 
-        gvir_config_domain_add_device(domain,
-                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
-        g_object_unref(fs);
-        g_free(target);
+            gchar *target = g_strdup_printf("sandbox:mount%zu", nHostBind++);
 
+            fs = gvir_config_domain_filesys_new();
+            gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_MAPPED);
+            gvir_config_domain_filesys_set_source(fs,
+                                                  gvir_sandbox_config_mount_file_get_source(mfile));
+            gvir_config_domain_filesys_set_target(fs, target);
+
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(fs));
+            g_object_unref(fs);
+            g_free(target);
+
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
+            gchar *target = g_strdup_printf("vd%c", (char)('a' + nHostImage++));
+
+            disk = gvir_config_domain_disk_new();
+            gvir_config_domain_disk_set_type(disk, GVIR_CONFIG_DOMAIN_DISK_FILE);
+            gvir_config_domain_disk_set_source(disk,
+                                               gvir_sandbox_config_mount_file_get_source(mfile));
+            gvir_config_domain_disk_set_target_dev(disk, target);
+
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(disk));
+            g_object_unref(disk);
+            g_free(target);
+        }
         tmp = tmp->next;
-        i++;
     }
     g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
     g_list_free(mounts);
-
-
-    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
-                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
-    i = 0;
-    while (tmp) {
-        GVirSandboxConfigMountFile *mconfig = tmp->data;
-        gchar *target = g_strdup_printf("vd%c", 'a' + i);
-
-        disk = gvir_config_domain_disk_new();
-        gvir_config_domain_disk_set_type(disk, GVIR_CONFIG_DOMAIN_DISK_FILE);
-        gvir_config_domain_disk_set_source(disk,
-                                           gvir_sandbox_config_mount_file_get_source(mconfig));
-        gvir_config_domain_disk_set_target_dev(disk, target);
-
-        gvir_config_domain_add_device(domain,
-                                      GVIR_CONFIG_DOMAIN_DEVICE(disk));
-        g_object_unref(disk);
-        g_free(target);
-
-        tmp = tmp->next;
-        i++;
-    }
-    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(mounts);
-
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {

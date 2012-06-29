@@ -106,7 +106,6 @@ mount_mkdir(const char *dir, int mode)
     }
 }
 
-#if 0
 static void
 mount_mkfile(const char *file, int mode)
 {
@@ -115,17 +114,17 @@ mount_mkfile(const char *file, int mode)
     mount_mkparent(file, 0755);
 
     if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s (mode=%o)\n", __func__, file, mode);
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s (mode=%o)\n",
+                __func__, file, mode);
 
     if ((fd = open(file, O_CREAT|O_WRONLY, mode)) < 0 &&
         errno != EEXIST) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open file %s: %s\n",
-                __func__, dir, strerror(errno));
+                    __func__, file, strerror(errno));
         exit_poweroff();
     }
     close(fd);
 }
-#endif
 
 static void
 mount_other_opts(const char *dst, const char *type, const char *opts, int mode)
@@ -173,59 +172,8 @@ mount_9pfs(const char *src, const char *dst, int mode, int readonly)
     }
 }
 
-static void
-mount_ext(const char *src, const char *dst, int mode, int readonly)
-{
-    int flags = 0;
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%d)\n", __func__, src, dst, readonly);
-
-    mount_mkdir(dst, mode);
-
-    if (readonly)
-        flags |= MS_RDONLY;
-
-    if (mount(src, dst, "ext4", flags, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (ext4): %s\n",
-                __func__, src, dst, strerror(errno));
-        exit_poweroff();
-    }
-}
-
-#if 0
-static void
-bind_dir(const char *src, const char *dst, int mode)
-{
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s\n", __func__, src, dst);
-
-    mount_mkdir(dst, mode);
-
-    if (mount(src, dst, "", MS_BIND, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot bind %s to %s: %s\n",
-                __func__, src, dst, strerror(errno));
-        exit_poweroff();
-    }
-}
-
-static void
-bind_file(const char *src, const char *dst, int mode)
-{
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s\n", __func__, src, dst);
-
-    mount_mkfile(dst, mode);
-
-    if (mount(src, dst, "", MS_BIND, "") < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot bind %s to %s: %s\n",
-                __func__, src, dst, strerror(errno));
-        exit_poweroff();
-    }
-}
-#endif
-
 static int virtioblk_major = 0;
-static int
+static void
 create_virtioblk_device(const char *dev)
 {
     int minor;
@@ -235,7 +183,7 @@ create_virtioblk_device(const char *dev)
         if (!fp) {
             fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/devices: %s\n",
                     __func__, strerror(errno));
-            return -1;
+            exit_poweroff();
         }
         while (fgets(line2, sizeof line2, fp)) {
             if (strstr(line2, "virtblk")) {
@@ -245,7 +193,7 @@ create_virtioblk_device(const char *dev)
                     fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot extract device major from '%s'\n",
                             __func__, line2);
                     fclose(fp);
-                    return -1;
+                    exit_poweroff();
                 }
                 virtioblk_major = l;
                 break;
@@ -256,7 +204,7 @@ create_virtioblk_device(const char *dev)
         if (virtioblk_major == 0) {
             fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot find virtioblk device major in /proc/devices\n",
                     __func__);
-            return -1;
+            exit_poweroff();
         }
     }
 
@@ -265,9 +213,8 @@ create_virtioblk_device(const char *dev)
     if (mknod(dev, S_IFBLK |0700, makedev(virtioblk_major, minor)) < 0) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make dev '%s' '%llu': %s\n",
                 __func__, dev, makedev(virtioblk_major, minor), strerror(errno));
-        return -1;
+        exit_poweroff();
     }
-    return 0;
 }
 
 int
@@ -394,48 +341,59 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: setting up filesystem mounts\n",
                 __func__);
-    fp = fopen(SANDBOXCONFIGDIR "/filesys.cfg", "r");
+    fp = fopen(SANDBOXCONFIGDIR "/mounts.cfg", "r");
     if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/filesys.cfg: %s\n",
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/mounts.cfg: %s\n",
                 __func__, strerror(errno));
         exit_poweroff();
     }
     while (fgets(line, sizeof line, fp)) {
-        char *target = strchr(line, '=');
+        char *source = line;
+        char *target = strchr(source, '\t');
         *target = '\0';
         target++;
-        size_t n = strlen(target);
-        if (n > 0 && target[n-1] == '\n')
-            target[--n] = '\0';
+        char *type = strchr(target, '\t');
+        *type = '\0';
+        type++;
+        char *opts = strchr(type, '\t');
+        *opts = '\0';
+        opts++;
+        char *tmp = strchr(opts, '\n');
+        *tmp = '\0';
+        int flags = 0;
 
-        mount_9pfs(line, target, 0755, 0);
-    }
-    fclose(fp);
+        if (debug)
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%s, %s)\n",
+                    __func__, source, target, type, opts);
 
+        if (strncmp(source, "/dev/vd", 7) == 0)
+            create_virtioblk_device(source);
 
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: setting up image mounts\n",
-                __func__);
-    fp = fopen(SANDBOXCONFIGDIR "/images.cfg", "r");
-    if (fp == NULL) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open " SANDBOXCONFIGDIR "/images.cfg: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-    while (fgets(line, sizeof line, fp)) {
-        char *target = strchr(line, '=');
-        *target = '\0';
-        target++;
-        size_t n = strlen(target);
-        if (n > 0 && target[n-1] == '\n')
-            target[--n] = '\0';
+        if (strcmp(type, "") == 0) {
+            struct stat st;
+            type = NULL;
+            flags |= MS_BIND;
+            if (stat(source, &st) < 0) {
+                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read mount source %s: %s\n",
+                        __func__, source, strerror(errno));
+                exit_poweroff();
+            }
+            if (S_ISDIR(st.st_mode))
+                mount_mkdir(target, 755);
+            else
+                mount_mkfile(target, 644);
+        } else {
+            mount_mkdir(target, 0755);
+        }
 
-        if (create_virtioblk_device(line) < 0)
+        if (mount(source, target, type, flags, opts) < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (%s, %s): %s\n",
+                    __func__, source, target, type, opts, strerror(errno));
             exit_poweroff();
-
-        mount_ext(line, target, 0755, 0);
+        }
     }
     fclose(fp);
+
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: preparing to launch common init\n",

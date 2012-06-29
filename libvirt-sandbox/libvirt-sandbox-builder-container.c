@@ -243,45 +243,54 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
 
 
-    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
-                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
+    tmp = mounts = gvir_sandbox_config_get_mounts(config);
     while (tmp) {
-        GVirSandboxConfigMountFile *mconfig = tmp->data;
+        GVirSandboxConfigMount *mconfig = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
 
-        fs = gvir_config_domain_filesys_new();
-        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
-        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
-        gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_file_get_source(mconfig));
-        gvir_config_domain_filesys_set_target(fs,
-                                              gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(mconfig)));
+        if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_BIND(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
 
-        gvir_config_domain_add_device(domain,
-                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
-        g_object_unref(fs);
+            fs = gvir_config_domain_filesys_new();
+            gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+            gvir_config_domain_filesys_set_source(fs,
+                                                  gvir_sandbox_config_mount_file_get_source(mfile));
+            gvir_config_domain_filesys_set_target(fs,
+                                                  gvir_sandbox_config_mount_get_target(mconfig));
 
-        tmp = tmp->next;
-    }
-    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
-    g_list_free(mounts);
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(fs));
+            g_object_unref(fs);
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
 
+            fs = gvir_config_domain_filesys_new();
+            gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+            gvir_config_domain_filesys_set_source(fs,
+                                                  gvir_sandbox_config_mount_file_get_source(mfile));
+            gvir_config_domain_filesys_set_target(fs,
+                                                  gvir_sandbox_config_mount_get_target(mconfig));
 
-    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
-                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
-    while (tmp) {
-        GVirSandboxConfigMountFile *mconfig = tmp->data;
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(fs));
+            g_object_unref(fs);
+        } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_GUEST_BIND(mconfig)) {
+            GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
 
-        fs = gvir_config_domain_filesys_new();
-        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
-        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
-        gvir_config_domain_filesys_set_source(fs,
-                                              gvir_sandbox_config_mount_file_get_source(mconfig));
-        gvir_config_domain_filesys_set_target(fs,
-                                              gvir_sandbox_config_mount_get_target(GVIR_SANDBOX_CONFIG_MOUNT(mconfig)));
+            fs = gvir_config_domain_filesys_new();
+            gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_BIND);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
+            gvir_config_domain_filesys_set_source(fs,
+                                                  gvir_sandbox_config_mount_file_get_source(mfile));
+            gvir_config_domain_filesys_set_target(fs,
+                                                  gvir_sandbox_config_mount_get_target(mconfig));
 
-        gvir_config_domain_add_device(domain,
-                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
-        g_object_unref(fs);
+            gvir_config_domain_add_device(domain,
+                                          GVIR_CONFIG_DOMAIN_DEVICE(fs));
+            g_object_unref(fs);
+        }
+
 
         tmp = tmp->next;
     }
