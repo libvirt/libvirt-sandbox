@@ -245,13 +245,13 @@ WantedBy=multi-user.target
 
     def __add_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
-        self.config.add_host_bind_mount(mount)
+        self.config.add_mount(mount)
 
     def __gen_filesystems(self):
         if self.use_image:
             self.image = self.DEFAULT_IMAGE % self.get_name()
             mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest)
-            self.config.add_host_image_mount(mount)
+            self.config.add_mount(mount)
 
         for d in self.SYSTEM_DIRS:
             source = "%s%s" % ( self.dest, d)
@@ -326,9 +326,13 @@ WantedBy=multi-user.target
         sys.stdout.write("Created sandbox config %s\n" % config)
 
     def __get_image_path(self):
-            mounts = self.config.get_host_image_mounts()
-            if len(mounts) and mounts[0].get_target() == self.dest:
-                return mounts[0].get_root()
+            mounts = self.config.get_mounts()
+            for m in mounts:
+                if type(m) != LibvirtSandbox.ConfigMountHostImage:
+                    continue
+
+                if m.get_target() == self.dest:
+                    return m.get_source()
             return None
 
     def delete(self):

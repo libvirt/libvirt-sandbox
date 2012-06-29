@@ -63,9 +63,7 @@ int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GError *error = NULL;
     gchar *name = NULL;
-    gchar **guestBinds = NULL;
-    gchar **hostBinds = NULL;
-    gchar **hostImages = NULL;
+    gchar **mounts = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
     gchar *uri = NULL;
@@ -88,12 +86,8 @@ int main(int argc, char **argv) {
           N_("connect to hypervisor"), "URI"},
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
-        { "guest-bind", 'b', 0, G_OPTION_ARG_STRING_ARRAY, &guestBinds,
-          N_("bind guest locations together"), "DST-GUEST-DIR=SRC-GUEST-DIR" },
-        { "host-bind", 'B', 0, G_OPTION_ARG_STRING_ARRAY, &hostBinds,
-          N_("pass host locations through to the guest"), "DST-GUEST-DIR=SRC-HOST-DIR" },
-        { "host-image", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &hostImages,
-          N_("pass host images through to the guest"), "DST-GUEST-DIR=SRC-HOST-FILE" },
+        { "mount", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
+          N_("mount a filesystem int he guest"), "TYPE:TARGET=SOURCE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
@@ -161,21 +155,9 @@ int main(int argc, char **argv) {
         gvir_sandbox_config_set_username(cfg, "root");
     }
 
-    if (hostBinds &&
-        !gvir_sandbox_config_add_host_bind_mount_strv(cfg, hostBinds, &error)) {
-        g_printerr(_("Unable to parse host bind mounts: %s\n"),
-                   error && error->message ? error->message : "unknown");
-        goto cleanup;
-    }
-    if (guestBinds &&
-        !gvir_sandbox_config_add_guest_bind_mount_strv(cfg, guestBinds, &error)) {
-        g_printerr(_("Unable to parse guest bind mounts: %s\n"),
-                   error && error->message ? error->message : "unknown");
-        goto cleanup;
-    }
-    if (hostImages &&
-        !gvir_sandbox_config_add_host_image_mount_strv(cfg, hostImages, &error)) {
-        g_printerr(_("Unable to parse host image mounts: %s\n"),
+    if (mounts &&
+        !gvir_sandbox_config_add_mount_strv(cfg, mounts, &error)) {
+        g_printerr(_("Unable to parse mounts: %s\n"),
                    error && error->message ? error->message : "unknown");
         goto cleanup;
     }

@@ -108,35 +108,20 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                               GError **error);
 gboolean gvir_sandbox_config_has_networks(GVirSandboxConfig *config);
 
-void gvir_sandbox_config_add_host_bind_mount(GVirSandboxConfig *config,
-                                             GVirSandboxConfigMountHostBind *mnt);
-GList *gvir_sandbox_config_get_host_bind_mounts(GVirSandboxConfig *config);
-GVirSandboxConfigMountHostBind *gvir_sandbox_config_find_host_bind_mount(GVirSandboxConfig *config,
-                                                                         const gchar *target);
-gboolean gvir_sandbox_config_add_host_bind_mount_strv(GVirSandboxConfig *config,
-                                                      gchar **mounts,
-                                                      GError **error);
+void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
+                                   GVirSandboxConfigMount *mnt);
+GList *gvir_sandbox_config_get_mounts(GVirSandboxConfig *config);
+GList *gvir_sandbox_config_get_mounts_with_type(GVirSandboxConfig *config,
+                                                GType type);
+GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config,
+                                                       const gchar *target);
 
-
-void gvir_sandbox_config_add_host_image_mount(GVirSandboxConfig *config,
-                                              GVirSandboxConfigMountHostImage *mnt);
-GList *gvir_sandbox_config_get_host_image_mounts(GVirSandboxConfig *config);
-GVirSandboxConfigMountHostImage *gvir_sandbox_config_find_host_image_mount(GVirSandboxConfig *config,
-                                                                           const gchar *target);
-gboolean gvir_sandbox_config_add_host_image_mount_strv(GVirSandboxConfig *config,
-                                                       gchar **mounts,
-                                                       GError **error);
-gboolean gvir_sandbox_config_has_host_image_mounts(GVirSandboxConfig *config);
-
-
-void gvir_sandbox_config_add_guest_bind_mount(GVirSandboxConfig *config,
-                                              GVirSandboxConfigMountGuestBind *mnt);
-GList *gvir_sandbox_config_get_guest_bind_mounts(GVirSandboxConfig *config);
-GVirSandboxConfigMountGuestBind *gvir_sandbox_config_find_guest_bind_mount(GVirSandboxConfig *config,
-                                                                            const gchar *target);
-gboolean gvir_sandbox_config_add_guest_bind_mount_strv(GVirSandboxConfig *config,
-                                                       gchar **mounts,
-                                                       GError **error);
+gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
+                                            gchar **mounts,
+                                            GError **error);
+gboolean gvir_sandbox_config_has_mounts(GVirSandboxConfig *config);
+gboolean gvir_sandbox_config_has_mounts_with_type(GVirSandboxConfig *config,
+                                                  GType type);
 
 gboolean gvir_sandbox_config_add_host_include_strv(GVirSandboxConfig *config,
                                                    gchar **includes,

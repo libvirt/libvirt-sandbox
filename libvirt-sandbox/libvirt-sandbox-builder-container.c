@@ -243,7 +243,8 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
 
 
-    tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
+                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
     while (tmp) {
         GVirSandboxConfigMountFile *mconfig = tmp->data;
 
@@ -265,7 +266,8 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     g_list_free(mounts);
 
 
-    tmp = mounts = gvir_sandbox_config_get_host_image_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
+                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
     while (tmp) {
         GVirSandboxConfigMountFile *mconfig = tmp->data;
 

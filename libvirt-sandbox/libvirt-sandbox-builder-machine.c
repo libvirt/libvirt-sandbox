@@ -135,7 +135,8 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     gvir_sandbox_config_initrd_add_module(initrd, "9pnet_virtio.ko");
     if (gvir_sandbox_config_has_networks(config))
         gvir_sandbox_config_initrd_add_module(initrd, "virtio_net.ko");
-    if (gvir_sandbox_config_has_host_image_mounts(config))
+    if (gvir_sandbox_config_has_mounts_with_type(config,
+                                                 GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE))
         gvir_sandbox_config_initrd_add_module(initrd, "virtio_blk.ko");
 #if 0
     gvir_sandbox_config_initrd_add_module(initrd, "virtio_balloon.ko");
@@ -279,27 +280,39 @@ static gboolean gvir_sandbox_builder_machine_construct_domain(GVirSandboxBuilder
                                                               GVirConfigDomain *domain,
                                                               GError **error)
 {
-    if (!gvir_sandbox_builder_machine_write_mount_cfg(gvir_sandbox_config_get_host_bind_mounts(config),
+    GList *hostBind = gvir_sandbox_config_get_mounts_with_type(config,
+                                                               GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
+    GList *hostImage = gvir_sandbox_config_get_mounts_with_type(config,
+                                                                GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
+    gboolean ret = FALSE;
+
+    if (!gvir_sandbox_builder_machine_write_mount_cfg(hostBind,
                                                       FALSE,
                                                       "filesys.cfg",
                                                       configdir,
                                                       cleaner,
                                                       error))
-        return FALSE;
+        goto cleanup;
 
-    if (!gvir_sandbox_builder_machine_write_mount_cfg(gvir_sandbox_config_get_host_image_mounts(config),
+    if (!gvir_sandbox_builder_machine_write_mount_cfg(hostImage,
                                                       TRUE,
                                                       "images.cfg",
                                                       configdir,
                                                       cleaner,
                                                       error))
-        return FALSE;
+        goto cleanup;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
         construct_domain(builder, config, configdir, cleaner, domain, error))
-        return FALSE;
+        goto cleanup;
 
-    return TRUE;
+    ret = TRUE;
+cleanup:
+    g_list_foreach(hostBind, (GFunc)g_object_unref, NULL);
+    g_list_foreach(hostImage, (GFunc)g_object_unref, NULL);
+    g_list_free(hostBind);
+    g_list_free(hostImage);
+    return ret;
 }
 
 static gboolean gvir_sandbox_builder_machine_construct_basic(GVirSandboxBuilder *builder,
@@ -446,7 +459,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
 
 
-    tmp = mounts = gvir_sandbox_config_get_host_bind_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
+                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND);
     i = 0;
     while (tmp) {
         GVirSandboxConfigMountFile *mconfig = tmp->data;
@@ -471,7 +485,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     g_list_free(mounts);
 
 
-    tmp = mounts = gvir_sandbox_config_get_host_image_mounts(config);
+    tmp = mounts = gvir_sandbox_config_get_mounts_with_type(config,
+                                                            GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE);
     i = 0;
     while (tmp) {
         GVirSandboxConfigMountFile *mconfig = tmp->data;
