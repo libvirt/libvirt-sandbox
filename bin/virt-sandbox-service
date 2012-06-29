@@ -48,7 +48,7 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    SYSTEM_DIRS   = [ "/tmp", "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
+    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
 #    SYSTEM_FILES   = [ "/etc/machine-id" ]
     SYSTEM_FILES   = []
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
@@ -252,6 +252,19 @@ WantedBy=multi-user.target
             self.image = self.DEFAULT_IMAGE % self.get_name()
             mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest)
             self.config.add_mount(mount)
+
+        # 10 MB /run
+        mount = LibvirtSandbox.ConfigMountRam.new("/run", 10 * 1024 * 1024);
+        self.config.add_mount(mount)
+
+        # Link /var/run to /run
+        mount = LibvirtSandbox.ConfigMountGuestBind.new("/run", "/var/run")
+        self.config.add_mount(mount)
+
+        # 100 MB /tmp
+        mount = LibvirtSandbox.ConfigMountRam.new("/tmp", 100 * 1024 * 1024);
+        self.config.add_mount(mount)
+
 
         for d in self.SYSTEM_DIRS:
             source = "%s%s" % ( self.dest, d)
