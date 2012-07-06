@@ -65,7 +65,6 @@ class Container:
         self.image = None
         self.size = 10 * MB
         self.config = None
-        self.rpm_name = None
         self.file_type = self.SELINUX_FILE_TYPE
         self.unit_file = []
 
@@ -82,7 +81,6 @@ class Container:
         if config:
             try:
                 self.config = LibvirtSandbox.Config.load_from_path(config)
-                self.__gen_rpm_name()
                 self.unitfile = self.__gen_unit_file_name()
             except gi._glib.GError, e:
                 raise OSError(config + ": " + str(e))
@@ -95,12 +93,7 @@ class Container:
         return unitst
 
     def __gen_unit_file_name(self):
-        if self.rpm_name:
-            name = "%s@%s.service" % (self.rpm_name, self.config.get_name())
-        else:
-            name = "%s.service" % self.config.get_name()
-
-        return "/etc/systemd/system/" + name
+        return "/etc/systemd/system/%s.service" % self.config.get_name()
 
 
     def add_unit_file(self, unit_file):
@@ -215,12 +208,6 @@ WantedBy=multi-user.target
             raise ValueError(["Cannot modify Name"])
         self.config = LibvirtSandbox.ConfigService.new(name)
 
-    def __gen_rpm_name(self):
-            ts = rpm.ts()
-            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
-            h = mi.next()
-            self.rpm_name = h['name']
-
     def __extract_rpm(self):
         self.all_dirs = []
         self.dirs = []
@@ -229,7 +216,6 @@ WantedBy=multi-user.target
             ts = rpm.ts()
             mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
             h = mi.next()
-            self.rpm_name=h['name']
             for rec in h.fiFromHeader():
                 f = rec[0]
                 for b in self.DEFAULT_DIRS:
