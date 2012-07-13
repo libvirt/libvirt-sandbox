@@ -47,7 +47,7 @@ _virt_sandbox_service () {
     )
     local -A OPTS=(
         [ALL]='-h --help'
-        [CREATE]='-e --executable -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
+        [CREATE]='-u --unitfile -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
         [LIST]='-r --running'
         [EXECUTE]='-C --command'
     )
@@ -86,10 +86,6 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} " -- "$cur") )
         return 0
     elif test "$verb" == "create" ; then
-        if test "$prev" = "-e" || test "$prev" = "--executable" ; then
-        COMPREPLY=( $( compgen -f -- "$cur") )
-        compopt -o filenames
-        return 0
         elif test "$prev" = "-p" || test "$prev" = "--path" ; then
         COMPREPLY=( $( compgen -d -- "$cur") )
         compopt -o filenames
