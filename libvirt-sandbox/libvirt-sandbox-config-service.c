@@ -42,8 +42,7 @@
 
 struct _GVirSandboxConfigServicePrivate
 {
-    gchar *unit;
-    gchar *executable;
+    GList *units;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
@@ -51,8 +50,6 @@ G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBO
 
 enum {
     PROP_0,
-    PROP_UNIT,
-    PROP_EXECUTABLE,
 };
 
 enum {
@@ -61,24 +58,20 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+#define GVIR_SANDBOX_CONFIG_SERVICE_ERROR gvir_sandbox_config_service_error_quark()
+
+static GQuark
+gvir_sandbox_config_service_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-config-service");
+}
 
 static void gvir_sandbox_config_service_get_property(GObject *object,
                                                      guint prop_id,
                                                      GValue *value,
                                                      GParamSpec *pspec)
 {
-    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-
     switch (prop_id) {
-    case PROP_UNIT:
-        g_value_set_string(value, priv->unit);
-        break;
-
-    case PROP_EXECUTABLE:
-        g_value_set_string(value, priv->executable);
-        break;
-
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -90,20 +83,7 @@ static void gvir_sandbox_config_service_set_property(GObject *object,
                                                      const GValue *value,
                                                      GParamSpec *pspec)
 {
-    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-
     switch (prop_id) {
-    case PROP_UNIT:
-        g_free(priv->unit);
-        priv->unit = g_value_dup_string(value);
-        break;
-
-    case PROP_EXECUTABLE:
-        g_free(priv->executable);
-        priv->executable = g_value_dup_string(value);
-        break;
-
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -116,20 +96,30 @@ static gboolean gvir_sandbox_config_service_load_config(GVirSandboxConfig *confi
 {
     GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
     gboolean ret = FALSE;
-    gchar *str;
+    gint i;
+    gchar *key;
+    GError *e = NULL;
 
     if (!GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
         ->load_config(config, file, error))
         goto cleanup;
 
-    if ((str = g_key_file_get_string(file, "service", "executable", NULL)) != NULL) {
-        g_free(priv->executable);
-        priv->executable = str;
-    }
-
-    if ((str = g_key_file_get_string(file, "service", "unit", NULL)) != NULL) {
-        g_free(priv->unit);
-        priv->unit = str;
+    for (i = 0 ; i < 1024 ; i++) {
+        key = g_strdup_printf("unit.%u", i);
+        gchar *name;
+        if ((name = g_key_file_get_string(file, key, "name", &e)) == NULL) {
+            g_free(key);
+            if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+                g_error_free(e);
+                break;
+            }
+            g_error_free(e);
+            g_set_error(error, GVIR_SANDBOX_CONFIG_SERVICE_ERROR, 0,
+                        "%s", "Missing unit name in config file");
+            goto cleanup;
+        }
+        priv->units = g_list_append(priv->units, name);
+        g_free(key);
     }
 
     ret = TRUE;
@@ -140,17 +130,24 @@ cleanup:
 
 
 static void gvir_sandbox_config_service_save_config(GVirSandboxConfig *config,
-                                                        GKeyFile *file)
+                                                    GKeyFile *file)
 {
     GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
+    GList *tmp;
+    gint i;
 
     GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
         ->save_config(config, file);
 
-    if (priv->executable)
-        g_key_file_set_string(file, "service", "executable", priv->executable);
-    if (priv->unit)
-        g_key_file_set_string(file, "service", "unit", priv->unit);
+    tmp = priv->units;
+    i = 0;
+    while (tmp) {
+        gchar *key = g_strdup_printf("unit.%u", i);
+        g_key_file_set_string(file, key, "name", tmp->data);
+        g_free(key);
+        tmp = tmp->next;
+    }
+
 }
 
 
@@ -159,8 +156,8 @@ static void gvir_sandbox_config_service_finalize(GObject *object)
     GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
     GVirSandboxConfigServicePrivate *priv = config->priv;
 
-    g_free(priv->unit);
-    g_free(priv->executable);
+    g_list_foreach(priv->units, (GFunc)g_free, NULL);
+    g_list_free(priv->units);
 
     G_OBJECT_CLASS(gvir_sandbox_config_service_parent_class)->finalize(object);
 }
@@ -177,30 +174,6 @@ static void gvir_sandbox_config_service_class_init(GVirSandboxConfigServiceClass
 
     config_class->load_config = gvir_sandbox_config_service_load_config;
     config_class->save_config = gvir_sandbox_config_service_save_config;
-
-    g_object_class_install_property(object_class,
-                                    PROP_UNIT,
-                                    g_param_spec_string("unit",
-                                                        "Unit",
-                                                        "The systemd unit name",
-                                                        NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
-
-    g_object_class_install_property(object_class,
-                                    PROP_EXECUTABLE,
-                                    g_param_spec_string("executable",
-                                                        "Executable",
-                                                        "The executable name path",
-                                                        NULL,
-                                                        G_PARAM_READABLE |
-                                                        G_PARAM_WRITABLE |
-                                                        G_PARAM_STATIC_NAME |
-                                                        G_PARAM_STATIC_NICK |
-                                                        G_PARAM_STATIC_BLURB));
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigServicePrivate));
 }
@@ -228,33 +201,21 @@ GVirSandboxConfigService *gvir_sandbox_config_service_new(const gchar *name)
 }
 
 
-const char *gvir_sandbox_config_service_get_unit(GVirSandboxConfigService *config)
+/**
+ * gvir_sandbox_config_service_get_units:
+ *
+ * Returns: (transfer container) (element-type utf8): a list of units
+ */
+GList *gvir_sandbox_config_service_get_units(GVirSandboxConfigService *config)
 {
     GVirSandboxConfigServicePrivate *priv = config->priv;
-    return priv->unit;
+    return g_list_copy(priv->units);
 }
 
 
-void gvir_sandbox_config_service_set_unit(GVirSandboxConfigService *config,
+void gvir_sandbox_config_service_add_unit(GVirSandboxConfigService *config,
                                           const gchar *unit)
 {
     GVirSandboxConfigServicePrivate *priv = config->priv;
-    g_free(priv->unit);
-    priv->unit = g_strdup(unit);
-}
-
-
-const char *gvir_sandbox_config_service_get_executable(GVirSandboxConfigService *config)
-{
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-    return priv->executable;
-}
-
-
-void gvir_sandbox_config_service_set_executable(GVirSandboxConfigService *config,
-                                                const gchar *executable)
-{
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-    g_free(priv->executable);
-    priv->executable = g_strdup(executable);
+    priv->units = g_list_append(priv->units, g_strdup(unit));
 }

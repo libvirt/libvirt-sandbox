@@ -60,13 +60,12 @@ class Container:
         self.clone = False
         self.use_image = False
         self.path = path
-        self.service_files = []
         self.conn = None
         self.image = None
         self.size = 10 * MB
         self.config = None
         self.file_type = self.SELINUX_FILE_TYPE
-        self.unit_file = []
+        self.unit_file_list = []
 
         if name:
             config = self.get_config_path(name)
@@ -87,7 +86,7 @@ class Container:
 
     def __follow_units(self):
         unitst=""
-        for i in self.service_files:
+        for i in self.unit_file_list:
             unitst += "#ReloadPropagatedFrom=%s\n" % i
 
         return unitst
@@ -114,7 +113,7 @@ class Container:
         name = self.config.get_name()
         unit = r"""
 [Unit]
-Description=Secure Sandbox Container %(NAME)s for %(EXEC)s Server
+Description=Secure Sandbox Container %(NAME)s
 Requires=libvirtd.service
 After=libvirtd.service
 %(FOLLOW)s
@@ -126,7 +125,7 @@ ExecStop=/usr/bin/virt-sandbox-service stop %(NAME)s
 
 [Install]
 WantedBy=multi-user.target
-""" % { 'NAME':name, 'EXEC':self.config.get_executable(), 'FOLLOW':self.__follow_units() }
+""" % { 'NAME':name, 'FOLLOW':self.__follow_units() }
         fd = open(self.unitfile, "w")
         fd.write(unit)
         fd.close()
@@ -200,21 +199,22 @@ WantedBy=multi-user.target
     def set_path(self, path):
         self.path = path
 
-    def set_executable(self,executable):
-        self.config.set_executable(executable)
-
     def set_name(self, name):
         if self.config:
             raise ValueError(["Cannot modify Name"])
         self.config = LibvirtSandbox.ConfigService.new(name)
 
-    def __extract_rpm(self):
+    def __extract_rpms(self):
         self.all_dirs = []
         self.dirs = []
 
+        for u in self.unit_file_list:
+            self.__extract_rpm_for_unit(u)
+
+    def __extract_rpm_for_unit(self, unitfile):
         try:
             ts = rpm.ts()
-            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, self.config.get_executable())
+            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, "/lib/systemd/system/" + unitfile)
             h = mi.next()
             for rec in h.fiFromHeader():
                 f = rec[0]
@@ -223,9 +223,6 @@ WantedBy=multi-user.target
                     if f.startswith(b) and not f.startswith("/var/run/"):
                         if os.path.isdir(f):
                             self.__add_dir(f)
-
-                if f.endswith(".service"):
-                    self.service_files.append(f)
         except StopIteration:
             pass
 
@@ -355,7 +352,7 @@ WantedBy=multi-user.target
         if os.path.exists(self.unitfile):
             os.remove(self.unitfile)
 
-    def create(self, executable):
+    def create(self):
         self.dest = "%s/%s" % (self.path, self.get_name())
         if os.path.exists(self.dest):
             raise OSError("%s already exists" % self.dest)
@@ -363,10 +360,11 @@ WantedBy=multi-user.target
         net = LibvirtSandbox.ConfigNetwork().new()
         net.set_dhcp(True)
         self.config.add_network(net)
-        self.set_executable(executable)
         self.config.set_shell(True)
+        for u in self.unit_file_list:
+            self.config.add_unit(u)
 
-        self.__extract_rpm()
+        self.__extract_rpms()
         self.__gen_filesystems()
         os.mkdir(self.dest)
         sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
@@ -501,7 +499,7 @@ def create(args):
     if args.imagesize:
         container.set_image(args.imagesize)
 
-    container.create(args.executable)
+    container.create()
 
 def usage(parser, msg):
     parser.print_help()
@@ -570,9 +568,6 @@ if __name__ == '__main__':
     parser_create = subparsers.add_parser("create",
                                           help=_("create a sandbox container"))
 
-    parser_create.add_argument("-e", "--executable", required=True,
-                               dest="executable",  default=None,
-                               help=_("Executable to run within the sandbox container"))
     parser_create.add_argument("-u", "--unitfile", required=True,
                                dest="unitfiles",  action='append',
                                help=_("Systemd Unit file to run within the sandbox container"))

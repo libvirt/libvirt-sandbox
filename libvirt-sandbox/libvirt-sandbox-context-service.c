@@ -149,64 +149,70 @@ GVirSandboxContextService *gvir_sandbox_context_service_new(GVirConnection *conn
                                                      NULL));
 }
 
-
-static gchar *gvir_sandbox_context_service_get_unitdata(GVirSandboxContext *ctxt)
-{
-    GVirSandboxConfig *config = gvir_sandbox_context_get_config(ctxt);
-    GVirSandboxConfigService *sconfig = GVIR_SANDBOX_CONFIG_SERVICE(config);
-    gchar *ret = NULL;
-
-    /* XXX forking should not be hardcoded */
-    /* XXX capabilities */
-    ret = g_strdup_printf(
-        "[Unit]\n"
-        "Description=Sandbox Service\n"
-        "DefaultDependencies=no\n"
-        "\n"
-        "[Service]\n"
-        "Type=forking\n"
-        "User=%d\n"
-        "Group=%d\n"
-        "StandardInput=null\n"
-        "StandardOutput=null\n"
-        "StandardError=null\n"
-        "WorkingDirectory=%s\n"
-        "Environment=HOME=%s USER=%s\n"
-        "ExecStart=%s\n"
-        "ExecStopPost=/bin/systemctl --force poweroff\n",
-        gvir_sandbox_config_get_userid(config),
-        gvir_sandbox_config_get_groupid(config),
-        gvir_sandbox_config_get_homedir(config),
-        gvir_sandbox_config_get_homedir(config),
-        gvir_sandbox_config_get_username(config),
-        gvir_sandbox_config_service_get_executable(sconfig));
-
-    return ret;
-}
-
-static gboolean gvir_sandbox_context_service_write_unitfile(GVirSandboxContext *ctxt,
-                                                            const gchar *unitfile,
-                                                            GError **error)
+static gboolean gvir_sandbox_context_service_write_target(GVirSandboxContext *ctxt,
+                                                          const gchar *unitfile,
+                                                          GError **error)
 {
     gboolean ret = FALSE;
     GFile *file = g_file_new_for_path(unitfile);
-    gchar *unitdata;
+    const gchar *unitdata =
+        "[Unit]\n"
+        "Description=Sandbox Target\n"
+        "After=multi-user.target\n";
 
-    unitdata = gvir_sandbox_context_service_get_unitdata(ctxt);
+   if (!g_file_replace_contents(file, unitdata, strlen(unitdata),
+                                NULL, FALSE,
+                                G_FILE_CREATE_NONE,
+                                NULL,
+                                NULL,
+                                error))
+       goto cleanup;
 
-    if (!g_file_replace_contents(file, unitdata, strlen(unitdata),
-                                 NULL, FALSE,
-                                 G_FILE_CREATE_NONE,
-                                 NULL,
-                                 NULL,
-                                 error))
-        goto cleanup;
+   gvir_sandbox_cleaner_add_rmfile_post_stop(gvir_sandbox_context_get_cleaner(ctxt),
+                                             unitfile);
+
+   ret = TRUE;
+
+cleanup:
+   g_object_unref(file);
+   return ret;
+}
+
+
+static gboolean gvir_sandbox_context_service_write_target_deps(GVirSandboxContext *ctxt,
+                                                               const gchar *unitdir,
+                                                               GError **error)
+{
+    gboolean ret = FALSE;
+    GList *units = NULL, *tmp;
+    GVirSandboxConfigService *cfg = GVIR_SANDBOX_CONFIG_SERVICE(
+        gvir_sandbox_context_get_config(ctxt));
+
+    units = tmp = gvir_sandbox_config_service_get_units(cfg);
+    while (tmp) {
+        const gchar *unitname = tmp->data;
+        gchar *unittgt = g_build_filename(unitdir, unitname, NULL);
+        gchar *unitsrc = g_build_filename("/", "lib", "systemd", "system", unitname, NULL);
+        GFile *file = g_file_new_for_path(unittgt);
+
+        gboolean rv = g_file_make_symbolic_link(file, unitsrc, NULL, error);
+        g_free(unitsrc);
+        g_object_unref(file);
+        if (!rv) {
+            g_free(unittgt);
+            goto cleanup;
+        }
+
+        gvir_sandbox_cleaner_add_rmfile_post_stop(gvir_sandbox_context_get_cleaner(ctxt),
+                                                  unittgt);
+
+        tmp = tmp->next;
+    }
 
     ret = TRUE;
 
 cleanup:
-    g_object_unref(file);
-    g_free(unitdata);
+    g_list_free(units);
     return ret;
 }
 
@@ -216,28 +222,31 @@ static gboolean gvir_sandbox_context_service_prestart(GVirSandboxContext *ctxt,
                                                       GError **error)
 {
     gchar *unitdir = NULL;
-    gchar *unitfile = NULL;
+    gchar *tgtdir = NULL;
+    gchar *tgtfile = NULL;
     gboolean ret = FALSE;
 
     if (!(GVIR_SANDBOX_CONTEXT_CLASS(gvir_sandbox_context_service_parent_class)->prestart(ctxt, configdir, error)))
         return FALSE;
 
     unitdir = g_build_filename(configdir, "systemd", NULL);
-    unitfile = g_build_filename(unitdir, "sandbox.service", NULL);
+    tgtfile = g_build_filename(unitdir, "sandbox.target", NULL);
+    tgtdir = g_build_filename(unitdir, "sandbox.target.wants", NULL);
 
-    g_mkdir_with_parents(unitdir, 0700);
+    g_mkdir_with_parents(tgtdir, 0700);
     gvir_sandbox_cleaner_add_rmdir_post_stop(gvir_sandbox_context_get_cleaner(ctxt),
                                              unitdir);
+    gvir_sandbox_cleaner_add_rmdir_post_stop(gvir_sandbox_context_get_cleaner(ctxt),
+                                             tgtdir);
 
-    if (!gvir_sandbox_context_service_write_unitfile(ctxt, unitfile, error))
+    if (!gvir_sandbox_context_service_write_target(ctxt, tgtfile, error))
         goto cleanup;
-
-    gvir_sandbox_cleaner_add_rmfile_post_stop(gvir_sandbox_context_get_cleaner(ctxt),
-                                              unitfile);
+    if (!gvir_sandbox_context_service_write_target_deps(ctxt, tgtdir, error))
+        goto cleanup;
 
     ret = TRUE;
 cleanup:
-    g_free(unitfile);
+    g_free(tgtdir);
     g_free(unitdir);
     return ret;
 }
