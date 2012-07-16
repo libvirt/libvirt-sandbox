@@ -91,8 +91,9 @@ class Container:
         return unitst
 
     def __gen_unit_file_name(self):
-        return "/etc/systemd/system/%s.service" % self.config.get_name()
-
+        if len(self.unit_file_list) != 1:
+            return "/etc/systemd/system/%s.service" % self.config.get_name()
+        return "/etc/systemd/system/%s@%s.service" %  (self.unit_file_list[0].split(".")[0], self.config.get_name())
 
     def add_unit_file(self, unit_file):
         if unit_file not in self.unit_file_list:
@@ -432,7 +433,7 @@ WantedBy=multi-user.target
     def running(self):
         try:
             self.__connect()
-            context = LibvirtSandbox.Context.new(self.conn, self.config)
+            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
             context.attach()
             self.__disconnect()
             return 1
