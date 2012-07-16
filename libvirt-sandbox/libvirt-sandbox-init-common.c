@@ -1077,6 +1077,8 @@ run_service(GVirSandboxConfigService *config)
         "/bin/systemd",
         "--unit",
         gvir_sandbox_config_service_get_boot_target(config),
+        "--log-target",
+        "console",
         "--system",
         NULL,
     };
