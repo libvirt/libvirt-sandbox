@@ -48,8 +48,8 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
-    SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime" ]
+    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system" ]
+    SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
