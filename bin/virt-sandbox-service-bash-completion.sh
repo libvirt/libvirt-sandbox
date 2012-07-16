@@ -23,8 +23,16 @@ __contains_word () {
 
 ALL_OPTS='-h --help'
 
+__get_all_unit_files () {
+    systemctl list-unit-files --no-legend | cut -d' ' -f 1 | grep -v '@'
+}
+
 __get_all_containers () {
     for i in `ls -1 /etc/libvirt-sandbox/services/*.sandbox 2>/dev/null`; do basename $i | cut -f1 -d.; done
+}
+
+__get_all_running_containers () {
+    virt-sandbox-service list --running
 }
 
 __get_all_types () {
@@ -70,6 +78,21 @@ _virt_sandbox_service () {
         fi
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[LIST]} " -- "$cur") )
         return 0
+    elif test "$verb" == "delete" ; then 
+	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
+        return 0
+    elif test "$verb" == "start" ; then 
+	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
+        return 0
+    elif test "$verb" == "stop" ; then 
+	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+        return 0
+    elif test "$verb" == "reload" ; then 
+	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+        return 0
+    elif test "$verb" == "connect" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+        return 0
     elif test "$verb" == "execute" ; then
         if test "$prev" = "-C" || test "$prev" = "--command" ; then
         COMPREPLY=( $( compgen -f -- "$cur") )
@@ -79,16 +102,19 @@ _virt_sandbox_service () {
 
         for ((i=0; $i <= $COMP_CWORD; i++)); do
         if __contains_word "${COMP_WORDS[i]}" ${OPTS[EXECUTE]}; then
-            COMPREPLY=( $(compgen -W "$( __get_all_containers ) " -- "$cur") )
+            COMPREPLY=( $(compgen -W "${OPTS[ALL]}  $( __get_all_running_containers ) " -- "$cur") )
             return 0
         fi
         done
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} " -- "$cur") )
         return 0
     elif test "$verb" == "create" ; then
-        elif test "$prev" = "-p" || test "$prev" = "--path" ; then
+	if test "$prev" = "-p" || test "$prev" = "--path" ; then
         COMPREPLY=( $( compgen -d -- "$cur") )
         compopt -o filenames
+        return 0
+	elif test "$prev" = "-u" || test "$prev" = "--unitfile" ; then
+        COMPREPLY=( $(compgen -W "$( __get_all_unit_files ) " -- "$cur") )
         return 0
         elif test "$prev" = "-t" || test "$prev" = "--type" ; then
         COMPREPLY=( $(compgen -W "$( __get_all_types ) " -- "$cur") )
