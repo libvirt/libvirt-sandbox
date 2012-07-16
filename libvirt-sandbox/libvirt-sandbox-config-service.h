@@ -59,9 +59,9 @@ GType gvir_sandbox_config_service_get_type(void);
 
 GVirSandboxConfigService *gvir_sandbox_config_service_new(const gchar *name);
 
-GList *gvir_sandbox_config_service_get_units(GVirSandboxConfigService *config);
-void gvir_sandbox_config_service_add_unit(GVirSandboxConfigService *config,
-                                          const gchar *unit);
+const gchar *gvir_sandbox_config_service_get_boot_target(GVirSandboxConfigService *config);
+void gvir_sandbox_config_service_set_boot_target(GVirSandboxConfigService *config,
+                                                 const gchar *target);
 
 G_END_DECLS
 

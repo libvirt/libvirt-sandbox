@@ -42,7 +42,7 @@
 
 struct _GVirSandboxConfigServicePrivate
 {
-    GList *units;
+    gchar *bootTarget;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
@@ -50,6 +50,7 @@ G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBO
 
 enum {
     PROP_0,
+    PROP_BOOT_TARGET,
 };
 
 enum {
@@ -58,6 +59,7 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+#if 0
 #define GVIR_SANDBOX_CONFIG_SERVICE_ERROR gvir_sandbox_config_service_error_quark()
 
 static GQuark
@@ -65,13 +67,21 @@ gvir_sandbox_config_service_error_quark(void)
 {
     return g_quark_from_static_string("gvir-sandbox-config-service");
 }
+#endif
 
 static void gvir_sandbox_config_service_get_property(GObject *object,
                                                      guint prop_id,
                                                      GValue *value,
                                                      GParamSpec *pspec)
 {
+    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
+    GVirSandboxConfigServicePrivate *priv = config->priv;
+
     switch (prop_id) {
+    case PROP_BOOT_TARGET:
+        g_value_set_string(value, priv->bootTarget);
+        break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -83,7 +93,15 @@ static void gvir_sandbox_config_service_set_property(GObject *object,
                                                      const GValue *value,
                                                      GParamSpec *pspec)
 {
+    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
+    GVirSandboxConfigServicePrivate *priv = config->priv;
+
     switch (prop_id) {
+    case PROP_BOOT_TARGET:
+        g_free(priv->bootTarget);
+        priv->bootTarget = g_value_dup_string(value);
+        break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -96,31 +114,13 @@ static gboolean gvir_sandbox_config_service_load_config(GVirSandboxConfig *confi
 {
     GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
     gboolean ret = FALSE;
-    gint i;
-    gchar *key;
-    GError *e = NULL;
 
     if (!GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
         ->load_config(config, file, error))
         goto cleanup;
 
-    for (i = 0 ; i < 1024 ; i++) {
-        key = g_strdup_printf("unit.%u", i);
-        gchar *name;
-        if ((name = g_key_file_get_string(file, key, "name", &e)) == NULL) {
-            g_free(key);
-            if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
-                g_error_free(e);
-                break;
-            }
-            g_error_free(e);
-            g_set_error(error, GVIR_SANDBOX_CONFIG_SERVICE_ERROR, 0,
-                        "%s", "Missing unit name in config file");
-            goto cleanup;
-        }
-        priv->units = g_list_append(priv->units, name);
-        g_free(key);
-    }
+    if ((priv->bootTarget = g_key_file_get_string(file, "service", "bootTarget", error)) == NULL)
+        goto cleanup;
 
     ret = TRUE;
 
@@ -133,21 +133,11 @@ static void gvir_sandbox_config_service_save_config(GVirSandboxConfig *config,
                                                     GKeyFile *file)
 {
     GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
-    GList *tmp;
-    gint i;
 
     GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
         ->save_config(config, file);
 
-    tmp = priv->units;
-    i = 0;
-    while (tmp) {
-        gchar *key = g_strdup_printf("unit.%u", i);
-        g_key_file_set_string(file, key, "name", tmp->data);
-        g_free(key);
-        tmp = tmp->next;
-    }
-
+    g_key_file_set_string(file, "service", "bootTarget", priv->bootTarget);
 }
 
 
@@ -156,8 +146,7 @@ static void gvir_sandbox_config_service_finalize(GObject *object)
     GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
     GVirSandboxConfigServicePrivate *priv = config->priv;
 
-    g_list_foreach(priv->units, (GFunc)g_free, NULL);
-    g_list_free(priv->units);
+    g_free(priv->bootTarget);
 
     G_OBJECT_CLASS(gvir_sandbox_config_service_parent_class)->finalize(object);
 }
@@ -202,20 +191,21 @@ GVirSandboxConfigService *gvir_sandbox_config_service_new(const gchar *name)
 
 
 /**
- * gvir_sandbox_config_service_get_units:
+ * gvir_sandbox_config_service_get_boot_target:
  *
- * Returns: (transfer container) (element-type utf8): a list of units
+ * Returns: the boot target name
  */
-GList *gvir_sandbox_config_service_get_units(GVirSandboxConfigService *config)
+const gchar *gvir_sandbox_config_service_get_boot_target(GVirSandboxConfigService *config)
 {
     GVirSandboxConfigServicePrivate *priv = config->priv;
-    return g_list_copy(priv->units);
+    return priv->bootTarget;
 }
 
 
-void gvir_sandbox_config_service_add_unit(GVirSandboxConfigService *config,
-                                          const gchar *unit)
+void gvir_sandbox_config_service_set_boot_target(GVirSandboxConfigService *config,
+                                                 const gchar *target)
 {
     GVirSandboxConfigServicePrivate *priv = config->priv;
-    priv->units = g_list_append(priv->units, g_strdup(unit));
+    g_free(priv->bootTarget);
+    priv->bootTarget = g_strdup(target);
 }

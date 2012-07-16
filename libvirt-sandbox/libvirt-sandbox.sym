@@ -11,10 +11,10 @@ LIBVIRT_SANDBOX_0.0.1 {
 	gvir_sandbox_config_graphical_set_window_size;
 	gvir_sandbox_config_graphical_size_get_type;
 
-	gvir_sandbox_config_service_add_unit;
 	gvir_sandbox_config_service_get_type;
-	gvir_sandbox_config_service_get_units;
+	gvir_sandbox_config_service_get_boot_target;
 	gvir_sandbox_config_service_new;
+	gvir_sandbox_config_service_set_boot_target;
 
 	gvir_sandbox_config_interactive_get_type;
 	gvir_sandbox_config_interactive_get_command;

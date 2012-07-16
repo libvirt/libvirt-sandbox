@@ -48,7 +48,7 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
+    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system" ]
 #    SYSTEM_FILES   = [ "/etc/machine-id" ]
     SYSTEM_FILES   = []
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
@@ -294,6 +294,40 @@ WantedBy=multi-user.target
                 if not e.errno == errno.EEXIST:
                     raise e
 
+        unitdir = self.dest + "/etc/systemd/system"
+        try:
+            os.makedirs(unitdir)
+        except OSError, e:
+            if not e.errno == errno.EEXIST:
+                raise e
+
+        tgtdir = unitdir + "/sandbox.target.wants"
+        try:
+            os.makedirs(tgtdir)
+        except OSError, e:
+            if not e.errno == errno.EEXIST:
+                raise e
+
+        for i in self.unit_file_list:
+            src = "/etc/systemd/system/" + i
+            if not os.path.exists(src):
+                src = "/lib/systemd/system/" + i
+            if not os.path.exists(src):
+                raise OSError("Requested unit %s does not exist" % i)
+            dst = tgtdir + "/" + i
+            os.symlink(src, dst)
+
+        tgtfile = unitdir + "/sandbox.target"
+        try:
+            fd = open(tgtfile, "w")
+            fd.write("[Unit]\n")
+            fd.write("Description=Sandbox target\n")
+            fd.close()
+        except OSError, e:
+            if not e.errno == errno.EEXIST:
+                raise e
+
+
     def __umount(self):
         p = Popen(["/bin/umount", self.dest])
         p.communicate()
@@ -361,9 +395,7 @@ WantedBy=multi-user.target
         net.set_dhcp(True)
         self.config.add_network(net)
         self.config.set_shell(True)
-        for u in self.unit_file_list:
-            self.config.add_unit(u)
-
+        self.config.set_boot_target("sandbox.target")
         self.__extract_rpms()
         self.__gen_filesystems()
         os.mkdir(self.dest)
@@ -398,7 +430,7 @@ WantedBy=multi-user.target
     def running(self):
         try:
             self.__connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = LibvirtSandbox.Context.new(self.conn, self.config)
             context.attach()
             self.__disconnect()
             return 1

@@ -1076,7 +1076,7 @@ run_service(GVirSandboxConfigService *config)
     const char *initargv[] = {
         "/bin/systemd",
         "--unit",
-        "sandbox.target",
+        gvir_sandbox_config_service_get_boot_target(config),
         "--system",
         NULL,
     };
@@ -1084,23 +1084,6 @@ run_service(GVirSandboxConfigService *config)
         "/bin/sh",
         NULL,
     };
-
-#if 0
-    if (mount(SANDBOXCONFIGDIR "/systemd", "/lib/systemd/system", NULL, MS_BIND, NULL) < 0) {
-        g_printerr("%s", "Cannot bind " SANDBOXCONFIGDIR "/systemd to /lib/systemd/system");
-        return FALSE;
-    }
-
-    if (mount(SANDBOXCONFIGDIR "/empty", "/etc/systemd/system", NULL, MS_BIND, NULL) < 0) {
-        g_printerr("%s", "Cannot bind " SANDBOXCONFIGDIR "/empty to /etc/systemd/system");
-        return FALSE;
-    }
-#else
-    if (mount(SANDBOXCONFIGDIR "/systemd", "/etc/systemd/system", NULL, MS_BIND, NULL) < 0) {
-        g_printerr("%s", "Cannot bind " SANDBOXCONFIGDIR "/systemd to /etc/systemd/system");
-        return FALSE;
-    }
-#endif
 
     if (debug)
         execv(shargv[0], (char **)shargv);
