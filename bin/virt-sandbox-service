@@ -48,9 +48,8 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/dev/shm", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system" ]
-#    SYSTEM_FILES   = [ "/etc/machine-id" ]
-    SYSTEM_FILES   = []
+    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache" ]
+    SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime" ]
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
@@ -248,6 +247,9 @@ WantedBy=multi-user.target
         mount = LibvirtSandbox.ConfigMountRam.new("/tmp", 100 * 1024 * 1024);
         self.config.add_mount(mount)
 
+        # 100 MB /tmp
+        mount = LibvirtSandbox.ConfigMountRam.new("/dev/shm", 100 * 1024 * 1024);
+        self.config.add_mount(mount)
 
         for d in self.SYSTEM_DIRS:
             source = "%s%s" % ( self.dest, d)
@@ -619,7 +621,7 @@ if __name__ == '__main__':
     image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
-    parser_create.add_argument("-n", "--clone", default=False,
+    parser_create.add_argument("-C", "--clone", default=False,
                                action="store_true",
                                help=_("clone content from /etc and /var directories that will be mounted within the sandbox"))
 
