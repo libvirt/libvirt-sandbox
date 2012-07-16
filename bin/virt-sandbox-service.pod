@@ -14,7 +14,7 @@ Connect to a security container console
 
 Create a security container
 
-  virt-sandbox-service [-c URI] create [-h] -e EXECUTABLE [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i SIZE] [-n] NAME
 
 Delete a security container
 
@@ -61,9 +61,9 @@ Display help message
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
-=item B<-e EXECUTABLE>, B<--executable EXECUTABLE>
+=item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
-Executable to run within the container.
+systemd unit_file(s) to be to run within the container.
 
 =item B<-p PATH>, B<--path PATH>
 
@@ -85,7 +85,7 @@ MCS Level with which to run the container.
 
 Use dynamic MCS labeling for the container
 
-=item B<-n>, B<--clone>
+=item B<-C>, B<--clone>
 
 Clone content from /etc and /var directories that will be mounted within the container.
 
@@ -107,7 +107,7 @@ systemd Unit file to run within the container
 
 Create httpd1 container
 
- # virt-sandbox-service create -n -u /lib/systemd/service/httpd.service -e /usr/sbin/httpd httpd1
+ # virt-sandbox-service create -C -u /lib/systemd/service/httpd.service -e /usr/sbin/httpd httpd1
  Created container dir /var/lib/libvirt/filesystems/httpd1
  Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
  Created unit file /etc/systemd/system/httpd@httpd1.service
