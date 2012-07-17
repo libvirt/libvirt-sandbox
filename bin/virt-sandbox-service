@@ -48,8 +48,13 @@ except IOError:
 class Container:
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system" ]
-    SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab" ]
+    NETWORK_CONFIG = "/etc/sysconfig/network"
+    SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
+    SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
+    BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/var/lib/dbus", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
+    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
+    LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
+
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
     DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
@@ -252,18 +257,18 @@ WantedBy=multi-user.target
         mount = LibvirtSandbox.ConfigMountRam.new("/dev/shm", 100 * 1024 * 1024);
         self.config.add_mount(mount)
 
-        for d in self.SYSTEM_DIRS:
+        for d in self.BIND_SYSTEM_DIRS:
             source = "%s%s" % ( self.dest, d)
             self.__add_mount(source, d)
 
-        for f in self.SYSTEM_FILES:
+        for f in self.BIND_SYSTEM_FILES:
             source = "%s%s" % ( self.dest, f)
             self.__add_mount(source, f)
 
         for d in self.dirs:
             found = False
             # Dont add dirs whos parents are in SYSTEM_DIRS
-            for s in self.SYSTEM_DIRS:
+            for s in self.BIND_SYSTEM_DIRS:
                 if d.startswith(s):
                     found = True
                     break
@@ -274,7 +279,7 @@ WantedBy=multi-user.target
     def __get_init_path(self):
         return "%s/%s/init" % (self.path, self.get_name())
 
-    def __gen_dirs(self):
+    def __gen_content(self):
         if self.clone:
             for d in self.dirs:
                 shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
@@ -282,20 +287,35 @@ WantedBy=multi-user.target
             for d in self.all_dirs:
                 os.makedirs("%s%s" % (self.dest, d))
 
-        for d in self.SYSTEM_DIRS:
+        for d in self.BIND_SYSTEM_DIRS:
             try:
                 os.makedirs("%s%s" % (self.dest, d))
             except OSError, e:
                 if not e.errno == errno.EEXIST:
                     raise e
 
-        for f in self.SYSTEM_FILES:
+        for f in self.BIND_SYSTEM_FILES:
             try:
+                try:
+                    os.makedirs("%s%s" % (self.dest, os.path.dirname(f)))
+                except OSError, e:
+                    if not e.errno == errno.EEXIST:
+                        raise e
                 fd=open("%s%s" % (self.dest, f), "w")
                 fd.close()
             except OSError, e:
                 if not e.errno == errno.EEXIST:
                     raise e
+
+        fd=open(self.dest + self.NETWORK_CONFIG, "w")
+        fd.write("HOSTNAME=%s\n" % self.config.get_name() )
+        fd.close()
+
+        for k in self.LOCAL_LINK_FILES:
+            for d in self.LOCAL_LINK_FILES[k]:
+                src = "../%s" % ( d)
+                dest = "%s%s/%s" % ( self.dest, k, d)
+                os.symlink(src,dest)
 
         unitdir = self.dest + "/etc/systemd/system"
         try:
@@ -405,10 +425,10 @@ WantedBy=multi-user.target
         sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
         if self.image:
             self.__create_image()
-            self.__gen_dirs()
+            self.__gen_content()
             self.__umount()
         else:
-            self.__gen_dirs()
+            self.__gen_content()
             selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (self.file_type, self.get_security_level()), True)
 
         self.save_config()
