@@ -78,17 +78,17 @@ _virt_sandbox_service () {
         fi
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[LIST]} " -- "$cur") )
         return 0
-    elif test "$verb" == "delete" ; then 
-	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
+    elif test "$verb" == "delete" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
         return 0
-    elif test "$verb" == "start" ; then 
-	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
+    elif test "$verb" == "start" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
         return 0
-    elif test "$verb" == "stop" ; then 
-	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+    elif test "$verb" == "stop" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
         return 0
-    elif test "$verb" == "reload" ; then 
-	COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+    elif test "$verb" == "reload" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "connect" ; then
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
@@ -109,11 +109,11 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} " -- "$cur") )
         return 0
     elif test "$verb" == "create" ; then
-	if test "$prev" = "-p" || test "$prev" = "--path" ; then
+        if test "$prev" = "-p" || test "$prev" = "--path" ; then
         COMPREPLY=( $( compgen -d -- "$cur") )
         compopt -o filenames
         return 0
-	elif test "$prev" = "-u" || test "$prev" = "--unitfile" ; then
+        elif test "$prev" = "-u" || test "$prev" = "--unitfile" ; then
         COMPREPLY=( $(compgen -W "$( __get_all_unit_files ) " -- "$cur") )
         return 0
         elif test "$prev" = "-t" || test "$prev" = "--type" ; then
