@@ -1,5 +1,5 @@
 
-bin_PROGRAMS = virt-sandbox
+bin_PROGRAMS = virt-sandbox virt-sandbox-service-util
 
 bin_SCRIPTS = virt-sandbox-service
 
@@ -31,6 +31,20 @@ virt_sandbox_CFLAGS = \
 		$(WARN_CFLAGS) \
 		$(NULL)
 virt_sandbox_LDFLAGS = \
+		$(GIO_UNIX_LIBS) \
+		$(LIBVIRT_GOBJECT_LIBS) \
+		../libvirt-sandbox/libvirt-sandbox-1.0.la \
+		$(WARN_CFLAGS) \
+		$(NULL)
+
+virt_sandbox_service_util_SOURCES = virt-sandbox-service-util.c
+virt_sandbox_service_util_CFLAGS = \
+		$(GIO_UNIX_CFLAGS) \
+		$(LIBVIRT_GOBJECT_CFLAGS) \
+		-I$(top_srcdir) \
+		$(WARN_CFLAGS) \
+		$(NULL)
+virt_sandbox_service_util_LDFLAGS = \
 		$(GIO_UNIX_LIBS) \
 		$(LIBVIRT_GOBJECT_LIBS) \
 		../libvirt-sandbox/libvirt-sandbox-1.0.la \
