@@ -52,7 +52,7 @@ class Container:
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
     BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/var/lib/dbus", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
-    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
+    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", "/etc/resolv.conf", NETWORK_CONFIG ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
@@ -563,10 +563,6 @@ def usage(parser, msg):
     sys.stderr.flush()
     sys.exit(1)
 
-def start(args):
-    container = Container(args.name, args.uri)
-    container.start()
-
 def sandbox_list(args):
     import glob
     container = Container()
@@ -588,13 +584,20 @@ def sandbox_reload(args):
     container = Container(args.name, args.uri)
     container.reload()
 
+def start(args):
+    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-s", args.name)
+#    container = Container(args.name, args.uri)
+#    container.start()
+
 def stop(args):
-    container = Container(args.name, args.uri)
-    container.stop()
+    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-S", args.name)
+#    container = Container(args.name, args.uri)
+#    container.stop()
 
 def connect(args):
-    container = Container(args.name, args.uri)
-    container.connect()
+    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
+#    container = Container(args.name, args.uri)
+#    container.connect()
 
 def execute(args):
     container = Container(args.name, args.uri)
