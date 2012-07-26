@@ -68,6 +68,8 @@ static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
         return ret;
     }
 
+    g_main_loop_run(loop);
+
     return EXIT_SUCCESS;
 }
 
@@ -96,6 +98,8 @@ static int container_attach( GVirSandboxContext *ctx,  GMainLoop *loop ) {
                    err && err->message ? err->message : _("unknown"));
         return ret;
     }
+
+    g_main_loop_run(loop);
 
     return EXIT_SUCCESS;
 }
@@ -256,9 +260,6 @@ int main(int argc, char **argv) {
     ctx = GVIR_SANDBOX_CONTEXT(service);
 
     ret = container_func(ctx, loop);
-    if (!ret)
-        g_main_loop_run(loop);
-
 
 cleanup:
     if (hv)
