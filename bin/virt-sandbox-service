@@ -52,7 +52,7 @@ class Container:
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
     BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/var/lib/dbus", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
-    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", "/etc/resolv.conf", NETWORK_CONFIG ]
+    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
@@ -279,6 +279,15 @@ WantedBy=multi-user.target
     def __get_init_path(self):
         return "%s/%s/init" % (self.path, self.get_name())
 
+    def __create_container_unit(self, src, dest, unit):
+            fd = open(dest + "/" + unit, "w")
+            fd.write(""".include %s
+[Service]
+PrivateTmp=false
+PrivateNetwork=false
+""" % src )
+            fd.close()
+    
     def __gen_content(self):
         if self.clone:
             for d in self.dirs:
@@ -337,8 +346,8 @@ WantedBy=multi-user.target
                 src = "/lib/systemd/system/" + i
             if not os.path.exists(src):
                 raise OSError("Requested unit %s does not exist" % i)
-            dst = tgtdir + "/" + i
-            os.symlink(src, dst)
+            self.__create_container_unit(src, unitdir, i)
+            os.symlink("../" + i, tgtdir + "/" + i)
 
         tgtfile = unitdir + "/sandbox.target"
         try:
