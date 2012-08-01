@@ -26,6 +26,17 @@
 
 #include <libvirt-sandbox/libvirt-sandbox.h>
 #include <glib/gi18n.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <sys/wait.h>
+#include <errno.h>
+#define STREQ(x,y) (strcmp(x,y) == 0)
+
+#define HAVE_SELINUX
+#ifdef HAVE_SELINUX
+#include <selinux/selinux.h>
+#endif
 
 static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
                          gboolean error G_GNUC_UNUSED,
@@ -36,10 +47,168 @@ static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
     return FALSE;
 }
 
+static int makeargv(const char *s, char ***argvp) {
+    gchar *ptr;
+    int argc = -1;
+    int i;
+    const gchar *delim=" \t";
+    if ((!s) || strlen(s) == 0) 
+        return argc;
+    
+    while(s && isspace(*s))
+        s++;
+    
+    if ((!s) || strlen(s) == 0) 
+        return argc;
+    
+    ptr = g_strdup(s);
+    if (!ptr)
+        return argc;
+    
+    if (strtok(ptr, delim) == NULL)
+        argc = 0;
+    else
+        for (argc = 1; strtok(NULL, delim) != NULL;
+             argc++);
+    
+    strcpy(ptr, s);
+    if ((*argvp = calloc(argc + 1, sizeof(char *))) == NULL) {
+        free(ptr);
+        argc = -1;
+    } else {            /* insert pointers to tokens into the array */
+        if (argc > 0) {
+            **argvp = strtok(ptr, delim);
+            for (i = 1; i < argc; i++)
+                *(*argvp + i) = strtok(NULL, delim);
+       } else {
+            **argvp = NULL;
+            free(ptr);
+        }
+    }
+    
+    return argc;
+}
+
 static void libvirt_sandbox_version(void)
 {
     g_print(_("%s version %s\n"), PACKAGE, VERSION);
     exit(EXIT_SUCCESS);
+}
+
+static int join_namespace(pid_t pid) {
+    int ret = -1;
+    DIR *dir = NULL;
+    struct dirent *entry;
+    int fd = -1;
+    char *pid_path = NULL;
+    char *path = NULL;
+    pid_path = g_strdup_printf("/proc/%d/ns", pid);
+    if (!pid_path) {
+        g_printerr(_("Out of memory\n"));
+        return -1;
+    }
+    if ((dir = opendir(pid_path)) == NULL) {
+        g_printerr(_("Failed to open container process path %s\n"), pid_path);
+        goto cleanup;
+    }
+    while ((entry = readdir(dir)) != NULL) { 
+        if (STREQ(entry->d_name,".") ||
+            STREQ(entry->d_name,".."))
+            continue;
+
+        path = g_strdup_printf("/proc/%d/ns/%s", pid, entry->d_name);
+        if (!path) {
+            g_printerr(_("Out of memory\n"));
+            goto cleanup;
+        }
+
+        fd = open(path, O_RDONLY);
+        if (fd < 0) {
+            g_printerr(_("Failed to open container namespace path %s\n"), path);
+            goto cleanup;
+        }
+        if (setns(fd,0) < 0) {
+            g_printerr(_("Failed to setup namespace for container namespace path %s\n"), path);
+            goto cleanup;
+        }
+        free(path); path = NULL;
+        close(fd); fd = -1;
+    }
+    ret = 0;
+
+cleanup:
+    if ( fd > -1 )
+        close(fd);
+    free(path);
+    free(pid_path);
+    if (dir)
+        closedir(dir);
+    
+    return ret;
+}
+
+static int set_process_label(pid_t pid) {
+    int ret = 0;
+
+#ifdef HAVE_SELINUX
+    security_context_t execcon = NULL;
+
+    if (getpidcon(pid, &execcon) < 0) {
+        g_printerr(_("Unable to get process context for pid %d\n"), pid);
+        return -1;
+    }
+    if (setexeccon(execcon) < 0) {
+        g_printerr(_("Unable to set executable context for pid %d\n"), pid);
+        ret = -1;
+    }
+    freecon(execcon); 
+#endif
+
+    return ret;
+}
+
+/*
+  This function should not require the PID to be passed in.  Eventually we 
+  should be able to query the libvirt for this information to get the pid of
+  libvirt_lxc or systemd associated with the container.
+*/
+    static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid_t pid ) {
+
+    int ret = EXIT_FAILURE;
+    char **argv;
+    int argc;
+
+    /* need to get pid from libvirt for container */
+    join_namespace(pid);
+
+    if (set_process_label(pid) < 0) 
+        goto cleanup;
+
+    argc = makeargv(command, &argv);
+    if (argc > -1) {
+        int child = fork();
+        if (child) {
+            int stat_loc;
+            ret = wait(&stat_loc);
+            if (ret < 0) {
+                g_printerr(_("Unable to wait for child %s\n"), strerror(errno));
+                goto cleanup;
+            }
+	    ret = WIFEXITED(stat_loc);
+	    if (ret) {
+	        ret = WEXITSTATUS(stat_loc);
+		if (ret) {
+		    g_printerr(_("Failed to execute %s: %s\n"), command, strerror(ret));
+		}
+	      }
+        } else {
+	  execv(argv[0],&argv[0]);
+	  exit(errno);
+        }
+    }
+
+cleanup:
+    return ret;
 }
 
 static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
@@ -103,7 +272,6 @@ static int container_attach( GVirSandboxContext *ctx,  GMainLoop *loop ) {
 
     return EXIT_SUCCESS;
 }
-int (*container_func)( GVirSandboxContext *ctx, GMainLoop *loop ) = NULL;
 
 static int container_stop( GVirSandboxContext *ctx, GMainLoop *loop G_GNUC_UNUSED) {
 
@@ -123,6 +291,8 @@ static int container_stop( GVirSandboxContext *ctx, GMainLoop *loop G_GNUC_UNUSE
 
     return EXIT_SUCCESS;
 }
+
+static int (*container_func)( GVirSandboxContext *ctx, GMainLoop *loop ) = NULL;
 
 static gboolean libvirt_lxc_start(const gchar *option_name,
                                    const gchar *value,
@@ -157,7 +327,6 @@ static gboolean libvirt_lxc_attach(const gchar *option_name,
     return TRUE;
 }
 
-
 int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GVirSandboxConfigService *cfg = NULL;
@@ -166,9 +335,11 @@ int main(int argc, char **argv) {
     GError *err = NULL;
     GVirConnection *hv = NULL;
     int ret = EXIT_FAILURE;
+    pid_t pid = 0;
     gchar *buf=NULL;
     GVirSandboxContextService *service;
     gchar *uri = NULL;
+    gchar *command = NULL;
 
     gchar **cmdargs = NULL;
     GOptionContext *context;
@@ -180,7 +351,15 @@ int main(int argc, char **argv) {
         { "stop", 'S', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           libvirt_lxc_stop, N_("Stop a container"), NULL },
         { "attach", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          libvirt_lxc_attach, N_("Attach to a running container"), NULL },
+          libvirt_lxc_attach, N_("Attach to a container"), NULL },
+        { "execute", 'e', 0, G_OPTION_ARG_STRING, &command, 
+          N_("Execute command in a container"), NULL },
+
+/* This option should be removed as soon as we can query libvirt for the
+   pid of libvirt_lxc or systemd associated with the container
+*/
+        { "pid", 'p', 0, G_OPTION_ARG_INT, &pid,
+          N_("Temp Feature to get pid until libvirt supports this"), "PID"},
         { "connect", 'c', 0, G_OPTION_ARG_STRING, &uri,
           N_("Connect to hypervisor Default:'lxc:///'"), "URI"},
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
@@ -203,14 +382,20 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if (container_func == NULL ) {
-        g_printerr(_("Invalid command: You must specify --start, --stop, or --attach\n%s"),
+    if ( container_func == NULL && command == NULL ) {
+        g_printerr(_("Invalid command: You must specify --start, --stop, --execute or --attach\n%s"),
                    gettext(help_msg));
         goto cleanup;
     }
 
     if (!cmdargs || !cmdargs[0] ) {
         g_printerr(_("Invalid command CONTAINER_NAME required: %s"),
+                   gettext(help_msg));
+        goto cleanup;
+    }
+
+    if ( command && (pid == 0)) {
+        g_printerr(_("Invalid command: You must only one of specify a pid with --execute\n%s"),
                    gettext(help_msg));
         goto cleanup;
     }
@@ -224,8 +409,6 @@ int main(int argc, char **argv) {
         g_printerr(_("Out of Memory\n"));
         goto cleanup;
     }
-
-    loop = g_main_loop_new(g_main_context_default(), 1);
 
     if (uri)
         hv = gvir_connection_new(uri);
@@ -259,7 +442,13 @@ int main(int argc, char **argv) {
 
     ctx = GVIR_SANDBOX_CONTEXT(service);
 
-    ret = container_func(ctx, loop);
+    if (command) {
+        container_execute(ctx, command, pid);
+    } 
+    else {
+        loop = g_main_loop_new(g_main_context_default(), 1);
+        ret = container_func(ctx, loop);
+    }
 
 cleanup:
     if (hv)
