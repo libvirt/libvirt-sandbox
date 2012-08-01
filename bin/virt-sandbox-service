@@ -595,13 +595,33 @@ def stop(args):
 #    container.stop()
 
 def connect(args):
+    print """\
+Connected to %s.
+Escape character is '^]'.
+""" % ( args.name )
     os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
 #    container = Container(args.name, args.uri)
 #    container.connect()
 
+#
+# Search Path for command to execute within the container.
+#
+def fullpath(cmd):
+    for i in [ "/", "./", "../" ]:
+        if cmd.startswith(i):
+            return cmd
+    for i in  os.environ["PATH"].split(':'):
+        f = "%s/%s" % (i, cmd)
+        if os.access(f, os.X_OK):
+            return f
+    return cmd
+
 def execute(args):
-    container = Container(args.name, args.uri)
-    container.execute(args.command)
+    myargs = args.command.split()
+    myargs[0] = fullpath(myargs[0])
+    cmd = "%s" % " ".join(myargs)
+    myexec = [ "virt-sandbox-service-util", "-e", cmd, "-p", args.pid, args.name ]
+    os.execv("/usr/bin/virt-sandbox-service-util", myexec)
 
 def clone(args):
     container = Container(args.source, args.uri)
@@ -676,6 +696,11 @@ if __name__ == '__main__':
     parser_execute.add_argument("-C", "--command", required=True,
                                 dest="command", default=None,
                                 help=_("command to execute within the sandbox"))
+    # This option should be removed as soon as we can query libvirt for the
+    # pid of libvirt_lxc or systemd associated with the container
+    parser_execute.add_argument("-p", "--pid", required=True,
+                                dest="pid", default=None,
+                                help=_("pid file of systemd"))
     parser_execute.add_argument("name",
                                 help=_("name of the sandbox container"))
 
