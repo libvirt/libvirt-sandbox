@@ -11,7 +11,7 @@ SYSLOG:  Currently syslog messages are going no where within the container.
 If we run a syslog within the container will it get messages from the outside?  Should we just use systemd-journal.  I think sysadmins will want to be able to look in /var/log/messages within the container. (systemd-journal is now running within a container)
 
 EXECUTE:
-	virt-sandbox-service execute --command "BLAH" does not work.  We need to have the ability to execute any random command within the container, and get stdin, stdout, stderror outside the container. (Partially Completed)  
+	virt-sandbox-service execute --command "BLAH" does not work.  We need to have the ability to execute any random command within the container, and get stdin, stdout, stderror outside the container. (Partially Completed)
 Still needs kernel to implement missing container namespace files under /proc/PID/ns, Also need a mechansm to get the PID of systemd from libvirt.
 
 HOSTNAME:
@@ -22,4 +22,3 @@ virt-sandbox-service connect NAME hangs when you attempt to end the connection.
 
 Need a mechanism to allow admins to specify additional services to run within
 the container.  For example you may want to run mysql and apache within the same container. (Completed) You can do this using systemctl enabel BLAH
-

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Simple script to setup hundreds of containers at the same time
-# 
+#
 # In order to create 100 containers execute
 # containers_test.sh create apache 100
 # Start

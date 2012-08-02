@@ -52,25 +52,25 @@ static int makeargv(const char *s, char ***argvp) {
     int argc = -1;
     int i;
     const gchar *delim=" \t";
-    if ((!s) || strlen(s) == 0) 
+    if ((!s) || strlen(s) == 0)
         return argc;
-    
+
     while(s && isspace(*s))
         s++;
-    
-    if ((!s) || strlen(s) == 0) 
+
+    if ((!s) || strlen(s) == 0)
         return argc;
-    
+
     ptr = g_strdup(s);
     if (!ptr)
         return argc;
-    
+
     if (strtok(ptr, delim) == NULL)
         argc = 0;
     else
         for (argc = 1; strtok(NULL, delim) != NULL;
              argc++);
-    
+
     strcpy(ptr, s);
     if ((*argvp = calloc(argc + 1, sizeof(char *))) == NULL) {
         free(ptr);
@@ -80,12 +80,12 @@ static int makeargv(const char *s, char ***argvp) {
             **argvp = strtok(ptr, delim);
             for (i = 1; i < argc; i++)
                 *(*argvp + i) = strtok(NULL, delim);
-       } else {
+        } else {
             **argvp = NULL;
             free(ptr);
         }
     }
-    
+
     return argc;
 }
 
@@ -111,7 +111,7 @@ static int join_namespace(pid_t pid) {
         g_printerr(_("Failed to open container process path %s\n"), pid_path);
         goto cleanup;
     }
-    while ((entry = readdir(dir)) != NULL) { 
+    while ((entry = readdir(dir)) != NULL) {
         if (STREQ(entry->d_name,".") ||
             STREQ(entry->d_name,".."))
             continue;
@@ -143,7 +143,7 @@ cleanup:
     free(pid_path);
     if (dir)
         closedir(dir);
-    
+
     return ret;
 }
 
@@ -161,18 +161,18 @@ static int set_process_label(pid_t pid) {
         g_printerr(_("Unable to set executable context for pid %d\n"), pid);
         ret = -1;
     }
-    freecon(execcon); 
+    freecon(execcon);
 #endif
 
     return ret;
 }
 
 /*
-  This function should not require the PID to be passed in.  Eventually we 
+  This function should not require the PID to be passed in.  Eventually we
   should be able to query the libvirt for this information to get the pid of
   libvirt_lxc or systemd associated with the container.
 */
-    static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid_t pid ) {
+static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid_t pid ) {
 
     int ret = EXIT_FAILURE;
     char **argv;
@@ -181,7 +181,7 @@ static int set_process_label(pid_t pid) {
     /* need to get pid from libvirt for container */
     join_namespace(pid);
 
-    if (set_process_label(pid) < 0) 
+    if (set_process_label(pid) < 0)
         goto cleanup;
 
     argc = makeargv(command, &argv);
@@ -194,16 +194,16 @@ static int set_process_label(pid_t pid) {
                 g_printerr(_("Unable to wait for child %s\n"), strerror(errno));
                 goto cleanup;
             }
-	    ret = WIFEXITED(stat_loc);
-	    if (ret) {
-	        ret = WEXITSTATUS(stat_loc);
-		if (ret) {
-		    g_printerr(_("Failed to execute %s: %s\n"), command, strerror(ret));
-		}
-	      }
+            ret = WIFEXITED(stat_loc);
+            if (ret) {
+                ret = WEXITSTATUS(stat_loc);
+                if (ret) {
+                    g_printerr(_("Failed to execute %s: %s\n"), command, strerror(ret));
+                }
+            }
         } else {
-	  execv(argv[0],&argv[0]);
-	  exit(errno);
+            execv(argv[0],&argv[0]);
+            exit(errno);
         }
     }
 
@@ -295,9 +295,9 @@ static int container_stop( GVirSandboxContext *ctx, GMainLoop *loop G_GNUC_UNUSE
 static int (*container_func)( GVirSandboxContext *ctx, GMainLoop *loop ) = NULL;
 
 static gboolean libvirt_lxc_start(const gchar *option_name,
-                                   const gchar *value,
-                                   const gpointer *data,
-                                   const GError **error)
+                                  const gchar *value,
+                                  const gpointer *data,
+                                  const GError **error)
 
 {
     if (container_func) return FALSE;
@@ -306,9 +306,9 @@ static gboolean libvirt_lxc_start(const gchar *option_name,
 }
 
 static gboolean libvirt_lxc_stop(const gchar *option_name,
-                                   const gchar *value,
-                                   const gpointer *data,
-                                   const GError **error)
+                                 const gchar *value,
+                                 const gpointer *data,
+                                 const GError **error)
 
 {
     if (container_func) return FALSE;
@@ -352,7 +352,7 @@ int main(int argc, char **argv) {
           libvirt_lxc_stop, N_("Stop a container"), NULL },
         { "attach", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           libvirt_lxc_attach, N_("Attach to a container"), NULL },
-        { "execute", 'e', 0, G_OPTION_ARG_STRING, &command, 
+        { "execute", 'e', 0, G_OPTION_ARG_STRING, &command,
           N_("Execute command in a container"), NULL },
 
 /* This option should be removed as soon as we can query libvirt for the
@@ -444,7 +444,7 @@ int main(int argc, char **argv) {
 
     if (command) {
         container_execute(ctx, command, pid);
-    } 
+    }
     else {
         loop = g_main_loop_new(g_main_context_default(), 1);
         ret = container_func(ctx, loop);

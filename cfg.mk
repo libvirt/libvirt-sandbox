@@ -119,7 +119,7 @@ sc_check_author_list:
 	test $$fail = 0
 
 
-exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)
+exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)|(bin/virt-sandbox-service-util.c)
 
 exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]
 
