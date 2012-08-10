@@ -1,5 +1,7 @@
 
-bin_PROGRAMS = virt-sandbox virt-sandbox-service-util
+bin_PROGRAMS = virt-sandbox
+
+libexec_PROGRAMS = virt-sandbox-service-util
 
 bin_SCRIPTS = virt-sandbox-service
 

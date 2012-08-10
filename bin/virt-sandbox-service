@@ -594,12 +594,12 @@ def sandbox_reload(args):
     container.reload()
 
 def start(args):
-    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-s", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-s", args.name)
 #    container = Container(args.name, args.uri)
 #    container.start()
 
 def stop(args):
-    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-S", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-S", args.name)
 #    container = Container(args.name, args.uri)
 #    container.stop()
 
@@ -608,7 +608,7 @@ def connect(args):
 Connected to %s.
 Escape character is '^]'.
 """ % ( args.name )
-    os.execl("/usr/bin/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
 #    container = Container(args.name, args.uri)
 #    container.connect()
 
@@ -630,7 +630,7 @@ def execute(args):
     myargs[0] = fullpath(myargs[0])
     cmd = "%s" % " ".join(myargs)
     myexec = [ "virt-sandbox-service-util", "-e", cmd, "-p", args.pid, args.name ]
-    os.execv("/usr/bin/virt-sandbox-service-util", myexec)
+    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
 
 def clone(args):
     container = Container(args.source, args.uri)
