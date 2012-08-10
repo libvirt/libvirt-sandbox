@@ -24,6 +24,7 @@ BuildRequires: libvirt-gobject-devel >= 0.0.9
 %if %{with_introspection}
 BuildRequires: gobject-introspection-devel
 %endif
+BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 Requires: glib2-devel >= 2.32.0
 
@@ -85,6 +86,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/libvirt-sandbox/services
 %{_bindir}/virt-sandbox
 %{_bindir}/virt-sandbox-service
+%{_libexecdir}/virt-sandbox-service-util
 %{_mandir}/man1/virt-sandbox.1*
 %{_mandir}/man1/virt-sandbox-service.1*
 
