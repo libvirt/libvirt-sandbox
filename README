@@ -27,10 +27,11 @@ Or to install into a private user specific location
 The following mandatory dependancies are required in order to
 build libvirt-sandbox
 
-  libvirt-glib     >= 0.0.7
-  libvirt          >= 0.9.11
+  libvirt-glib     >= 0.0.9
+  libvirt          >= 0.9.13
   glib2            >= 2.28.0
 
+And either the libvirt LXC or QEMU/KVM drivers.
 
 
 Communication
