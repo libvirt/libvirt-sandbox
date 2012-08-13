@@ -1,6 +1,38 @@
       libvirt Sandbox News
       ====================
 
+0.1.0 2012-08-10
+----------------
+
+ - ABI+API incompatible with previous library, so new soname
+ - Some changes to CLI args for virt-sandbox command
+ - Many fixes to virt-sandbox-service
+ - Use /run/libvirt-sandbox instead of /root/.cache/libvirt
+   when run as root
+ - Fix typo setting RUNDIR
+ - Re-add /kernel suffix to kmod search dir
+ - Add APIs to select kernel version
+ - Fix SEGV when attaching consoles to NULL stdin
+ - Add logrotate script for virt-sandbox-service
+ - Turn GVirSandboxConsole into an abstract class
+ - Configurable keysequence for breaking out of console
+   (defaults to Ctrl+])
+ - Fix handling of strace debugging
+ - Add APIs to select kmod directory prefix
+ - Require glib >= 2.32
+ - Refactor APIs for configuring sandbox mounts
+ - Maintain a single sorted list of mounts
+ - Add support for RAM filesystems
+ - Setup tmpfs for /run and /tmp in sandbox services
+ - Remove need to provide executable for sandbox services,
+   just rely on systemd unit filename
+ - Enable admin customization of systemd services in sandbox
+   services
+ - Rewrite part of virt-sandbox-service in C to reduce
+   long term memory overhead
+ - Create custom systemd startup sequence
+
+
 0.0.3 2012-04-13
 ----------------
 
