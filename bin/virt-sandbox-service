@@ -51,7 +51,8 @@ class Container:
     NETWORK_CONFIG = "/etc/sysconfig/network"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
-    BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var/tmp", "/var/log", "/var/lib/dhclient", "/var/lib/dbus", "/home", "/root", "/var/spool", "/var/cache", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
+    MAKE_SYSTEM_DIRS = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp" ]
+    BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var", "/home", "/root", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
@@ -70,7 +71,7 @@ class Container:
 	self.config = None
 	self.file_type = self.SELINUX_FILE_TYPE
 	self.unit_file_list = []
-
+        
 	if name:
 	    config = self.get_config_path(name)
 
@@ -288,33 +289,49 @@ PrivateNetwork=false
 """ % src )
 	    fd.close()
 
+    def fix_stat(self, f):
+        try:
+            s = os.stat(f)
+            path = "%s%s" % (self.dest, f)
+            os.chown(path, s.st_uid, s.st_gid)
+            os.chmod(path, s.st_mode)
+        except OSError, e:
+            if not e.errno == errno.ENOENT:
+                raise e
+
+    def makedirs(self, d):
+        try:
+            path = "%s%s" % (self.dest, d)
+            os.makedirs(path)
+        except OSError, e:
+            if not e.errno == errno.EEXIST:
+                raise e
+        self.fix_stat(d)
+
+    def makefile(self, f):
+        self.makedirs(os.path.dirname(f))
+        try:
+            path = "%s%s" % (self.dest, f)
+            fd=open(path, "w")
+            fd.close()
+        except OSError, e:
+            if not e.errno == errno.EEXIST:
+                raise e
+        self.fix_stat(f)
+
     def __gen_content(self):
+	for d in self.BIND_SYSTEM_DIRS + self.MAKE_SYSTEM_DIRS:
+            self.makedirs(d)
+
+	for f in self.BIND_SYSTEM_FILES:
+            self.makefile(f)
+
 	if self.clone:
 	    for d in self.dirs:
 		shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
 	else:
 	    for d in self.all_dirs:
-		os.makedirs("%s%s" % (self.dest, d))
-
-	for d in self.BIND_SYSTEM_DIRS:
-	    try:
-		os.makedirs("%s%s" % (self.dest, d))
-	    except OSError, e:
-		if not e.errno == errno.EEXIST:
-		    raise e
-
-	for f in self.BIND_SYSTEM_FILES:
-	    try:
-		try:
-		    os.makedirs("%s%s" % (self.dest, os.path.dirname(f)))
-		except OSError, e:
-		    if not e.errno == errno.EEXIST:
-			raise e
-		fd=open("%s%s" % (self.dest, f), "w")
-		fd.close()
-	    except OSError, e:
-		if not e.errno == errno.EEXIST:
-		    raise e
+		self.makedirs(d)
 
 	fd=open(self.dest + self.NETWORK_CONFIG, "w")
 	fd.write("HOSTNAME=%s\n" % self.config.get_name() )
@@ -326,19 +343,11 @@ PrivateNetwork=false
 		dest = "%s%s/%s" % ( self.dest, k, d)
 		os.symlink(src,dest)
 
-	unitdir = self.dest + "/etc/systemd/system"
-	try:
-	    os.makedirs(unitdir)
-	except OSError, e:
-	    if not e.errno == errno.EEXIST:
-		raise e
-
+        unitdir = "/etc/systemd/system"
 	tgtdir = unitdir + "/sandbox.target.wants"
-	try:
-	    os.makedirs(tgtdir)
-	except OSError, e:
-	    if not e.errno == errno.EEXIST:
-		raise e
+
+        self.makedirs(unitdir)
+        self.makedirs(tgtdir)
 
 	for i in self.unit_file_list:
 	    src = "/etc/systemd/system/" + i
@@ -346,19 +355,19 @@ PrivateNetwork=false
 		src = "/lib/systemd/system/" + i
 	    if not os.path.exists(src):
 		raise OSError("Requested unit %s does not exist" % i)
-	    self.__create_container_unit(src, unitdir, i)
-	    os.symlink("../" + i, tgtdir + "/" + i)
+	    self.__create_container_unit(src, self.dest + unitdir, i)
+	    os.symlink("../" + i, self.dest + tgtdir + "/" + i)
 
 	tgtfile = unitdir + "/sandbox.target"
 	try:
-	    fd = open(tgtfile, "w")
+	    fd = open(self.dest + tgtfile, "w")
 	    fd.write("[Unit]\n")
 	    fd.write("Description=Sandbox target\n")
 	    fd.close()
 	except OSError, e:
 	    if not e.errno == errno.EEXIST:
 		raise e
-
+            self.fix_stat(tgtfile)
 
     def __umount(self):
 	p = Popen(["/bin/umount", self.dest])
