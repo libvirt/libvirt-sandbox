@@ -46,6 +46,7 @@ except IOError:
     __builtin__.__dict__['_'] = unicode
 
 class Container:
+    IGNORE_DIRS  = [ "/var/run/", "/etc/logrotate.d/" ]
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
     NETWORK_CONFIG = "/etc/sysconfig/network"
@@ -91,7 +92,7 @@ class Container:
 
     def __follow_units(self):
         unitst=""
-        for i in self.unit_file_list:
+        for i, src in self.unit_file_list:
             unitst += "#ReloadPropagatedFrom=%s\n" % i
 
         return unitst
@@ -99,17 +100,7 @@ class Container:
     def __gen_unit_file_name(self):
         if len(self.unit_file_list) != 1:
             return "/etc/systemd/system/%s.service" % self.config.get_name()
-        return "/etc/systemd/system/%s@%s.service" %  (self.unit_file_list[0].split(".")[0], self.config.get_name())
-
-    def add_unit_file(self, unit_file):
-        if unit_file not in self.unit_file_list:
-            self.unit_file_list.append(unit_file)
-
-    def delete_unit_file(self, unit_file):
-        self.unit_file_list.delete(unit_file)
-
-    def get_unit_file(self, unit_file):
-        return self.unit_file_list
+        return "/etc/systemd/system/%s@%s.service" %  (self.unit_file_list[0][0].split(".")[0], self.config.get_name())
 
     def set_unit_file_list(self, unit_file_list):
         self.unit_file_list = unit_file_list
@@ -213,8 +204,9 @@ WantedBy=multi-user.target
     def __extract_rpms(self):
         self.all_dirs = []
         self.dirs = []
+        self.files = []
 
-        for u in self.unit_file_list:
+        for u, src in self.unit_file_list:
             self.__extract_rpm_for_unit(u)
 
     def __extract_rpm_for_unit(self, unitfile):
@@ -224,11 +216,20 @@ WantedBy=multi-user.target
             h = mi.next()
             for rec in h.fiFromHeader():
                 f = rec[0]
-                for b in self.DEFAULT_DIRS:
-                    # /var/run is a symbolic link to /run
-                    if f.startswith(b) and not f.startswith("/var/run/"):
+
+                ignore = False
+                for d in self.IGNORE_DIRS:
+                    if f.startswith(d):
+                        ignore = True
+                if ignore:
+                    continue
+
+                for d in self.DEFAULT_DIRS:
+                    if f.startswith(d):
                         if os.path.isdir(f):
                             self.__add_dir(f)
+                        if os.path.isfile(f):
+                            self.files.append(f)
         except StopIteration:
             pass
 
@@ -289,7 +290,7 @@ PrivateNetwork=false
 """ % src )
             fd.close()
 
-    def fix_stat(self, f):
+    def __fix_stat(self, f):
         try:
             s = os.stat(f)
             path = "%s%s" % (self.dest, f)
@@ -299,6 +300,16 @@ PrivateNetwork=false
             if not e.errno == errno.ENOENT:
                 raise e
 
+    def __fix_protection(self):
+        l = len(self.dest)
+        for root, dirs, files in os.walk(self.dest):
+            for f in files:
+                dest = root + "/" + f
+                self.__fix_stat(dest[l:])
+            for d in dirs:
+                dest = root + "/" + d
+                self.__fix_stat(dest[l:])
+
     def makedirs(self, d):
         try:
             path = "%s%s" % (self.dest, d)
@@ -306,7 +317,6 @@ PrivateNetwork=false
         except OSError, e:
             if not e.errno == errno.EEXIST:
                 raise e
-        self.fix_stat(d)
 
     def makefile(self, f):
         self.makedirs(os.path.dirname(f))
@@ -317,7 +327,6 @@ PrivateNetwork=false
         except OSError, e:
             if not e.errno == errno.EEXIST:
                 raise e
-        self.fix_stat(f)
 
     def __gen_content(self):
         for d in self.BIND_SYSTEM_DIRS + self.MAKE_SYSTEM_DIRS:
@@ -329,9 +338,15 @@ PrivateNetwork=false
         if self.clone:
             for d in self.dirs:
                 shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
+            for f in self.files:
+                self.makedirs(os.path.dirname(f))
+                shutil.copy(f, "%s%s" % (self.dest, f))
         else:
             for d in self.all_dirs:
                 self.makedirs(d)
+            for f in self.files:
+                self.makedirs(os.path.dirname(f))
+                self.makefile(f)
 
         fd=open(self.dest + self.NETWORK_CONFIG, "w")
         fd.write("HOSTNAME=%s\n" % self.config.get_name() )
@@ -349,12 +364,7 @@ PrivateNetwork=false
         self.makedirs(unitdir)
         self.makedirs(tgtdir)
 
-        for i in self.unit_file_list:
-            src = "/etc/systemd/system/" + i
-            if not os.path.exists(src):
-                src = "/lib/systemd/system/" + i
-            if not os.path.exists(src):
-                raise OSError("Requested unit %s does not exist" % i)
+        for i, src in self.unit_file_list:
             self.__create_container_unit(src, self.dest + unitdir, i)
             os.symlink("../" + i, self.dest + tgtdir + "/" + i)
 
@@ -367,7 +377,7 @@ PrivateNetwork=false
         except OSError, e:
             if not e.errno == errno.EEXIST:
                 raise e
-            self.fix_stat(tgtfile)
+        self.__fix_protection()
 
     def __umount(self):
         p = Popen(["/bin/umount", self.dest])
@@ -653,6 +663,20 @@ class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, int(values))
 
+class CheckUnit(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        src = "/etc/systemd/system/" + values
+        if not os.path.exists(src):
+            src = "/lib/systemd/system/" + values
+            if not os.path.exists(src):
+                raise OSError("Requested unit %s does not exist" % values)
+        unitfiles = getattr(namespace, self.dest)
+        if unitfiles:
+            unitfiles.append((values, src))
+        else:
+            unitfiles = [ (values, src) ]
+        setattr(namespace, self.dest, unitfiles)
+
 if __name__ == '__main__':
     c = Container()
 
@@ -665,7 +689,8 @@ if __name__ == '__main__':
                                           help=_("create a sandbox container"))
 
     parser_create.add_argument("-u", "--unitfile", required=True,
-                               dest="unitfiles",  action='append',
+                               action=CheckUnit,
+                               dest="unitfiles",
                                help=_("Systemd Unit file to run within the sandbox container"))
     parser_create.add_argument("-p", "--path", dest="path",  default=None,
                                help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
