@@ -131,20 +131,19 @@ WantedBy=multi-user.target
     def __add_dir(self, newd):
         if newd in self.all_dirs:
             return
-        for d in self.IGNORE_DIRS:
-            if newd.startswith(d):
+        for ignd in self.IGNORE_DIRS:
+            if newd.startswith(ignd):
                 return
-        for d in self.DEFAULT_DIRS:
-            if newd.startswith(d):
+        for defd in self.DEFAULT_DIRS:
+            if newd.startswith(defd):
                 self.all_dirs.append(newd)
-                tmp = self.dirs
-                for d in tmp:
+                tmp_dirs = []
+                for d in self.dirs:
                     if newd.startswith(d):
                         return
-                    if d.startswith(newd):
-                        self.dirs.remove(d)
-                        self.dirs.append(newd)
-                        return
+                    if not d.startswith(newd):
+                        tmp_dirs.append(d)
+                self.dirs = tmp_dirs
                 self.dirs.append(newd)
                 break;
 
@@ -343,12 +342,6 @@ PrivateNetwork=false
                 raise e
 
     def __gen_content(self):
-        for d in self.BIND_SYSTEM_DIRS + self.MAKE_SYSTEM_DIRS:
-            self.makedirs(d)
-
-        for f in self.BIND_SYSTEM_FILES:
-            self.makefile(f)
-
         if self.clone:
             for d in self.dirs:
                 shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
@@ -361,6 +354,12 @@ PrivateNetwork=false
             for f in self.files:
                 self.makedirs(os.path.dirname(f))
                 self.makefile(f)
+        
+        for d in self.BIND_SYSTEM_DIRS + self.MAKE_SYSTEM_DIRS:
+            self.makedirs(d)
+
+        for f in self.BIND_SYSTEM_FILES:
+            self.makefile(f)
 
         fd=open(self.dest + self.NETWORK_CONFIG, "w")
         fd.write("HOSTNAME=%s\n" % self.config.get_name() )
