@@ -26,7 +26,7 @@ from gi.repository import LibvirtSandbox
 from gi.repository import GLib
 import gi
 import os, sys, shutil, errno, stat
-import rpm
+import yum
 from subprocess import Popen, PIPE, STDOUT
 import gettext
 import selinux
@@ -46,14 +46,14 @@ except IOError:
     __builtin__.__dict__['_'] = unicode
 
 class Container:
-    IGNORE_DIRS  = [ "/var/run/", "/etc/logrotate.d/" ]
+    IGNORE_DIRS  = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS  = [ "/etc", "/var" ]
     CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
     NETWORK_CONFIG = "/etc/sysconfig/network"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
     MAKE_SYSTEM_DIRS = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp" ]
-    BIND_SYSTEM_DIRS   = [ "/etc/pki", "/var", "/home", "/root", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
+    BIND_SYSTEM_DIRS   = [ "/var", "/var/lib/rpm", "/home", "/root", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
@@ -129,16 +129,35 @@ WantedBy=multi-user.target
         sys.stdout.write("Created unit file %s\n" % self.unitfile)
 
     def __add_dir(self, newd):
-        self.all_dirs.append(newd)
-        tmp = self.dirs
-        for d in tmp:
+        if newd in self.all_dirs:
+            return
+        for d in self.IGNORE_DIRS:
             if newd.startswith(d):
                 return
-            if d.startswith(newd):
-                self.dirs.remove(d)
+        for d in self.DEFAULT_DIRS:
+            if newd.startswith(d):
+                self.all_dirs.append(newd)
+                tmp = self.dirs
+                for d in tmp:
+                    if newd.startswith(d):
+                        return
+                    if d.startswith(newd):
+                        self.dirs.remove(d)
+                        self.dirs.append(newd)
+                        return
                 self.dirs.append(newd)
+                break;
+
+    def __add_file(self, newf):
+        if newf in self.files:
+            return
+        for d in self.IGNORE_DIRS:
+            if newf.startswith(d):
                 return
-        self.dirs.append(newd)
+        for d in self.DEFAULT_DIRS:
+            if newf.startswith(d):
+                self.files.append(newf)
+                break;
 
     def get_config_path(self, name = None):
         if not name:
@@ -206,32 +225,27 @@ WantedBy=multi-user.target
         self.dirs = []
         self.files = []
 
+        self.yb = yum.YumBase()
+
+        self.yb.setCacheDir()
+
         for u, src in self.unit_file_list:
-            self.__extract_rpm_for_unit(u)
+            self.__extract_rpm_for_unit(src)
 
     def __extract_rpm_for_unit(self, unitfile):
-        try:
-            ts = rpm.ts()
-            mi = ts.dbMatch(rpm.RPMTAG_BASENAMES, "/lib/systemd/system/" + unitfile)
-            h = mi.next()
-            for rec in h.fiFromHeader():
-                f = rec[0]
+        for pkg in self.yb.searchPackageProvides([unitfile]):
+            for fname in pkg.filelist + pkg.ghostlist + pkg.dirlist:
+                if os.path.isdir(fname):
+                    self.__add_dir(fname)
+                if os.path.isfile(fname):
+                    self.__add_file(fname)
 
-                ignore = False
-                for d in self.IGNORE_DIRS:
-                    if f.startswith(d):
-                        ignore = True
-                if ignore:
-                    continue
-
-                for d in self.DEFAULT_DIRS:
-                    if f.startswith(d):
-                        if os.path.isdir(f):
-                            self.__add_dir(f)
-                        if os.path.isfile(f):
-                            self.files.append(f)
-        except StopIteration:
-            pass
+            for bpkg in self.yb.rpmdb.searchNames([pkg.base_package_name]):
+                for fname in bpkg.filelist + bpkg.ghostlist + bpkg.dirlist:
+                    if os.path.isdir(fname):
+                        self.__add_dir(fname)
+                    if os.path.isfile(fname):
+                        self.__add_file(fname)
 
     def __add_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
