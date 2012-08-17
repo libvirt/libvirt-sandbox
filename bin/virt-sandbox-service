@@ -354,7 +354,7 @@ PrivateNetwork=false
             for f in self.files:
                 self.makedirs(os.path.dirname(f))
                 self.makefile(f)
-        
+
         for d in self.BIND_SYSTEM_DIRS + self.MAKE_SYSTEM_DIRS:
             self.makedirs(d)
 
