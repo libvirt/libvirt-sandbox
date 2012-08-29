@@ -32,7 +32,11 @@ Requires: glib2-devel >= 2.32.0
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
-Requires: libvirt >= 0.9.12
+%ifarch %{ix86} x86_64
+Requires: libvirt-daemon-kvm >= 0.9.12
+%endif
+Requires: libvirt-daemon-qemu >= 0.9.12
+Requires: libvirt-daemon-lxc >= 0.9.12
 
 %package devel
 Group: Development/Libraries
