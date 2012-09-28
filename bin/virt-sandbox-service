@@ -738,11 +738,11 @@ def clone(args):
             selinux.chcon(new_path, "system_u:object_r:%s:%s" % (container.file_type, args.level), True)
         sys.stdout.write("Created sandbox container dir %s\n" % new_path)
 
-    fd = open(container.get_unit_path()) 
+    fd = open(container.get_unit_path())
     recs = fd.read()
     fd.close()
 
-    fd = open(container.get_unit_path(args.dest), "wx") 
+    fd = open(container.get_unit_path(args.dest), "wx")
     fd.write(recs.replace(args.source, args.dest))
     fd.close()
 
@@ -756,7 +756,7 @@ def clone(args):
     if args.level:
         container.set_security_level(args.level)
     container.save_config()
-        
+
 import argparse
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
