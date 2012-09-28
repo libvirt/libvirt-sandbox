@@ -46,24 +46,26 @@ except IOError:
     __builtin__.__dict__['_'] = unicode
 
 class Container:
-    IGNORE_DIRS  = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
-    DEFAULT_DIRS  = [ "/etc", "/var" ]
-    CONFIG_PATH   = "/etc/libvirt-sandbox/services/"
-    NETWORK_CONFIG = "/etc/sysconfig/network"
+    IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
+    DEFAULT_DIRS       = [ "/etc", "/var" ]
+    CONFIG_PATH        = "/etc/libvirt-sandbox/services/"
+    MACHINE_ID         = "/etc/machine-id"
+    NETWORK_CONFIG     = "/etc/sysconfig/network"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
-    SOCKET_WANTS_PATH = "/usr/lib/systemd/system/sockets.target.wants"
-    MAKE_SYSTEM_DIRS = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp" ]
-    BIND_SYSTEM_DIRS   = [ "/var", "/var/lib/rpm", "/home", "/root", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
-    BIND_SYSTEM_FILES   = [ "/etc/machine-id", "/etc/adjtime", "/etc/fstab", NETWORK_CONFIG ]
+    SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
+    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp" ]
+    BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
+    BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", NETWORK_CONFIG ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
-    DEFAULT_PATH  = "/var/lib/libvirt/filesystems"
-    DEFAULT_IMAGE = "/var/lib/libvirt/images/%s.raw"
+    DEFAULT_PATH       = "/var/lib/libvirt/filesystems"
+    DEFAULT_IMAGE      = "/var/lib/libvirt/images/%s.raw"
+    DEFAULT_UNIT       = "/etc/systemd/system/%s_sandbox.service"
 
     def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH, config=None, create=False):
         self.uri = uri
-        self.clone = False
+        self.copy = False
         self.use_image = False
         self.path = path
         self.conn = None
@@ -86,33 +88,61 @@ class Container:
         if config:
             try:
                 self.config = LibvirtSandbox.Config.load_from_path(config)
-                self.unitfile = self.__gen_unit_file_name()
+                self.unitfile = self.get_unit_path()
             except gi._glib.GError, e:
                 raise OSError(config + ": " + str(e))
 
     def __follow_units(self):
         unitst=""
         for i, src in self.unit_file_list:
-            unitst += "#ReloadPropagatedFrom=%s\n" % i
+            unitst += "ReloadPropagatedFrom=%s\n" % i
 
         return unitst
 
-    def __gen_unit_file_name(self):
-        if len(self.unit_file_list) != 1:
-            return "/etc/systemd/system/%s.service" % self.config.get_name()
-        return "/etc/systemd/system/%s@%s.service" %  (self.unit_file_list[0][0].split(".")[0], self.config.get_name())
+    def get_unit_path(self, name = None):
+        if not name:
+            name = self.get_name()
+        return self.DEFAULT_UNIT % name
 
     def set_unit_file_list(self, unit_file_list):
         self.unit_file_list = unit_file_list
 
+    def __get_sandbox_target(self):
+        if len(self.unit_file_list) > 1:
+            raise ValueError(["Only Valid for single units"])
+        return "%s_sandbox.target" %  self.unit_file_list[0][0].split(".")[0]
+
+    def __partof(self):
+        try:
+            name = self.__get_sandbox_target()
+            path = "/etc/systemd/system/" + name
+            if not os.path.exists(path):
+                fd = open(path, "w")
+                fd.write("""
+#  This file is part of virt-sandbox.
+#
+#  virt-sandbox is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+[Unit]
+Description=Sandbox Container
+Documentation=man:virt-sandbox-service(1)
+""")
+            return "PartOf=%s" % name
+        except ValueError:
+            return ""
+
     def __create_system_unit(self):
-        self.unitfile = self.__gen_unit_file_name()
+        self.unitfile = self.get_unit_path()
         name = self.config.get_name()
         unit = r"""
 [Unit]
 Description=Secure Sandbox Container %(NAME)s
 Requires=libvirtd.service
 After=libvirtd.service
+%(PARTOF)s
 %(FOLLOW)s
 [Service]
 Type=simple
@@ -122,10 +152,11 @@ ExecStop=/usr/bin/virt-sandbox-service stop %(NAME)s
 
 [Install]
 WantedBy=multi-user.target
-""" % { 'NAME':name, 'FOLLOW':self.__follow_units() }
+""" % { 'NAME':name, 'FOLLOW':self.__follow_units(), 'PARTOF':self.__partof() }
         fd = open(self.unitfile, "w")
         fd.write(unit)
         fd.close()
+        selinux.restorecon(self.unitfile)
         sys.stdout.write("Created unit file %s\n" % self.unitfile)
 
     def __add_dir(self, newd):
@@ -163,13 +194,23 @@ WantedBy=multi-user.target
             name = self.get_name()
         return self.CONFIG_PATH + name + ".sandbox"
 
+    def get_filesystem_path(self, name = None):
+        if not name:
+            name = self.get_name()
+        return self.DEFAULT_PATH + "/" + name
+
+    def get_image_path(self, name = None):
+        if not name:
+            name = self.get_name()
+        return self.DEFAULT_IMAGE % name
+
     def get_name(self):
         if self.config:
             return self.config.get_name()
         raise ValueError(["Name not configured"])
 
-    def set_clone(self, clone):
-        self.clone = clone
+    def set_copy(self, copy):
+        self.copy = copy
 
     def get_dynamic(self):
         return self.config.get_security_dynamic()
@@ -225,14 +266,14 @@ WantedBy=multi-user.target
         self.files = []
 
         self.yb = yum.YumBase()
-
         self.yb.setCacheDir()
 
         for u, src in self.unit_file_list:
             self.__extract_rpm_for_unit(src)
 
     def __extract_rpm_for_unit(self, unitfile):
-        for pkg in self.yb.searchPackageProvides([unitfile]):
+
+        for pkg in self.yb.rpmdb.searchProvides(unitfile):
             for fname in pkg.filelist + pkg.ghostlist + pkg.dirlist:
                 if os.path.isdir(fname):
                     self.__add_dir(fname)
@@ -258,10 +299,6 @@ WantedBy=multi-user.target
 
         # 10 MB /run
         mount = LibvirtSandbox.ConfigMountRam.new("/run", 10 * 1024 * 1024);
-        self.config.add_mount(mount)
-
-        # Link /var/run to /run
-        mount = LibvirtSandbox.ConfigMountGuestBind.new("/run", "/var/run")
         self.config.add_mount(mount)
 
         # 100 MB /tmp
@@ -342,7 +379,7 @@ PrivateNetwork=false
                 raise e
 
     def __gen_content(self):
-        if self.clone:
+        if self.copy:
             for d in self.dirs:
                 shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
             for f in self.files:
@@ -361,6 +398,14 @@ PrivateNetwork=false
         for f in self.BIND_SYSTEM_FILES:
             self.makefile(f)
 
+        fd=open(self.dest + self.MACHINE_ID, "w")
+        p = Popen(["/usr/bin/journalctl", "--new-id128"], stdout=PIPE, stderr=PIPE)
+        stdout,stderr = p.communicate()
+        if p.returncode and p.returncode != 0:
+            raise OSError("Failed to execute journalctl: %s" % stderr)
+        fd.write("%s\n" % stdout.split()[2])
+        fd.close()
+
         fd=open(self.dest + self.NETWORK_CONFIG, "w")
         fd.write("HOSTNAME=%s\n" % self.config.get_name() )
         fd.close()
@@ -376,6 +421,7 @@ PrivateNetwork=false
 
         self.makedirs(unitdir)
         self.makedirs(tgtdir)
+        os.symlink("/run", self.dest + "/var/run")
 
         for i, src in self.unit_file_list:
             self.__create_container_unit(src, self.dest + unitdir, i)
@@ -417,6 +463,7 @@ PrivateNetwork=false
         if os.path.exists(config):
             os.remove(config)
         self.config.save_to_path(config)
+        selinux.restorecon(config)
         sys.stdout.write("Created sandbox config %s\n" % config)
 
     def __get_image_path(self):
@@ -447,6 +494,11 @@ PrivateNetwork=false
         if os.path.exists(config):
             os.remove(config)
 
+        image = self.get_image_path()
+        if os.path.exists(image):
+            os.remove(image)
+
+
         if os.path.exists(self.unitfile):
             os.remove(self.unitfile)
 
@@ -463,15 +515,15 @@ PrivateNetwork=false
         self.__extract_rpms()
         self.__gen_filesystems()
         os.mkdir(self.dest)
-        sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
         if self.image:
             self.__create_image()
             self.__gen_content()
             self.__umount()
+            sys.stdout.write("Created sandbox container image %s\n" % self.image)
         else:
             self.__gen_content()
             selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (self.file_type, self.get_security_level()), True)
-
+            sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
         self.save_config()
         self.__create_system_unit()
 
@@ -585,7 +637,7 @@ def delete(args):
 
 def create(args):
     container = Container(name = args.name, create = True)
-    container.set_clone(args.clone)
+    container.set_copy(args.copy)
     container.set_dynamic(args.dynamic)
     container.set_security_type(args.type)
     container.set_unit_file_list(args.unitfiles)
@@ -666,11 +718,45 @@ def execute(args):
 
 def clone(args):
     container = Container(args.source, args.uri)
+    fd = open(container.get_config_path(),"r")
+    recs = fd.read()
+    fd.close()
+    old_path = container.get_filesystem_path()
+    new_path = container.get_filesystem_path(args.dest)
+    newrec = recs.replace(old_path + "/", new_path + "/")
+    newrec = newrec.replace("name=" + args.source, "name=" + args.dest)
+    old_image_path = container.get_image_path()
+    if os.path.exists(old_image_path):
+        new_image_path = container.get_image_path(args.dest)
+        newrec = newrec.replace(old_image_path, new_image_path)
+        shutil.copy(old_image_path, new_image_path)
+        sys.stdout.write("Created sandbox container image %s\n" % new_image_path)
+        os.mkdir(new_path)
+    else:
+        shutil.copytree(old_path, new_path, symlinks=True)
+        if args.level:
+            selinux.chcon(new_path, "system_u:object_r:%s:%s" % (container.file_type, args.level), True)
+        sys.stdout.write("Created sandbox container dir %s\n" % new_path)
+
+    fd = open(container.get_unit_path()) 
+    recs = fd.read()
+    fd.close()
+
+    fd = open(container.get_unit_path(args.dest), "wx") 
+    fd.write(recs.replace(args.source, args.dest))
+    fd.close()
+
+    new_unit = container.get_config_path(args.dest)
+    fd = open(new_unit,"wx")
+    fd.write(newrec)
+    fd.close()
+    sys.stdout.write("Created unit file %s\n" % new_unit)
+
+    container = Container(args.dest, args.uri)
     if args.level:
         container.set_security_level(args.level)
-    container.set_name(args.dest)
     container.save_config()
-
+        
 import argparse
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -721,9 +807,9 @@ if __name__ == '__main__':
     image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
-    parser_create.add_argument("-C", "--clone", default=False,
+    parser_create.add_argument("-C", "--copy", default=False,
                                action="store_true",
-                               help=_("clone content from /etc and /var directories that will be mounted within the sandbox"))
+                               help=_("copy content from /etc and /var directories that will be mounted within the sandbox"))
 
     parser_create.set_defaults(func=create)
     parser_create.add_argument("name",
@@ -801,6 +887,10 @@ if __name__ == '__main__':
         for line in e:
             for l in line:
                 sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
+        sys.stderr.flush()
+        sys.exit(1)
+    except IOError, e:
+        sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.strerror))
         sys.stderr.flush()
         sys.exit(1)
     except OSError, e:
