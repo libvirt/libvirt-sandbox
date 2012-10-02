@@ -291,6 +291,15 @@ WantedBy=multi-user.target
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
         self.config.add_mount(mount)
 
+    def gen_machine_id(self):
+        uuid_fd = open("/proc/sys/kernel/random/uuid")
+        uuid = uuid_fd.read().replace("-","")
+        uuid_fd.close()
+
+        fd=open(self.dest + self.MACHINE_ID, "w")
+        fd.write(uuid)
+        fd.close()
+
     def __gen_filesystems(self):
         if self.use_image:
             self.image = self.DEFAULT_IMAGE % self.get_name()
@@ -398,13 +407,7 @@ PrivateNetwork=false
         for f in self.BIND_SYSTEM_FILES:
             self.makefile(f)
 
-        fd=open(self.dest + self.MACHINE_ID, "w")
-        p = Popen(["/usr/bin/journalctl", "--new-id128"], stdout=PIPE, stderr=PIPE)
-        stdout,stderr = p.communicate()
-        if p.returncode and p.returncode != 0:
-            raise OSError("Failed to execute journalctl: %s" % stderr)
-        fd.write("%s\n" % stdout.split()[2])
-        fd.close()
+        self.gen_machine_id()
 
         fd=open(self.dest + self.NETWORK_CONFIG, "w")
         fd.write("HOSTNAME=%s\n" % self.config.get_name() )
@@ -755,6 +758,7 @@ def clone(args):
     container = Container(args.dest, args.uri)
     if args.level:
         container.set_security_level(args.level)
+    container.gen_machine_id()
     container.save_config()
 
 import argparse
