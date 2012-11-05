@@ -530,7 +530,7 @@ PrivateNetwork=false
             if target:
                 if not os.path.exists(target + ".wants"):
                     os.remove(target)
-                    
+
     def create(self):
         self.dest = "%s/%s" % (self.path, self.get_name())
         if os.path.exists(self.dest):
