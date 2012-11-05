@@ -26,7 +26,7 @@
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
- * SECTION: libvirt-sandbox-config-mount-bind
+ * SECTION: libvirt-sandbox-config-mount-host-bind
  * @short_description: Bindsystem attachment configuration details
  * @include: libvirt-sandbox/libvirt-sandbox.h
  * @see_aloso: #GVirSandboxConfig
