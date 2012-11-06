@@ -438,7 +438,7 @@ PrivateNetwork=false
                 os.symlink(src,dest)
 
         unitdir = "/etc/systemd/system"
-        tgtdir = unitdir + "/sandbox.target.wants"
+        tgtdir = unitdir + "/multi-user.target.wants"
 
         self.makedirs(unitdir)
         self.makedirs(tgtdir)
@@ -448,11 +448,11 @@ PrivateNetwork=false
             self.__create_container_unit(src, self.dest + unitdir, i)
             os.symlink("../" + i, self.dest + tgtdir + "/" + i)
 
-        tgtfile = unitdir + "/sandbox.target"
+        tgtfile = unitdir + "/multi-user.target"
         try:
             fd = open(self.dest + tgtfile, "w")
             fd.write("[Unit]\n")
-            fd.write("Description=Sandbox target\n")
+            fd.write("Description=Sandbox multi-user target\n")
             fd.close()
         except OSError, e:
             if not e.errno == errno.EEXIST:
@@ -553,7 +553,7 @@ PrivateNetwork=false
         net.set_dhcp(True)
         self.config.add_network(net)
         self.config.set_shell(True)
-        self.config.set_boot_target("sandbox.target")
+        self.config.set_boot_target("multi-user.target")
         self.__extract_rpms()
         self.__gen_filesystems()
         os.mkdir(self.dest)
