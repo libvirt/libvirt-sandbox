@@ -83,6 +83,7 @@ class Container:
                 raise ValueError(["Container already exists"])
 
             self.config = LibvirtSandbox.ConfigService.new(name)
+            self.__gen_uuid()
             return
 
         if config:
@@ -301,14 +302,21 @@ WantedBy=%(TARGET)s
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
         self.config.add_mount(mount)
 
-    def gen_machine_id(self):
+    def __gen_uuid(self):
         uuid_fd = open("/proc/sys/kernel/random/uuid")
-        uuid = uuid_fd.read().replace("-","")
+        self.uuid = uuid_fd.read().replace("-","").rstrip()
         uuid_fd.close()
 
+    def gen_machine_id(self):
         fd=open(self.dest + self.MACHINE_ID, "w")
-        fd.write(uuid)
+        fd.write("%s\n" % self.uuid)
         fd.close()
+
+        # Link /var/log/journal within the container to /var/log/journal/UUID 
+        # on host.  This will allow the hosts journalctl to easily read 
+        # containers journal information.
+        os.makedirs(self.dest + "/var/log/journal")
+        os.symlink(self.dest + "/var/log/journal", "/var/log/journal/" + self.uuid)
 
     def __gen_filesystems(self):
         if self.use_image:
@@ -497,6 +505,12 @@ PrivateNetwork=false
             pass
 
         self.dest = "%s/%s" % (self.path, self.get_name())
+        # Should be stored in config
+        fd=open(self.dest + self.MACHINE_ID, "r")
+        uuid = fd.read().rstrip()
+        fd.close()
+        os.remove("/var/log/journal/" + uuid)
+
         if os.path.exists(self.dest):
             shutil.rmtree(self.dest)
             mount_path = self.__get_image_path()
@@ -510,7 +524,6 @@ PrivateNetwork=false
         image = self.get_image_path()
         if os.path.exists(image):
             os.remove(image)
-
 
         if os.path.exists(self.unitfile):
             p = Popen(["/usr/bin/systemctl","disable", self.unitfile],stdout=PIPE, stderr=PIPE)
