@@ -312,8 +312,8 @@ WantedBy=%(TARGET)s
         fd.write("%s\n" % self.uuid)
         fd.close()
 
-        # Link /var/log/journal within the container to /var/log/journal/UUID 
-        # on host.  This will allow the hosts journalctl to easily read 
+        # Link /var/log/journal within the container to /var/log/journal/UUID
+        # on host.  This will allow the hosts journalctl to easily read
         # containers journal information.
         os.makedirs(self.dest + "/var/log/journal")
         os.symlink(self.dest + "/var/log/journal", "/var/log/journal/" + self.uuid)
