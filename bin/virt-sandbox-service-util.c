@@ -95,10 +95,10 @@ static void libvirt_sandbox_version(void)
     exit(EXIT_SUCCESS);
 }
 
-/* 
+/*
    Join the namespace of the pid file.
    Note:
-   All namespace FDs must be open before doing any setns calls.  Otherwise path to the 
+   All namespace FDs must be open before doing any setns calls.  Otherwise path to the
    /proc/PID/ns will change out from under the current process, and open calls will fail.
 */
 static int join_namespace(pid_t pid) {
@@ -173,7 +173,7 @@ static int set_process_label(pid_t pid) {
             }
             freecon(execcon);
         }
-        if (ret < 0) { 
+        if (ret < 0) {
             /* If SELinux in permissive mode ignore error */
             if (security_getenforce() == 0) {
                 ret = 0;
