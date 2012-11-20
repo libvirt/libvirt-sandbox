@@ -23,6 +23,7 @@
 
 #define _GNU_SOURCE
 #include <config.h>
+#include <limits.h>
 
 #include <libvirt-sandbox/libvirt-sandbox.h>
 #include <glib/gi18n.h>
@@ -33,8 +34,7 @@
 #include <errno.h>
 #define STREQ(x,y) (strcmp(x,y) == 0)
 
-#define HAVE_SELINUX
-#ifdef HAVE_SELINUX
+#ifdef HAVE_LIBSELINUX
 #include <selinux/selinux.h>
 #endif
 
@@ -95,73 +95,92 @@ static void libvirt_sandbox_version(void)
     exit(EXIT_SUCCESS);
 }
 
+/* 
+   Join the namespace of the pid file.
+   Note:
+   All namespace FDs must be open before doing any setns calls.  Otherwise path to the 
+   /proc/PID/ns will change out from under the current process, and open calls will fail.
+*/
 static int join_namespace(pid_t pid) {
     int ret = -1;
     DIR *dir = NULL;
     struct dirent *entry;
-    int fd = -1;
-    char *pid_path = NULL;
-    char *path = NULL;
-    pid_path = g_strdup_printf("/proc/%d/ns", pid);
-    if (!pid_path) {
-        g_printerr(_("Out of memory\n"));
-        return -1;
-    }
-    if ((dir = opendir(pid_path)) == NULL) {
-        g_printerr(_("Failed to open container process path %s\n"), pid_path);
+    int fds[100]; /* Can't see us going over 100 namespaces */
+    int i = 0;
+    char path[1024];
+    int len = sizeof(fds);
+    int size = sizeof(path);
+
+    memset(fds, -1, len);
+
+    snprintf(path, size, "/proc/%d/ns", pid);
+    if ((dir = opendir(path)) == NULL) {
+        g_printerr(_("Failed to open container process path %s\n"), path);
         goto cleanup;
     }
-    while ((entry = readdir(dir)) != NULL) {
-        if (STREQ(entry->d_name,".") ||
-            STREQ(entry->d_name,".."))
+    while (((entry = readdir(dir)) != NULL) && (i < len)) {
+        /* skip '.' and '..' */
+        if (*entry->d_name == '.')
             continue;
 
-        path = g_strdup_printf("/proc/%d/ns/%s", pid, entry->d_name);
-        if (!path) {
-            g_printerr(_("Out of memory\n"));
+        snprintf(path, size, "/proc/%d/ns/%s", pid, entry->d_name);
+        fds[i] = open(path, O_RDONLY);
+        if (fds[i] < 0) {
+            g_printerr(_("Failed to open container namespace path %s: %m\n"), path);
+            len = i;
             goto cleanup;
         }
-
-        fd = open(path, O_RDONLY);
-        if (fd < 0) {
-            g_printerr(_("Failed to open container namespace path %s\n"), path);
+        i++;
+    }
+    len = i;
+    for (i=0; ((i < len)) ; i++) {
+        if (setns(fds[i],0) < 0) {
+            g_printerr(_("Failed to setup namespace: %m\n"));
             goto cleanup;
         }
-        if (setns(fd,0) < 0) {
-            g_printerr(_("Failed to setup namespace for container namespace path %s\n"), path);
-            goto cleanup;
-        }
-        free(path); path = NULL;
-        close(fd); fd = -1;
     }
     ret = 0;
 
 cleanup:
-    if ( fd > -1 )
-        close(fd);
-    free(path);
-    free(pid_path);
+    for (i=0; i < len; i++) {
+            if ( fds[i] > -1 )
+                    close(fds[i]);
+    }
     if (dir)
         closedir(dir);
 
     return ret;
 }
 
+/*
+  Set process context to match labels within the container.
+*/
 static int set_process_label(pid_t pid) {
     int ret = 0;
 
-#ifdef HAVE_SELINUX
+#ifdef HAVE_LIBSELINUX
+
     security_context_t execcon = NULL;
 
-    if (getpidcon(pid, &execcon) < 0) {
-        g_printerr(_("Unable to get process context for pid %d\n"), pid);
-        return -1;
+    if (is_selinux_enabled() > 0) {
+        if (getpidcon(pid, &execcon) < 0) {
+            g_printerr(_("Unable to get process context for pid %d\n"), pid);
+            ret = -1;
+        } else {
+            if (setexeccon(execcon) < 0) {
+                g_printerr(_("Unable to set executable context for pid %d\n"), pid);
+                ret = -1;
+            }
+            freecon(execcon);
+        }
+        if (ret < 0) { 
+            /* If SELinux in permissive mode ignore error */
+            if (security_getenforce() == 0) {
+                ret = 0;
+            }
+        }
     }
-    if (setexeccon(execcon) < 0) {
-        g_printerr(_("Unable to set executable context for pid %d\n"), pid);
-        ret = -1;
-    }
-    freecon(execcon);
+
 #endif
 
     return ret;
@@ -178,11 +197,11 @@ static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid
     char **argv;
     int argc;
 
-    /* need to get pid from libvirt for container */
-    join_namespace(pid);
-
     if (set_process_label(pid) < 0)
         goto cleanup;
+
+    /* need to get pid from libvirt for container */
+    join_namespace(pid);
 
     argc = makeargv(command, &argv);
     if (argc > -1) {
@@ -354,12 +373,8 @@ int main(int argc, char **argv) {
           libvirt_lxc_attach, N_("Attach to a container"), NULL },
         { "execute", 'e', 0, G_OPTION_ARG_STRING, &command,
           N_("Execute command in a container"), NULL },
-
-/* This option should be removed as soon as we can query libvirt for the
-   pid of libvirt_lxc or systemd associated with the container
-*/
         { "pid", 'p', 0, G_OPTION_ARG_INT, &pid,
-          N_("Temp Feature to get pid until libvirt supports this"), "PID"},
+          N_("Pid of process in container to which the command will run"), "PID"},
         { "connect", 'c', 0, G_OPTION_ARG_STRING, &uri,
           N_("Connect to hypervisor Default:'lxc:///'"), "URI"},
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
