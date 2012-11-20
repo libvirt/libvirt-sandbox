@@ -316,7 +316,8 @@ WantedBy=%(TARGET)s
         # on host.  This will allow the hosts journalctl to easily read
         # containers journal information.
         os.makedirs(self.dest + "/var/log/journal")
-        os.symlink(self.dest + "/var/log/journal", "/var/log/journal/" + self.uuid)
+        journalfile = "/var/log/journal/" + self.uuid
+        os.symlink(self.dest + journalfile, journalfile)
 
     def __gen_filesystems(self):
         if self.use_image:
