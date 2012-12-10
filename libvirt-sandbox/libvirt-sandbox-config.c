@@ -544,7 +544,7 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config)
  *
  * Set the kernel release version to use in the sandbox. If none is provided,
  * it will default to matching the current running kernel.
- * Also sets the default kernel path as /boot/vmlinuz-<release>
+ * Also sets the default kernel path as /boot/vmlinuz-[release]
  */
 void gvir_sandbox_config_set_kernrelease(GVirSandboxConfig *config, const gchar *kernrelease)
 {
@@ -576,7 +576,7 @@ const gchar *gvir_sandbox_config_get_kernrelease(GVirSandboxConfig *config)
  * @kernpath: (transfer none): the host directory
  *
  * Set the kernel image path to use in the sandbox. If none is provided,
- * it will default to matching /boot/vmlinuz-<kernel release>.
+ * it will default to matching /boot/vmlinuz-[kernel release].
  */
 
 void gvir_sandbox_config_set_kernpath(GVirSandboxConfig *config, const gchar *kernpath)
@@ -608,8 +608,8 @@ const gchar *gvir_sandbox_config_get_kernpath(GVirSandboxConfig *config)
  *
  * Sets the generic path to the kernel modules directory.
  * It will default to "/lib/modules", modules being searched in
- * /lib/modules/<kernel release>. If "/path" is given as argument
- * modules will be searched in /path/<kernel release>
+ * /lib/modules/[kernel release[. If "/path" is given as argument
+ * modules will be searched in /path/[kernel release]
  */
 
 void gvir_sandbox_config_set_kmodpath(GVirSandboxConfig *config, const gchar *kmodpath)
