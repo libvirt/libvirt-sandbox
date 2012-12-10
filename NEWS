@@ -1,6 +1,23 @@
       libvirt Sandbox News
       ====================
 
+0.1.1 2012-12-10
+----------------
+
+ - Fix typos in POD docs for some classes
+ - Only depend on libvirt-daemon-{kvm,qemu,lxc}, not
+   full libvirt RPM.
+ - Switch to YUM for extracting package file list
+ - Bind mount whole of /var rather than only some subdirs
+ - Validate unit files exist before creating sandbox
+ - Fixes to population of files in /etc and /var
+ - Finish 'clone' command for copying sandboxes
+ - Populate /etc/machine-id file
+ - Fix systemd dependancies for bulk start/stop of containers
+ - Symlink container journal directory into host filesystem
+ - Rename sandbox.target to multi-user.target
+ - Fix attachment to running containers
+
 0.1.0 2012-08-10
 ----------------
 
