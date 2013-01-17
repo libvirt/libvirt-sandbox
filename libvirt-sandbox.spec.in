@@ -1,6 +1,7 @@
 # -*- rpm-spec -*-
 
 %define with_introspection 0
+%define with_tcg 1
 %define with_python 0
 
 %if 0%{?fedora} >= 15
@@ -8,6 +9,7 @@
 %endif
 %if 0%{?rhel} >= 6
 %define with_introspection 1
+%define with_tcg 0
 %endif
 
 
@@ -35,7 +37,9 @@ Summary: libvirt application sandbox framework libraries
 %ifarch %{ix86} x86_64
 Requires: libvirt-daemon-kvm >= 0.9.12
 %endif
+%if %{with_tcg}
 Requires: libvirt-daemon-qemu >= 0.9.12
+%endif
 Requires: libvirt-daemon-lxc >= 0.9.12
 
 %package devel
