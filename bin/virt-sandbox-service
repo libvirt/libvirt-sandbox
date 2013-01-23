@@ -760,7 +760,7 @@ def fullpath(cmd):
     return cmd
 
 def execute(args):
-    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ] 
+    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ]
 #    myexec = [ "virt-sandbox-service-util" ]
 #    myargs = args.command
 #    myargs[0] = fullpath(args.command[0])
