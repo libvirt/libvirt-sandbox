@@ -48,6 +48,7 @@ except IOError:
 class Container:
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS       = [ "/etc", "/var" ]
+    PROFILE_FILES      = [ ".bashrc", ".bash_profile" ]
     CONFIG_PATH        = "/etc/libvirt-sandbox/services/"
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
@@ -459,6 +460,11 @@ PrivateNetwork=false
         except OSError, e:
             if not e.errno == errno.EEXIST:
                 raise e
+
+        for p in self.PROFILE_FILES:
+            profile = "/etc/skel/" + p
+            shutil.copy(profile, self.dest + "/root/")
+
         self.__fix_protection()
 
     def __umount(self):
@@ -754,14 +760,13 @@ def fullpath(cmd):
     return cmd
 
 def execute(args):
-    myargs = args.command.split()
-    myargs[0] = fullpath(myargs[0])
-    cmd = "%s" % " ".join(myargs)
     myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ] 
 #    myexec = [ "virt-sandbox-service-util" ]
+#    myargs = args.command
+#    myargs[0] = fullpath(args.command[0])
     if args.nolabel:
         myexec.append("--nolabel")
-    myexec.extend([ args.name, "--", cmd ])
+    myexec.extend([ args.name, "--" ] +  args.command )
     os.execv("/usr/bin/virsh", myexec)
 #    myexec.extend( "-e", cmd, args.name ]
 #    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
@@ -873,11 +878,10 @@ def gen_execute_args(subparser):
     parser.add_argument("-N", "--nolabel", dest="nolabel",
                         default=False, action="store_true",
                         help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
-    parser.add_argument("-C", "--command", required=True,
-                        dest="command", default=None,
-                        help=_("command to execute within the sandbox"))
     parser.add_argument("name",
                         help=_("name of the sandbox container"))
+    parser.add_argument("command", nargs="+",
+                        help=_("command to execute within the container"))
 
 def gen_start_args(subparser):
     parser = subparser.add_parser("start",

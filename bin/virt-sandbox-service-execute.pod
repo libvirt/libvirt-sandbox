@@ -6,7 +6,7 @@ virt-sandbox-service execute - execute commands inside Secure container
 
 Execute a command within a security container
 
-  virt-sandbox-service [-c URI] execute [-h] [-N] -C COMMAND NAME
+  virt-sandbox-service [-c URI] execute [-h] [-N] NAME -- COMMAND
 
 =head1 DESCRIPTION
 
@@ -31,10 +31,6 @@ Display help message
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
-=item B<-C COMMAND>, B<--command COMMAND>
-
-Execute command within the container.
-
 =item B<-N>, B<--nolabel>
 
 Execute command within the container.
@@ -45,7 +41,7 @@ Execute command within the container.
 
 Execute /bin/sh in httpd1 container
 
- # virt-sandbox-service execute -C /bin/sh httpd1
+ # virt-sandbox-service execute httpd1 -- /bin/sh
 
 =head1 SEE ALSO
 
