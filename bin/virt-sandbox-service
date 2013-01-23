@@ -2,7 +2,7 @@
 #
 # Authors: Dan Walsh <dwalsh@redhat.com>
 #
-# Copyright (C) 2012 Red Hat, Inc.
+# Copyright (C) 2012-2013 Red Hat, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -594,7 +594,7 @@ PrivateNetwork=false
             context.attach()
             self.__disconnect()
             return 1
-        except gi._glib.GError, e:
+        except GLib.GError, e:
             return 0
 
     def start(self):
@@ -618,7 +618,7 @@ PrivateNetwork=false
                 context.stop()
             except:
                 pass
-        except gi._glib.GError, e:
+        except GLib.GError, e:
             raise OSError(str(e))
 
     def stop(self):
@@ -627,7 +627,7 @@ PrivateNetwork=false
             context = LibvirtSandbox.ContextService.new(self.conn, self.config)
             context.attach()
             context.stop()
-        except gi._glib.GError, e:
+        except GLib.GError, e:
             raise OSError(str(e))
 
     def connect(self):
@@ -647,7 +647,7 @@ PrivateNetwork=false
                 console.detach()
             except:
                 pass
-        except gi._glib.GError, e:
+        except GLib.GError, e:
             raise OSError(str(e))
 
     def execute(self, command):
@@ -670,7 +670,7 @@ PrivateNetwork=false
                 console.detach()
             except:
                 pass
-        except gi._glib.GError, e:
+        except GLib.GError, e:
             raise OSError(str(e))
 
 MB = int(1000000)
