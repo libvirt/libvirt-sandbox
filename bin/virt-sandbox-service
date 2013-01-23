@@ -91,7 +91,7 @@ class Container:
             try:
                 self.config = LibvirtSandbox.Config.load_from_path(config)
                 self.unitfile = self.get_unit_path()
-            except gi._glib.GError, e:
+            except GLib.GError, e:
                 raise OSError(config + ": " + str(e))
 
     def __follow_units(self):
