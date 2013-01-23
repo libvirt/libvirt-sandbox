@@ -757,8 +757,15 @@ def execute(args):
     myargs = args.command.split()
     myargs[0] = fullpath(myargs[0])
     cmd = "%s" % " ".join(myargs)
-    myexec = [ "virt-sandbox-service-util", "-e", cmd, "-p", args.pid, args.name ]
-    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
+    if args.nolabel:
+        nolabel="--nolabel"
+    else:
+        nolabel=""
+
+    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace", nolabel, args.name, "--", cmd ]
+    os.execv("/usr/bin/virsh", myexec)
+#    myexec = [ "virt-sandbox-service-util", "-e", cmd, "-p", args.pid, args.name ]
+#    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
 
 def clone(args):
     container = Container(args.source, args.uri)
@@ -905,7 +912,7 @@ def gen_clone_args(subparser):
                         help=_("source sandbox container name"))
     parser.add_argument("dest",
                         help=("dest name of the new sandbox container"))
-    
+
 def gen_delete_args(subparser):
     parser = subparser.add_parser("delete",
                                    help=_("Delete a sandbox container"))
