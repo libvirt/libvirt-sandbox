@@ -1,30 +1,12 @@
 =head1 NAME
 
-virt-sandbox-service - Secure container tool
+virt-sandbox-service clone - clone an existing Secure container
 
 =head1 SYNOPSIS
 
-  {create,clone,connect,delete,execute,list,reload,start,stop}
+Clone a Security container
 
-  commands:
-
-    create              create a sandbox container
-
-    clone               Clone an existing sandbox container
-
-    connect             Connect to a sandbox container
-
-    delete              Delete a sandbox container
-
-    execute             Execute a command within a sandbox container
-
-    list                List all sandbox container
-
-    reload              Reload a running sandbox container
-
-    start               Start a sandbox container
-
-    stop                Stop a sandbox container
+  virt-sandbox-service [-c URI] clone [-h] [-l LEVEL] -s SOURCE DEST
 
 =head1 DESCRIPTION
 
@@ -33,6 +15,8 @@ These applications will be launched via libvirt and run within a virtualization
 technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
 container / virtual machines will be secured by SELinux and resource
 separated using cgroups.
+
+The clone command will clone the SOURCE security sandbox container into the DEST security sandbox container.
 
 =head1 OPTIONS
 
@@ -47,11 +31,21 @@ Display help message
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
+=item B<-l LEVEL>, B<--level LEVEL>
+
+MCS Level with which to run the container.
+
 =back
+
+=head1 EXAMPLE
+
+Execute /bin/sh in httpd1 container
+
+ # virt-sandbox-service clone -l s0:c1,c2 httpd1 httpd2
 
 =head1 SEE ALSO
 
-C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox(1)>, C<virt-sandbox-service-create(1)>, C<virt-sandbox-service-clone(1)>, C<virt-sandbox-service-connect(1)>, C<virt-sandbox-service-delete(1)>, C<virt-sandbox-service-execute(1)>, C<virt-sandbox-service-list(1)>, C<virt-sandbox-service-reload(1)>, C<virt-sandbox-service-start(1)>, C<virt-sandbox-service-stop(1)>
+C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox-service(1)>
 
 =head1 FILES
 
@@ -63,7 +57,6 @@ processes within the container will see the content.
 =head1 AUTHORS
 
 Daniel Walsh <dwalsh@redhat.com>
-
 Daniel P. Berrange <dan@berrange.com>
 
 =head1 COPYRIGHT

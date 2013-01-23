@@ -1,0 +1,59 @@
+=head1 NAME
+
+virt-sandbox-service connect - Connect to a security container console
+
+=head1 SYNOPSIS
+
+  virt-sandbox-service [-c URI] connect [-h] NAME
+
+=head1 DESCRIPTION
+
+virt-sandbox-service is used to manage secure sandboxed system services.
+These applications will be launched via libvirt and run within a virtualization
+technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
+container / virtual machines will be secured by SELinux and resource
+separated using cgroups.
+
+The connect command will connect to the security sandbox container console NAME.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Display help message
+
+=item B<-c> URI, B<--connect URI>
+
+The connection URI for the hypervisor (only LXC or QEMU are
+supported currently).
+
+=back
+
+=head1 EXAMPLE
+
+Connect to the in httpd1 container console
+
+ # virt-sandbox-service connect httpd1
+ #
+
+=head1 SEE ALSO
+
+C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox-service(1)>
+
+=head1 AUTHORS
+
+Daniel Walsh <dwalsh@redhat.com>
+Daniel P. Berrange <dan@berrange.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2011-2013 Red Hat, Inc.
+
+=head1 LICENSE
+
+virt-sandbox is distributed under the terms of the GNU LGPL v2+.
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE
