@@ -50,13 +50,13 @@ class Container:
     DEFAULT_DIRS       = [ "/etc", "/var" ]
     CONFIG_PATH        = "/etc/libvirt-sandbox/services/"
     MACHINE_ID         = "/etc/machine-id"
-    NETWORK_CONFIG     = "/etc/sysconfig/network"
+    HOSTNAME           = "/etc/hostname"
     MULTI_USER_WANTS_PATH = "/usr/lib/systemd/system/multi-user.target.wants"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
     MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs"]
     BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
-    BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", NETWORK_CONFIG ]
+    BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", HOSTNAME ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
     SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
@@ -429,8 +429,8 @@ PrivateNetwork=false
 
         self.gen_machine_id()
 
-        fd=open(self.dest + self.NETWORK_CONFIG, "w")
-        fd.write("HOSTNAME=%s\n" % self.config.get_name() )
+        fd=open(self.dest + self.HOSTNAME, "w")
+        fd.write("%s\n" % self.config.get_name() )
         fd.close()
 
         for k in self.LOCAL_LINK_FILES:
@@ -757,14 +757,13 @@ def execute(args):
     myargs = args.command.split()
     myargs[0] = fullpath(myargs[0])
     cmd = "%s" % " ".join(myargs)
+    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ] 
+#    myexec = [ "virt-sandbox-service-util" ]
     if args.nolabel:
-        nolabel="--nolabel"
-    else:
-        nolabel=""
-
-    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace", nolabel, args.name, "--", cmd ]
+        myexec.append("--nolabel")
+    myexec.extend([ args.name, "--", cmd ])
     os.execv("/usr/bin/virsh", myexec)
-#    myexec = [ "virt-sandbox-service-util", "-e", cmd, "-p", args.pid, args.name ]
+#    myexec.extend( "-e", cmd, args.name ]
 #    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
 
 def clone(args):
