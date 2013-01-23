@@ -821,6 +821,106 @@ class CheckUnit(argparse.Action):
             unitfiles = [ (values, src) ]
         setattr(namespace, self.dest, unitfiles)
 
+def gen_create_args(subparser):
+    parser = subparser.add_parser("create",
+                                  help=_("create a sandbox container"))
+
+    parser.add_argument("-u", "--unitfile", required=True,
+                        action=CheckUnit,
+                        dest="unitfiles",
+                        help=_("Systemd Unit file to run within the sandbox container"))
+    parser.add_argument("-p", "--path", dest="path",  default=None,
+                        help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
+    parser.add_argument("-t", "--type", dest="type",
+                        default=c.get_security_type(),
+                        help=_("SELinux type with which to run the sandbox.  Default: %s") % c.get_security_type())
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("-l", "--level", dest="level", default=None,
+                       help=_("MCS Level with which to run the sandbox"))
+    group.add_argument("-d", "--dynamic", dest="dynamic", default=False,
+                       action="store_true",
+                       help=_("use dynamic MCS labeling for the sandbox"))
+    image = parser.add_argument_group("Create On Disk Image File")
+
+    image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
+                       action=SizeAction,
+                       help=_("create image of this many megabytes."))
+    parser.add_argument("-C", "--copy", default=False,
+                        action="store_true",
+                        help=_("copy content from /etc and /var directories that will be mounted within the sandbox"))
+
+    parser.set_defaults(func=create)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_connect_args(subparser):
+    parser = subparser.add_parser("connect",
+                                  help=_("Connect to a sandbox container"))
+    parser.set_defaults(func=connect)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_execute_args(subparser):
+    parser = subparser.add_parser("execute",
+                                  help=("Execute a command within a sandbox container"))
+    parser.set_defaults(func=execute)
+    parser.add_argument("-N", "--nolabel", dest="nolabel",
+                        default=False, action="store_true",
+                        help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
+    parser.add_argument("-C", "--command", required=True,
+                        dest="command", default=None,
+                        help=_("command to execute within the sandbox"))
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_start_args(subparser):
+    parser = subparser.add_parser("start",
+                                   help=_("Start a sandbox container"))
+    parser.set_defaults(func=start)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_stop_args(subparser):
+    parser = subparser.add_parser("stop",
+                                   help=_("Stop a sandbox container"))
+    parser.set_defaults(func=stop)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_reload_args(subparser):
+    parser = subparser.add_parser("reload",
+                                   help=_("Reload a running sandbox container"))
+    parser.set_defaults(func=sandbox_reload)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_clone_args(subparser):
+    parser = subparser.add_parser("clone",
+                                         help=_("Clone an existing sandbox container"))
+    parser.set_defaults(func=clone)
+    parser.add_argument("-l", "--level", dest="level", default=None,
+                        help=_("MCS Level with which to run the sandbox"))
+    parser.add_argument("-s", "--source", required=True,
+                        dest="source", default=None,
+                        help=_("source sandbox container name"))
+    parser.add_argument("dest",
+                        help=("dest name of the new sandbox container"))
+    
+def gen_delete_args(subparser):
+    parser = subparser.add_parser("delete",
+                                   help=_("Delete a sandbox container"))
+    parser.set_defaults(func=delete)
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
+def gen_list_args(subparser):
+    parser = subparser.add_parser("list",
+                                        help=_("List all sandbox container"))
+    parser.set_defaults(func=sandbox_list)
+    parser.add_argument("-r", "--running", dest="running",
+                        default=False, action="store_true",
+                        help=_("list only running sandbox containers"))
+
 if __name__ == '__main__':
     c = Container()
 
@@ -828,99 +928,16 @@ if __name__ == '__main__':
     parser.add_argument("-c", "--connect", required=False, dest="uri",  default="lxc:///",
                         help=_("libvirt connection URI to use (lxc:/// [default] or qemu:///session)"))
 
-    subparsers = parser.add_subparsers(help=_("commands"))
-    parser_create = subparsers.add_parser("create",
-                                          help=_("create a sandbox container"))
-
-    parser_create.add_argument("-u", "--unitfile", required=True,
-                               action=CheckUnit,
-                               dest="unitfiles",
-                               help=_("Systemd Unit file to run within the sandbox container"))
-    parser_create.add_argument("-p", "--path", dest="path",  default=None,
-                               help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
-    parser_create.add_argument("-t", "--type", dest="type",
-                               default=c.get_security_type(),
-                               help=_("SELinux type with which to run the sandbox.  Default: %s") % c.get_security_type())
-    group = parser_create.add_mutually_exclusive_group()
-    group.add_argument("-l", "--level", dest="level", default=None,
-                       help=_("MCS Level with which to run the sandbox"))
-    group.add_argument("-d", "--dynamic", dest="dynamic", default=False,
-                       action="store_true",
-                       help=_("use dynamic MCS labeling for the sandbox"))
-    image = parser_create.add_argument_group("Create On Disk Image File")
-
-    image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
-                       action=SizeAction,
-                       help=_("create image of this many megabytes."))
-    parser_create.add_argument("-C", "--copy", default=False,
-                               action="store_true",
-                               help=_("copy content from /etc and /var directories that will be mounted within the sandbox"))
-
-    parser_create.set_defaults(func=create)
-    parser_create.add_argument("name",
-                               help=_("name of the sandbox container"))
-
-    parser_connect = subparsers.add_parser("connect",
-                                           help=_("Connect to a sandbox container"))
-    parser_connect.set_defaults(func=connect)
-    parser_connect.add_argument("name",
-                                help=_("name of the sandbox container"))
-
-    parser_clone = subparsers.add_parser("clone",
-                                         help=_("Clone an existing sandbox container"))
-    parser_clone.set_defaults(func=clone)
-    parser_clone.add_argument("-l", "--level", dest="level", default=None,
-                              help=_("MCS Level with which to run the sandbox"))
-    parser_clone.add_argument("-s", "--source", required=True,
-                              dest="source", default=None,
-                              help=_("source sandbox container name"))
-    parser_clone.add_argument("dest",
-                              help=("dest name of the new sandbox container"))
-
-    parser_execute = subparsers.add_parser("execute",
-                                           help=("Execute a command within a sandbox container"))
-    parser_execute.set_defaults(func=execute)
-    parser_execute.add_argument("-C", "--command", required=True,
-                                dest="command", default=None,
-                                help=_("command to execute within the sandbox"))
-    # This option should be removed as soon as we can query libvirt for the
-    # pid of libvirt_lxc or systemd associated with the container
-    parser_execute.add_argument("-p", "--pid", required=True,
-                                dest="pid", default=None,
-                                help=_("pid file of systemd"))
-    parser_execute.add_argument("name",
-                                help=_("name of the sandbox container"))
-
-    parser_delete = subparsers.add_parser("delete",
-                                          help=_("Delete a sandbox container"))
-    parser_delete.set_defaults(func=delete)
-    parser_delete.add_argument("name",
-                               help=_("name of the sandbox container"))
-
-    parser_stop = subparsers.add_parser("stop",
-                                        help=_("Stop a sandbox container"))
-    parser_stop.set_defaults(func=stop)
-    parser_stop.add_argument("name",
-                             help=_("name of the sandbox container"))
-
-    parser_start = subparsers.add_parser("start",
-                                         help=_("Start a sandbox container"))
-    parser_start.set_defaults(func=start)
-    parser_start.add_argument("name",
-                              help=_("name of the sandbox container"))
-
-    parser_reload = subparsers.add_parser("reload",
-                                          help=_("Reload a running sandbox container"))
-    parser_reload.set_defaults(func=sandbox_reload)
-    parser_reload.add_argument("name",
-                               help=_("name of the sandbox container"))
-
-    parser_list = subparsers.add_parser("list",
-                                        help=_("List all sandbox container"))
-    parser_list.set_defaults(func=sandbox_list)
-    parser_list.add_argument("-r", "--running", dest="running",
-                             default=False, action="store_true",
-                             help=_("list only running sandbox containers"))
+    subparser = parser.add_subparsers(help=_("commands"))
+    gen_create_args(subparser)
+    gen_clone_args(subparser)
+    gen_connect_args(subparser)
+    gen_delete_args(subparser)
+    gen_execute_args(subparser)
+    gen_list_args(subparser)
+    gen_reload_args(subparser)
+    gen_start_args(subparser)
+    gen_stop_args(subparser)
 
     try:
         args = parser.parse_args()
