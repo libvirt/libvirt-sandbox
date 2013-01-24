@@ -309,6 +309,22 @@ WantedBy=%(TARGET)s
         self.uuid = uuid_fd.read().replace("-","").rstrip()
         uuid_fd.close()
 
+    def get_machine_id(self):
+        path = None
+        for m in self.config.get_mounts():
+            try:
+                if m.get_target() == self.MACHINE_ID:
+                    path = m.get_source()
+                    break
+            except:
+                pass
+        if not path:
+            raise ValueError(_("%s does not exist in container %s" % (self.MACHINE_ID, args.name)))
+        fd=open(path, "r")
+        uuid = fd.read()
+        fd.close()
+        return uuid
+
     def gen_machine_id(self):
         fd=open(self.dest + self.MACHINE_ID, "w")
         fd.write("%s\n" % self.uuid)
@@ -706,6 +722,10 @@ def usage(parser, msg):
     sys.stderr.flush()
     sys.exit(1)
 
+def machineid(args):
+    container = Container(args.name, args.uri)
+    print container.get_machine_id()
+
 def sandbox_list(args):
     import glob
     container = Container()
@@ -760,7 +780,7 @@ def fullpath(cmd):
     return cmd
 
 def execute(args):
-    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ]
+    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ] 
 #    myexec = [ "virt-sandbox-service-util" ]
 #    myargs = args.command
 #    myargs[0] = fullpath(args.command[0])
@@ -832,6 +852,10 @@ class CheckUnit(argparse.Action):
             unitfiles = [ (values, src) ]
         setattr(namespace, self.dest, unitfiles)
 
+def requires_name(parser):
+    parser.add_argument("name",
+                        help=_("name of the sandbox container"))
+
 def gen_create_args(subparser):
     parser = subparser.add_parser("create",
                                   help=_("create a sandbox container"))
@@ -859,50 +883,44 @@ def gen_create_args(subparser):
     parser.add_argument("-C", "--copy", default=False,
                         action="store_true",
                         help=_("copy content from /etc and /var directories that will be mounted within the sandbox"))
+    requires_name(parser)
 
     parser.set_defaults(func=create)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_connect_args(subparser):
     parser = subparser.add_parser("connect",
                                   help=_("Connect to a sandbox container"))
+    requires_name(parser)
     parser.set_defaults(func=connect)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_execute_args(subparser):
     parser = subparser.add_parser("execute",
                                   help=("Execute a command within a sandbox container"))
-    parser.set_defaults(func=execute)
     parser.add_argument("-N", "--nolabel", dest="nolabel",
                         default=False, action="store_true",
                         help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
+    requires_name(parser)
     parser.add_argument("command", nargs="+",
                         help=_("command to execute within the container"))
+    parser.set_defaults(func=execute)
 
 def gen_start_args(subparser):
     parser = subparser.add_parser("start",
                                    help=_("Start a sandbox container"))
+    requires_name(parser)
     parser.set_defaults(func=start)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_stop_args(subparser):
     parser = subparser.add_parser("stop",
                                    help=_("Stop a sandbox container"))
+    requires_name(parser)
     parser.set_defaults(func=stop)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_reload_args(subparser):
     parser = subparser.add_parser("reload",
                                    help=_("Reload a running sandbox container"))
+    requires_name(parser)
     parser.set_defaults(func=sandbox_reload)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_clone_args(subparser):
     parser = subparser.add_parser("clone",
@@ -919,17 +937,22 @@ def gen_clone_args(subparser):
 def gen_delete_args(subparser):
     parser = subparser.add_parser("delete",
                                    help=_("Delete a sandbox container"))
+    requires_name(parser)
     parser.set_defaults(func=delete)
-    parser.add_argument("name",
-                        help=_("name of the sandbox container"))
 
 def gen_list_args(subparser):
     parser = subparser.add_parser("list",
-                                        help=_("List all sandbox container"))
-    parser.set_defaults(func=sandbox_list)
+                                  help=_("List all sandbox container"))
     parser.add_argument("-r", "--running", dest="running",
                         default=False, action="store_true",
                         help=_("list only running sandbox containers"))
+    parser.set_defaults(func=sandbox_list)
+
+def gen_machineid_args(subparser):
+    parser = subparser.add_parser("machineid",
+                                  help=_("Show the /etc/machine-id specific to container"))
+    requires_name(parser)
+    parser.set_defaults(func=machineid)
 
 if __name__ == '__main__':
     c = Container()
@@ -945,6 +968,7 @@ if __name__ == '__main__':
     gen_delete_args(subparser)
     gen_execute_args(subparser)
     gen_list_args(subparser)
+    gen_machineid_args(subparser)
     gen_reload_args(subparser)
     gen_start_args(subparser)
     gen_stop_args(subparser)

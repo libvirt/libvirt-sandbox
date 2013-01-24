@@ -28,7 +28,7 @@ __get_all_unit_files () {
 }
 
 __get_all_containers () {
-    for i in `ls -1 /etc/libvirt-sandbox/services/*.sandbox 2>/dev/null`; do basename $i | cut -f1 -d.; done
+    virt-sandbox-service list
 }
 
 __get_all_running_containers () {
@@ -48,6 +48,7 @@ _virt_sandbox_service () {
            [CREATE]='create'
            [DELETE]='delete'
            [RELOAD]='reload'
+           [MACHINEID]='machineid'
            [START]='start'
            [EXECUTE]='execute'
            [STOP]='stop'
@@ -79,6 +80,9 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[LIST]} " -- "$cur") )
         return 0
     elif test "$verb" == "delete" ; then
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
+        return 0
+    elif test "$verb" == "machineid" ; then
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "start" ; then
