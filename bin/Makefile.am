@@ -70,7 +70,7 @@ virt_sandbox_LDFLAGS = \
 		$(WARN_CFLAGS) \
 		$(NULL)
 
-virt_sandbox_service_util_SOURCES = virt-sandbox-service-util.c  container.c
+virt_sandbox_service_util_SOURCES = virt-sandbox-service-util.c
 virt_sandbox_service_util_CFLAGS = \
 		$(GIO_UNIX_CFLAGS) \
 		$(LIBVIRT_GOBJECT_CFLAGS) \
