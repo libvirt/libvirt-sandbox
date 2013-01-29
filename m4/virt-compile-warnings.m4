@@ -84,8 +84,13 @@ AC_DEFUN([LIBVIRT_SANDBOX_COMPILE_WARNINGS],[
     gl_WARN_ADD([-Wframe-larger-than=4096])
 
     # Use improved glibc headers
-    AC_DEFINE([_FORTIFY_SOURCE], [2],
-      [enable compile-time and run-time bounds-checking, and some warnings])
+    AH_VERBATIM([FORTIFY_SOURCE],
+    [/* Enable compile-time and run-time bounds-checking, and some warnings,
+        without upsetting newer glibc. */
+     #if !defined _FORTIFY_SOURCE &&  defined __OPTIMIZE__ && __OPTIMIZE__
+     # define _FORTIFY_SOURCE 2
+     #endif
+    ])
 
     # Extra special flags
     dnl -fstack-protector stuff passes gl_WARN_ADD with gcc
