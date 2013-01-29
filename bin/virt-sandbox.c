@@ -289,32 +289,42 @@ but this will need to be changed if more than one sandbox is to
 be run concurrently. This is used as the name of the libvirt
 virtual machine or container.
 
-=item B<-b DST-GUEST-DIR=SRC-GUEST-DIR>, B<--guest-bind DST-GUEST-DIR=SRC-GUEST-DIR>
+=item B<-m TYPE:DST=SRC>, B<--mount TYPE:DST=SRC>
 
-Binds the guest location B<SRC-GUEST-DIR> to the location B<DST-GUEST-DIR>
-such that their contents are indistinguishable. This option may be
-repeated multiple times
+Sets up a mount inside the sandbox at B<DST> backed by B<SRC>. The
+meaning of B<SRC> depends on the value of C<TYPE> specified:
 
-=item B<-B DST-GUEST-DIR=SRC-HOST-DIR>, B<--guest-bind DST-GUEST-DIR=SRC-HOST-DIR>
+=over 4
 
-Binds the host location B<SRC-HOST-DIR> to the location B<DST-GUEST-DIR>
-such that their contents are indistinguishable. If C<SRC-HOST-DIR> is the
-empty string, then a temporary (empty) directory is created on the host
-before starting the sandbox and deleted afterwards. The C<--include> option
+=item B<host-bind>
+
+If B<TYPE> is B<host-bind>, then B<SRC> is interpreted as the path
+to a directory on the host filesystem. If C<SRC> is the empty string,
+then a temporary (empty) directory is created on the host before
+starting the sandbox and deleted afterwards. The C<--include> option
 is useful for populating these temporary directories with copies of host
-files. This option may be repeated multiple times.
+files.
 
-=item B<-m DST-GUEST-DIR=SRC-HOST-FILE>, B<--host-image DST-GUEST-DIR=SRC-HOST-FILE>
+=item B<host-image>
 
-Treats the host file B<SRC-HOST-FILE> as a virtual disk image and mounts it in
-the guest at B<DST-GUEST-DIR>. The disk image should be in raw format. This option
-may be repeated multiple times.
+If B<TYPE> is B<host-image>, then B<SRC> is interpreted as the path
+to a disk image file on the host filesystem. The image should be
+formatted with a filesystem that can be auto-detected by the sandbox,
+such as B<ext3>, B<ext4>, etc. The disk image itself should be a raw
+file, not qcow2 or any other special format
 
-=item B<-i HOST-PATH>, B<--include=HOST-PATH>
+=item B<guest-bind>
 
-Copy this file from the host into the same location in the guest.
-This is used to populate content for mount overrides. This may
-be repeated multiple times.
+If B<TYPE> is B<host-image>, then B<SRC> is interpreted as the path
+to another directory in the container filesystem.
+
+=back
+
+Some examples
+
+ -m host-bind:/tmp=/var/lib/sandbox/demo/tmp
+ -m host-image:/=/var/lib/sandbox/demo.img
+ -m guest-bind:/home=/tmp/home
 
 =item B<-I HOST-PATH>, B<--includefile=HOST-PATH>
 
