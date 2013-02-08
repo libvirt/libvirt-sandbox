@@ -734,7 +734,7 @@ def stop(args):
 def connect(args):
     print """\
 Connected to %s.
-Escape character is '^]'.
+Type 'Ctrl + ]' to detach from the console.
 """ % ( args.name )
     os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
 #    container = Container(args.name, args.uri)
