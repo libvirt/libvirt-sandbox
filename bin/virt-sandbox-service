@@ -52,10 +52,11 @@ class Container:
     CONFIG_PATH        = "/etc/libvirt-sandbox/services/"
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
+    FUNCTIONS          = "/etc/rc.d/init.d/functions"
     MULTI_USER_WANTS_PATH = "/usr/lib/systemd/system/multi-user.target.wants"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
-    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs"]
+    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", "/etc/rc.d/init.d"]
     BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", HOSTNAME ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
@@ -444,6 +445,8 @@ PrivateNetwork=false
 	for f in self.BIND_SYSTEM_FILES:
 	    self.makefile(f)
 
+        shutil.copy(self.FUNCTIONS, "%s%s" % (self.dest, self.FUNCTIONS))
+
 	self.gen_machine_id()
 
 	fd=open(self.dest + self.HOSTNAME, "w")
@@ -781,12 +784,10 @@ def fullpath(cmd):
 
 def execute(args):
     myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ]
-#    myexec = [ "virt-sandbox-service-util" ]
-#    myargs = args.command
-#    myargs[0] = fullpath(args.command[0])
+#    myexec = [ "virt-sandbox-service-util", "execute" ]
     if args.nolabel:
 	myexec.append("--nolabel")
-    myexec.extend([ args.name, "--" ] +  args.command )
+    myexec.extend([ args.name, "--", fullpath(args.command[0])] +  args.command[1:])
     os.execv("/usr/bin/virsh", myexec)
 #    myexec.extend( "-e", cmd, args.name ]
 #    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
@@ -950,7 +951,7 @@ def gen_list_args(subparser):
 
 def gen_machineid_args(subparser):
     parser = subparser.add_parser("machineid",
-				  help=_("Show the /etc/machine-id specific to container"))
+                                  help=_("Display the machineid of the sandbox container"))
     requires_name(parser)
     parser.set_defaults(func=machineid)
 
