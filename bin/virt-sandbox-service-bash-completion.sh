@@ -98,19 +98,11 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "execute" ; then
-        if test "$prev" = "-C" || test "$prev" = "--command" ; then
-        COMPREPLY=( $( compgen -f -- "$cur") )
-        compopt -o filenames
-        return 0
+        if test "$prev" = "execute"; then
+            COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} $( __get_all_running_containers ) " -- "$cur") )
+	else
+            COMPREPLY=( $( compgen -c -- "$cur") )
         fi
-
-        for ((i=0; $i <= $COMP_CWORD; i++)); do
-        if __contains_word "${COMP_WORDS[i]}" ${OPTS[EXECUTE]}; then
-            COMPREPLY=( $(compgen -W "${OPTS[ALL]}  $( __get_all_running_containers ) " -- "$cur") )
-            return 0
-        fi
-        done
-        COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} " -- "$cur") )
         return 0
     elif test "$verb" == "create" ; then
         if test "$prev" = "-p" || test "$prev" = "--path" ; then
