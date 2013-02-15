@@ -53,11 +53,12 @@ class Container:
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
     FUNCTIONS          = "/etc/rc.d/init.d/functions"
+    ANACONDA_WANTS_PATH = "/usr/lib/systemd/system/anaconda.target.wants"
     MULTI_USER_WANTS_PATH = "/usr/lib/systemd/system/multi-user.target.wants"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
     MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", "/etc/rc.d/init.d"]
-    BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
+    BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", ANACONDA_WANTS_PATH, MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", HOSTNAME ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
 
@@ -77,16 +78,17 @@ class Container:
 	self.config = None
 	self.file_type = self.SELINUX_FILE_TYPE
 	self.unit_file_list = []
+        self.name = name
 
 	if name:
 	    config = self.get_config_path(name)
+            self.dest = "%s/%s" % (self.path, name)
 
 	if create:
 	    if config and os.path.exists(config):
 		raise ValueError(["Container already exists"])
 
 	    self.config = LibvirtSandbox.ConfigService.new(name)
-	    self.__gen_uuid()
 	    return
 
 	if config:
@@ -272,6 +274,7 @@ WantedBy=%(TARGET)s
     def set_name(self, name):
 	if self.config:
 	    raise ValueError(["Cannot modify Name"])
+	self.dest = "%s/%s" % (self.path, self.name)
 	self.config = LibvirtSandbox.ConfigService.new(name)
 
     def __extract_rpms(self):
@@ -305,11 +308,6 @@ WantedBy=%(TARGET)s
 	mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
 	self.config.add_mount(mount)
 
-    def __gen_uuid(self):
-	uuid_fd = open("/proc/sys/kernel/random/uuid")
-	self.uuid = uuid_fd.read().replace("-","").rstrip()
-	uuid_fd.close()
-
     def get_machine_id(self):
 	path = None
 	for m in self.config.get_mounts():
@@ -326,16 +324,28 @@ WantedBy=%(TARGET)s
 	fd.close()
 	return uuid
 
+    def gen_hostname(self):
+	fd=open(self.dest + self.HOSTNAME, "w")
+	fd.write("%s\n" % self.name )
+	fd.close()
+
     def gen_machine_id(self):
+	uuid_fd = open("/proc/sys/kernel/random/uuid")
+	uuid = uuid_fd.read().replace("-","").rstrip()
+	uuid_fd.close()
 	fd=open(self.dest + self.MACHINE_ID, "w")
-	fd.write("%s\n" % self.uuid)
+	fd.write("%s\n" % uuid)
 	fd.close()
 
 	# Link /var/log/journal within the container to /var/log/journal/UUID
 	# on host.  This will allow the hosts journalctl to easily read
 	# containers journal information.
-	os.makedirs(self.dest + "/var/log/journal")
-	journalfile = "/var/log/journal/" + self.uuid
+        if not os.path.exists(self.dest + "/var/log/journal"):
+            os.makedirs(self.dest + "/var/log/journal")
+            
+	journalfile = "/var/log/journal/" + uuid
+	fd=open(self.dest + journamfile, "w")
+	fd.close()
 	os.symlink(self.dest + journalfile, journalfile)
 
     def __gen_filesystems(self):
@@ -449,9 +459,7 @@ PrivateNetwork=false
 
 	self.gen_machine_id()
 
-	fd=open(self.dest + self.HOSTNAME, "w")
-	fd.write("%s\n" % self.config.get_name() )
-	fd.close()
+	self.gen_hostname()
 
 	for k in self.LOCAL_LINK_FILES:
 	    for d in self.LOCAL_LINK_FILES[k]:
@@ -531,7 +539,6 @@ PrivateNetwork=false
 	except:
 	    pass
 
-	self.dest = "%s/%s" % (self.path, self.get_name())
 	# Should be stored in config
 	fd=open(self.dest + self.MACHINE_ID, "r")
 	uuid = fd.read().rstrip()
@@ -572,7 +579,6 @@ PrivateNetwork=false
 		    os.remove(target)
 
     def create(self):
-	self.dest = "%s/%s" % (self.path, self.get_name())
 	if os.path.exists(self.dest):
 	    raise OSError("%s already exists" % self.dest)
 
@@ -613,10 +619,12 @@ PrivateNetwork=false
 	    self.conn = None
 
     def running(self):
+	def closed(obj, error):
+	    self.loop.quit()
 	try:
 	    self.__connect()
 	    context = LibvirtSandbox.ContextService.new(self.conn, self.config)
-	    context.attach()
+            context.attach()
 	    self.__disconnect()
 	    return 1
 	except GLib.GError, e:
@@ -733,6 +741,7 @@ def sandbox_list(args):
     import glob
     container = Container()
     g = glob.glob(container.CONFIG_PATH + "*.sandbox")
+    g.sort()
     for gc in g:
 	try:
 	    c = Container(config = gc)
@@ -832,6 +841,7 @@ def clone(args):
     if args.level:
 	container.set_security_level(args.level)
     container.gen_machine_id()
+    container.gen_hostname()
     container.save_config()
 
 import argparse
