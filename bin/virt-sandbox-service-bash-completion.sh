@@ -100,7 +100,7 @@ _virt_sandbox_service () {
     elif test "$verb" == "execute" ; then
         if test "$prev" = "execute"; then
             COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[EXECUTE]} $( __get_all_running_containers ) " -- "$cur") )
-	else
+        else
             COMPREPLY=( $( compgen -c -- "$cur") )
         fi
         return 0
