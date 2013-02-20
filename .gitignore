@@ -43,6 +43,6 @@ libvirt-sandbox/libvirt-sandbox-protocol.h
 libvirt-sandbox/tests/*.cfg
 libvirt-sandbox/tests/test-config
 bin/virt-sandbox
+bin/virt-sandbox-service-util
 build/
-bin/virt-sandbox.1
-bin/virt-sandbox-service.1
+bin/*.1
