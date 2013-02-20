@@ -452,7 +452,7 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->kernrelease = g_strdup(uts.release);
     priv->kernpath = g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease);
     priv->kmodpath = g_strdup_printf("/lib/modules");
-    priv->secLabel = g_strdup("system_u:system_r:svirt_t:s0:c0.c1023");
+    priv->secLabel = g_strdup("system_u:system_r:virtd_lxc_t:s0:c0.c1023");
 
     priv->uid = geteuid();
     priv->gid = getegid();
