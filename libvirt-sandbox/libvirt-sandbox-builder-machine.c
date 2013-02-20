@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <string.h>
+#include <sys/utsname.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
@@ -114,6 +115,33 @@ static void gvir_sandbox_builder_machine_finalize(GObject *object)
 }
 
 
+static gchar *gvir_sandbox_builder_machine_get_kernrelease(GVirSandboxConfig *config)
+{
+    struct utsname uts;
+    const gchar *kver = gvir_sandbox_config_get_kernrelease(config);
+    if (kver)
+        return g_strdup(kver);
+
+    uname(&uts);
+    return g_strdup(uts.release);
+}
+
+
+static gchar *gvir_sandbox_builder_machine_get_kernpath(GVirSandboxConfig *config)
+{
+    const gchar *kernpath = gvir_sandbox_config_get_kernpath(config);
+    gchar *kver;
+    gchar *ret;
+    if (kernpath)
+        return g_strdup(kernpath);
+
+    kver = gvir_sandbox_builder_machine_get_kernrelease(config);
+    ret = g_strdup_printf("/boot/vmlinuz-%s", kver);
+    g_free(kver);
+    return ret;
+}
+
+
 static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
                                                     GError **error)
 {
@@ -121,10 +149,14 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     GVirSandboxBuilderInitrd *builder = gvir_sandbox_builder_initrd_new();
     gchar *targetfile = g_strdup_printf("/tmp/libvirt-sandbox-initrd-XXXXXX");
     int fd = -1;
+    gchar *kver = gvir_sandbox_builder_machine_get_kernrelease(config);
+    const gchar *kmodpath = gvir_sandbox_config_get_kmodpath(config);
+    if (!kmodpath)
+        kmodpath = "/lib/modules";
 
-    gvir_sandbox_config_initrd_set_kver(initrd, gvir_sandbox_config_get_kernrelease(config));
-    gchar *kmoddir = g_strdup_printf("%s/%s/kernel", gvir_sandbox_config_get_kmodpath(config),
-                    gvir_sandbox_config_get_kernrelease(config));
+    gvir_sandbox_config_initrd_set_kver(initrd, kver);
+    gchar *kmoddir = g_strdup_printf("%s/%s/kernel",
+                                     kmodpath, kver);
     gvir_sandbox_config_initrd_set_kmoddir(initrd, kmoddir);
 
     gvir_sandbox_config_initrd_set_init(initrd, LIBEXECDIR "/libvirt-sandbox-init-qemu");
@@ -159,6 +191,7 @@ cleanup:
         targetfile = NULL;
     }
     g_free(kmoddir);
+    g_free(kver);
     g_object_unref(initrd);
     g_object_unref(builder);
     return targetfile;
@@ -370,7 +403,7 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     if (!(initrd = gvir_sandbox_builder_machine_mkinitrd(config, error)))
         return FALSE;
 
-    kernel = g_strdup(gvir_sandbox_config_get_kernpath(config));
+    kernel = gvir_sandbox_builder_machine_get_kernpath(config);
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
     gvir_sandbox_cleaner_add_rmfile_post_start(cleaner,

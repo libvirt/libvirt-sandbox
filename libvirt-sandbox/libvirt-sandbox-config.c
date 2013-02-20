@@ -449,9 +449,6 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->name = g_strdup("sandbox");
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
-    priv->kernrelease = g_strdup(uts.release);
-    priv->kernpath = g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease);
-    priv->kmodpath = g_strdup_printf("/lib/modules");
     priv->secLabel = g_strdup("system_u:system_r:virtd_lxc_t:s0:c0.c1023");
 
     priv->uid = geteuid();
@@ -544,15 +541,12 @@ const gchar *gvir_sandbox_config_get_arch(GVirSandboxConfig *config)
  *
  * Set the kernel release version to use in the sandbox. If none is provided,
  * it will default to matching the current running kernel.
- * Also sets the default kernel path as /boot/vmlinuz-[release]
  */
 void gvir_sandbox_config_set_kernrelease(GVirSandboxConfig *config, const gchar *kernrelease)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     g_free(priv->kernrelease);
     priv->kernrelease = g_strdup(kernrelease);
-    gvir_sandbox_config_set_kernpath(config, g_strdup_printf("/boot/vmlinuz-%s", priv->kernrelease));
-
 }
 
 
@@ -608,7 +602,7 @@ const gchar *gvir_sandbox_config_get_kernpath(GVirSandboxConfig *config)
  *
  * Sets the generic path to the kernel modules directory.
  * It will default to "/lib/modules", modules being searched in
- * /lib/modules/[kernel release[. If "/path" is given as argument
+ * /lib/modules/[kernel release]. If "/path" is given as argument
  * modules will be searched in /path/[kernel release]
  */
 
@@ -1835,9 +1829,12 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     g_key_file_set_string(file, "core", "name", priv->name);
     g_key_file_set_string(file, "core", "root", priv->root);
     g_key_file_set_string(file, "core", "arch", priv->arch);
-    g_key_file_set_string(file, "core", "kernrelease", priv->kernrelease);
-    g_key_file_set_string(file, "core", "kernpath", priv->kernpath);
-    g_key_file_set_string(file, "core", "kmodpath", priv->kmodpath);
+    if (priv->kernrelease)
+        g_key_file_set_string(file, "core", "kernrelease", priv->kernrelease);
+    if (priv->kernpath)
+        g_key_file_set_string(file, "core", "kernpath", priv->kernpath);
+    if (priv->kmodpath)
+        g_key_file_set_string(file, "core", "kmodpath", priv->kmodpath);
     g_key_file_set_boolean(file, "core", "shell", priv->shell);
 
     g_key_file_set_uint64(file, "identity", "uid", priv->uid);
