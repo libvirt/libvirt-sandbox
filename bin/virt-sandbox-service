@@ -344,7 +344,7 @@ WantedBy=%(TARGET)s
             os.makedirs(self.dest + "/var/log/journal")
 
         journalfile = "/var/log/journal/" + uuid
-        fd=open(self.dest + journamfile, "w")
+        fd=open(self.dest + journalfile, "w")
         fd.close()
         os.symlink(self.dest + journalfile, journalfile)
 
