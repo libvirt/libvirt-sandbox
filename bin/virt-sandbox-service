@@ -367,12 +367,14 @@ WantedBy=%(TARGET)s
         self.config.add_mount(mount)
 
         for d in self.BIND_SYSTEM_DIRS:
-            source = "%s%s" % ( self.dest, d)
-            self.__add_mount(source, d)
+            if os.path.exists(d):
+                source = "%s%s" % ( self.dest, d)
+                self.__add_mount(source, d)
 
         for f in self.BIND_SYSTEM_FILES:
-            source = "%s%s" % ( self.dest, f)
-            self.__add_mount(source, f)
+            if os.path.exists(f):
+                source = "%s%s" % ( self.dest, f)
+                self.__add_mount(source, f)
 
         for d in self.dirs:
             found = False
