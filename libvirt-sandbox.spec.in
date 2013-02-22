@@ -28,6 +28,7 @@ BuildRequires: gobject-introspection-devel
 %endif
 BuildRequires: libselinux-devel
 BuildRequires: glibc-static
+BuildRequires: /usr/bin/pod2man
 Requires: glib2-devel >= 2.32.0
 
 %package libs
@@ -97,6 +98,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libexecdir}/virt-sandbox-service-util
 %{_mandir}/man1/virt-sandbox.1*
 %{_mandir}/man1/virt-sandbox-service.1*
+%{_mandir}/man1/virt-sandbox-service-*.1*
 
 %files libs
 %defattr(-,root,root,-)
