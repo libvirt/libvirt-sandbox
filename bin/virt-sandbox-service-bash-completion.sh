@@ -48,7 +48,6 @@ _virt_sandbox_service () {
            [CREATE]='create'
            [DELETE]='delete'
            [RELOAD]='reload'
-           [MACHINEID]='machineid'
            [START]='start'
            [EXECUTE]='execute'
            [STOP]='stop'
@@ -80,9 +79,6 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[LIST]} " -- "$cur") )
         return 0
     elif test "$verb" == "delete" ; then
-        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
-        return 0
-    elif test "$verb" == "machineid" ; then
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "start" ; then

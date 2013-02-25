@@ -20,8 +20,6 @@ virt-sandbox-service - Secure container tool
 
     list                List all sandbox container
 
-    machineid           Show the /etc/machine-id specific to container
-
     reload              Reload a running sandbox container
 
     start               Start a sandbox container
@@ -53,7 +51,7 @@ supported currently).
 
 =head1 SEE ALSO
 
-C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox(1)>, C<virt-sandbox-service-create(1)>, C<virt-sandbox-service-clone(1)>, C<virt-sandbox-service-connect(1)>, C<virt-sandbox-service-delete(1)>, C<virt-sandbox-service-execute(1)>, C<virt-sandbox-service-list(1)>, C<virt-sandbox-service-machineid(1)>, C<virt-sandbox-service-reload(1)>, C<virt-sandbox-service-start(1)>, C<virt-sandbox-service-stop(1)>
+C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox(1)>, C<virt-sandbox-service-create(1)>, C<virt-sandbox-service-clone(1)>, C<virt-sandbox-service-connect(1)>, C<virt-sandbox-service-delete(1)>, C<virt-sandbox-service-execute(1)>, C<virt-sandbox-service-list(1)>, C<virt-sandbox-service-reload(1)>, C<virt-sandbox-service-start(1)>, C<virt-sandbox-service-stop(1)>
 
 =head1 FILES
 

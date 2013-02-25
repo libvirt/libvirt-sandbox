@@ -735,10 +735,6 @@ def usage(parser, msg):
     sys.stderr.flush()
     sys.exit(1)
 
-def machineid(args):
-    container = Container(args.name, args.uri)
-    print container.get_machine_id()
-
 def sandbox_list(args):
     import glob
     container = Container()
@@ -961,12 +957,6 @@ def gen_list_args(subparser):
                         help=_("list only running sandbox containers"))
     parser.set_defaults(func=sandbox_list)
 
-def gen_machineid_args(subparser):
-    parser = subparser.add_parser("machineid",
-                                  help=_("Display the machineid of the sandbox container"))
-    requires_name(parser)
-    parser.set_defaults(func=machineid)
-
 if __name__ == '__main__':
     c = Container()
 
@@ -981,7 +971,6 @@ if __name__ == '__main__':
     gen_delete_args(subparser)
     gen_execute_args(subparser)
     gen_list_args(subparser)
-    gen_machineid_args(subparser)
     gen_reload_args(subparser)
     gen_start_args(subparser)
     gen_stop_args(subparser)
