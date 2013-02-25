@@ -308,22 +308,6 @@ WantedBy=%(TARGET)s
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
         self.config.add_mount(mount)
 
-    def get_machine_id(self):
-        path = None
-        for m in self.config.get_mounts():
-            try:
-                if m.get_target() == self.MACHINE_ID:
-                    path = m.get_source()
-                    break
-            except:
-                pass
-        if not path:
-            raise ValueError(_("%s does not exist in container %s" % (self.MACHINE_ID, args.name)))
-        fd=open(path, "r")
-        uuid = fd.read()
-        fd.close()
-        return uuid
-
     def gen_hostname(self):
         fd=open(self.dest + self.HOSTNAME, "w")
         fd.write("%s\n" % self.name )
