@@ -1,6 +1,23 @@
       libvirt Sandbox News
       ====================
 
+0.1.2 2013-03-05
+----------------
+
+ - Requires libvirt >= 1.0.2
+ - Split virt-sandbox-service manpage into separate docs,
+   one for each sub-command
+ - Fix handling of GLib.GError exceptions
+ - Containerize /var/lib/nfs/rpc_pipefs too
+ - Add ability to execute arbitrary commands inside the
+   container using namespace attach
+ - Fix docs for virt-sandbox mount options
+ - Better wording about escape sequence for consoles
+ - Create journal file if it doesn't already exist
+ - Create /etc/rc.d/init.d inside container to block
+   legacy init scripts starting
+ - Skip binding files/dirs which don't exist in host
+
 0.1.1 2012-12-10
 ----------------
 
