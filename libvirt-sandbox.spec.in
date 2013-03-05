@@ -12,6 +12,8 @@
 %define with_tcg 0
 %endif
 
+%define libvirt_version 1.0.2
+
 
 Name: @PACKAGE@
 Version: @VERSION@
@@ -30,18 +32,20 @@ BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
 Requires: glib2-devel >= 2.32.0
+# For virsh lxc-enter-namespace command
+Requires: libvirt-client >= %{libvirt_version}
 
 %package libs
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
 %ifarch %{ix86} x86_64
-Requires: libvirt-daemon-kvm >= 0.9.12
+Requires: libvirt-daemon-kvm >= %{libvirt_version}
 %endif
 %if %{with_tcg}
-Requires: libvirt-daemon-qemu >= 0.9.12
+Requires: libvirt-daemon-qemu >= %{libvirt_version}
 %endif
-Requires: libvirt-daemon-lxc >= 0.9.12
+Requires: libvirt-daemon-lxc >= %{libvirt_version}
 
 %package devel
 Group: Development/Libraries

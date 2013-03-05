@@ -28,7 +28,7 @@ The following mandatory dependancies are required in order to
 build libvirt-sandbox
 
   libvirt-glib     >= 0.0.9
-  libvirt          >= 0.9.13
+  libvirt          >= 1.0.2
   glib2            >= 2.28.0
 
 And either the libvirt LXC or QEMU/KVM drivers.
