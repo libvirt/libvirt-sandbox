@@ -315,7 +315,7 @@ file, not qcow2 or any other special format
 
 =item B<guest-bind>
 
-If B<TYPE> is B<host-image>, then B<SRC> is interpreted as the path
+If B<TYPE> is B<guest-bind>, then B<SRC> is interpreted as the path
 to another directory in the container filesystem.
 
 =back
