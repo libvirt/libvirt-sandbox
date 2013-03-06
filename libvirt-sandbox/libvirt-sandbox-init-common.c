@@ -703,6 +703,7 @@ static gboolean eventloop(gboolean interactive,
             gssize got;
 
             if (fds[i].fd == sigread) {
+                /* The self-pipe signal handler */
                 if (fds[i].revents) {
                     char ignore;
                     int rv;
@@ -712,11 +713,15 @@ static gboolean eventloop(gboolean interactive,
                         rv = waitpid(child, &exitstatus, 0);
                     } while (rv != -1 && rv != child);
                     appQuit = TRUE;
-                    if (appErrEOF && appOutEOF &&
-                        !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                        goto cleanup;
+                    if (appErrEOF && appOutEOF) {
+                        if (debug)
+                            fprintf(stderr, "Encoding exit status sigchild %d\n", exitstatus);
+                        if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                            goto cleanup;
+                    }
                 }
             } else if (fds[i].fd == host) {
+                /* The channel to the virt-sandbox library client in host */
                 if (fds[i].revents & POLLIN) {
                     if (debug)
                         fprintf(stderr, "host readable\n");
@@ -889,6 +894,7 @@ static gboolean eventloop(gboolean interactive,
                 }
             } else if (fds[i].fd == appin &&
                        fds[i].fd == appout) {
+                /* The child application, when using a psuedo-tty */
                 if (fds[i].revents & POLLIN) {
                     if (!tx) {
                         gsize len = 4096;
@@ -900,9 +906,12 @@ static gboolean eventloop(gboolean interactive,
                                         strerror(errno));
                             appOutEOF = TRUE;
                             appErrEOF = TRUE;
-                            if (appQuit &&
-                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                                goto cleanup;
+                            if (appQuit) {
+                                if (debug)
+                                    fprintf(stderr, "Encoding exit status appout tty %d\n", exitstatus);
+                                if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                    goto cleanup;
+                            }
                         } else {
                             if (!(tx = gvir_sandbox_encode_stdout(buf, got, serial++, NULL))) {
                                 g_free(buf);
@@ -913,7 +922,7 @@ static gboolean eventloop(gboolean interactive,
                         }
                         g_free(buf);
                     }
-                    fds[i].revents &= ~(POLLIN);
+                    fds[i].revents &= ~(POLLIN | POLLHUP);
                 }
                 if (fds[i].revents & POLLOUT) {
                     if (hostToStdin) {
@@ -937,16 +946,20 @@ static gboolean eventloop(gboolean interactive,
                             }
                         }
                     }
-                    fds[i].revents &= ~(POLLOUT);
+                    fds[i].revents &= ~(POLLOUT | POLLHUP);
                 }
                 if (fds[i].revents & POLLHUP) {
                     appOutEOF = TRUE;
                     appErrEOF = TRUE;
-                    if (appQuit &&
-                        !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                        goto cleanup;
+                    if (appQuit) {
+                        if (debug)
+                            fprintf(stderr, "Encoding exit status due to HUP %d\n", exitstatus);
+                        if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                            goto cleanup;
+                    }
                 }
             } else if (fds[i].fd == appin) {
+                /* The child stdin when using a plain pipe */
                 if (fds[i].revents && hostToStdin) {
                     got = write_data(appin,
                                      hostToStdin + hostToStdinOffset,
@@ -966,6 +979,7 @@ static gboolean eventloop(gboolean interactive,
                     }
                 }
             } else if (fds[i].fd == appout) {
+                /* The child stdout when using a plain pipe */
                 if (fds[i].revents && !tx) {
                     if (!tx) {
                         gsize len = 4096;
@@ -973,9 +987,12 @@ static gboolean eventloop(gboolean interactive,
                         got = read_data(appout, buf, len);
                         if (got <= 0) {
                             appOutEOF = TRUE;
-                            if (appErrEOF && appQuit &&
-                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                                goto cleanup;
+                            if (appErrEOF && appQuit) {
+                                if (debug)
+                                    fprintf(stderr, "Encoding exit status appout %d\n", exitstatus);
+                                if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                    goto cleanup;
+                            }
                         } else {
                             if (!(tx = gvir_sandbox_encode_stdout(buf, got, serial++, NULL))) {
                                 g_free(buf);
@@ -986,6 +1003,7 @@ static gboolean eventloop(gboolean interactive,
                     }
                 }
             } else if (fds[i].fd == apperr) {
+                /* The child stderr when using a plain pipe */
                 if (fds[i].revents && !tx) {
                     if (!tx) {
                         gsize len = 4096;
@@ -993,9 +1011,12 @@ static gboolean eventloop(gboolean interactive,
                         got = read_data(apperr, buf, len);
                         if (got <= 0) {
                             appErrEOF = TRUE;
-                            if (appOutEOF && appQuit &&
-                                !(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                                goto cleanup;
+                            if (appOutEOF && appQuit) {
+                                if (debug)
+                                    fprintf(stderr, "Encoding exit status apperr %d\n", exitstatus);
+                                if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                    goto cleanup;
+                            }
                         } else {
                             if (!(tx = gvir_sandbox_encode_stderr(buf, got, serial++, NULL))) {
                                 g_free(buf);
@@ -1008,8 +1029,11 @@ static gboolean eventloop(gboolean interactive,
             }
         }
 
-        if (appQuit && appOutEOF && appErrEOF && !tx)
+        if (appQuit && appOutEOF && appErrEOF && !tx) {
+            if (debug)
+                fprintf(stderr, "All closed, tx finished %d\n", exitstatus);
             quit = TRUE;
+        }
     }
 
     ret = TRUE;
