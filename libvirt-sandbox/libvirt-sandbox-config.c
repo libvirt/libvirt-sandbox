@@ -449,7 +449,7 @@ static void gvir_sandbox_config_init(GVirSandboxConfig *config)
     priv->name = g_strdup("sandbox");
     priv->root = g_strdup("/");
     priv->arch = g_strdup(uts.machine);
-    priv->secLabel = g_strdup("system_u:system_r:virtd_lxc_t:s0:c0.c1023");
+    priv->secDynamic = TRUE;
 
     priv->uid = geteuid();
     priv->gid = getegid();

@@ -322,23 +322,32 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
                                                         GVirSandboxConfig *config G_GNUC_UNUSED,
                                                         const gchar *configdir G_GNUC_UNUSED,
                                                         GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
-                                                        GVirConfigDomain *domain G_GNUC_UNUSED,
+                                                        GVirConfigDomain *domain,
                                                         GError **error G_GNUC_UNUSED)
 {
     GVirConfigDomainSeclabel *sec = gvir_config_domain_seclabel_new();
+    const char *label = gvir_sandbox_config_get_security_label(config);
 
     gvir_config_domain_seclabel_set_model(sec, "selinux");
     if (gvir_sandbox_config_get_security_dynamic(config)) {
         gvir_config_domain_seclabel_set_type(sec,
                                              GVIR_CONFIG_DOMAIN_SECLABEL_DYNAMIC);
-        if (gvir_sandbox_config_get_security_label(config))
-            gvir_config_domain_seclabel_set_baselabel(sec,
-                                                      gvir_sandbox_config_get_security_label(config));
+        if (label)
+            gvir_config_domain_seclabel_set_baselabel(sec, label);
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_LXC)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_lxc_net_t:s0");
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_QEMU)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_tcg_t:s0");
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_KVM)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_t:s0");
     } else {
         gvir_config_domain_seclabel_set_type(sec,
                                              GVIR_CONFIG_DOMAIN_SECLABEL_STATIC);
-        gvir_config_domain_seclabel_set_label(sec,
-                                              gvir_sandbox_config_get_security_label(config));
+        if (label)
+            gvir_config_domain_seclabel_set_label(sec, label);
     }
 
     gvir_config_domain_set_seclabel(domain, sec);
