@@ -17,7 +17,7 @@ Thus the foundation of the sandbox is the host filesystem passthrough capabiliti
 of the virtualization technology. There needs to be the ability to pass the entire
 root filesystem of the host through to the virtual domain in readonly mode. There
 are then zero or more additional host locations passed through in read-write mode,
-to be mounted at the specific locations in the virtual donain to which the application
+to be mounted at the specific locations in the virtual domain to which the application
 will require write access. The host and guest paths for the additional locations
 need not, and typically will not, be the same.
 
@@ -136,7 +136,7 @@ second problem is that the primary console is typically operating in
 a non-raw mode initially, which means that any data sent from the
 host to the guest is automatically echoed back out. This is not
 desirable, since the application to be run needs to be in charge of
-this. Thus it is often neccessary to put the guest console into raw
+this. Thus it is often necessary to put the guest console into raw
 mode. Unfortunately with a virtual machine based sandbox, there is
 no way to tell the kernel to put its console in raw mode from the
 moment it boots. Thus it is critical to prevent the host from sending
@@ -157,11 +157,11 @@ sequences to be sent. Any literal '\' in the stream is itself escaped
 as '\\'.
 
 Initially the host process starts off in receive mode only. ie it will
-not attmpt to send any data to the virtual guest.
+not attempt to send any data to the virtual guest.
 
 If the sandbox successfully starts the application, the magic byte
 sequence "xoqpuɐs" will be transmitted from the guest to the host.
-This byte sequence is guarenteed to be the first data sent from the
+This byte sequence is guaranteed to be the first data sent from the
 guest to the host in normal circumstances. Thus if the host process
 receives any other byte sequences it knows that sandbox startup has
 failed. In this case, further data received from the guest should
@@ -181,14 +181,14 @@ Kernels and initrds
 
 For application sandboxes based on virtual machines, a kernel and
 initrd is required to boot the guest. The goal once again is to run
-the same kernel in the guest, as curently runs on the host OS. The
+the same kernel in the guest, as currently runs on the host OS. The
 initrd though, will typically need to be different, since at the time
 of writing all distro initrd's lack the ability to boot from a 9p
 based host filesystem.
 
 In addition startup performance of the virtual machine startup is
 absolutely critical. The hardware configured for the virtual machine
-is well known ahead of time, thus a highly targetted initrd can be
+is well known ahead of time, thus a highly targeted initrd can be
 built and all hardware probing can be avoided. In fact all that is
 required is an initrd containing a 9p module and the virtio-net
 modules (and their dependencies).
@@ -227,14 +227,14 @@ inefficiency in libvirt probing QEMU command line arguments.
 The kernel command line is tuned in an attempt to minimize the time
 it spends initializing hardware
 
- - loglevel=0 - to supress all extraneous kernel output on the primary
+ - loglevel=0 - to suppress all extraneous kernel output on the primary
                 console which would get mixed up with application data
  - quiet      - as above
  - edd=off    - stop probing for EDD support which does not exist for QEMU
  - noreplace-smp - don't attempt to switch SMP alternatives, which wastes
                    many cycles
  - pci=noearly - minimize time spent initializing the PCI bus
- - cgroup_disable=memory - don't waste time on unsed subsystem
+ - cgroup_disable=memory - don't waste time on unused subsystem
 
 Still todo
 
