@@ -12,10 +12,10 @@ If we run a syslog within the container will it get messages from the outside?  
 
 EXECUTE:
 	virt-sandbox-service execute --command "BLAH" does not work.  We need to have the ability to execute any random command within the container, and get stdin, stdout, stderror outside the container. (Partially Completed)
-Still needs kernel to implement missing container namespace files under /proc/PID/ns, Also need a mechansm to get the PID of systemd from libvirt.
+Still needs kernel to implement missing container namespace files under /proc/PID/ns, Also need a mechanism to get the PID of systemd from libvirt.
 
 HOSTNAME:
-	Currently if I execute hostname within the conatiner it sees the name of the host not the name based on the container name or the IP Address associated with dhclient. (Completed)
+	Currently if I execute hostname within the container it sees the name of the host not the name based on the container name or the IP Address associated with dhclient. (Completed)
 
 virt-sandbox-service connect NAME hangs when you attempt to end the connection.
 ^d should bring you back to the host terminal.
