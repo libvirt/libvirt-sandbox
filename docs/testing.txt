@@ -11,27 +11,27 @@ For all tests, repeat with both KVM and LXC, eg
 
      a. No I/O, with TTY
 
-          libvirt-sandbox /bin/false
+          virt-sandbox /bin/false
 
      b. Output only, with TTY
 
-          libvirt-sandbox /bin/date
+          virt-sandbox /bin/date
 
      c. Input/output, with TTY
 
-          libvirt-sandbox /bin/sh
+          virt-sandbox /bin/sh
 
      d. No I/O, without TTY
 
-          libvirt-sandbox /bin/false < /dev/null > /dev/null
+          virt-sandbox /bin/false < /dev/null > /dev/null
 
      e. Output only, without TTY
 
-          libvirt-sandbox /bin/date > date.txt
+          virt-sandbox /bin/date > date.txt
 
      f. Input/output, without TTY
 
-          libvirt-sandbox /bin/cat < src.txt > dst.txt
+          virt-sandbox /bin/cat < src.txt > dst.txt
 
 
  2. Filesystem config
