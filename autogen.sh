@@ -12,7 +12,7 @@ DIE=0
 
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {
         echo
-        echo "You must have autoconf installed to compile virt-viewer."
+        echo "You must have autoconf installed to compile libvirt-sandbox."
         echo "Download the appropriate package for your distribution,"
         echo "or see http://www.gnu.org/software/autoconf"
         DIE=1
@@ -21,7 +21,7 @@ DIE=0
 (automake --version) < /dev/null > /dev/null 2>&1 || {
         echo
         DIE=1
-        echo "You must have automake installed to compile virt-viewer."
+        echo "You must have automake installed to compile libvirt-sandbox."
         echo "Download the appropriate package for your distribution,"
         echo "or see http://www.gnu.org/software/automake"
 }
