@@ -1365,6 +1365,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
                         "Unknown security option '%s'", name);
             return FALSE;
         }
+        i++;
     }
     return TRUE;
 }
