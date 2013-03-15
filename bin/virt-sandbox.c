@@ -352,7 +352,7 @@ specifies the broadcast address. Some examples
 
   address=192.168.122.1/24
   address=192.168.122.1/24%192.168.122.255
-  address=2001:212::204.2/64
+  address=2001:212::204:2/64
 
 =item route=IP-NETWORK/PREFIX%GATEWAY
 
