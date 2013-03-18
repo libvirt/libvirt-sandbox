@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
         { "mount", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
-          N_("mount a filesystem int he guest"), "TYPE:TARGET=SOURCE" },
+          N_("mount a filesystem in the guest"), "TYPE:TARGET=SOURCE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
           N_("file to copy into custom dir"), "GUEST-PATH=HOST-PATH", },
         { "includefile", 'I', 0, G_OPTION_ARG_STRING, &includefile,
