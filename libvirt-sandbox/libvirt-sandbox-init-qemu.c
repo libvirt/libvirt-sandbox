@@ -496,12 +496,16 @@ insmod(const char *filename)
         switch (errno) {
         case ENOEXEC:
             msg = "Invalid module format";
+            break;
         case ENOENT:
             msg = "Unknown symbol in module";
+            break;
         case ESRCH:
             msg = "Module has wrong symbol version";
+            break;
         case EINVAL:
             msg = "Invalid parameters";
+            break;
         default:
             msg = strerror(errno);
         }
