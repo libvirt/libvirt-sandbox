@@ -142,12 +142,19 @@ static gboolean gvir_sandbox_builder_container_construct_basic(GVirSandboxBuilde
                                                                GVirConfigDomain *domain,
                                                                GError **error)
 {
+    gchar **features;
+
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
         construct_basic(builder, config, configdir, cleaner, domain, error))
         return FALSE;
 
     gvir_config_domain_set_virt_type(domain,
                                      GVIR_CONFIG_DOMAIN_VIRT_LXC);
+
+    features = g_new0(gchar *, 2);
+    features[0] = g_strdup("privnet");
+    gvir_config_domain_set_features(domain, features);
+    g_strfreev(features);
 
     return TRUE;
 }
