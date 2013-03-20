@@ -843,6 +843,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
         GVirSandboxConfigNetwork *net;
 
         net = gvir_sandbox_config_network_new();
+        gvir_sandbox_config_network_set_dhcp(net, FALSE);
 
         while (params && params[j]) {
             gchar *param = params[j];
@@ -973,6 +974,11 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 g_free(target);
 
                 gvir_sandbox_config_network_set_dhcp(net, FALSE);
+            } else {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Unknown parameter %s", param);
+                g_object_unref(net);
+                goto cleanup;
             }
 
             j++;
