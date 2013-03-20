@@ -326,6 +326,8 @@ WantedBy=%(TARGET)s
         # containers journal information.
         if not os.path.exists(self.dest + "/var/log/journal"):
             os.makedirs(self.dest + "/var/log/journal")
+        if not os.path.exists("/var/log/journal"):
+            os.makedirs("/var/log/journal")
 
         journalfile = "/var/log/journal/" + uuid
         fd=open(self.dest + journalfile, "w")
@@ -529,7 +531,9 @@ PrivateNetwork=false
         fd=open(self.dest + self.MACHINE_ID, "r")
         uuid = fd.read().rstrip()
         fd.close()
-        os.remove("/var/log/journal/" + uuid)
+        jpath = "/var/log/journal/" + uuid
+        if os.path.exists(jpath):
+            os.remove(jpath)
 
         if os.path.exists(self.dest):
             shutil.rmtree(self.dest)
