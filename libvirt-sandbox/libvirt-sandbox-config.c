@@ -849,7 +849,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
             } else if (g_str_has_prefix(param, "address=")) {
                 GVirSandboxConfigNetworkAddress *addr;
                 GInetAddress *primaryaddr;
-                GInetAddress *bcastaddr;
+                GInetAddress *bcastaddr = NULL;
                 gchar *primary = g_strdup(param + strlen("address="));
                 gchar *bcast = NULL;
                 guint prefix = 24;
@@ -873,7 +873,8 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                     goto cleanup;
                 }
 
-                if (!(bcastaddr = g_inet_address_new_from_string(bcast))) {
+                if (bcast &&
+                    !(bcastaddr = g_inet_address_new_from_string(bcast))) {
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Unable to parse address %s", bcast);
                     g_free(primary);
@@ -888,7 +889,8 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 gvir_sandbox_config_network_add_address(net, addr);
 
                 g_object_unref(primaryaddr);
-                g_object_unref(bcastaddr);
+                if (bcastaddr)
+                    g_object_unref(bcastaddr);
                 g_free(primary);
 
                 gvir_sandbox_config_network_set_dhcp(net, FALSE);
@@ -1529,7 +1531,8 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
         gvir_sandbox_config_network_add_address(config, addr);
 
         g_object_unref(primary);
-        g_object_unref(broadcast);
+        if (broadcast)
+            g_object_unref(broadcast);
         g_free(str1);
         g_free(str2);
         g_free(key);
@@ -1565,7 +1568,8 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
         gvir_sandbox_config_network_add_route(config, route);
 
         g_object_unref(target);
-        g_object_unref(gateway);
+        if (gateway)
+            g_object_unref(gateway);
         g_free(str1);
         g_free(str2);
         g_free(key);
@@ -1761,9 +1765,11 @@ static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *co
         g_free(str);
 
         inet = gvir_sandbox_config_network_address_get_broadcast(addr);
-        str = g_inet_address_to_string(inet);
-        g_key_file_set_string(file, key, "broadcast", str);
-        g_free(str);
+        if (inet) {
+            str = g_inet_address_to_string(inet);
+            g_key_file_set_string(file, key, "broadcast", str);
+            g_free(str);
+        }
 
         g_key_file_set_uint64(file, key, "prefix",
                               gvir_sandbox_config_network_address_get_prefix(addr));

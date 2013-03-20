@@ -130,13 +130,19 @@ static gboolean add_address(const gchar *devname,
     GInetAddress *bcast = gvir_sandbox_config_network_address_get_broadcast(config);
     gchar *addrstr = g_inet_address_to_string(addr);
     gchar *fulladdrstr = g_strdup_printf("%s/%u", addrstr, prefix);
-    gchar *bcaststr = g_inet_address_to_string(bcast);
+    gchar *bcaststr = bcast ? g_inet_address_to_string(bcast) : NULL;
     gboolean ret = FALSE;
 
-    const gchar *argv1[] = {
+    const gchar *argv1a[] = {
         "/sbin/ip", "addr",
         "add", fulladdrstr,
         "broadcast", bcaststr,
+        "dev", devname,
+        NULL
+    };
+    const gchar *argv1b[] = {
+        "/sbin/ip", "addr",
+        "add", fulladdrstr,
         "dev", devname,
         NULL
     };
@@ -146,9 +152,15 @@ static gboolean add_address(const gchar *devname,
         NULL
     };
 
-    if (!g_spawn_sync(NULL, (gchar**)argv1, NULL, 0,
-                      NULL, NULL, NULL, NULL, NULL, error))
-        goto cleanup;
+    if (bcaststr) {
+        if (!g_spawn_sync(NULL, (gchar**)argv1a, NULL, 0,
+                          NULL, NULL, NULL, NULL, NULL, error))
+            goto cleanup;
+    } else {
+        if (!g_spawn_sync(NULL, (gchar**)argv1b, NULL, 0,
+                          NULL, NULL, NULL, NULL, NULL, error))
+            goto cleanup;
+    }
     if (!g_spawn_sync(NULL, (gchar**)argv2, NULL, 0,
                       NULL, NULL, NULL, NULL, NULL, error))
         goto cleanup;
