@@ -235,14 +235,14 @@ WantedBy=%(TARGET)s
         return self.config.set_security_dynamic(val)
 
     def get_security_type(self):
-        if self.config:
+        if self.config and self.config.get_security_label():
             con = self.config.get_security_label().split(':')
             return con[2]
         else:
             return "svirt_lxc_net_t"
 
     def get_security_level(self):
-        if self.config:
+        if self.config and self.config.get_security_label():
             con = self.config.get_security_label().split(':')
             return ":".join(con[3:])
         else:
