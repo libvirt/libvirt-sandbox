@@ -520,13 +520,7 @@ PrivateNetwork=false
                     return m.get_source()
             return None
 
-    def delete(self):
-        # Stop service if it is running
-        try:
-            self.stop()
-        except:
-            pass
-
+    def _delete(self):
         # Should be stored in config
         fd=open(self.dest + self.MACHINE_ID, "r")
         uuid = fd.read().rstrip()
@@ -568,10 +562,16 @@ PrivateNetwork=false
                 if not os.path.exists(target + ".wants"):
                     os.remove(target)
 
-    def create(self):
-        if os.path.exists(self.dest):
-            raise OSError("%s already exists" % self.dest)
+    def delete(self):
+        # Stop service if it is running
+        try:
+            self.stop()
+        except:
+            pass
 
+        self._delete()
+
+    def _create(self):
         net = LibvirtSandbox.ConfigNetwork().new()
         net.set_dhcp(True)
         self.config.add_network(net)
@@ -591,6 +591,19 @@ PrivateNetwork=false
             sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
         self.save_config()
         self.__create_system_unit()
+
+    def create(self):
+        if os.path.exists(self.dest):
+            raise OSError("%s already exists" % self.dest)
+
+        try:
+            self._create()
+        except Exception, e:
+            try:
+                self._delete()
+            except Exception, e2:
+                pass
+            raise e
 
     def reload(self):
         # Crude way of doing this.
