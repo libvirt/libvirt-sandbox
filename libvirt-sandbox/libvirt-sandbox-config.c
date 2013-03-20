@@ -834,6 +834,9 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
 {
     gboolean ret = FALSE;
     gsize i = 0;
+    gboolean gotaddr = FALSE;
+    gboolean gotroute = FALSE;
+    gboolean gotdhcp = FALSE;
     while (networks && networks[i]) {
         gchar **params = g_strsplit(networks[i], ";", 50);
         gsize j = 0;
@@ -845,7 +848,14 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
             gchar *param = params[j];
 
             if (g_str_equal(param, "dhcp")) {
+                if (gotaddr || gotroute) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Cannot request DHCP with static routes/addresses");
+                    goto cleanup;
+                }
+
                 gvir_sandbox_config_network_set_dhcp(net, TRUE);
+                gotdhcp = TRUE;
             } else if (g_str_has_prefix(param, "address=")) {
                 GVirSandboxConfigNetworkAddress *addr;
                 GInetAddress *primaryaddr;
@@ -854,6 +864,14 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 gchar *bcast = NULL;
                 guint prefix = 24;
                 gchar *tmp;
+
+                if (gotdhcp) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Cannot set static addresses with DHCP");
+                    goto cleanup;
+                }
+                gotaddr = TRUE;
+
                 if ((tmp = strchr(primary, '/'))) {
                     prefix = g_ascii_strtoll(tmp+1, NULL, 10);
                     *tmp = '\0';
@@ -902,6 +920,14 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 gchar *gateway = NULL;
                 guint prefix = 24;
                 gchar *tmp;
+
+                if (gotdhcp) {
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                "Cannot set static routes with DHCP");
+                    goto cleanup;
+                }
+                gotroute = TRUE;
+
                 if ((tmp = strchr(target, '/'))) {
                     prefix = g_ascii_strtoll(tmp+1, NULL, 10);
                     *tmp = '\0';
@@ -945,6 +971,12 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
             j++;
         }
         g_strfreev(params);
+
+        if (gotroute && !gotaddr) {
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        "Cannot set static routes without addresses");
+            goto cleanup;
+        }
 
         gvir_sandbox_config_add_network(config, net);
         g_object_unref(net);
