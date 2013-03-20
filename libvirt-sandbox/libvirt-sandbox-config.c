@@ -851,6 +851,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 if (gotaddr || gotroute) {
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Cannot request DHCP with static routes/addresses");
+                    g_object_unref(net);
                     goto cleanup;
                 }
 
@@ -868,6 +869,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 if (gotdhcp) {
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Cannot set static addresses with DHCP");
+                    g_object_unref(net);
                     goto cleanup;
                 }
                 gotaddr = TRUE;
@@ -888,6 +890,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Unable to parse address %s", primary);
                     g_free(primary);
+                    g_object_unref(net);
                     goto cleanup;
                 }
 
@@ -897,6 +900,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                 "Unable to parse address %s", bcast);
                     g_free(primary);
                     g_object_unref(primaryaddr);
+                    g_object_unref(net);
                     goto cleanup;
                 }
 
@@ -924,6 +928,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                 if (gotdhcp) {
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Cannot set static routes with DHCP");
+                    g_object_unref(net);
                     goto cleanup;
                 }
                 gotroute = TRUE;
@@ -944,6 +949,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                     g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                                 "Unable to parse address %s", target);
                     g_free(target);
+                    g_object_unref(net);
                     goto cleanup;
                 }
 
@@ -952,6 +958,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                 "Unable to parse address %s", gateway);
                     g_free(target);
                     g_object_unref(targetaddr);
+                    g_object_unref(net);
                     goto cleanup;
                 }
 
@@ -975,6 +982,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
         if (gotroute && !gotaddr) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                         "Cannot set static routes without addresses");
+            g_object_unref(net);
             goto cleanup;
         }
 
