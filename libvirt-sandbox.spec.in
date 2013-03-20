@@ -1,15 +1,13 @@
 # -*- rpm-spec -*-
 
-%define with_introspection 0
 %define with_tcg 1
-%define with_python 0
+%define with_kvm 1
 
-%if 0%{?fedora} >= 15
-%define with_introspection 1
-%endif
-%if 0%{?rhel} >= 6
-%define with_introspection 1
+# RHEL does not provide the 9p.ko kernel module
+# nor the virtio-9p KVM backend driver.
+%if 0%{?rhel}
 %define with_tcg 0
+%define with_kvm 0
 %endif
 
 %define libvirt_version 1.0.2
@@ -25,9 +23,7 @@ URL: http://libvirt.org/
 Source0: ftp://libvirt.org/libvirt/sandbox/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: libvirt-gobject-devel >= 0.0.9
-%if %{with_introspection}
 BuildRequires: gobject-introspection-devel
-%endif
 BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
@@ -40,7 +36,9 @@ Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
 %ifarch %{ix86} x86_64
+%if %{with_kvm}
 Requires: libvirt-daemon-kvm >= %{libvirt_version}
+%endif
 %endif
 %if %{with_tcg}
 Requires: libvirt-daemon-qemu >= %{libvirt_version}
@@ -69,13 +67,7 @@ the libvirt sandbox
 
 %build
 
-%if %{with_introspection}
-%define introspection_arg --enable-introspection
-%else
-%define introspection_arg --disable-introspection
-%endif
-
-%configure %{introspection_arg}
+%configure --enable-introspection
 %__make %{?_smp_mflags}
 
 
@@ -114,9 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libexecdir}/libvirt-sandbox-init-lxc
 %{_libexecdir}/libvirt-sandbox-init-qemu
 %{_libdir}/libvirt-sandbox-1.0.so.*
-%if %{with_introspection}
 %{_libdir}/girepository-1.0/LibvirtSandbox-1.0.typelib
-%endif
 
 %files devel
 %defattr(-,root,root,-)
@@ -130,9 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox
 %{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox/libvirt-sandbox.h
 %{_includedir}/libvirt-sandbox-1.0/libvirt-sandbox/libvirt-sandbox-*.h
-%if %{with_introspection}
 %{_datadir}/gir-1.0/LibvirtSandbox-1.0.gir
-%endif
 %{_datadir}/gtk-doc/html/Libvirt-sandbox
 
 %changelog
