@@ -265,13 +265,7 @@ virt-sandbox [OPTIONS...] -S
 Run the C<cmd>  application within a tightly confined virtual machine. The
 default sandbox domain only allows applications the ability to read and
 write stdin, stdout and any other file descriptors handed to it. It is
-not allowed to open any other files. The -M option will mount an alternate
-homedir and tmpdir to be used by the sandbox.
-
-If directories are specified with -H or -T the directory will have its
-security label changed unless a level is specified with -l. If the MLS/MCS
-security level is specified, the user is responsible to set the correct
-labels.
+not allowed to open any other files.
 
 =head1 OPTIONS
 
