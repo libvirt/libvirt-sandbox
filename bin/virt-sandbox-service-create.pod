@@ -4,7 +4,7 @@ virt-sandbox-service create - Create a Security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
 
 =head1 DESCRIPTION
 
@@ -43,6 +43,47 @@ Clone content from /etc and /var directories that will be mounted within the con
 Select path to store container content.
 
 Default: C</var/lib/libvirt/filesystems>.
+
+=item B<-N NETWORK-OPTIONS>, B<--network NETWORK-OPTIONS>
+
+Add a network interface to the sandbox. By default the sandbox will
+only have a loopback interface. This option allows for connectivity
+to the LAN in some manner. NETWORK-OPTIONS is a set of
+key=val pairs, separated by commas. The following options are valid
+
+=over 4
+
+=item dhcp
+
+Configure the network interface using dhcp. This key takes no value.
+No other keys may be specified.
+
+=item source=NETWORK
+
+Set the name of the network to connect the interface to. C<NETWORK>
+is the name of any libvirt virtual network. See also B<virsh net-list>
+
+=item address=IP-ADDRESS/PREFIX%BROADCAST
+
+Configure the network interface with the static IPv4 or IPv6 address
+B<IP-ADDRESS>. The B<PREFIX> value is the length of the network
+prefix in B<IP-ADDRESS>. The optional B<BROADCAST> parameter
+specifies the broadcast address. Some examples
+
+  address=192.168.122.1/24
+  address=192.168.122.1/24%192.168.122.255
+  address=2001:212::204:2/64
+
+=item route=IP-NETWORK/PREFIX%GATEWAY
+
+Configure the network interface with the static IPv4 or IPv6 route
+B<IP-NETWORK>. The B<PREFIX> value is the length of the network
+prefix in B<IP-NETWORK>. The optional B<GATEWAY> parameter
+specifies the address of the gateway. Some examples
+
+  route=192.168.122.255/24%192.168.1.1
+
+=back
 
 =item B<-s SECURITY-OPTIONS>, B<--security=SECURITY-OPTIONS>
 

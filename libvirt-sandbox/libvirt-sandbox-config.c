@@ -822,183 +822,207 @@ GList *gvir_sandbox_config_get_networks(GVirSandboxConfig *config)
  * Parses @networks whose elements are in the format
  * KEY=VALUE, creating #GVirSandboxConfigNetwork
  * instances for each element.
+ */
+gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
+                                              gchar **networks,
+                                              GError **error)
+{
+    gsize i = 0;
+    while (networks && networks[i]) {
+        if (!gvir_sandbox_config_add_network_opts(config,
+                                                  networks[i],
+                                                  error))
+            return FALSE;
+        i++;
+    }
+
+    return TRUE;
+}
+
+
+/**
+ * gvir_sandbox_config_add_network_opts:
+ * @config: (transfer none): the sandbox config
+ * @network: (transfer none): the network config
+ *
+ * Parses @network whose elements are in the format
+ * KEY=VALUE, creating #GVirSandboxConfigNetwork
+ * instances for each element.
  *
  *  dhcp,source=default
  *  source=private,address=192.168.122.1/24%192.168.122.255,
  *  address=192.168.122.1/24%192.168.122.255,address=2001:212::204:2/64
  *  route=192.168.122.255/24%192.168.1.1
  */
-gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
-                                              gchar **networks,
+gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
+                                              const gchar *network,
                                               GError **error)
 {
     gboolean ret = FALSE;
-    gsize i = 0;
     gboolean gotaddr = FALSE;
     gboolean gotroute = FALSE;
     gboolean gotdhcp = FALSE;
-    while (networks && networks[i]) {
-        gchar **params = g_strsplit(networks[i], ",", 50);
-        gsize j = 0;
-        GVirSandboxConfigNetwork *net;
 
-        net = gvir_sandbox_config_network_new();
-        gvir_sandbox_config_network_set_dhcp(net, FALSE);
+    gchar **params = g_strsplit(network, ",", 50);
+    gsize j = 0;
+    GVirSandboxConfigNetwork *net;
 
-        while (params && params[j]) {
-            gchar *param = params[j];
+    net = gvir_sandbox_config_network_new();
+    gvir_sandbox_config_network_set_dhcp(net, FALSE);
 
-            if (g_str_equal(param, "dhcp")) {
-                if (gotaddr || gotroute) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Cannot request DHCP with static routes/addresses");
-                    g_object_unref(net);
-                    goto cleanup;
-                }
+    while (params && params[j]) {
+        gchar *param = params[j];
 
-                gvir_sandbox_config_network_set_dhcp(net, TRUE);
-                gotdhcp = TRUE;
-            } else if (g_str_has_prefix(param, "source=")) {
-                gvir_sandbox_config_network_set_source(net,
-                                                       param + strlen("source="));
-            } else if (g_str_has_prefix(param, "address=")) {
-                GVirSandboxConfigNetworkAddress *addr;
-                GInetAddress *primaryaddr;
-                GInetAddress *bcastaddr = NULL;
-                gchar *primary = g_strdup(param + strlen("address="));
-                gchar *bcast = NULL;
-                guint prefix = 24;
-                gchar *tmp;
-
-                if (gotdhcp) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Cannot set static addresses with DHCP");
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-                gotaddr = TRUE;
-
-                if ((tmp = strchr(primary, '/'))) {
-                    prefix = g_ascii_strtoll(tmp+1, NULL, 10);
-                    *tmp = '\0';
-                    tmp = strchr(tmp+1, '%');
-                } else {
-                    tmp = strchr(primary, '%');
-                }
-                if (tmp) {
-                    *tmp = '\0';
-                    bcast = tmp+1;
-                }
-
-                if (!(primaryaddr = g_inet_address_new_from_string(primary))) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Unable to parse address %s", primary);
-                    g_free(primary);
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-
-                if (bcast &&
-                    !(bcastaddr = g_inet_address_new_from_string(bcast))) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Unable to parse address %s", bcast);
-                    g_free(primary);
-                    g_object_unref(primaryaddr);
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-
-                addr = gvir_sandbox_config_network_address_new(primaryaddr,
-                                                               prefix,
-                                                               bcastaddr);
-
-                gvir_sandbox_config_network_add_address(net, addr);
-
-                g_object_unref(primaryaddr);
-                if (bcastaddr)
-                    g_object_unref(bcastaddr);
-                g_free(primary);
-
-                gvir_sandbox_config_network_set_dhcp(net, FALSE);
-            } else if (g_str_has_prefix(param, "route=")) {
-                GVirSandboxConfigNetworkRoute *route;
-                GInetAddress *targetaddr;
-                GInetAddress *gatewayaddr;
-                gchar *target = g_strdup(param + strlen("route="));
-                gchar *gateway = NULL;
-                guint prefix = 24;
-                gchar *tmp;
-
-                if (gotdhcp) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Cannot set static routes with DHCP");
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-                gotroute = TRUE;
-
-                if ((tmp = strchr(target, '/'))) {
-                    prefix = g_ascii_strtoll(tmp+1, NULL, 10);
-                    *tmp = '\0';
-                    tmp = strchr(tmp+1, '%');
-                } else {
-                    tmp = strchr(target, '%');
-                }
-                if (tmp) {
-                    *tmp = '\0';
-                    gateway = tmp+1;
-                }
-
-                if (!(targetaddr = g_inet_address_new_from_string(target))) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Unable to parse address %s", target);
-                    g_free(target);
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-
-                if (!(gatewayaddr = g_inet_address_new_from_string(gateway))) {
-                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                                "Unable to parse address %s", gateway);
-                    g_free(target);
-                    g_object_unref(targetaddr);
-                    g_object_unref(net);
-                    goto cleanup;
-                }
-
-                route = gvir_sandbox_config_network_route_new(targetaddr,
-                                                              prefix,
-                                                              gatewayaddr);
-
-                gvir_sandbox_config_network_add_route(net, route);
-
-                g_object_unref(targetaddr);
-                g_object_unref(gatewayaddr);
-                g_free(target);
-
-                gvir_sandbox_config_network_set_dhcp(net, FALSE);
-            } else {
+        if (g_str_equal(param, "dhcp")) {
+            if (gotaddr || gotroute) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Unknown parameter %s", param);
+                            "Cannot request DHCP with static routes/addresses");
                 g_object_unref(net);
                 goto cleanup;
             }
 
-            j++;
-        }
-        g_strfreev(params);
+            gvir_sandbox_config_network_set_dhcp(net, TRUE);
+            gotdhcp = TRUE;
+        } else if (g_str_has_prefix(param, "source=")) {
+            gvir_sandbox_config_network_set_source(net,
+                                                   param + strlen("source="));
+        } else if (g_str_has_prefix(param, "address=")) {
+            GVirSandboxConfigNetworkAddress *addr;
+            GInetAddress *primaryaddr;
+            GInetAddress *bcastaddr = NULL;
+            gchar *primary = g_strdup(param + strlen("address="));
+            gchar *bcast = NULL;
+            guint prefix = 24;
+            gchar *tmp;
 
-        if (gotroute && !gotaddr) {
+            if (gotdhcp) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Cannot set static addresses with DHCP");
+                g_object_unref(net);
+                goto cleanup;
+            }
+            gotaddr = TRUE;
+
+            if ((tmp = strchr(primary, '/'))) {
+                prefix = g_ascii_strtoll(tmp+1, NULL, 10);
+                *tmp = '\0';
+                tmp = strchr(tmp+1, '%');
+            } else {
+                tmp = strchr(primary, '%');
+            }
+            if (tmp) {
+                *tmp = '\0';
+                bcast = tmp+1;
+            }
+
+            if (!(primaryaddr = g_inet_address_new_from_string(primary))) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Unable to parse address %s", primary);
+                g_free(primary);
+                g_object_unref(net);
+                goto cleanup;
+            }
+
+            if (bcast &&
+                !(bcastaddr = g_inet_address_new_from_string(bcast))) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Unable to parse address %s", bcast);
+                g_free(primary);
+                g_object_unref(primaryaddr);
+                g_object_unref(net);
+                goto cleanup;
+            }
+
+            addr = gvir_sandbox_config_network_address_new(primaryaddr,
+                                                           prefix,
+                                                           bcastaddr);
+
+            gvir_sandbox_config_network_add_address(net, addr);
+
+            g_object_unref(primaryaddr);
+            if (bcastaddr)
+                g_object_unref(bcastaddr);
+            g_free(primary);
+
+            gvir_sandbox_config_network_set_dhcp(net, FALSE);
+        } else if (g_str_has_prefix(param, "route=")) {
+            GVirSandboxConfigNetworkRoute *route;
+            GInetAddress *targetaddr;
+            GInetAddress *gatewayaddr;
+            gchar *target = g_strdup(param + strlen("route="));
+            gchar *gateway = NULL;
+            guint prefix = 24;
+            gchar *tmp;
+
+            if (gotdhcp) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Cannot set static routes with DHCP");
+                g_object_unref(net);
+                goto cleanup;
+            }
+            gotroute = TRUE;
+
+            if ((tmp = strchr(target, '/'))) {
+                prefix = g_ascii_strtoll(tmp+1, NULL, 10);
+                *tmp = '\0';
+                tmp = strchr(tmp+1, '%');
+            } else {
+                tmp = strchr(target, '%');
+            }
+            if (tmp) {
+                *tmp = '\0';
+                gateway = tmp+1;
+            }
+
+            if (!(targetaddr = g_inet_address_new_from_string(target))) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Unable to parse address %s", target);
+                g_free(target);
+                g_object_unref(net);
+                goto cleanup;
+            }
+
+            if (!(gatewayaddr = g_inet_address_new_from_string(gateway))) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "Unable to parse address %s", gateway);
+                g_free(target);
+                g_object_unref(targetaddr);
+                g_object_unref(net);
+                goto cleanup;
+            }
+
+            route = gvir_sandbox_config_network_route_new(targetaddr,
+                                                          prefix,
+                                                          gatewayaddr);
+
+            gvir_sandbox_config_network_add_route(net, route);
+
+            g_object_unref(targetaddr);
+            g_object_unref(gatewayaddr);
+            g_free(target);
+
+            gvir_sandbox_config_network_set_dhcp(net, FALSE);
+        } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "Cannot set static routes without addresses");
+                        "Unknown parameter %s", param);
             g_object_unref(net);
             goto cleanup;
         }
 
-        gvir_sandbox_config_add_network(config, net);
-        g_object_unref(net);
-        i++;
+        j++;
     }
+    g_strfreev(params);
+
+    if (gotroute && !gotaddr) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "Cannot set static routes without addresses");
+        g_object_unref(net);
+        goto cleanup;
+    }
+
+    gvir_sandbox_config_add_network(config, net);
+    g_object_unref(net);
+
     ret = TRUE;
 cleanup:
     return ret;
@@ -1113,72 +1137,97 @@ GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config
  */
 gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
                                             gchar **mounts,
-                                            GError **error G_GNUC_UNUSED)
+                                            GError **error)
 {
     gsize i = 0;
     while (mounts && mounts[i]) {
-        gchar *target = NULL;
-        const gchar *source = NULL;
-        GVirSandboxConfigMount *mnt;
-        gchar *tmp;
-        GType type;
-
-        tmp = strchr(mounts[i], ':');
-        if (!tmp) {
-            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "No mount type prefix on %s", mounts[i]);
+        if (!gvir_sandbox_config_add_mount_opts(config,
+                                                mounts[i],
+                                                error))
             return FALSE;
-        }
-        if (strncmp(mounts[i], "host-bind", (tmp - mounts[i])) == 0) {
-            type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND;
-        } else if (strncmp(mounts[i], "host-image", (tmp - mounts[i])) == 0) {
-            type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE;
-        } else if (strncmp(mounts[i], "guest-bind", (tmp - mounts[i])) == 0) {
-            type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_GUEST_BIND;
-        } else if (strncmp(mounts[i], "ram", (tmp - mounts[i])) == 0) {
-            type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM;
-        } else {
-            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "Unknown mount type prefix on %s", mounts[i]);
-            return FALSE;
-        }
-
-        target = g_strdup(tmp + 1);
-
-        if ((tmp = strchr(target, '=')) != NULL) {
-            *tmp = '\0';
-            source = tmp + 1;
-        }
-
-        if (type == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
-            gint size;
-            gchar *end;
-            gchar *sizestr;
-            *tmp = '\0';
-            sizestr = tmp + 1;
-            size = strtol(sizestr, &end, 10);
-
-            if (end) {
-                if (g_str_equal(end, "KiB") || g_str_equal(end, "K"))
-                    size *= 1024;
-                else if (g_str_equal(end, "MiB") || g_str_equal(end, "M"))
-                    size *= 1024 * 1024;
-                else if (g_str_equal(end, "GiB") || g_str_equal(end, "G"))
-                    size *= 1024 * 1024 * 1024;
-            }
-            mnt = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_ram_new(target,
-                                                                              size));
-        } else {
-            mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
-                                                         "target", target,
-                                                         "source", source,
-                                                         NULL));
-        }
-        gvir_sandbox_config_add_mount(config, mnt);
-        g_object_unref(mnt);
-        g_free(target);
         i++;
     }
+    return TRUE;
+}
+
+
+/**
+ * gvir_sandbox_config_add_mount_opts:
+ * @config: (transfer none): the sandbox config
+ * @mount: (transfer none): the mount config
+ *
+ * Parses @mount whose elements are in the format TYPE:TARGET=SOURCE
+ * creating #GVirSandboxConfigMount instances for each element. For
+ * example
+ *
+ * - host-bind:/tmp=/var/lib/sandbox/demo/tmp
+ * - host-image:/=/var/lib/sandbox/demo.img
+ * - guest-bind:/home=/tmp/home
+ */
+gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
+                                            const char *mount,
+                                            GError **error)
+{
+    gchar *target = NULL;
+    const gchar *source = NULL;
+    GVirSandboxConfigMount *mnt;
+    gchar *tmp;
+    GType type;
+
+    tmp = strchr(mount, ':');
+    if (!tmp) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "No mount type prefix on %s", mount);
+        return FALSE;
+    }
+    if (strncmp(mount, "host-bind", (tmp - mount)) == 0) {
+        type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_BIND;
+    } else if (strncmp(mount, "host-image", (tmp - mount)) == 0) {
+        type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE;
+    } else if (strncmp(mount, "guest-bind", (tmp - mount)) == 0) {
+        type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_GUEST_BIND;
+    } else if (strncmp(mount, "ram", (tmp - mount)) == 0) {
+        type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM;
+    } else {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "Unknown mount type prefix on %s", mount);
+        return FALSE;
+    }
+
+    target = g_strdup(tmp + 1);
+
+    if ((tmp = strchr(target, '=')) != NULL) {
+        *tmp = '\0';
+        source = tmp + 1;
+    }
+
+    if (type == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
+        gint size;
+        gchar *end;
+        gchar *sizestr;
+        *tmp = '\0';
+        sizestr = tmp + 1;
+        size = strtol(sizestr, &end, 10);
+
+        if (end) {
+            if (g_str_equal(end, "KiB") || g_str_equal(end, "K"))
+                size *= 1024;
+            else if (g_str_equal(end, "MiB") || g_str_equal(end, "M"))
+                size *= 1024 * 1024;
+            else if (g_str_equal(end, "GiB") || g_str_equal(end, "G"))
+                size *= 1024 * 1024 * 1024;
+        }
+        mnt = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_ram_new(target,
+                                                                          size));
+    } else {
+        mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
+                                                     "target", target,
+                                                     "source", source,
+                                                     NULL));
+    }
+    gvir_sandbox_config_add_mount(config, mnt);
+    g_object_unref(mnt);
+    g_free(target);
 
     return TRUE;
 }

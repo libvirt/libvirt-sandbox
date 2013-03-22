@@ -237,6 +237,9 @@ WantedBy=%(TARGET)s
     def set_security(self, val):
         return self.config.set_security_opts(val)
 
+    def add_network(self, val):
+        return self.config.add_network_opts(val)
+
     def get_security_dynamic(self):
         return self.config.get_security_dynamic()
 
@@ -612,9 +615,6 @@ PrivateNetwork=false
 
     def _create(self):
         self.__connect()
-        net = LibvirtSandbox.ConfigNetwork().new()
-        net.set_dhcp(True)
-        self.config.add_network(net)
         self.config.set_shell(True)
         self.config.set_boot_target("multi-user.target")
         self.__extract_rpms()
@@ -758,6 +758,8 @@ def delete(args):
 def create(args):
     container = Container(name = args.name, create = True)
     container.set_copy(args.copy)
+    for net in args.network:
+        container.add_network(net)
     if args.security:
         container.set_security(args.security)
     container.set_unit_file_list(args.unitfiles)
@@ -899,6 +901,15 @@ class CheckUnit(argparse.Action):
             unitfiles = [ (values, src) ]
         setattr(namespace, self.dest, unitfiles)
 
+class SetNet(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        nets = getattr(namespace, self.dest)
+        if nets:
+            nets.append(values)
+        else:
+            nets = [values]
+        setattr(namespace, self.dest, nets)
+
 def requires_name(parser):
     parser.add_argument("name",
                         help=_("name of the sandbox container"))
@@ -925,6 +936,9 @@ def gen_create_args(subparser):
     parser.add_argument("-s", "--security", dest="security",
                         default=default_security_opts(),
                         help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
+    parser.add_argument("-N", "--network", dest="network",
+                        action=SetNet,
+                        help=_("Specify the network configuration"))
 
     image = parser.add_argument_group("Create On Disk Image File")
 

@@ -103,6 +103,9 @@ const gchar *gvir_sandbox_config_get_homedir(GVirSandboxConfig *config);
 void gvir_sandbox_config_add_network(GVirSandboxConfig *config,
                                      GVirSandboxConfigNetwork *network);
 GList *gvir_sandbox_config_get_networks(GVirSandboxConfig *config);
+gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
+                                              const gchar *network,
+                                              GError **error);
 gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                               gchar **networks,
                                               GError **error);
@@ -116,6 +119,9 @@ GList *gvir_sandbox_config_get_mounts_with_type(GVirSandboxConfig *config,
 GVirSandboxConfigMount *gvir_sandbox_config_find_mount(GVirSandboxConfig *config,
                                                        const gchar *target);
 
+gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
+                                            const char *mount,
+                                            GError **error);
 gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
                                             gchar **mounts,
                                             GError **error);

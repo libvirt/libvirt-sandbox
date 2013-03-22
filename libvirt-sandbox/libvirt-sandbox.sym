@@ -50,10 +50,12 @@ LIBVIRT_SANDBOX_0.1.0 {
 	gvir_sandbox_config_network_add_route;
 	gvir_sandbox_config_network_get_type;
 	gvir_sandbox_config_network_get_dhcp;
+	gvir_sandbox_config_network_get_source;
 	gvir_sandbox_config_network_get_routes;
 	gvir_sandbox_config_network_get_addresses;
 	gvir_sandbox_config_network_new;
 	gvir_sandbox_config_network_set_dhcp;
+	gvir_sandbox_config_network_set_source;
 
 	gvir_sandbox_config_network_address_get_type;
 	gvir_sandbox_config_network_address_get_broadcast;
@@ -74,10 +76,12 @@ LIBVIRT_SANDBOX_0.1.0 {
 	gvir_sandbox_config_network_route_set_target;
 
 	gvir_sandbox_config_add_mount;
+	gvir_sandbox_config_add_mount_opts;
 	gvir_sandbox_config_add_mount_strv;
 	gvir_sandbox_config_add_host_include_strv;
 	gvir_sandbox_config_add_host_include_file;
 	gvir_sandbox_config_add_network;
+	gvir_sandbox_config_add_network_opts;
 	gvir_sandbox_config_add_network_strv;
 	gvir_sandbox_config_get_groupid;
 	gvir_sandbox_config_get_homedir;
