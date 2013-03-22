@@ -1395,27 +1395,39 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
                                                const gchar *optstr,
                                                GError **error)
 {
-    gchar **opts = g_strsplit(optstr, ",", 0);
-    gsize i = 0;
+    gboolean ret = FALSE;
+    gchar *tmp = g_strdup(optstr);
+    gchar *offset = strchr(tmp, ',');
+    if (offset) {
+        *offset = '\0';
+        offset++;
+    }
 
-    while (opts[i]) {
-        gchar *name = opts[i];
-        gchar *value = strchr(name, '=');
+    if (g_str_equal(tmp, "dynamic")) {
+        gvir_sandbox_config_set_security_dynamic(config, TRUE);
+    } else if (g_str_equal(tmp, "static")) {
+        gvir_sandbox_config_set_security_dynamic(config, FALSE);
+    } else {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "Unknown security option '%s'", tmp);
+        goto cleanup;
+    }
 
-        if (strncmp(name, "label=", 5) == 0) {
-            gvir_sandbox_config_set_security_label(config, value);
-        } else if (g_str_equal(name, "dynamic")) {
-            gvir_sandbox_config_set_security_dynamic(config, TRUE);
-        } else if (g_str_equal(name, "static")) {
-            gvir_sandbox_config_set_security_dynamic(config, FALSE);
+    if (offset) {
+        if (strncmp(offset, "label=", 6) == 0) {
+            gvir_sandbox_config_set_security_label(config, offset+6);
         } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "Unknown security option '%s'", name);
-            return FALSE;
+                    "Unknown security option '%s'", offset);
+            goto cleanup;
         }
-        i++;
     }
-    return TRUE;
+
+    ret = TRUE;
+
+cleanup:
+    g_free(tmp);
+    return ret;
 }
 
 
