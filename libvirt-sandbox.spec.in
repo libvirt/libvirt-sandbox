@@ -27,6 +27,7 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
+Requires: rpm-python
 Requires: glib2-devel >= 2.32.0
 # For virsh lxc-enter-namespace command
 Requires: libvirt-client >= %{libvirt_version}

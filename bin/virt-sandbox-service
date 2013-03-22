@@ -26,7 +26,8 @@ from gi.repository import LibvirtSandbox
 from gi.repository import GLib
 import gi
 import os, sys, shutil, errno, stat
-import yum
+import exceptions
+import rpm
 from subprocess import Popen, PIPE, STDOUT
 import gettext
 
@@ -80,6 +81,7 @@ class Container:
         self.image = None
         self.size = 10 * MB
         self.config = None
+        self.unitfile = None
         self.unit_file_list = []
         self.name = name
 
@@ -276,27 +278,67 @@ WantedBy=%(TARGET)s
         self.dirs = []
         self.files = []
 
-        self.yb = yum.YumBase()
-        self.yb.setCacheDir()
+        self.ts = rpm.ts()
 
         for u, src in self.unit_file_list:
             self.__extract_rpm_for_unit(src)
 
+    def __split_filename(self, filename):
+        if filename[-4:] == '.rpm':
+            filename = filename[:-4]
+
+        archIndex = filename.rfind('.')
+        arch = filename[archIndex+1:]
+
+        relIndex = filename[:archIndex].rfind('-')
+        rel = filename[relIndex+1:archIndex]
+
+        verIndex = filename[:relIndex].rfind('-')
+        ver = filename[verIndex+1:relIndex]
+
+        epochIndex = filename.find(':')
+        if epochIndex == -1:
+            epoch = ''
+        else:
+            epoch = filename[:epochIndex]
+
+        name = filename[epochIndex + 1:verIndex]
+        return name, ver, rel, epoch, arch
+
     def __extract_rpm_for_unit(self, unitfile):
+        mi = self.ts.dbMatch(rpm.RPMTAG_BASENAMES, unitfile)
+        try:
+            h = mi.next();
+        except exceptions.StopIteration:
+            raise ValueError("Cannot find package containing %s" % unitfile)
 
-        for pkg in self.yb.rpmdb.searchProvides(unitfile):
-            for fname in pkg.filelist + pkg.ghostlist + pkg.dirlist:
-                if os.path.isdir(fname):
-                    self.__add_dir(fname)
-                if os.path.isfile(fname):
-                    self.__add_file(fname)
+        for fentry in h.fiFromHeader():
+            fname = fentry[0]
 
-            for bpkg in self.yb.rpmdb.searchNames([pkg.base_package_name]):
-                for fname in bpkg.filelist + bpkg.ghostlist + bpkg.dirlist:
-                    if os.path.isdir(fname):
-                        self.__add_dir(fname)
-                    if os.path.isfile(fname):
-                        self.__add_file(fname)
+            if os.path.isdir(fname):
+                self.__add_dir(fname)
+            if os.path.isfile(fname):
+                self.__add_file(fname)
+
+        srcrpm = h[rpm.RPMTAG_SOURCERPM]
+        srcrpmbits = self.__split_filename(srcrpm)
+
+        if srcrpmbits[0] == h[rpm.RPMTAG_NAME]:
+            return
+
+        mi = self.ts.dbMatch(rpm.RPMTAG_NAME, srcrpmbits[0])
+        try:
+            h = mi.next();
+        except exceptions.StopIteration:
+            raise ValueError("Cannot find base package %s" % srcrpmbits[0])
+
+        for fentry in h.fiFromHeader():
+            fname = fentry[0]
+
+            if os.path.isdir(fname):
+                self.__add_dir(fname)
+            if os.path.isfile(fname):
+                self.__add_file(fname)
 
     def __add_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
@@ -516,12 +558,15 @@ PrivateNetwork=false
 
     def _delete(self):
         # Should be stored in config
-        fd=open(self.dest + self.MACHINE_ID, "r")
-        uuid = fd.read().rstrip()
-        fd.close()
-        jpath = "/var/log/journal/" + uuid
-        if os.path.exists(jpath):
-            os.remove(jpath)
+        try:
+            fd=open(self.dest + self.MACHINE_ID, "r")
+            uuid = fd.read().rstrip()
+            fd.close()
+            jpath = "/var/log/journal/" + uuid
+            if os.path.exists(jpath):
+                os.remove(jpath)
+        except Exception, e:
+            pass
 
         if os.path.exists(self.dest):
             shutil.rmtree(self.dest)
@@ -537,7 +582,7 @@ PrivateNetwork=false
         if os.path.exists(image):
             os.remove(image)
 
-        if os.path.exists(self.unitfile):
+        if self.unitfile is not None and os.path.exists(self.unitfile):
             p = Popen(["/usr/bin/systemctl","disable", self.unitfile],stdout=PIPE, stderr=PIPE)
             p.communicate()
             if p.returncode and p.returncode != 0:
