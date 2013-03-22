@@ -720,18 +720,22 @@ static gboolean eventloop(gboolean interactive,
                 /* The self-pipe signal handler */
                 if (fds[i].revents) {
                     char ignore;
-                    int rv;
+                    pid_t rv;
                     if (read(sigread, &ignore, 1) != 1)
                         goto cleanup;
-                    do {
-                        rv = waitpid(child, &exitstatus, 0);
-                    } while (rv != -1 && rv != child);
-                    appQuit = TRUE;
-                    if (appErrEOF && appOutEOF) {
-                        if (debug)
-                            fprintf(stderr, "Encoding exit status sigchild %d\n", exitstatus);
-                        if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                            goto cleanup;
+                    while (1) {
+                        rv = waitpid(-1, &exitstatus, WNOHANG);
+                        if (rv == -1 || rv == 0)
+                            break;
+                        if (rv == child) {
+                            appQuit = TRUE;
+                            if (appErrEOF && appOutEOF) {
+                                if (debug)
+                                    fprintf(stderr, "Encoding exit status sigchild %d\n", exitstatus);
+                                if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
+                                goto cleanup;
+                            }
+                        }
                     }
                 }
             } else if (fds[i].fd == host) {
