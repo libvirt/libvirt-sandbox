@@ -457,7 +457,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 {
     GVirConfigDomainFilesys *fs;
     GVirConfigDomainDisk *disk;
-    GVirConfigDomainInterfaceUser *iface;
+    GVirConfigDomainInterface *iface;
     GVirConfigDomainMemballoon *ball;
     GVirConfigDomainGraphicsSpice *graph;
     GVirConfigDomainConsole *con;
@@ -539,9 +539,19 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {
-        iface = gvir_config_domain_interface_user_new();
+        const gchar *source;
+        GVirSandboxConfigNetwork *network = GVIR_SANDBOX_CONFIG_NETWORK(tmp->data);
 
-        gvir_config_domain_interface_set_model(GVIR_CONFIG_DOMAIN_INTERFACE(iface),
+        source = gvir_sandbox_config_network_get_source(network);
+        if (source) {
+            iface = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_network_new());
+            gvir_config_domain_interface_network_set_source(
+                GVIR_CONFIG_DOMAIN_INTERFACE_NETWORK(iface), source);
+        } else {
+            iface = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_user_new());
+        }
+
+        gvir_config_domain_interface_set_model(iface,
                                                "virtio");
 
         gvir_config_domain_add_device(domain,

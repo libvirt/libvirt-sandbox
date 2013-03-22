@@ -823,9 +823,9 @@ GList *gvir_sandbox_config_get_networks(GVirSandboxConfig *config)
  * KEY=VALUE, creating #GVirSandboxConfigNetwork
  * instances for each element.
  *
- *  dhcp
- *  address=192.168.122.1/24%192.168.122.255;
- *  address=192.168.122.1/24%192.168.122.255;address=2001:212::204:2/64
+ *  dhcp,source=default
+ *  source=private,address=192.168.122.1/24%192.168.122.255,
+ *  address=192.168.122.1/24%192.168.122.255,address=2001:212::204:2/64
  *  route=192.168.122.255/24%192.168.1.1
  */
 gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
@@ -838,7 +838,7 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
     gboolean gotroute = FALSE;
     gboolean gotdhcp = FALSE;
     while (networks && networks[i]) {
-        gchar **params = g_strsplit(networks[i], ";", 50);
+        gchar **params = g_strsplit(networks[i], ",", 50);
         gsize j = 0;
         GVirSandboxConfigNetwork *net;
 
@@ -858,6 +858,9 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
 
                 gvir_sandbox_config_network_set_dhcp(net, TRUE);
                 gotdhcp = TRUE;
+            } else if (g_str_has_prefix(param, "source=")) {
+                gvir_sandbox_config_network_set_source(net,
+                                                       param + strlen("source="));
             } else if (g_str_has_prefix(param, "address=")) {
                 GVirSandboxConfigNetworkAddress *addr;
                 GInetAddress *primaryaddr;
@@ -1556,6 +1559,11 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
     config = gvir_sandbox_config_network_new();
     gvir_sandbox_config_network_set_dhcp(config, b);
 
+    str1 = g_key_file_get_string(file, key, "source", NULL);
+    if (str1)
+        gvir_sandbox_config_network_set_source(config, str1);
+    g_free(str1);
+
     g_free(key);
     key = NULL;
 
@@ -1877,6 +1885,8 @@ static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *co
 
     key = g_strdup_printf("network.%u", i);
     g_key_file_set_boolean(file, key, "dhcp", gvir_sandbox_config_network_get_dhcp(config));
+    if (gvir_sandbox_config_network_get_source(config))
+        g_key_file_set_string(file, key, "source", gvir_sandbox_config_network_get_source(config));
     g_key_file_set_uint64(file, key, "addresses", j);
     g_key_file_set_uint64(file, key, "routes", k);
     g_free(key);

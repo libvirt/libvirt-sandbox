@@ -320,8 +320,15 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {
+        const gchar *source;
+        GVirSandboxConfigNetwork *network = GVIR_SANDBOX_CONFIG_NETWORK(tmp->data);
+
         iface = gvir_config_domain_interface_network_new();
-        gvir_config_domain_interface_network_set_source(iface, "default");
+        source = gvir_sandbox_config_network_get_source(network);
+        if (source)
+            gvir_config_domain_interface_network_set_source(iface, source);
+        else
+            gvir_config_domain_interface_network_set_source(iface, "default");
 
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(iface));

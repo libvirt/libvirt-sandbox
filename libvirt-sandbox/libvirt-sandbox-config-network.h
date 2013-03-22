@@ -61,6 +61,10 @@ GType gvir_sandbox_config_network_get_type(void);
 
 GVirSandboxConfigNetwork *gvir_sandbox_config_network_new(void);
 
+void gvir_sandbox_config_network_set_source(GVirSandboxConfigNetwork *config,
+                                             const gchar *network);
+const gchar *gvir_sandbox_config_network_get_source(GVirSandboxConfigNetwork *config);
+
 void gvir_sandbox_config_network_set_dhcp(GVirSandboxConfigNetwork *config,
                                           gboolean dhcp);
 gboolean gvir_sandbox_config_network_get_dhcp(GVirSandboxConfigNetwork *config);

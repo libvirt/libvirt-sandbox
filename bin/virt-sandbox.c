@@ -337,6 +337,11 @@ key=val pairs, separated by commas. The following options are valid
 Configure the network interface using dhcp. This key takes no value.
 No other keys may be specified.
 
+=item source=NETWORK
+
+Set the name of the network to connect the interface to. C<NETWORK>
+is the name of any libvirt virtual network. See also B<virsh net-list>
+
 =item address=IP-ADDRESS/PREFIX%BROADCAST
 
 Configure the network interface with the static IPv4 or IPv6 address
