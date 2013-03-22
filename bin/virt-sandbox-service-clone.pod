@@ -6,7 +6,7 @@ virt-sandbox-service clone - clone an existing Secure container
 
 Clone a Security container
 
-  virt-sandbox-service [-c URI] clone [-h] [-l LEVEL] -s SOURCE DEST
+  virt-sandbox-service [-c URI] clone [-h] [-s SECURITY-OPTS] SOURCE DEST
 
 =head1 DESCRIPTION
 
@@ -31,9 +31,31 @@ Display help message
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
-=item B<-l LEVEL>, B<--level LEVEL>
+=item B<-s SECURITY-OPTIONS>, B<--security=SECURITY-OPTIONS>
 
-MCS Level with which to run the container.
+Use alternative security options. SECURITY-OPTIONS is a set of key=val pairs,
+separated by commas. The following options are valid for SELinux
+
+=over 4
+
+=item dynamic
+
+Dynamically allocate an SELinux label, using the default base context.
+The default base context is system_u:system_r:svirt_lxc_net_t:s0 for LXC,
+system_u:system_r:svirt_t:s0 for KVM, system_u:system_r:svirt_tcg_t:s0
+for QEMU.
+
+=item dynamic,label=USER:ROLE:TYPE:LEVEL
+
+Dynamically allocate an SELinux label, using the base context
+USER:ROLE:TYPE:LEVEL, instead of the default base context.
+
+=item static,label=USER:ROLE:TYPE:LEVEL
+
+To set a completely static label. For example,
+static,label=system_u:system_r:svirt_t:s0:c412,c355
+
+=back
 
 =back
 
@@ -41,7 +63,7 @@ MCS Level with which to run the container.
 
 Execute /bin/sh in httpd1 container
 
- # virt-sandbox-service clone -l s0:c1,c2 httpd1 httpd2
+ # virt-sandbox-service clone -s static,label=system_u:system_r:svirt_lxc_net_t:s0:c1,c2 httpd1 httpd2
 
 =head1 SEE ALSO
 

@@ -29,7 +29,11 @@ import os, sys, shutil, errno, stat
 import yum
 from subprocess import Popen, PIPE, STDOUT
 import gettext
-import selinux
+
+if os.path.exists("/sys/fs/selinux"):
+    import selinux
+else:
+    selinux = None
 
 LibvirtGObject.init_object_check(None)
 LibvirtSandbox.init_check(None)
@@ -76,7 +80,6 @@ class Container:
         self.image = None
         self.size = 10 * MB
         self.config = None
-        self.file_type = self.SELINUX_FILE_TYPE
         self.unit_file_list = []
         self.name = name
 
@@ -168,7 +171,8 @@ WantedBy=%(TARGET)s
         fd = open(self.unitfile, "w")
         fd.write(unit)
         fd.close()
-        selinux.restorecon(self.unitfile)
+        if selinux is not None:
+            selinux.restorecon(self.unitfile)
         p = Popen(["/usr/bin/systemctl","enable", self.unitfile],stdout=PIPE, stderr=PIPE)
         p.communicate()
         if p.returncode and p.returncode != 0:
@@ -228,41 +232,31 @@ WantedBy=%(TARGET)s
     def set_copy(self, copy):
         self.copy = copy
 
-    def get_dynamic(self):
+    def set_security(self, val):
+        return self.config.set_security_opts(val)
+
+    def get_security_dynamic(self):
         return self.config.get_security_dynamic()
 
-    def set_dynamic(self, val):
-        return self.config.set_security_dynamic(val)
+    def get_security_label(self):
+        return self.config.get_security_label()
 
-    def get_security_type(self):
-        if self.config and self.config.get_security_label():
-            con = self.config.get_security_label().split(':')
-            return con[2]
-        else:
-            return "svirt_lxc_net_t"
+    def set_security_label(self):
+        if selinux is None:
+            return
 
-    def get_security_level(self):
-        if self.config and self.config.get_security_label():
-            con = self.config.get_security_label().split(':')
-            return ":".join(con[3:])
-        else:
-            return "s0"
+        if self.image or self.get_security_dynamic():
+            return
 
-    def set_security_type(self, security_type):
-        label = "system_u:system_r:%s:%s" % (security_type, self.get_security_level())
-        try:
-            selinux.security_check_context(label)
-            self.config.set_security_label(label)
-        except OSError, e:
-            raise OSError("Invalid Security Type %s: %s " %  (security_type, e))
+        selabel = self.get_security_label()
+        if selabel is None:
+            raise ValueError("Missing security label configuration")
+        parts = selabel.split(":")
+        if len(parts) != 5:
+            raise ValueError("Expected 5 parts in SELinux security label %s" % parts)
 
-    def set_security_level(self, security_level):
-        label = "system_u:system_r:%s:%s" % (self.get_security_type(), security_level)
-        try:
-            selinux.security_check_context(label)
-            self.config.set_security_label(label)
-        except OSError, e:
-            raise OSError("Invalid Security Level %s: %s " %  (security_level, e))
+        selinux.chcon(self.dest, "system_u:object_r:%s:%s:%s" % (
+                self.SELINUX_FILE_TYPE, parts[3], parts[4]), True)
 
     def set_image(self, size):
         self.use_image = True
@@ -506,7 +500,8 @@ PrivateNetwork=false
         if os.path.exists(config):
             os.remove(config)
         self.config.save_to_path(config)
-        selinux.restorecon(config)
+        if selinux is not None:
+            selinux.restorecon(config)
         sys.stdout.write("Created sandbox config %s\n" % config)
 
     def __get_image_path(self):
@@ -571,6 +566,7 @@ PrivateNetwork=false
         self._delete()
 
     def _create(self):
+        self.__connect()
         net = LibvirtSandbox.ConfigNetwork().new()
         net.set_dhcp(True)
         self.config.add_network(net)
@@ -586,8 +582,8 @@ PrivateNetwork=false
             sys.stdout.write("Created sandbox container image %s\n" % self.image)
         else:
             self.__gen_content()
-            selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (self.file_type, self.get_security_level()), True)
             sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
+        self.set_security_label()
         self.save_config()
         self.__create_system_unit()
 
@@ -717,11 +713,9 @@ def delete(args):
 def create(args):
     container = Container(name = args.name, create = True)
     container.set_copy(args.copy)
-    container.set_dynamic(args.dynamic)
-    container.set_security_type(args.type)
+    if args.security:
+        container.set_security(args.security)
     container.set_unit_file_list(args.unitfiles)
-    if args.level:
-        container.set_security_level(args.level)
 
     if args.imagesize:
         container.set_image(args.imagesize)
@@ -817,8 +811,6 @@ def clone(args):
         os.mkdir(new_path)
     else:
         shutil.copytree(old_path, new_path, symlinks=True)
-        if args.level:
-            selinux.chcon(new_path, "system_u:object_r:%s:%s" % (container.file_type, args.level), True)
         sys.stdout.write("Created sandbox container dir %s\n" % new_path)
 
     fd = open(container.get_unit_path())
@@ -836,10 +828,11 @@ def clone(args):
     sys.stdout.write("Created unit file %s\n" % new_unit)
 
     container = Container(args.dest, args.uri)
-    if args.level:
-        container.set_security_level(args.level)
+    if args.security:
+        container.set_security(args.security)
     container.gen_machine_id()
     container.gen_hostname()
+    container.set_security_label()
     container.save_config()
 
 import argparse
@@ -865,6 +858,14 @@ def requires_name(parser):
     parser.add_argument("name",
                         help=_("name of the sandbox container"))
 
+def default_security_opts():
+    if selinux is None:
+        return None
+
+    # XXX vary per URI for kvm/qemu/lxc.
+    # XXX generate a random category
+    return "static,label=system_u:system_r:svirt_lxc_net_t:s0"
+
 def gen_create_args(subparser):
     parser = subparser.add_parser("create",
                                   help=_("create a sandbox container"))
@@ -875,15 +876,11 @@ def gen_create_args(subparser):
                         help=_("Systemd Unit file to run within the sandbox container"))
     parser.add_argument("-p", "--path", dest="path",  default=None,
                         help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
-    parser.add_argument("-t", "--type", dest="type",
-                        default=c.get_security_type(),
-                        help=_("SELinux type with which to run the sandbox.  Default: %s") % c.get_security_type())
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-l", "--level", dest="level", default=None,
-                       help=_("MCS Level with which to run the sandbox"))
-    group.add_argument("-d", "--dynamic", dest="dynamic", default=False,
-                       action="store_true",
-                       help=_("use dynamic MCS labeling for the sandbox"))
+
+    parser.add_argument("-s", "--security", dest="security",
+                        default=default_security_opts(),
+                        help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
+
     image = parser.add_argument_group("Create On Disk Image File")
 
     image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
@@ -935,10 +932,11 @@ def gen_clone_args(subparser):
     parser = subparser.add_parser("clone",
                                          help=_("Clone an existing sandbox container"))
     parser.set_defaults(func=clone)
-    parser.add_argument("-l", "--level", dest="level", default=None,
-                        help=_("MCS Level with which to run the sandbox"))
-    parser.add_argument("-s", "--source", required=True,
-                        dest="source", default=None,
+    parser.add_argument("-s", "--security", dest="security",
+                        default=default_security_opts(),
+                        help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
+
+    parser.add_argument("source",
                         help=_("source sandbox container name"))
     parser.add_argument("dest",
                         help=("dest name of the new sandbox container"))

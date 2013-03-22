@@ -4,7 +4,7 @@ virt-sandbox-service create - Create a Security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-t TYPE] [-l LEVEL | -d] [-i SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
 
 =head1 DESCRIPTION
 
@@ -44,23 +44,31 @@ Select path to store container content.
 
 Default: C</var/lib/libvirt/filesystems>.
 
-=item B<-l LEVEL>, B<--level LEVEL>
+=item B<-s SECURITY-OPTIONS>, B<--security=SECURITY-OPTIONS>
 
-MCS Level with which to run the container.
+Use alternative security options. SECURITY-OPTIONS is a set of key=val pairs,
+separated by commas. The following options are valid for SELinux
 
-=item B<-t TYPE>, B<--type TYPE>
+=over 4
 
-SELinux type with which to run the container.
+=item dynamic
 
-Default: svirt_lxc_net_t
+Dynamically allocate an SELinux label, using the default base context.
+The default base context is system_u:system_r:svirt_lxc_net_t:s0 for LXC,
+system_u:system_r:svirt_t:s0 for KVM, system_u:system_r:svirt_tcg_t:s0
+for QEMU.
 
-=item B<-l LEVEL>, B<--level LEVEL>
+=item dynamic,label=USER:ROLE:TYPE:LEVEL
 
-MCS Level with which to run the container.
+Dynamically allocate an SELinux label, using the base context
+USER:ROLE:TYPE:LEVEL, instead of the default base context.
 
-=item B<-d>, B<--dynamic>
+=item static,label=USER:ROLE:TYPE:LEVEL
 
-Use dynamic MCS labeling for the container
+To set a completely static label. For example,
+static,label=system_u:system_r:svirt_t:s0:c412,c355
+
+=back
 
 =item B<-i SIZE>, B<--image SIZE>
 
