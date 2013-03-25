@@ -335,7 +335,12 @@ key=val pairs, separated by commas. The following options are valid
 =item dhcp
 
 Configure the network interface using dhcp. This key takes no value.
-No other keys may be specified.
+No other keys may be specified. eg
+
+  -N dhcp,source=default
+  --network dhcp,source=lan
+
+where 'source' is the name of any libvirt virtual network.
 
 =item source=NETWORK
 
