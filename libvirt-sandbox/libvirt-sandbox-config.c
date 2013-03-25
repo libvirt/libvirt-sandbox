@@ -1337,6 +1337,7 @@ gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
                                                  error))) {
         const gchar *host;
         gchar *guest;
+        const gchar *relguest;
         GVirSandboxConfigMount *mnt = NULL;
         GList *mnts = NULL;
         gchar *tmp;
@@ -1354,8 +1355,10 @@ gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
             mnt = GVIR_SANDBOX_CONFIG_MOUNT(mnts->data);
             const gchar *target = gvir_sandbox_config_mount_get_target(mnt);
             if (g_str_has_prefix(guest, target)) {
-                guest = guest + strlen(target);
+                relguest = guest + strlen(target);
                 break;
+            } else {
+                relguest = guest;
             }
             mnt = NULL;
             mnts = mnts->next;
@@ -1367,7 +1370,7 @@ gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
             return FALSE;
         }
 
-        gvir_sandbox_config_mount_add_include(GVIR_SANDBOX_CONFIG_MOUNT(mnt), host, guest);
+        gvir_sandbox_config_mount_add_include(GVIR_SANDBOX_CONFIG_MOUNT(mnt), host, relguest);
         g_free(guest);
         g_free(line);
     }
