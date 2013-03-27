@@ -758,8 +758,9 @@ def delete(args):
 def create(args):
     container = Container(name = args.name, create = True)
     container.set_copy(args.copy)
-    for net in args.network:
-        container.add_network(net)
+    if args.network:
+        for net in args.network:
+            container.add_network(net)
     if args.security:
         container.set_security(args.security)
     container.set_unit_file_list(args.unitfiles)
