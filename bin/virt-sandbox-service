@@ -257,11 +257,15 @@ WantedBy=%(TARGET)s
         if selabel is None:
             raise ValueError(["Missing security label configuration"])
         parts = selabel.split(":")
-        if len(parts) != 5:
+        if len(parts) != 5 and len(parts) != 4:
             raise ValueError(["Expected 5 parts in SELinux security label %s" % parts])
 
-        selinux.chcon(self.dest, "system_u:object_r:%s:%s:%s" % (
-                self.SELINUX_FILE_TYPE, parts[3], parts[4]), True)
+        if len(parts) == 5:
+            selinux.chcon(self.dest, "system_u:object_r:%s:%s:%s" % (
+                    self.SELINUX_FILE_TYPE, parts[3], parts[4]), True)
+        else:
+            selinux.chcon(self.dest, "system_u:object_r:%s:%s" % (
+                    self.SELINUX_FILE_TYPE, parts[3]), True)
 
     def set_image(self, size):
         self.use_image = True
