@@ -255,10 +255,10 @@ WantedBy=%(TARGET)s
 
         selabel = self.get_security_label()
         if selabel is None:
-            raise ValueError("Missing security label configuration")
+            raise ValueError(["Missing security label configuration"])
         parts = selabel.split(":")
         if len(parts) != 5:
-            raise ValueError("Expected 5 parts in SELinux security label %s" % parts)
+            raise ValueError(["Expected 5 parts in SELinux security label %s" % parts])
 
         selinux.chcon(self.dest, "system_u:object_r:%s:%s:%s" % (
                 self.SELINUX_FILE_TYPE, parts[3], parts[4]), True)
@@ -313,7 +313,7 @@ WantedBy=%(TARGET)s
         try:
             h = mi.next();
         except exceptions.StopIteration:
-            raise ValueError("Cannot find package containing %s" % unitfile)
+            raise ValueError(["Cannot find package containing %s" % unitfile])
 
         for fentry in h.fiFromHeader():
             fname = fentry[0]
@@ -333,7 +333,7 @@ WantedBy=%(TARGET)s
         try:
             h = mi.next();
         except exceptions.StopIteration:
-            raise ValueError("Cannot find base package %s" % srcrpmbits[0])
+            raise ValueError(["Cannot find base package %s" % srcrpmbits[0]])
 
         for fentry in h.fiFromHeader():
             fname = fentry[0]
