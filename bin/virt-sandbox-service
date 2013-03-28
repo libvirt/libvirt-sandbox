@@ -838,8 +838,8 @@ def fullpath(cmd):
 def execute(args):
     myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ]
 #    myexec = [ "virt-sandbox-service-util", "execute" ]
-    if args.nolabel:
-        myexec.append("--nolabel")
+    if args.noseclabel:
+        myexec.append("--noseclabel")
     myexec.extend([ args.name, "--", fullpath(args.command[0])] +  args.command[1:])
     os.execv("/usr/bin/virsh", myexec)
 #    myexec.extend( "-e", cmd, args.name ]
@@ -966,7 +966,7 @@ def gen_connect_args(subparser):
 def gen_execute_args(subparser):
     parser = subparser.add_parser("execute",
                                   help=("Execute a command within a sandbox container"))
-    parser.add_argument("-N", "--nolabel", dest="nolabel",
+    parser.add_argument("-N", "--noseclabel", dest="noseclabel",
                         default=False, action="store_true",
                         help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
     requires_name(parser)

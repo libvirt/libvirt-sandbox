@@ -31,7 +31,7 @@ Display help message
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
-=item B<-N>, B<--nolabel>
+=item B<-N>, B<--noseclabel>
 
 Execute command within the container.
 

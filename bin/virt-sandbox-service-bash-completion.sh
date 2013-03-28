@@ -57,7 +57,7 @@ _virt_sandbox_service () {
         [ALL]='-h --help'
         [CREATE]='-u --unitfile -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
         [LIST]='-r --running'
-        [EXECUTE]='-N --nolabel'
+        [EXECUTE]='-N --noseclabel'
     )
 
     for ((i=0; $i <= $COMP_CWORD; i++)); do
