@@ -67,7 +67,7 @@ class Container:
         self.use_image = False
         self.size = 10 * MB
         self.path = path
-        self.config = None
+        self.config = config
         if self.config:
             self.name = self.config.get_name()
         else:
@@ -273,12 +273,18 @@ class Container:
             self.conn.close()
             self.conn = None
 
+    def context(self):
+        if isinstance(self.config, gi.repository.LibvirtSandbox.ConfigInteractive):
+            return LibvirtSandbox.ContextInteractive.new(self.conn, self.config)
+
+        return LibvirtSandbox.ContextService.new(self.conn, self.config)
+
     def running(self):
         def closed(obj, error):
             self.loop.quit()
         try:
             self.connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = self.context()
             context.attach()
             self.disconnect()
             return 1
@@ -291,7 +297,7 @@ class Container:
 
         try:
             self.connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = self.context()
             context.start()
             console = context.get_log_console()
             console.connect("closed", closed)
@@ -312,19 +318,19 @@ class Container:
     def stop(self):
         try:
             self.connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = self.context()
             context.attach()
             context.stop()
         except GLib.GError, e:
             raise OSError(str(e))
 
-    def connect(self):
+    def console(self):
         def closed(obj, error):
             self.loop.quit()
 
         try:
             self.connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = self.context()
             context.attach()
             console = context.get_shell_console()
             console.connect("closed", closed)
@@ -344,7 +350,7 @@ class Container:
 
         try:
             self.connect()
-            context = LibvirtSandbox.ContextService.new(self.conn, self.config)
+            context = self.context()
             context.attach()
             console = context.get_shell_console()
             console.connect("closed", closed)
@@ -368,6 +374,45 @@ class Container:
     def add_ram_mount(self, dest, size):
         mount = LibvirtSandbox.ConfigMountRam.new(dest, size);
         self.config.add_mount(mount)
+
+class InteractiveContainer(Container):
+    def __init__(self, name=None, uri = "lxc:///", path = Container.DEFAULT_PATH, config=None, create=False):
+        Container.__init__(self, name, uri, path, config, create)
+
+        if create:
+            self.config = LibvirtSandbox.ConfigInteractive.new(name)
+
+    def gen_filesystems(self):
+        Container.gen_filesystems(self)
+        self.add_bind_mount(self.dest, self.path)
+
+    def create_interactive(self):
+        #
+        # Create an InteractiveContainer
+        #
+        Container.create(self)
+        self.gen_filesystems()
+
+        if self.image:
+            self.create_image()
+            self.umount()
+            sys.stdout.write(_("Created sandbox container image %s\n") % self.image)
+        else:
+            sys.stdout.write(_("Created sandbox container dir %s\n") % self.dest)
+        self.save_config()
+
+    def create(self):
+        try:
+            self.create_interactive()
+        except Exception, e:
+            try:
+                self.delete()
+            except Exception, e2:
+                pass
+            raise e
+
+    def set_command(self, command):
+        self.config.set_command(command)
 
 class ServiceContainer(Container):
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
@@ -781,19 +826,32 @@ MB = int(1000000)
 
 def delete(args):
     config = read_config(args.name)
-    container = ServiceContainer(uri=args.uri, config = config)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
+        container = InteractiveContainer(uri=args.uri, config = config)
+    else:
+        container = ServiceContainer(uri=args.uri, config = config)
     container.delete()
 
 def create(args):
-    container = ServiceContainer(name = args.name, uri=args.uri, create = True)
-    container.set_copy(args.copy)
+    if len(args.command) > 0 and len(args.unitfiles) > 0:
+        raise ValueError([_("Commands can not be specified with unit files")])
+
+    if len(args.command) == 0  and len(args.unitfiles) == 0:
+        raise ValueError([_("You must specify a command or a unit file")])
+
+    if len(args.command) > 0:
+        container = InteractiveContainer(name = args.name, uri=args.uri, create = True)
+        container.set_command(args.command)
+    else:
+        container = ServiceContainer(name = args.name, uri=args.uri, create = True)
+        container.set_copy(args.copy)
+        container.set_unit_file_list(args.unitfiles)
     for net in args.network:
         container.add_network(net)
     if args.security:
         container.set_security(args.security)
-    container.set_unit_file_list(args.unitfiles)
     container.set_path(args.path)
-
+    container.set_file_type(args.file_type)
     if args.imagesize:
         container.set_image(args.imagesize)
 
@@ -814,7 +872,12 @@ def sandbox_list(args):
         try:
             c = LibvirtSandbox.Config.load_from_path(gc)
             if args.running:
-                if c.running():
+                if isinstance(c, gi.repository.LibvirtSandbox.ConfigInteractive):
+                    container = InteractiveContainer(uri=args.uri, config=c)
+                else:
+                    container = ServiceContainer(uri=args.uri, config=c)
+
+                if container.running():
                     print c.get_name()
             else:
                 print c.get_name()
@@ -822,9 +885,10 @@ def sandbox_list(args):
         except OSError, e:
             print "Invalid container %s: %s", (gc, e)
 
-
 def sandbox_reload(args):
     config = read_config(args.name)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
+        raise ValueError(_("Interactive Containers do not support reload"))
     container = ServiceContainer(uri = args.uri, config = config)
     container.reload(args.unitfiles)
 
@@ -848,7 +912,7 @@ Type 'Ctrl + ]' to detach from the console.
     os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
 #    config = read_config(args.name)
 #    container = Container(uri = args.uri, config=config)
-#    container.connect()
+#    container.console()
 
 #
 # Search Path for command to execute within the container.
@@ -894,25 +958,27 @@ def clone(args):
         shutil.copytree(old_path, new_path, symlinks=True)
         sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
-    fd = open(container.get_unit_path())
-    recs = fd.read()
-    fd.close()
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
+        container = InteractiveContainer(name=args.dest, uri=args.uri, create=True)
+    else:
+        fd = open(container.get_unit_path())
+        recs = fd.read()
+        fd.close()
+        fd = open(container.get_unit_path(args.dest), "wx")
+        fd.write(recs.replace(args.source, args.dest))
+        fd.close()
+        new_unit = container.get_config_path(args.dest)
+        fd = open(new_unit,"wx")
+        fd.write(newrec)
+        fd.close()
+        sys.stdout.write(_("Created unit file %s\n") % new_unit)
 
-    fd = open(container.get_unit_path(args.dest), "wx")
-    fd.write(recs.replace(args.source, args.dest))
-    fd.close()
+        container = ServiceContainer(name=args.dest, uri=args.uri, create=True)
+        container.gen_machine_id()
+        container.gen_hostname()
 
-    new_unit = container.get_config_path(args.dest)
-    fd = open(new_unit,"wx")
-    fd.write(newrec)
-    fd.close()
-    sys.stdout.write(_("Created unit file %s\n") % new_unit)
-
-    container = ServiceContainer(name=args.dest, uri=args.uri, create=True)
     if args.security:
         container.set_security(args.security)
-    container.gen_machine_id()
-    container.gen_hostname()
     container.set_security_label()
     container.save_config()
 
@@ -969,31 +1035,34 @@ def default_security_opts():
 
 def gen_create_args(subparser):
     parser = subparser.add_parser("create",
-                                  help=_("create a sandbox container"))
+                                  help=_("Create a sandbox container."))
 
-    parser.add_argument("-u", "--unitfile", required=True,
-                        action=CheckUnit,
-                        dest="unitfiles",
-                        help=_("Systemd Unit file to run within the sandbox container"))
-    parser.add_argument("-p", "--path", dest="path",  default=None,
+    parser.add_argument("-C", "--copy", default=False,
+                        action="store_true",
+                        help=_("copy content from the hosts /etc and /var directories that will be mounted within the sandbox"))
+
+    parser.add_argument("-f", "--filetype", dest="file_type",
+                        default=c.get_file_type(),
+                        help=_("SELinux file type to assign to content within the sandbox.  Default: %s") % c.get_file_type())
+    parser.add_argument("-i", "--imagesize", dest="imagesize", default = None,
+                       action=SizeAction,
+                       help=_("create image of this many megabytes."))
+    parser.add_argument("-n", "--network", dest="network",
+                        action=SetNet, default=[],
+                        help=_("Specify the network configuration"))
+    parser.add_argument("-p", "--path", dest="path",  default=c.DEFAULT_PATH,
                         help=_("select path to store sandbox content.  Default: %s") % c.DEFAULT_PATH)
-
     parser.add_argument("-s", "--security", dest="security",
                         default=default_security_opts(),
                         help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
-    parser.add_argument("-N", "--network", dest="network",
-                        action=SetNet,
-                        help=_("Specify the network configuration"))
+    parser.add_argument("-u", "--unitfile",
+                        action=CheckUnit,
+                        dest="unitfiles",
+                        help=_("Systemd Unit file to run within the Service sandbox container. Commands can not be specified with unit files."))
 
-    image = parser.add_argument_group("Create On Disk Image File")
-
-    image.add_argument("-i", "--imagesize", dest="imagesize", default = None,
-                       action=SizeAction,
-                       help=_("create image of this many megabytes."))
-    parser.add_argument("-C", "--copy", default=False,
-                        action="store_true",
-                        help=_("copy content from /etc and /var directories that will be mounted within the sandbox"))
     requires_name(parser)
+    parser.add_argument("command", default=[], nargs="*",
+                        help=_("Command to run within the Interactive sandbox container. Commands can not be specified with unit files."))
 
     parser.set_defaults(func=create)
 

@@ -4,7 +4,7 @@ virt-sandbox-service create - Create a Security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --copy ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] create [-h] [ -u UNIT_FILE ] [ --copy ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME [ COMMAND ]
 
 =head1 DESCRIPTION
 
@@ -14,7 +14,7 @@ technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
 container / virtual machines will be secured by SELinux and resource
 separated using cgroups.
 
-The create command will setup a sandbox for running one or more systemd unit files
+The create command can setup a sandbox for running one or more systemd unit files.  It can also setup a sandbox for running a command in an InteractiveContainer.  Specify a unit file to create the ServiceContainer and the command to create an InteractiveContainer.
 
 =head1 OPTIONS
 
@@ -31,8 +31,7 @@ supported currently).
 
 =item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
-Name of the systemd unit file to be to run within the container. Can be repeated
-if multiple unit files are required within the sandbox.
+Name of the systemd unit file to be to run within the Service Container. Can be repeated if multiple unit files are required within the sandbox.  Can not be specified if you are using a COMMAND.
 
 =item B<-C>, B<--copy>
 
@@ -128,12 +127,18 @@ systemd Unit file to run within the container
 
 =head1 EXAMPLE
 
-Create httpd1 container
+Create httpd1 Service container
 
  # virt-sandbox-service create -C -u httpd.service httpd1
  Created container dir /var/lib/libvirt/filesystems/httpd1
  Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
  Created unit file /etc/systemd/system/httpd@httpd1.service
+
+Create foobar1 Service container
+
+ # virt-sandbox-service create foobar1 -- /usr/bin/foobar -a -b
+ Created container dir /var/lib/libvirt/filesystems/foobar1
+ Created sandbox config /etc/libvirt-sandbox/foobar1.sandbox
 
 =head1 SEE ALSO
 

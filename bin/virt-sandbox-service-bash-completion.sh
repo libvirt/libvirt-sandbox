@@ -35,8 +35,8 @@ __get_all_running_containers () {
     virt-sandbox-service list --running
 }
 
-__get_all_types () {
-    seinfo -asvirt_lxc_domain -x 2>/dev/null | tail -n +2
+__get_all_file_types () {
+    seinfo -afile_type -x 2>/dev/null | tail -n +2
 }
 
 _virt_sandbox_service () {
@@ -55,7 +55,7 @@ _virt_sandbox_service () {
     )
     local -A OPTS=(
         [ALL]='-h --help'
-        [CREATE]='-u --unitfile -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
+        [CREATE]='-u --unitfile -p --path -f --filetype -C --copy -i --imagesize -n --network -s --security'
         [LIST]='-r --running'
         [RELOAD]='-u --unitfile'
         [EXECUTE]='-N --noseclabel'
@@ -109,12 +109,14 @@ _virt_sandbox_service () {
         elif test "$prev" = "-u" || test "$prev" = "--unitfile" ; then
         COMPREPLY=( $(compgen -W "$( __get_all_unit_files ) " -- "$cur") )
         return 0
-        elif test "$prev" = "-t" || test "$prev" = "--type" ; then
-        COMPREPLY=( $(compgen -W "$( __get_all_types ) " -- "$cur") )
+        elif test "$prev" = "-f" || test "$prev" = "--filetype" ; then
+        COMPREPLY=( $(compgen -W "$( __get_all_file_types ) " -- "$cur") )
         return 0
-        elif test "$prev" = "-l" || test "$prev" = "--level" ; then
+        elif test "$prev" = "-s" || test "$prev" = "--security" ; then
         return 0
-        elif test "$prev" = "-s" || test "$prev" = "--size" ; then
+        elif test "$prev" = "-n" || test "$prev" = "--network" ; then
+        return 0
+        elif test "$prev" = "-i" || test "$prev" = "--imagesize" ; then
         return 0
         elif __contains_word "$command" ${VERBS[CREATE]} ; then
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[CREATE]}" -- "$cur") )
