@@ -928,7 +928,7 @@ def fullpath(cmd):
     return cmd
 
 def execute(args):
-    myexec = [ "virsh", "-c", "lxc:///", "lxc-enter-namespace" ]
+    myexec = [ "virsh", "-c", args.uri, "lxc-enter-namespace" ]
 #    myexec = [ "virt-sandbox-service-util", "execute" ]
     if args.noseclabel:
         myexec.append("--noseclabel")
