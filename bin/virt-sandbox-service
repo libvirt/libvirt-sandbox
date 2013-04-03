@@ -928,6 +928,9 @@ def fullpath(cmd):
     return cmd
 
 def execute(args):
+    if args.uri != "lxc:///":
+        raise ValueError(_("Can only execute commands inside of linux containers."))
+
     myexec = [ "virsh", "-c", args.uri, "lxc-enter-namespace" ]
 #    myexec = [ "virt-sandbox-service-util", "execute" ]
     if args.noseclabel:
@@ -1074,7 +1077,7 @@ def gen_connect_args(subparser):
 
 def gen_execute_args(subparser):
     parser = subparser.add_parser("execute",
-                                  help=_("Execute a command within a sandbox container"))
+                                  help=_("Execute a command within a sandbox container. Only available for lxc:///"))
     parser.add_argument("-N", "--noseclabel", dest="noseclabel",
                         default=False, action="store_true",
                         help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
