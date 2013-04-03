@@ -1084,3 +1084,7 @@ if __name__ == '__main__':
         sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
         sys.stderr.flush()
         sys.exit(1)
+    except GLib.GError, e:
+        sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
+        sys.stderr.flush()
+        sys.exit(1)
