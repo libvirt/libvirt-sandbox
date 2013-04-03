@@ -4,7 +4,7 @@ virt-sandbox-service create - Create a Security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --clone ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
+  virt-sandbox-service [-c URI] create [-h] -u UNIT_FILE [ --copy ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME
 
 =head1 DESCRIPTION
 
@@ -34,9 +34,9 @@ supported currently).
 Name of the systemd unit file to be to run within the container. Can be repeated
 if multiple unit files are required within the sandbox.
 
-=item B<-C>, B<--clone>
+=item B<-C>, B<--copy>
 
-Clone content from /etc and /var directories that will be mounted within the container.
+Copy content from /etc and /var directories that will be mounted within the container.
 
 =item B<-p PATH>, B<--path PATH>
 
