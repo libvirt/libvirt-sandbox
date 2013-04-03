@@ -1,7 +1,7 @@
 /*
  * virt-sandbox-service-util.c: libvirt sandbox service util command
  *
- * Copyright (C) 2012 Red Hat, Inc.
+ * Copyright (C) 2012-2013 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -353,7 +353,6 @@ static gboolean libvirt_lxc_attach(const gchar *option_name,
 
 int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
-    GVirSandboxConfigService *cfg = NULL;
     GVirSandboxConfig *config = NULL;
     GVirSandboxContext *ctx = NULL;
     GError *err = NULL;
@@ -361,7 +360,6 @@ int main(int argc, char **argv) {
     int ret = EXIT_FAILURE;
     pid_t pid = 0;
     gchar *buf=NULL;
-    GVirSandboxContextService *service;
     gchar *uri = NULL;
     gchar *command = NULL;
 
@@ -452,15 +450,24 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    cfg = GVIR_SANDBOX_CONFIG_SERVICE(config);
+    if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
+        GVirSandboxContextInteractive *service;
+        if (!(service = gvir_sandbox_context_interactive_new(hv, GVIR_SANDBOX_CONFIG_INTERACTIVE(config)))) {
+                g_printerr(_("Unable to create new context service: %s\n"),
+                           err && err->message ? err->message : _("unknown"));
+                goto cleanup;
+        }
+        ctx = GVIR_SANDBOX_CONTEXT(service);
+    } else {
+        GVirSandboxContextService *service;
 
-    if (!(service = gvir_sandbox_context_service_new(hv, cfg))) {
-        g_printerr(_("Unable to create new context service: %s\n"),
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
+        if (!(service = gvir_sandbox_context_service_new(hv, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
+                g_printerr(_("Unable to create new context service: %s\n"),
+                           err && err->message ? err->message : _("unknown"));
+                goto cleanup;
+        }
+        ctx = GVIR_SANDBOX_CONTEXT(service);
     }
-
-    ctx = GVIR_SANDBOX_CONTEXT(service);
 
     if (command) {
         container_execute(ctx, command, pid);
@@ -476,8 +483,8 @@ cleanup:
 
     free(buf);
 
-    if (cfg)
-        g_object_unref(cfg);
+    if (config)
+        g_object_unref(config);
 
     exit(ret);
 }
