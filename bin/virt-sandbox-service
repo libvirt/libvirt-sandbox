@@ -50,11 +50,17 @@ except IOError:
     import __builtin__
     __builtin__.__dict__['_'] = unicode
 
+CONFIG_PATH = "/etc/libvirt-sandbox/services/"
+def get_config_path(name):
+    return CONFIG_PATH + name + ".sandbox"
+
+def read_config(name):
+    return LibvirtSandbox.Config.load_from_path(get_config_path(name))
+
 class Container:
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS       = [ "/etc", "/var" ]
     PROFILE_FILES      = [ ".bashrc", ".bash_profile" ]
-    CONFIG_PATH        = "/etc/libvirt-sandbox/services/"
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
     FUNCTIONS          = "/etc/rc.d/init.d/functions"
@@ -214,7 +220,7 @@ WantedBy=%(TARGET)s
     def get_config_path(self, name = None):
         if not name:
             name = self.get_name()
-        return self.CONFIG_PATH + name + ".sandbox"
+        return get_config_path()
 
     def get_filesystem_path(self, name = None):
         if not name:
@@ -790,8 +796,7 @@ def usage(parser, msg):
 
 def sandbox_list(args):
     import glob
-    container = Container()
-    g = glob.glob(container.CONFIG_PATH + "*.sandbox")
+    g = glob.glob(CONFIG_PATH + "*.sandbox")
     g.sort()
     for gc in g:
         try:
