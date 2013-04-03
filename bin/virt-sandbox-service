@@ -91,7 +91,7 @@ class Container:
 
         if create:
             if config and os.path.exists(config):
-                raise ValueError(["Container already exists"])
+                raise ValueError([_("Container already exists")])
 
             self.config = LibvirtSandbox.ConfigService.new(name)
             return
@@ -123,7 +123,7 @@ class Container:
 
     def __get_sandbox_target(self):
         if len(self.unit_file_list) > 1:
-            raise ValueError(["Only Valid for single units"])
+            raise ValueError([_("Only Valid for single units")])
         return "%s_sandbox.target" %  self.__get_sandboxed_service()
 
     def __target(self):
@@ -178,8 +178,8 @@ WantedBy=%(TARGET)s
         p = Popen(["/usr/bin/systemctl","enable", self.unitfile],stdout=PIPE, stderr=PIPE)
         p.communicate()
         if p.returncode and p.returncode != 0:
-            raise OSError("Failed to enable %s unit file " %  self.unitfile)
-        sys.stdout.write("Created unit file %s\n" %  self.unitfile)
+            raise OSError(_("Failed to enable %s unit file") %  self.unitfile)
+        sys.stdout.write(_("Created unit file %s\n") %  self.unitfile)
 
     def __add_dir(self, newd):
         if newd in self.all_dirs:
@@ -229,7 +229,7 @@ WantedBy=%(TARGET)s
     def get_name(self):
         if self.config:
             return self.config.get_name()
-        raise ValueError(["Name not configured"])
+        raise ValueError([_("Name not configured")])
 
     def set_copy(self, copy):
         self.copy = copy
@@ -255,10 +255,10 @@ WantedBy=%(TARGET)s
 
         selabel = self.get_security_label()
         if selabel is None:
-            raise ValueError(["Missing security label configuration"])
+            raise ValueError([_("Missing security label configuration")])
         parts = selabel.split(":")
         if len(parts) != 5 and len(parts) != 4:
-            raise ValueError(["Expected 5 parts in SELinux security label %s" % parts])
+            raise ValueError([_("Expected 5 parts in SELinux security label %s") % parts])
 
         if len(parts) == 5:
             selinux.chcon(self.dest, "system_u:object_r:%s:%s:%s" % (
@@ -276,7 +276,7 @@ WantedBy=%(TARGET)s
 
     def set_name(self, name):
         if self.config:
-            raise ValueError(["Cannot modify Name"])
+            raise ValueError([_("Cannot modify Name")])
         self.dest = "%s/%s" % (self.path, self.name)
         self.config = LibvirtSandbox.ConfigService.new(name)
 
@@ -317,7 +317,7 @@ WantedBy=%(TARGET)s
         try:
             h = mi.next();
         except exceptions.StopIteration:
-            raise ValueError(["Cannot find package containing %s" % unitfile])
+            raise ValueError([_("Cannot find package containing %s") % unitfile])
 
         for fentry in h.fiFromHeader():
             fname = fentry[0]
@@ -337,7 +337,7 @@ WantedBy=%(TARGET)s
         try:
             h = mi.next();
         except exceptions.StopIteration:
-            raise ValueError(["Cannot find base package %s" % srcrpmbits[0]])
+            raise ValueError([_("Cannot find base package %s") % srcrpmbits[0]])
 
         for fentry in h.fiFromHeader():
             fname = fentry[0]
@@ -528,7 +528,7 @@ PrivateNetwork=false
         p = Popen(["/bin/umount", self.dest])
         p.communicate()
         if p.returncode and p.returncode != 0:
-            raise OSError("Failed to unmount image %s from %s " %  (self.image, self.dest))
+            raise OSError(_("Failed to unmount image %s from %s") %  (self.image, self.dest))
 
     def __create_image(self):
         fd = open(self.image, "w")
@@ -537,12 +537,12 @@ PrivateNetwork=false
         p = Popen(["/sbin/mkfs","-F", "-t", "ext4", self.image],stdout=PIPE, stderr=PIPE)
         p.communicate()
         if p.returncode and p.returncode != 0:
-            raise OSError("Failed to build image %s" % self.image )
+            raise OSError(_("Failed to build image %s") % self.image )
 
         p = Popen(["/bin/mount", self.image, self.dest])
         p.communicate()
         if p.returncode and p.returncode != 0:
-            raise OSError("Failed to mount image %s on %s " %  (self.image, self.dest))
+            raise OSError(_("Failed to mount image %s on %s") %  (self.image, self.dest))
 
     def save_config(self):
         config = self.get_config_path()
@@ -551,7 +551,7 @@ PrivateNetwork=false
         self.config.save_to_path(config)
         if selinux is not None:
             selinux.restorecon(config)
-        sys.stdout.write("Created sandbox config %s\n" % config)
+        sys.stdout.write(_("Created sandbox config %s\n") % config)
 
     def __get_image_path(self):
             mounts = self.config.get_mounts()
@@ -593,7 +593,7 @@ PrivateNetwork=false
             p = Popen(["/usr/bin/systemctl","disable", self.unitfile],stdout=PIPE, stderr=PIPE)
             p.communicate()
             if p.returncode and p.returncode != 0:
-                raise OSError("Failed to disable %s unit file " %  self.unitfile)
+                raise OSError(_("Failed to disable %s unit file") %  self.unitfile)
             fd = open(self.unitfile,"r")
             recs = fd.readlines()
             fd.close()
@@ -628,17 +628,17 @@ PrivateNetwork=false
             self.__create_image()
             self.__gen_content()
             self.__umount()
-            sys.stdout.write("Created sandbox container image %s\n" % self.image)
+            sys.stdout.write(_("Created sandbox container image %s\n") % self.image)
         else:
             self.__gen_content()
-            sys.stdout.write("Created sandbox container dir %s\n" % self.dest)
+            sys.stdout.write(_("Created sandbox container dir %s\n") % self.dest)
         self.set_security_label()
         self.save_config()
         self.__create_system_unit()
 
     def create(self):
         if os.path.exists(self.dest):
-            raise OSError("%s already exists" % self.dest)
+            raise OSError(_("%s already exists") % self.dest)
 
         try:
             self._create()
@@ -867,11 +867,11 @@ def clone(args):
         new_image_path = container.get_image_path(args.dest)
         newrec = newrec.replace(old_image_path, new_image_path)
         shutil.copy(old_image_path, new_image_path)
-        sys.stdout.write("Created sandbox container image %s\n" % new_image_path)
+        sys.stdout.write(_("Created sandbox container image %s\n") % new_image_path)
         os.mkdir(new_path)
     else:
         shutil.copytree(old_path, new_path, symlinks=True)
-        sys.stdout.write("Created sandbox container dir %s\n" % new_path)
+        sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
     fd = open(container.get_unit_path())
     recs = fd.read()
@@ -885,7 +885,7 @@ def clone(args):
     fd = open(new_unit,"wx")
     fd.write(newrec)
     fd.close()
-    sys.stdout.write("Created unit file %s\n" % new_unit)
+    sys.stdout.write(_("Created unit file %s\n") % new_unit)
 
     container = Container(args.dest, args.uri)
     if args.security:
@@ -916,7 +916,7 @@ class CheckUnit(argparse.Action):
             if src:
                 value = value + ".service"
             else:
-                raise OSError("Requested unit %s does not exist" % value)
+                raise OSError(_("Requested unit %s does not exist") % value)
 
         unitfiles = getattr(namespace, self.dest)
         if unitfiles:
@@ -984,7 +984,7 @@ def gen_connect_args(subparser):
 
 def gen_execute_args(subparser):
     parser = subparser.add_parser("execute",
-                                  help=("Execute a command within a sandbox container"))
+                                  help=_("Execute a command within a sandbox container"))
     parser.add_argument("-N", "--noseclabel", dest="noseclabel",
                         default=False, action="store_true",
                         help=_("do not modify the label of the executable process.  By default all commands execute with the label of the sandbox"))
@@ -1025,7 +1025,7 @@ def gen_clone_args(subparser):
     parser.add_argument("source",
                         help=_("source sandbox container name"))
     parser.add_argument("dest",
-                        help=("dest name of the new sandbox container"))
+                        help=_("dest name of the new sandbox container"))
 
 def gen_delete_args(subparser):
     parser = subparser.add_parser("delete",
