@@ -5,14 +5,14 @@ libexec_PROGRAMS = virt-sandbox-service-util
 
 bin_SCRIPTS = virt-sandbox-service
 
-virtsandboxcompdir = $(sysconfdir)/bash_completion.d/
-virtsandboxcomp_DATA = virt-sandbox-service-bash-completion.sh
+virtsandboxcompdir = $(datarootdir)/bash-completion/completions/
 
 crondailydir = $(sysconfdir)/cron.daily
 crondaily_SCRIPTS = virt-sandbox-service.logrotate
 
 POD_FILES = virt-sandbox-service.pod virt-sandbox-service-execute.pod virt-sandbox-service-create.pod virt-sandbox-service-clone.pod virt-sandbox-service-connect.pod virt-sandbox-service-delete.pod virt-sandbox-service-start.pod virt-sandbox-service-stop.pod virt-sandbox-service-reload.pod virt-sandbox-service-list.pod
 EXTRA_DIST = $(bin_SCRIPTS) $(POD_FILES) virt-sandbox-service-bash-completion.sh virt-sandbox-service.logrotate
+EXTRA_DIST += virt-sandbox-service-bash-completion.sh
 
 man1_MANS = virt-sandbox.1 virt-sandbox-service.1 virt-sandbox-service-execute.1 virt-sandbox-service-create.1 virt-sandbox-service-clone.1 virt-sandbox-service-connect.1 virt-sandbox-service-delete.1 virt-sandbox-service-start.1 virt-sandbox-service-stop.1 virt-sandbox-service-reload.1 virt-sandbox-service-list.1
 
@@ -84,7 +84,10 @@ virt_sandbox_service_util_LDFLAGS = \
 
 install-data-local:
 		$(MKDIR_P) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services
+		$(MKDIR_P) $(DESTDIR)$(virtsandboxcompdir)
+		cp virt-sandbox-service-bash-completion.sh $(DESTDIR)$(virtsandboxcompdir)/virt-sandbox-service
 
 uninstall-local:
 		$(rmdir) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services ||:
 		$(rmdir) $(DESTDIR)$(sysconfdir)/libvirt-sandbox ||:
+		rm -f $(DESTDIR)$(virtsandboxcompdir)/virt-sandbox-service
