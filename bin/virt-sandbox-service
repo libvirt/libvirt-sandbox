@@ -551,13 +551,13 @@ PrivateNetwork=false
             raise OSError(_("Failed to mount image %s on %s") %  (self.image, self.dest))
 
     def save_config(self):
-        config = self.get_config_path()
-        if os.path.exists(config):
-            os.remove(config)
-        self.config.save_to_path(config)
+        config_path = self.get_config_path()
+        if os.path.exists(config_path):
+            os.remove(config_path)
+        self.config.save_to_path(config_path)
         if selinux is not None:
-            selinux.restorecon(config)
-        sys.stdout.write(_("Created sandbox config %s\n") % config)
+            selinux.restorecon(config_path)
+        sys.stdout.write(_("Created sandbox config %s\n") % config_path)
 
     def get_image_path(self):
             mounts = self.config.get_mounts()
