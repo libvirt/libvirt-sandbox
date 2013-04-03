@@ -194,8 +194,9 @@ static int set_process_label(pid_t pid) {
 static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid_t pid ) {
 
     int ret = EXIT_FAILURE;
-    char **argv;
-    int argc;
+    char **argv = NULL;
+    int argc=-1;
+    int i;
 
     if (set_process_label(pid) < 0)
         goto cleanup;
@@ -227,6 +228,10 @@ static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid
     }
 
 cleanup:
+    for (i = argc; i >= 0; i--)
+            free(argv[i]);
+    free(argv);
+
     return ret;
 }
 
