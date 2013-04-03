@@ -420,12 +420,12 @@ class ServiceContainer(Container):
     PROFILE_FILES      = [ ".bashrc", ".bash_profile" ]
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
-    FUNCTIONS          = "/etc/rc.d/init.d/functions"
+    SYSVINIT_PATH      = "/etc/rc.d"
     ANACONDA_WANTS_PATH = "/usr/lib/systemd/system/anaconda.target.wants"
     MULTI_USER_WANTS_PATH = "/usr/lib/systemd/system/multi-user.target.wants"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
-    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", "/etc/rc.d/init.d"]
+    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", SYSVINIT_PATH ]
     BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", ANACONDA_WANTS_PATH, MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", HOSTNAME ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket" ] }
@@ -702,7 +702,11 @@ PrivateNetwork=false
         for f in self.BIND_SYSTEM_FILES:
             self.makefile(f)
 
-        shutil.copy(self.FUNCTIONS, "%s%s" % (self.dest, self.FUNCTIONS))
+        destpath = self.dest + self.SYSVINIT_PATH
+        for i in range(7):
+            os.mkdir(destpath+("/rc%s.d" % i))
+        os.mkdir(destpath+"/init.d")
+        shutil.copy(self.SYSVINIT_PATH + "/init.d/functions" , destpath + "/init.d")
 
         self.gen_machine_id()
         self.gen_hostname()
