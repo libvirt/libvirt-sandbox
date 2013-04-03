@@ -4,7 +4,7 @@ virt-sandbox-service reload - Reload a security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] reload [-h] NAME
+  virt-sandbox-service [-c URI] reload [-h] -u UNIT_FILE NAME
 
 =head1 DESCRIPTION
 
@@ -26,6 +26,11 @@ Display help message
 
 =item B<-c> URI, B<--connect URI>
 
+=item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
+
+Name of the systemd unit file to reload within the container. Can be repeated
+if multiple unit files need to be reloaded within the sandbox.
+
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
@@ -35,7 +40,7 @@ supported currently).
 
 Reload the httpd1 container
 
- # virt-sandbox-service reload httpd1
+ # virt-sandbox-service reload -u httpd.service httpd1
 
 =head1 SEE ALSO
 

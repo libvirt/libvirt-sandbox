@@ -57,6 +57,7 @@ _virt_sandbox_service () {
         [ALL]='-h --help'
         [CREATE]='-u --unitfile -p --path -t --type -l --level -d --dynamic -n --clone -i --image -s --size'
         [LIST]='-r --running'
+        [RELOAD]='-u --unitfile'
         [EXECUTE]='-N --noseclabel'
     )
 
@@ -88,7 +89,7 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "reload" ; then
-        COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )
+        COMPREPLY=( $(compgen -W "${OPTS[ALL]} ${OPTS[RELOAD]} $( __get_all_running_containers ) " -- "$cur") )
         return 0
     elif test "$verb" == "connect" ; then
         COMPREPLY=( $(compgen -W "${OPTS[ALL]} $( __get_all_running_containers ) " -- "$cur") )

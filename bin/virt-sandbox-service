@@ -164,12 +164,12 @@ After=libvirtd.service
 [Service]
 Type=simple
 ExecStart=/usr/bin/virt-sandbox-service start %(NAME)s
-ExecReload=/usr/bin/virt-sandbox-service reload %(NAME)s
+ExecReload=/usr/bin/virt-sandbox-service reload -u %(RELOAD)s %(NAME)s
 ExecStop=/usr/bin/virt-sandbox-service stop %(NAME)s
 
 [Install]
 WantedBy=%(TARGET)s
-""" % { 'NAME':name, 'FOLLOW':self.__follow_units(), 'TARGET':self.__target() }
+""" % { 'NAME':name, 'FOLLOW':self.__follow_units(), 'TARGET':self.__target(), 'RELOAD': " -u ".join(map(lambda x: x[0], self.unit_file_list)) }
         fd = open(self.unitfile, "w")
         fd.write(unit)
         fd.close()
@@ -649,11 +649,18 @@ PrivateNetwork=false
                 pass
             raise e
 
-    def reload(self):
-        # Crude way of doing this.
-        self.stop()
-        self.start()
-        # self.execute("systemctl reload %s.service" % self.get_name())
+    def reload(self, unitfiles):
+        #
+        # Reload Container
+        #
+        class Args:
+            command = []
+            noseclabel = None
+            name = self.name
+            uri = self.uri
+        args = Args()
+        args.command = [ "systemctl", "reload" ] + map(lambda x: x[0], unitfiles)
+        execute(args)
 
     def __connect(self):
         if not self.conn:
@@ -800,8 +807,9 @@ def sandbox_list(args):
 
 
 def sandbox_reload(args):
-    container = Container(args.name, args.uri)
-    container.reload()
+    config = read_config(args.name)
+    container = Container(uri = args.uri, config = config)
+    container.reload(args.unitfiles)
 
 def start(args):
     os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-s", args.name)
@@ -893,17 +901,28 @@ class SizeAction(argparse.Action):
         setattr(namespace, self.dest, int(values))
 
 class CheckUnit(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        src = "/etc/systemd/system/" + values
-        if not os.path.exists(src):
-            src = "/lib/systemd/system/" + values
-            if not os.path.exists(src):
-                raise OSError("Requested unit %s does not exist" % values)
+    def __call__(self, parser, namespace, value, option_string=None):
+        def check_unit(unit):
+            src = "/etc/systemd/system/" + unit
+            if os.path.exists(src):
+                return src
+            src = "/lib/systemd/system/" + unit
+            if os.path.exists(src):
+                return src
+            return None
+        src = check_unit(value)
+        if not src:
+            src = check_unit(value + ".service")
+            if src:
+                value = value + ".service"
+            else:
+                raise OSError("Requested unit %s does not exist" % value)
+
         unitfiles = getattr(namespace, self.dest)
         if unitfiles:
-            unitfiles.append((values, src))
+            unitfiles.append((value, src))
         else:
-            unitfiles = [ (values, src) ]
+            unitfiles = [ (value, src) ]
         setattr(namespace, self.dest, unitfiles)
 
 class SetNet(argparse.Action):
@@ -989,6 +1008,9 @@ def gen_stop_args(subparser):
 def gen_reload_args(subparser):
     parser = subparser.add_parser("reload",
                                    help=_("Reload a running sandbox container"))
+    parser.add_argument("-u", "--unitfile", required=True,
+                        action=CheckUnit, dest="unitfiles",
+                        help=_("Systemd Unit file to reload within the sandbox container"))
     requires_name(parser)
     parser.set_defaults(func=sandbox_reload)
 
