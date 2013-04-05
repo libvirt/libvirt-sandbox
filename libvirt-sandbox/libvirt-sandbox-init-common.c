@@ -590,8 +590,8 @@ typedef enum {
 
 static gboolean eventloop(gboolean interactive,
                           gchar **appargv,
-                          gboolean withshell,
-                          int sigread)
+                          int sigread,
+                          int host)
 {
     GVirSandboxRPCPacket *rx = NULL;
     GVirSandboxRPCPacket *tx = NULL;
@@ -609,33 +609,10 @@ static gboolean eventloop(gboolean interactive,
     int appout = -1;
     int apperr = -1;
     gboolean ret = FALSE;
-    int host;
-    const gchar *devname;
     GVirSandboxConsoleState state = GVIR_SANDBOX_CONSOLE_STATE_WAITING;
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: running I/O loop %d %d", appin, appout);
-
-    /* XXX lame hack */
-    if (getenv("LIBVIRT_LXC_NAME")) {
-        if (withshell)
-            devname = "/dev/tty3";
-        else
-            devname = "/dev/tty2";
-    } else {
-        devname = "/dev/hvc0";
-    }
-
-    if ((host = open(devname, O_RDWR)) < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-common: cannot open %s: %s",
-                devname, strerror(errno));
-        return FALSE;
-    }
-    struct termios  rawattr;
-
-    tcgetattr(host, &rawattr);
-    cfmakeraw(&rawattr);
-    tcsetattr(host, TCSAFLUSH, &rawattr);
 
 
     rx = gvir_sandbox_rpcpacket_new(FALSE);
@@ -1076,12 +1053,10 @@ static int
 run_interactive(GVirSandboxConfigInteractive *config)
 {
     int sigpipe[2] = { -1, -1 };
+    int host = -1;
     int ret = -1;
     struct termios  rawattr;
-
-    tcgetattr(STDIN_FILENO, &rawattr);
-    cfmakeraw(&rawattr);
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
+    const char *devname;
 
     if (pipe(sigpipe) < 0) {
         g_printerr("libvirt-sandbox-init-common: unable to create signal pipe: %s",
@@ -1092,10 +1067,42 @@ run_interactive(GVirSandboxConfigInteractive *config)
     sigwrite = sigpipe[1];
     signal(SIGCHLD, sig_child);
 
+    /* XXX lame hack */
+    if (getenv("LIBVIRT_LXC_NAME")) {
+        if (gvir_sandbox_config_get_shell(GVIR_SANDBOX_CONFIG(config)))
+            devname = "/dev/tty3";
+        else
+            devname = "/dev/tty2";
+    } else {
+        devname = "/dev/hvc0";
+    }
+
+    if ((host = open(devname, O_RDWR)) < 0) {
+        g_printerr("libvirt-sandbox-init-common: cannot open %s: %s",
+                   devname, strerror(errno));
+        return -1;
+    }
+
+    tcgetattr(STDIN_FILENO, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rawattr);
+
+    tcgetattr(host, &rawattr);
+    cfmakeraw(&rawattr);
+    tcsetattr(host, TCSAFLUSH, &rawattr);
+
+
+
+    if (change_user(gvir_sandbox_config_get_username(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_userid(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_groupid(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_homedir(GVIR_SANDBOX_CONFIG(config))) < 0)
+        return -1;
+
     if (!eventloop(gvir_sandbox_config_interactive_get_tty(config),
                    gvir_sandbox_config_interactive_get_command(config),
-                   gvir_sandbox_config_get_shell(GVIR_SANDBOX_CONFIG(config)),
-                   sigpipe[0]))
+                   sigpipe[0],
+                   host))
         goto cleanup;
 
     ret = 0;
@@ -1128,6 +1135,12 @@ run_service(GVirSandboxConfigService *config)
         "/bin/sh",
         NULL,
     };
+
+    if (change_user(gvir_sandbox_config_get_username(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_userid(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_groupid(GVIR_SANDBOX_CONFIG(config)),
+                    gvir_sandbox_config_get_homedir(GVIR_SANDBOX_CONFIG(config))) < 0)
+        return -1;
 
     if (debug)
         execv(shargv[0], (char **)shargv);
@@ -1209,12 +1222,6 @@ int main(int argc, char **argv) {
 
     if (!setup_network(config, &error))
         goto error;
-
-    if (change_user(gvir_sandbox_config_get_username(config),
-                    gvir_sandbox_config_get_userid(config),
-                    gvir_sandbox_config_get_groupid(config),
-                    gvir_sandbox_config_get_homedir(config)) < 0)
-        exit(EXIT_FAILURE);
 
     if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
         if (run_interactive(GVIR_SANDBOX_CONFIG_INTERACTIVE(config)) < 0)
