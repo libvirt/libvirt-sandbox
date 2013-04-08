@@ -55,7 +55,7 @@ _virt_sandbox_service () {
     )
     local -A OPTS=(
         [ALL]='-h --help'
-        [CREATE]='-u --unitfile -p --path -f --filetype -C --copy -i --imagesize -n --network -s --security'
+        [CREATE]='-u --unitfile -p --path -f --filetype -C --copy -i --imagesize -N --network -s --security'
         [LIST]='-r --running'
         [RELOAD]='-u --unitfile'
         [EXECUTE]='-N --noseclabel'

@@ -1054,7 +1054,7 @@ def gen_create_args(subparser):
     parser.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
-    parser.add_argument("-n", "--network", dest="network",
+    parser.add_argument("-N", "--network", dest="network",
                         action=SetNet, default=[],
                         help=_("Specify the network configuration"))
     parser.add_argument("-p", "--path", dest="path",  default=c.DEFAULT_PATH,
