@@ -229,7 +229,7 @@ static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid
 
 cleanup:
     for (i = argc; i >= 0; i--)
-            free(argv[i]);
+        free(argv[i]);
     free(argv);
 
     return ret;
@@ -453,18 +453,18 @@ int main(int argc, char **argv) {
     if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
         GVirSandboxContextInteractive *service;
         if (!(service = gvir_sandbox_context_interactive_new(hv, GVIR_SANDBOX_CONFIG_INTERACTIVE(config)))) {
-                g_printerr(_("Unable to create new context service: %s\n"),
-                           err && err->message ? err->message : _("unknown"));
-                goto cleanup;
+            g_printerr(_("Unable to create new context service: %s\n"),
+                       err && err->message ? err->message : _("unknown"));
+            goto cleanup;
         }
         ctx = GVIR_SANDBOX_CONTEXT(service);
     } else {
         GVirSandboxContextService *service;
 
         if (!(service = gvir_sandbox_context_service_new(hv, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
-                g_printerr(_("Unable to create new context service: %s\n"),
-                           err && err->message ? err->message : _("unknown"));
-                goto cleanup;
+            g_printerr(_("Unable to create new context service: %s\n"),
+                       err && err->message ? err->message : _("unknown"));
+            goto cleanup;
         }
         ctx = GVIR_SANDBOX_CONTEXT(service);
     }
