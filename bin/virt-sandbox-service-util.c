@@ -228,7 +228,7 @@ static int container_execute( GVirSandboxContext *ctx, const gchar *command, pid
     }
 
 cleanup:
-    for (i = argc; i >= 0; i--)
+    for (i = 0; i < argc; i++)
         free(argv[i]);
     free(argv);
 
