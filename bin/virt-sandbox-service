@@ -19,8 +19,6 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-PROGNAME="virt-sandbox-service"
-
 from gi.repository import LibvirtGObject
 from gi.repository import LibvirtSandbox
 from gi.repository import GLib
@@ -39,10 +37,10 @@ else:
 LibvirtGObject.init_object_check(None)
 LibvirtSandbox.init_check(None)
 
-gettext.bindtextdomain(PROGNAME, "/usr/share/locale")
-gettext.textdomain(PROGNAME)
+gettext.bindtextdomain("libvirt-sandbox", "/usr/share/locale")
+gettext.textdomain("libvirt-sandbox")
 try:
-    gettext.install(PROGNAME,
+    gettext.install("libvirt-sandbox",
                     localedir="/usr/share/locale",
                     unicode=False,
                     codeset = 'utf-8')

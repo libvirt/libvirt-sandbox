@@ -24,6 +24,8 @@
 
 #include <string.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -270,7 +272,7 @@ GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
 
     if (!priv->domain) {
         g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
-                    "Domain is not currently running");
+                    _("Domain is not currently running"));
         return NULL;
     }
 
@@ -493,7 +495,7 @@ GVirSandboxConsole *gvir_sandbox_context_get_log_console(GVirSandboxContext *ctx
 
     if (!priv->console) {
         g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
-                    "Domain is not currently running");
+                    _("Domain is not currently running"));
         return NULL;
     }
 
@@ -516,7 +518,7 @@ GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *c
 
     if (!priv->domain) {
         g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
-                    "Domain is not currently running");
+                    _("Domain is not currently running"));
         return NULL;
     }
 

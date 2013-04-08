@@ -24,6 +24,8 @@
 #include <sys/utsname.h>
 #include <string.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -876,7 +878,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
         if (g_str_equal(param, "dhcp")) {
             if (gotaddr || gotroute) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Cannot request DHCP with static routes/addresses");
+                            _("Cannot request DHCP with static routes/addresses"));
                 g_object_unref(net);
                 goto cleanup;
             }
@@ -897,7 +899,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
             if (gotdhcp) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Cannot set static addresses with DHCP");
+                            _("Cannot set static addresses with DHCP"));
                 g_object_unref(net);
                 goto cleanup;
             }
@@ -917,7 +919,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
             if (!(primaryaddr = g_inet_address_new_from_string(primary))) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Unable to parse address %s", primary);
+                            _("Unable to parse address %s"), primary);
                 g_free(primary);
                 g_object_unref(net);
                 goto cleanup;
@@ -926,7 +928,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
             if (bcast &&
                 !(bcastaddr = g_inet_address_new_from_string(bcast))) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Unable to parse address %s", bcast);
+                            _("Unable to parse address %s"), bcast);
                 g_free(primary);
                 g_object_unref(primaryaddr);
                 g_object_unref(net);
@@ -956,7 +958,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
             if (gotdhcp) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Cannot set static routes with DHCP");
+                            _("Cannot set static routes with DHCP"));
                 g_object_unref(net);
                 goto cleanup;
             }
@@ -976,7 +978,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
             if (!(targetaddr = g_inet_address_new_from_string(target))) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Unable to parse address %s", target);
+                            _("Unable to parse address %s"), target);
                 g_free(target);
                 g_object_unref(net);
                 goto cleanup;
@@ -984,7 +986,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
             if (!(gatewayaddr = g_inet_address_new_from_string(gateway))) {
                 g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            "Unable to parse address %s", gateway);
+                            _("Unable to parse address %s"), gateway);
                 g_free(target);
                 g_object_unref(targetaddr);
                 g_object_unref(net);
@@ -1004,7 +1006,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
             gvir_sandbox_config_network_set_dhcp(net, FALSE);
         } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "Unknown parameter %s", param);
+                        _("Unknown parameter %s"), param);
             g_object_unref(net);
             goto cleanup;
         }
@@ -1015,7 +1017,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
     if (gotroute && !gotaddr) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Cannot set static routes without addresses");
+                    _("Cannot set static routes without addresses"));
         g_object_unref(net);
         goto cleanup;
     }
@@ -1177,7 +1179,7 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
     tmp = strchr(mount, ':');
     if (!tmp) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "No mount type prefix on %s", mount);
+                    _("No mount type prefix on %s"), mount);
         return FALSE;
     }
     if (strncmp(mount, "host-bind", (tmp - mount)) == 0) {
@@ -1190,7 +1192,7 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
         type = GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM;
     } else {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Unknown mount type prefix on %s", mount);
+                    _("Unknown mount type prefix on %s"), mount);
         return FALSE;
     }
 
@@ -1300,7 +1302,7 @@ gboolean gvir_sandbox_config_add_host_include_strv(GVirSandboxConfig *config,
         }
         if (!mnt) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "No mount with a prefix under %s", guest);
+                        _("No mount with a prefix under %s"), guest);
             g_free(guest);
             return FALSE;
         }
@@ -1365,7 +1367,7 @@ gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
         }
         if (!mnt) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "No mount with a prefix under %s", guest);
+                        _("No mount with a prefix under %s"), guest);
             g_free(guest);
             return FALSE;
         }
@@ -1464,7 +1466,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
         gvir_sandbox_config_set_security_dynamic(config, FALSE);
     } else {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Unknown security option '%s'", tmp);
+                    _("Unknown security option '%s'"), tmp);
         goto cleanup;
     }
 
@@ -1473,7 +1475,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
             gvir_sandbox_config_set_security_label(config, offset+6);
         } else {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Unknown security option '%s'", offset);
+                        _("Unknown security option '%s'"), offset);
             goto cleanup;
         }
     }
@@ -1507,12 +1509,12 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
         }
         g_error_free(e);
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "%s", "Missing mount target in config file");
+                    "%s", _("Missing mount target in config file"));
         goto cleanup;
     }
     if ((type = g_key_file_get_string(file, key, "type", NULL)) == NULL) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "%s", "Missing mount type in config file");
+                    "%s", _("Missing mount type in config file"));
         goto cleanup;
     }
 
@@ -1524,14 +1526,14 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
 
     if ((mountType = g_type_from_name(type)) == 0) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Unknown mount type %s in config file", type);
+                    _("Unknown mount type %s in config file"), type);
         goto error;
     }
 
     if (mountType == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
         if ((source = g_key_file_get_string(file, key, "usage", NULL)) == NULL) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "%s", "Missing mount usage in config file");
+                        "%s", _("Missing mount usage in config file"));
             goto error;
         }
         gint usage = strtol(source, NULL, 10);
@@ -1540,7 +1542,7 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
     } else {
         if ((source = g_key_file_get_string(file, key, "source", NULL)) == NULL) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                        "%s", "Missing mount source in config file");
+                        "%s", _("Missing mount source in config file"));
             goto error;
         }
 
@@ -2023,20 +2025,20 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
 
     if ((str = g_key_file_get_string(file, "api", "class", NULL)) == NULL) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "%s", "Missing class name in config file");
+                    "%s", _("Missing class name in config file"));
         goto cleanup;
     }
 
     if (!(type = g_type_from_name(str))) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Unknown type name '%s' in config file", str);
+                    _("Unknown type name '%s' in config file"), str);
         goto cleanup;
     }
 
     if (!g_type_is_a(type,
                      GVIR_SANDBOX_TYPE_CONFIG)) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                    "Type name '%s' in config file had wrong parent", str);
+                    _("Type name '%s' in config file had wrong parent"), str);
         goto cleanup;
     }
 

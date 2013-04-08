@@ -131,6 +131,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-DRUNDIR="\"$(rundir)\"" \
+			-DLOCALEDIR="\"$(datadir)/locale"\" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \
@@ -161,6 +162,7 @@ libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c \
 libvirt_sandbox_init_common_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			-DLOCALEDIR="\"$(datadir)/locale"\" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			$(GIO_UNIX_CFLAGS) \

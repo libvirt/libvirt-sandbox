@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <dirent.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -166,7 +168,7 @@ static gchar *gvir_sandbox_builder_initrd_create_tempdir(GError **error)
 
     if (!dir) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, errno,
-                    "Unable to create temporary directory %s: %s",
+                    _("Unable to create temporary directory %s: %s"),
                     tmpl, strerror(errno));
         goto cleanup;
     }
@@ -262,7 +264,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
     DIR *dh = opendir(g_file_get_path(dir));
     if (!dh) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, 0,
-                    "Unable to read entries in %s: %s",
+                    _("Unable to read entries in %s: %s"),
                     g_file_get_path(dir), strerror(errno));
         return NULL;
     }
@@ -293,7 +295,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
             struct stat sb;
             if (stat(g_file_get_path(child), &sb) < 0) {
                 g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, 0,
-                            "Unable to access %s: %s",
+                            _("Unable to access %s: %s"),
                             g_file_get_path(child) , strerror(errno));
                 g_object_unref(child);
                 goto cleanup;
@@ -354,7 +356,7 @@ static GList *gvir_sandbox_builder_initrd_find_modules(GList *modnames,
         }
         if (!found) {
             g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, 0,
-                        "Cannot find module file for %s", (const gchar*)tmp1->data);
+                        _("Cannot find module file for %s"), (const gchar*)tmp1->data);
             g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
             g_list_free(modfiles);
             modfiles = NULL;

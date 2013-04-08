@@ -10,21 +10,14 @@ cd $srcdir
 
 DIE=0
 
-(autoconf --version) < /dev/null > /dev/null 2>&1 || {
+for prog in intltoolize autoreconf automake autoconf libtool
+do
+    ($prog --version) < /dev/null > /dev/null 2>&1 || {
         echo
-        echo "You must have autoconf installed to compile libvirt-sandbox."
-        echo "Download the appropriate package for your distribution,"
-        echo "or see http://www.gnu.org/software/autoconf"
+        echo "You must have $prog installed to compile libvirt-sandbox."
         DIE=1
-}
-
-(automake --version) < /dev/null > /dev/null 2>&1 || {
-        echo
-        DIE=1
-        echo "You must have automake installed to compile libvirt-sandbox."
-        echo "Download the appropriate package for your distribution,"
-        echo "or see http://www.gnu.org/software/automake"
-}
+    }
+done
 
 if test "$DIE" -eq 1; then
         exit 1
@@ -37,11 +30,8 @@ if test -z "$*"; then
 fi
 
 mkdir -p build-aux
-libtoolize --copy --force
-aclocal -I m4
-autoheader
-automake --add-missing
-autoconf
+intltoolize --force
+autoreconf -if
 
 cd $THEDIR
 

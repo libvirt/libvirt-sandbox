@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <glib/gi18n.h>
+
 #include <libvirt-sandbox/libvirt-sandbox.h>
 #include <libvirt-gconfig/libvirt-gconfig.h>
 
@@ -65,6 +67,9 @@ gboolean gvir_sandbox_init_check(int *argc,
                                  GError **err)
 {
     if (!gvir_init_object_check(argc, argv, err))
+        return FALSE;
+
+    if (!bindtextdomain(PACKAGE, LOCALEDIR))
         return FALSE;
 
     /* GLib >= 2.31.0 debug is off by default, so we need to

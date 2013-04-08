@@ -61,6 +61,30 @@ VC_LIST_ALWAYS_EXCLUDE_REGEX = \
 useless_free_options =				\
   --name=g_free
 
+msg_gen_function =
+msg_gen_function += g_set_error
+msg_gen_function += g_printerr
+
+func_or := $(shell echo $(msg_gen_function)|tr -s ' ' '|')
+func_re := ($(func_or))
+
+# Look for diagnostics that aren't marked for translation.
+# This won't find any for which error's format string is on a separate line.
+# The sed filters eliminate false-positives like these:
+#    _("...: "
+#    "%s", _("no storage vol w..."
+sc_libvirt_unmarked_diagnostics:
+	@prohibit='\<$(func_re) *\([^"]*"[^"]*[a-z]{3}'			\
+	exclude='_\('							\
+	halt='found unmarked diagnostic(s)'				\
+	  $(_sc_search_regexp)
+	@{ grep     -nE '\<$(func_re) *\(.*;$$' $$($(VC_LIST_EXCEPT));   \
+	   grep -A1 -nE '\<$(func_re) *\(.*,$$' $$($(VC_LIST_EXCEPT)); } \
+	   | sed 's/_("\([^\"]\|\\.\)\+"//;s/[	 ]"%s"//'		\
+	   | grep '[	 ]"' &&						\
+	  { echo '$(ME): found unmarked diagnostic(s)' 1>&2;		\
+	    exit 1; } || :
+
 # Ensure that no C source file, docs, or rng schema uses TABs for
 # indentation.  Also match *.h.in files, to get libvirt.h.in.  Exclude
 # files in gnulib, since they're imported.
@@ -118,6 +142,7 @@ sc_check_author_list:
 	  && echo '$(ME): committer(s) not listed in AUTHORS' >&2;	\
 	test $$fail = 0
 
+exclude_file_name_regexp--sc_libvirt_unmarked_diagnostics = ^libvirt-sandbox/tests
 
 exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)|(bin/virt-sandbox-service-util.c)
 

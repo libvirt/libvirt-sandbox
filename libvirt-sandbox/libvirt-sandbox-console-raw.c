@@ -26,6 +26,8 @@
 #include <termios.h>
 #include <errno.h>
 #include <string.h>
+
+#include <glib/gi18n.h>
 #include <libvirt-glib/libvirt-glib-error.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
@@ -167,7 +169,7 @@ static gboolean gvir_sandbox_console_raw_start_term(GVirSandboxConsoleRaw *conso
 
     if (tcgetattr(fd, &priv->termiosProps) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0,
-                    "Unable to query terminal attributes: %s",
+                    _("Unable to query terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -184,7 +186,7 @@ static gboolean gvir_sandbox_console_raw_start_term(GVirSandboxConsoleRaw *conso
 
     if (tcsetattr(fd, TCSADRAIN, &ios) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0,
-                    "Unable to update terminal attributes: %s",
+                    _("Unable to update terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -207,7 +209,7 @@ static gboolean gvir_sandbox_console_raw_stop_term(GVirSandboxConsoleRaw *consol
 
     if (tcsetattr(fd, TCSADRAIN, &priv->termiosProps) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0,
-                    "Unable to restore terminal attributes: %s",
+                    _("Unable to restore terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -477,7 +479,7 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
 
     if (priv->console) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0, "%s",
-                    "Console is already attached to a stream");
+                    _("Console is already attached to a stream"));
         return FALSE;
     }
 
@@ -535,7 +537,7 @@ static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
         return TRUE;
 #if 0
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RAW_ERROR, 0, "%s",
-                    "Console is not attached to a stream");
+                    _("Console is not attached to a stream"));
         return FALSE;
 #endif
     }

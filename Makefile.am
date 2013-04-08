@@ -1,5 +1,5 @@
 
-SUBDIRS = libvirt-sandbox bin examples docs
+SUBDIRS = libvirt-sandbox bin examples docs po
 
 ACLOCAL_AMFLAGS = -I m4
 

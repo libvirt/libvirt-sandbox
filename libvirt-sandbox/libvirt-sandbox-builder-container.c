@@ -23,6 +23,8 @@
 #include <config.h>
 #include <string.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -376,7 +378,7 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
     if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_CONTAINER_ERROR, 0,
-                    "%s", "Graphical sandboxes are not supported for containers");
+                    "%s", _("Graphical sandboxes are not supported for containers"));
         return FALSE;
     }
 

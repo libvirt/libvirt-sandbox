@@ -26,10 +26,11 @@
 #include <termios.h>
 #include <errno.h>
 #include <string.h>
+
+#include <glib/gi18n.h>
 #include <libvirt-glib/libvirt-glib-error.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
-
 #include "libvirt-sandbox/libvirt-sandbox-rpcpacket.h"
 
 /**
@@ -296,7 +297,7 @@ static gboolean gvir_sandbox_console_rpc_start_term(GVirSandboxConsoleRpc *conso
 
     if (tcgetattr(fd, &priv->termiosProps) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
-                    "Unable to query terminal attributes: %s",
+                    _("Unable to query terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -313,7 +314,7 @@ static gboolean gvir_sandbox_console_rpc_start_term(GVirSandboxConsoleRpc *conso
 
     if (tcsetattr(fd, TCSADRAIN, &ios) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
-                    "Unable to update terminal attributes: %s",
+                    _("Unable to update terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -341,7 +342,7 @@ static gboolean gvir_sandbox_console_rpc_stop_term(GVirSandboxConsoleRpc *consol
 
     if (tcsetattr(fd, TCSADRAIN, &priv->termiosProps) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
-                    "Unable to restore terminal attributes: %s",
+                    _("Unable to restore terminal attributes: %s"),
                     strerror(errno));
         return FALSE;
     }
@@ -468,7 +469,7 @@ static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
         return FALSE;
 
     if (priv->rx->header.status != GVIR_SANDBOX_PROTOCOL_STATUS_OK) {
-        g_set_error(error, 0, 0, "Unexpected rpc status %u",
+        g_set_error(error, 0, 0, _("Unexpected rpc status %u"),
                     priv->rx->header.status);
         return FALSE;
     }
@@ -513,7 +514,7 @@ static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
     case GVIR_SANDBOX_PROTOCOL_PROC_QUIT:
     case GVIR_SANDBOX_PROTOCOL_PROC_STDIN:
     default:
-        g_set_error(error, 0, 0, "Unexpected rpc proc %u",
+        g_set_error(error, 0, 0, _("Unexpected rpc proc %u"),
                     priv->rx->header.proc);
         return FALSE;
     }
@@ -823,7 +824,7 @@ static gboolean gvir_sandbox_console_rpc_attach(GVirSandboxConsole *console,
 
     if (priv->state != GVIR_SANDBOX_CONSOLE_RPC_INIT) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0, "%s",
-                    "Console is already attached to a stream");
+                    _("Console is already attached to a stream"));
         return FALSE;
     }
 
@@ -882,7 +883,7 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
         return TRUE;
 #if 0
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0, "%s",
-                    "ConsoleRpc is not attached to a stream");
+                    _("ConsoleRpc is not attached to a stream"));
         return FALSE;
 #endif
     }

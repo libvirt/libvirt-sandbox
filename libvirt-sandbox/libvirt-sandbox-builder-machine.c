@@ -24,6 +24,8 @@
 #include <string.h>
 #include <sys/utsname.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -176,7 +178,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
 
     if ((fd = mkstemp(targetfile)) < 0) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
-                    "Cannot create initrd %s", targetfile);
+                    _("Cannot create initrd %s"), targetfile);
         goto cleanup;
     }
 

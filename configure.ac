@@ -86,6 +86,10 @@ LIBVIRT_SANDBOX_INTROSPECTION
 LIBVIRT_SANDBOX_RPCGEN
 LIBVIRT_SANDBOX_SELINUX
 
+dnl Should be in m4/virt-gettext.m4 but intltoolize is too
+dnl dumb to find it there
+IT_PROG_INTLTOOL([0.35.0])
+
 
 AC_OUTPUT(Makefile
           libvirt-sandbox/Makefile
@@ -94,6 +98,7 @@ AC_OUTPUT(Makefile
           examples/Makefile
           docs/Makefile
           docs/libvirt-sandbox/Makefile
+          po/Makefile.in
           libvirt-sandbox.spec
           libvirt-sandbox-1.0.pc)
 

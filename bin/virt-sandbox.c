@@ -106,6 +106,11 @@ int main(int argc, char **argv) {
     };
     const char *help_msg = N_("Run 'virt-sandbox --help' to see a full list of available command line options");
 
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
+    textdomain(PACKAGE);
+
     if (!gvir_sandbox_init_check(&argc, &argv, &error))
         exit(EXIT_FAILURE);
 
@@ -141,7 +146,7 @@ int main(int argc, char **argv) {
     hv = gvir_connection_new(uri);
     if (!gvir_connection_open(hv, NULL, &error)) {
         g_printerr(_("Unable to open connection: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
 
@@ -158,31 +163,31 @@ int main(int argc, char **argv) {
     if (mounts &&
         !gvir_sandbox_config_add_mount_strv(cfg, mounts, &error)) {
         g_printerr(_("Unable to parse mounts: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     if (includes &&
         !gvir_sandbox_config_add_host_include_strv(cfg, includes, &error)) {
         g_printerr(_("Unable to parse includes: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     if (includefile &&
         !gvir_sandbox_config_add_host_include_file(cfg, includefile, &error)) {
         g_printerr(_("Unable to parse include file: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     if (networks &&
         !gvir_sandbox_config_add_network_strv(cfg, networks, &error)) {
         g_printerr(_("Unable to parse networks: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     if (security &&
         !gvir_sandbox_config_set_security_opts(cfg, security, &error)) {
         g_printerr(_("Unable to parse security: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
 
@@ -197,26 +202,26 @@ int main(int argc, char **argv) {
 
     if (!gvir_sandbox_context_start(ctx, &error)) {
         g_printerr(_("Unable to start sandbox: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
 
     if (!(log = gvir_sandbox_context_get_log_console(ctx, &error))) {
         g_printerr(_("Unable to get log console: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     g_signal_connect(log, "closed", (GCallback)do_close, loop);
 
     if (!(gvir_sandbox_console_attach_stderr(log, &error))) {
         g_printerr(_("Unable to attach sandbox console: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
 
     if (!(con = gvir_sandbox_context_interactive_get_app_console(ictx, &error))) {
         g_printerr(_("Unable to get app console: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
@@ -224,7 +229,7 @@ int main(int argc, char **argv) {
 
     if (!(gvir_sandbox_console_attach_stdio(con, &error))) {
         g_printerr(_("Unable to attach sandbox console: %s\n"),
-                   error && error->message ? error->message : "unknown");
+                   error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
 

@@ -386,6 +386,11 @@ int main(int argc, char **argv) {
     };
     const char *help_msg = N_("Run 'virt-sandbox-service-util --help' to see a full list of available command line options\n");
 
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
+    textdomain(PACKAGE);
+
     if (!gvir_sandbox_init_check(&argc, &argv, &err))
         exit(EXIT_FAILURE);
 

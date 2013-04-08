@@ -58,6 +58,7 @@ virt_sandbox_CFLAGS = \
 		$(GIO_UNIX_CFLAGS) \
 		$(LIBVIRT_GOBJECT_CFLAGS) \
 		-I$(top_srcdir) \
+		-DLOCALEDIR="\"$(datadir)/locale"\" \
 		$(WARN_CFLAGS) \
 		$(NULL)
 virt_sandbox_LDFLAGS = \
@@ -72,6 +73,7 @@ virt_sandbox_service_util_CFLAGS = \
 		$(GIO_UNIX_CFLAGS) \
 		$(LIBVIRT_GOBJECT_CFLAGS) \
 		-I$(top_srcdir) \
+		-DLOCALEDIR="\"$(datadir)/locale"\" \
 		$(WARN_CFLAGS) \
 		$(NULL)
 virt_sandbox_service_util_LDFLAGS = \

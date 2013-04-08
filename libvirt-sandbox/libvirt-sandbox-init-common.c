@@ -1059,7 +1059,7 @@ run_interactive(GVirSandboxConfigInteractive *config)
     const char *devname;
 
     if (pipe(sigpipe) < 0) {
-        g_printerr("libvirt-sandbox-init-common: unable to create signal pipe: %s",
+        g_printerr(_("libvirt-sandbox-init-common: unable to create signal pipe: %s"),
                    strerror(errno));
         return -1;
     }
@@ -1078,7 +1078,7 @@ run_interactive(GVirSandboxConfigInteractive *config)
     }
 
     if ((host = open(devname, O_RDWR)) < 0) {
-        g_printerr("libvirt-sandbox-init-common: cannot open %s: %s",
+        g_printerr(_("libvirt-sandbox-init-common: cannot open %s: %s"),
                    devname, strerror(errno));
         return -1;
     }
@@ -1146,7 +1146,7 @@ run_service(GVirSandboxConfigService *config)
         execv(shargv[0], (char **)shargv);
     else
         execv(initargv[0], (char**)initargv);
-    g_printerr("libvirt-sandbox-init-common: %s: cannot execute %s: %s\n",
+    g_printerr(_("libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"),
                __func__, debug ? shargv[0] : initargv[0], strerror(errno));
     return -1;
 }
@@ -1179,8 +1179,13 @@ int main(int argc, char **argv) {
     GVirSandboxConfig *config;
     int ret = EXIT_FAILURE;
 
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(PACKAGE, "UTF-8");
+    textdomain(PACKAGE);
+
     if (geteuid() != 0) {
-        g_printerr("%s: must be launched as root\n", argv[0]);
+        g_printerr(_("%s: must be launched as root\n"), argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -1205,7 +1210,7 @@ int main(int argc, char **argv) {
 
     if (!(config = gvir_sandbox_config_load_from_path(configfile ? configfile :
                                                       SANDBOXCONFIGDIR "/sandbox.cfg", &error))) {
-        g_printerr("%s: Unable to load config %s: %s\n",
+        g_printerr(_("%s: Unable to load config %s: %s\n"),
                    argv[0],
                    configfile ? configfile :
                    SANDBOXCONFIGDIR "/sandbox.cfg",
@@ -1231,7 +1236,7 @@ int main(int argc, char **argv) {
             goto cleanup;
     } else {
         GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
-        g_printerr("Unsupported configuration type %s",
+        g_printerr(_("Unsupported configuration type %s"),
                    g_type_name(G_TYPE_FROM_CLASS(klass)));
         goto cleanup;
     }
@@ -1247,6 +1252,6 @@ cleanup:
 error:
     g_printerr("%s: %s",
                argv[0],
-               error && error->message ? error->message : "Unknown failure");
+               error && error->message ? error->message : _("Unknown failure"));
     goto cleanup;
 }
