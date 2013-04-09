@@ -875,7 +875,7 @@ static gboolean eventloop(gboolean interactive,
                             tx->bufferOffset += got;
                             if (tx->bufferOffset == tx->bufferLength) {
                                 if (debug)
-                                    fprintf(stderr, "Wrote packet %zu to host",
+                                    fprintf(stderr, "Wrote packet %zu to host\n",
                                             tx->bufferOffset);
                                 gvir_sandbox_rpcpacket_free(tx);
                                 tx = NULL;
@@ -1022,12 +1022,6 @@ static gboolean eventloop(gboolean interactive,
                     }
                 }
             }
-        }
-
-        if (appQuit && appOutEOF && appErrEOF && !tx) {
-            if (debug)
-                fprintf(stderr, "All closed, tx finished %d\n", exitstatus);
-            quit = TRUE;
         }
     }
 
