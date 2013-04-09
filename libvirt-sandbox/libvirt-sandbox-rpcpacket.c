@@ -27,6 +27,13 @@
 
 #include "libvirt-sandbox-rpcpacket.h"
 
+#define GVIR_SANDBOX_RPCPACKET_ERROR gvir_sandbox_rpcpacket_error_quark()
+
+static GQuark
+gvir_sandbox_rpcpacket_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-rpcpacket");
+}
 
 GVirSandboxRPCPacket *gvir_sandbox_rpcpacket_new(gboolean rxready)
 {
@@ -58,14 +65,14 @@ gboolean gvir_sandbox_rpcpacket_decode_length(GVirSandboxRPCPacket *msg,
     xdrmem_create(&xdr, msg->buffer,
                   msg->bufferLength, XDR_DECODE);
     if (!xdr_u_int(&xdr, &len)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to decode message length"));
         goto cleanup;
     }
     msg->bufferOffset = xdr_getpos(&xdr);
 
     if (len < GVIR_SANDBOX_PROTOCOL_LEN_MAX) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     _("packet %u bytes received from server too small, want %u"),
                     len, GVIR_SANDBOX_PROTOCOL_LEN_MAX);
         goto cleanup;
@@ -75,7 +82,7 @@ gboolean gvir_sandbox_rpcpacket_decode_length(GVirSandboxRPCPacket *msg,
     len -= GVIR_SANDBOX_PROTOCOL_LEN_MAX;
 
     if (len > GVIR_SANDBOX_PROTOCOL_PACKET_MAX) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     _("packet %u bytes received from server too large, want %d"),
                     len, GVIR_SANDBOX_PROTOCOL_PACKET_MAX);
         goto cleanup;
@@ -119,7 +126,7 @@ gboolean gvir_sandbox_rpcpacket_decode_header(GVirSandboxRPCPacket *msg,
                   XDR_DECODE);
 
     if (!xdr_GVirSandboxProtocolHeader(&xdr, &msg->header)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to decode message header"));
         goto cleanup;
     }
@@ -163,13 +170,13 @@ gboolean gvir_sandbox_rpcpacket_encode_header(GVirSandboxRPCPacket *msg,
 
     /* The real value is filled in shortly */
     if (!xdr_u_int(&xdr, &len)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message length"));
         goto cleanup;
     }
 
     if (!xdr_GVirSandboxProtocolHeader(&xdr, &msg->header)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message header"));
         goto cleanup;
     }
@@ -181,7 +188,7 @@ gboolean gvir_sandbox_rpcpacket_encode_header(GVirSandboxRPCPacket *msg,
      * if a payload is added
      */
     if (!xdr_u_int(&xdr, &len)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to re-encode message length"));
         goto cleanup;
     }
@@ -211,7 +218,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_msg(GVirSandboxRPCPacket *msg,
                   msg->bufferLength - msg->bufferOffset, XDR_ENCODE);
 
     if (!(*filter)(&xdr, data)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message payload"));
         goto error;
     }
@@ -224,7 +231,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_msg(GVirSandboxRPCPacket *msg,
     xdrmem_create(&xdr, msg->buffer, GVIR_SANDBOX_PROTOCOL_LEN_MAX, XDR_ENCODE);
     msglen = msg->bufferOffset;
     if (!xdr_u_int(&xdr, &msglen)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message length"));
         goto error;
     }
@@ -254,7 +261,7 @@ gboolean gvir_sandbox_rpcpacket_decode_payload_msg(GVirSandboxRPCPacket *msg,
                   msg->bufferLength - msg->bufferOffset, XDR_DECODE);
 
     if (!(*filter)(&xdr, data)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to decode message payload"));
         goto error;
     }
@@ -279,7 +286,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_raw(GVirSandboxRPCPacket *msg,
     unsigned int msglen;
 
     if ((msg->bufferLength - msg->bufferOffset) < len) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     _("Raw data too long to send (%zu bytes needed, %zu bytes available)"),
                     len, (msg->bufferLength - msg->bufferOffset));
         return FALSE;
@@ -292,7 +299,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_raw(GVirSandboxRPCPacket *msg,
     xdrmem_create(&xdr, msg->buffer, GVIR_SANDBOX_PROTOCOL_LEN_MAX, XDR_ENCODE);
     msglen = msg->bufferOffset;
     if (!xdr_u_int(&xdr, &msglen)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message length"));
         goto error;
     }
@@ -318,7 +325,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_empty(GVirSandboxRPCPacket *msg,
     xdrmem_create(&xdr, msg->buffer, GVIR_SANDBOX_PROTOCOL_LEN_MAX, XDR_ENCODE);
     msglen = msg->bufferOffset;
     if (!xdr_u_int(&xdr, &msglen)) {
-        g_set_error(error, 0, 0,
+        g_set_error(error, GVIR_SANDBOX_RPCPACKET_ERROR, 0,
                     "%s", _("Unable to encode message length"));
         goto error;
     }
