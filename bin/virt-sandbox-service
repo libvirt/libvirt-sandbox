@@ -836,7 +836,7 @@ def delete(args):
 
 def create(args):
     if len(args.command) > 0 and len(args.unitfiles) > 0:
-        raise ValueError([_("Commands can not be specified with unit files")])
+        raise ValueError([_("Commands cannot be specified with unit files")])
 
     if len(args.command) == 0  and len(args.unitfiles) == 0:
         raise ValueError([_("You must specify a command or a unit file")])
@@ -1063,11 +1063,11 @@ def gen_create_args(subparser):
     parser.add_argument("-u", "--unitfile",
                         action=CheckUnit,
                         dest="unitfiles",
-                        help=_("Systemd Unit file to run within the Service sandbox container. Commands can not be specified with unit files."))
+                        help=_("Systemd Unit file to run within the Service sandbox container. Commands cannot be specified with unit files."))
 
     requires_name(parser)
     parser.add_argument("command", default=[], nargs="*",
-                        help=_("Command to run within the Interactive sandbox container. Commands can not be specified with unit files."))
+                        help=_("Command to run within the Interactive sandbox container. Commands cannot be specified with unit files."))
 
     parser.set_defaults(func=create)
 
