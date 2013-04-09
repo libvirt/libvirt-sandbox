@@ -78,7 +78,7 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
     }
 
     args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
-    if (debug && 0)
+    if (debug)
         args[narg++] = "-d";
 
     if (debug)
