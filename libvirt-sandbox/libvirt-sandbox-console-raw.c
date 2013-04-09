@@ -355,6 +355,7 @@ static gboolean do_console_raw_stream_readwrite(GVirStream *stream,
             }
         }
         if (ret == 0) { /* EOF */
+            do_console_raw_close(console, NULL);
             goto done;
         }
         priv->consoleToLocalOffset += ret;
