@@ -87,7 +87,7 @@ virt_sandbox_service_util_LDFLAGS = \
 install-data-local:
 		$(MKDIR_P) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services
 		$(MKDIR_P) $(DESTDIR)$(virtsandboxcompdir)
-		cp virt-sandbox-service-bash-completion.sh $(DESTDIR)$(virtsandboxcompdir)/virt-sandbox-service
+		cp $(srcdir)/virt-sandbox-service-bash-completion.sh $(DESTDIR)$(virtsandboxcompdir)/virt-sandbox-service
 
 uninstall-local:
 		$(rmdir) $(DESTDIR)$(sysconfdir)/libvirt-sandbox/services ||:
