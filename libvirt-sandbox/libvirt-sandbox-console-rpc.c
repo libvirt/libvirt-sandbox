@@ -59,12 +59,58 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
                                                 GError **error);
 
 typedef enum {
-    GVIR_SANDBOX_CONSOLE_RPC_INIT,
-    GVIR_SANDBOX_CONSOLE_RPC_WAITING,
-    GVIR_SANDBOX_CONSOLE_RPC_SYNCING,
-    GVIR_SANDBOX_CONSOLE_RPC_RUNNING,
-    GVIR_SANDBOX_CONSOLE_RPC_FINISHED,
+    /*
+     * No streams connected
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE = 0,
+
+    /*
+     * Remote stream connected, need tx/rx.
+     *
+     *  - Sending GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT bytes every 50ms
+     *
+     * If receive GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT byte, switch
+     * to next state
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING = 1,
+
+    /*
+     * Remote stream connected, need tx
+     *
+     *  - Send single GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC byte
+     *
+     * When byte is sent, switch to next state
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING = 2,
+
+    /*
+     * Remote stream connected, need tx/rx
+     * Local stdin/out/err connected, need tx/rx
+     *
+     * When receiving PROC_EXIT switch to STOPPING
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING = 3,
+
+    /*
+     * Remote stream connected, need tx
+     * Local stdout/err connected, need tx
+     *
+     * When stream tx == 0 and stdout/err == 0, send
+     * PROC_QUIT and move to next state
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING = 4,
+
+    /*
+     * Remote stream connected, need tx
+     *
+     * When tx == 0, then emit "closed", go back
+     * to first state
+     */
+    GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED = 5,
 } GVirSandboxConsoleRpcState;
+
+
+#define GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA 1024
 
 struct _GVirSandboxConsoleRpcPrivate
 {
@@ -83,25 +129,26 @@ struct _GVirSandboxConsoleRpcPrivate
 
     /* Decoded RPC message forwarded to stdout */
     gchar *localToStdout;
-    gsize localToStdoutLength;
+    gsize localToStdoutLength; /* No more than GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA*/
     gsize localToStdoutOffset;
 
     /* Decoded RPC message forwarded to stdout */
     gchar *localToStderr;
-    gsize localToStderrLength;
+    gsize localToStderrLength; /* No more than GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA*/
     gsize localToStderrOffset;
 
     GVirSandboxConsoleRpcState state;
 
     /* True if stdin has shown us EOF */
     gboolean localEOF;
-    /* True if we got the EXIT RPC message over console */
-    gboolean consoleEOF;
 
     GSource *localStdinSource;
     GSource *localStdoutSource;
     GSource *localStderrSource;
     gint consoleWatch;
+
+    /* True if on a TTY & escape sequence is allowed */
+    gboolean allowEscape;
 
     gsize serial;
 };
@@ -123,88 +170,86 @@ gvir_sandbox_console_rpc_error_quark(void)
     return g_quark_from_static_string("gvir-sandbox-console-rpc");
 }
 
-static void gvir_sandbox_console_rpc_send_handshake_wait(GVirSandboxConsoleRpc *console)
+static GVirSandboxRPCPacket *
+gvir_sandbox_console_rpc_build_handshake_wait(void)
 {
-    GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
 
-    g_debug("Send wait");
+    g_debug("Build wait");
     pkt->buffer[0] = GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT;
     pkt->bufferLength = 1;
     pkt->bufferOffset = 0;
 
-    priv->tx = pkt;
+    return pkt;
 }
 
 
-static void gvir_sandbox_console_rpc_send_handshake_sync(GVirSandboxConsoleRpc *console)
+static GVirSandboxRPCPacket *
+gvir_sandbox_console_rpc_build_handshake_sync(void)
 {
-    GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
 
-    g_debug("Send sync");
+    g_debug("Build sync");
     pkt->buffer[0] = GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC;
     pkt->bufferLength = 1;
     pkt->bufferOffset = 0;
 
-    priv->tx = pkt;
+    return pkt;
 }
 
 
-static gboolean gvir_sandbox_console_rpc_send_quit(GVirSandboxConsoleRpc *console,
-                                                   GError **error)
+static GVirSandboxRPCPacket *
+gvir_sandbox_console_rpc_build_quit(GVirSandboxConsoleRpc *console,
+                                    GError **error)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
-    gboolean ret = FALSE;
 
-    g_debug("Send quit");
+    g_debug("Build quit");
     pkt->header.proc = GVIR_SANDBOX_PROTOCOL_PROC_QUIT;
     pkt->header.status = GVIR_SANDBOX_PROTOCOL_STATUS_OK;
     pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_DATA;
     pkt->header.serial = priv->serial++;
 
     if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
-        goto cleanup;
+        goto error;
     if (!gvir_sandbox_rpcpacket_encode_payload_empty(pkt, error))
-        goto cleanup;
+        goto error;
 
-    priv->tx = pkt;
-    ret = TRUE;
+    return pkt;
 
-cleanup:
-    return ret;
+error:
+    gvir_sandbox_rpcpacket_free(pkt);
+    return NULL;
 }
 
 
 
-static gboolean gvir_sandbox_console_rpc_send_stdin(GVirSandboxConsoleRpc *console,
-                                                    gchar *data,
-                                                    gsize len,
-                                                    GError **error)
+static GVirSandboxRPCPacket *
+gvir_sandbox_console_rpc_build_stdin(GVirSandboxConsoleRpc *console,
+                                     gchar *data,
+                                     gsize len,
+                                     GError **error)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GVirSandboxRPCPacket *pkt = gvir_sandbox_rpcpacket_new(FALSE);
-    gboolean ret = FALSE;
 
-    g_debug("Send stdin %p %zu", data, len);
+    g_debug("Build stdin %p %zu", data, len);
     pkt->header.proc = GVIR_SANDBOX_PROTOCOL_PROC_STDIN;
     pkt->header.status = GVIR_SANDBOX_PROTOCOL_STATUS_OK;
     pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_DATA;
     pkt->header.serial = priv->serial++;
 
     if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
-        goto cleanup;
+        goto error;
     if (!gvir_sandbox_rpcpacket_encode_payload_raw(pkt, data, len, error))
-        goto cleanup;
+        goto error;
 
-    priv->tx = pkt;
-    ret = TRUE;
+    return pkt;
 
-cleanup:
-    if (!ret)
-        gvir_sandbox_rpcpacket_free(pkt);
-    return ret;
+error:
+    gvir_sandbox_rpcpacket_free(pkt);
+    return NULL;
 }
 
 
@@ -292,9 +337,14 @@ static gboolean gvir_sandbox_console_rpc_start_term(GVirSandboxConsoleRpc *conso
 
     fd = g_unix_input_stream_get_fd(localStdin);
 
-    if (!isatty(fd))
+    if (!isatty(fd)) {
+        priv->allowEscape = FALSE;
+        g_debug("input is not on a tty");
         return TRUE;
+    }
 
+    priv->allowEscape = TRUE;
+    g_debug("Putting TTY in raw mode");
     if (tcgetattr(fd, &priv->termiosProps) < 0) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
                     _("Unable to query terminal attributes: %s"),
@@ -363,84 +413,183 @@ static gboolean do_console_rpc_stdout_write(GObject *stream,
 static gboolean do_console_rpc_stderr_write(GObject *stream,
                                             gpointer opaque);
 
+static gboolean do_console_rpc_set_state(GVirSandboxConsoleRpc *console,
+                                         GVirSandboxConsoleRpcState state,
+                                         GError **err)
+{
+    GVirSandboxConsoleRpcPrivate *priv = console->priv;
+
+    if (priv->state == state) {
+        g_debug("Already in state %d", state);
+        return TRUE;
+    }
+    g_debug("Switch state from %d to %d", priv->state, state);
+    priv->state = state;
+
+    switch (priv->state) {
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING:
+        priv->tx = gvir_sandbox_console_rpc_build_handshake_wait();
+        priv->rx = gvir_sandbox_rpcpacket_new(FALSE);
+        priv->rx->bufferLength = 1; /* We need to recv a hanshake byte */
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING:
+        if (priv->tx)
+            gvir_sandbox_rpcpacket_free(priv->tx);
+        priv->tx = gvir_sandbox_console_rpc_build_handshake_sync();
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING:
+        priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING:
+        /* Container has exited, so no point trying to send any
+         * stdin data that might be queued */
+        if (priv->tx) {
+            gvir_sandbox_rpcpacket_free(priv->tx);
+            priv->tx = NULL;
+        }
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED:
+        if (!(priv->tx = gvir_sandbox_console_rpc_build_quit(console, err)))
+            return FALSE;
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE:
+    default:
+        break;
+    }
+    return TRUE;
+}
+
 static void do_console_rpc_update_events(GVirSandboxConsoleRpc *console)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GVirStreamIOCondition cond = 0;
+    gboolean needLocalStdin = FALSE;
+    gboolean needLocalStdout = FALSE;
+    gboolean needLocalStderr = FALSE;
 
-    if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_INIT)
-        return;
+    g_debug("Update rx=%p tx=%p localeof=%d "
+            "stdinsource=%p stdoutsource=%p stderrsource=%p "
+            "stdoutlen=%zu stderrlen=%zu",
+            priv->rx, priv->tx, priv->localEOF,
+            priv->localStdinSource,
+            priv->localStdoutSource,
+            priv->localStderrSource,
+            priv->localToStdoutLength,
+            priv->localToStderrLength);
 
-    if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_RUNNING) {
+    switch (priv->state) {
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING:
         /* If nothing is waiting to be sent to guest, we can read
          * some more of stdin */
-        if (!priv->tx && !priv->localEOF) {
-            if (priv->localStdinSource == NULL && priv->localStdin) {
-                priv->localStdinSource = g_pollable_input_stream_create_source
-                    (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
-                g_source_set_callback(priv->localStdinSource,
-                                      (GSourceFunc)do_console_rpc_stdin_read,
-                                      console,
-                                      NULL);
-                g_source_attach(priv->localStdinSource,
-                                g_main_context_default());
-            }
-        } else {
-            if (priv->localStdinSource) {
-                g_source_destroy(priv->localStdinSource);
-                g_source_unref(priv->localStdinSource);
-                priv->localStdinSource = NULL;
-            }
-        }
+        if (!priv->tx && !priv->localEOF)
+            needLocalStdin = TRUE;
 
-        /* If we have data queued for stdout, we better pull to write */
-        if (priv->localToStdoutLength) {
-            if (priv->localStdoutSource == NULL) {
-                priv->localStdoutSource = g_pollable_output_stream_create_source
-                    (G_POLLABLE_OUTPUT_STREAM(priv->localStdout), NULL);
-                g_source_set_callback(priv->localStdoutSource,
-                                      (GSourceFunc)do_console_rpc_stdout_write,
-                                      console,
-                                      NULL);
-                g_source_attach(priv->localStdoutSource,
-                                g_main_context_default());
-            }
-        } else {
-            if (priv->localStdoutSource) {
-                g_source_destroy(priv->localStdoutSource);
-                g_source_unref(priv->localStdoutSource);
-                priv->localStdoutSource = NULL;
-            }
-        }
+        /* Fall through */
 
-        /* If we have data queued for stderr, we better pull to write */
-        if (priv->localToStderrLength) {
-            if (priv->localStderrSource == NULL) {
-                priv->localStderrSource = g_pollable_output_stream_create_source
-                    (G_POLLABLE_OUTPUT_STREAM(priv->localStderr), NULL);
-                g_source_set_callback(priv->localStderrSource,
-                                      (GSourceFunc)do_console_rpc_stderr_write,
-                                      console,
-                                      NULL);
-                g_source_attach(priv->localStderrSource,
-                                g_main_context_default());
-            }
-        } else {
-            if (priv->localStderrSource) {
-                g_source_destroy(priv->localStderrSource);
-                g_source_unref(priv->localStderrSource);
-                priv->localStderrSource = NULL;
-            }
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING:
+        /* If we have data queued for stdout, we better poll to write */
+        if (priv->localToStdoutLength)
+            needLocalStdout = TRUE;
+
+        /* If we have data queued for stderr, we better poll to write */
+        if (priv->localToStderrLength)
+            needLocalStderr = TRUE;
+
+        /* Fall through */
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING:
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING:
+        /* If we have RPC ready for RX we must read */
+        if (priv->rx)
+            cond |= GVIR_STREAM_IO_CONDITION_READABLE;
+
+        /* Fall through */
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED:
+        /* If we have RPC ready for TX we must write */
+        if (priv->tx)
+            cond |= GVIR_STREAM_IO_CONDITION_WRITABLE;
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE:
+    default:
+        break;
+
+    }
+
+    g_debug("new events stdin=%d sdout=%d stderr=%d stream=%d",
+            needLocalStdin, needLocalStdout, needLocalStderr, cond);
+
+    if (needLocalStdin) {
+        if (priv->localStdinSource == NULL) {
+            priv->localStdinSource = g_pollable_input_stream_create_source
+                (G_POLLABLE_INPUT_STREAM(priv->localStdin), NULL);
+            g_debug("stdint source %p",
+                    priv->localStdinSource);
+            g_source_set_callback(priv->localStdinSource,
+                                  (GSourceFunc)do_console_rpc_stdin_read,
+                                  console,
+                                  NULL);
+            g_source_attach(priv->localStdinSource,
+                            g_main_context_default());
+        }
+    } else {
+        if (priv->localStdinSource != NULL) {
+            g_debug("Remove stdin %p", priv->localStdinSource);
+            g_source_destroy(priv->localStdinSource);
+            g_source_unref(priv->localStdinSource);
+            priv->localStdinSource = NULL;
         }
     }
 
-    /* If we have RPC ready for TX we must write */
-    if (priv->tx)
-        cond |= GVIR_STREAM_IO_CONDITION_WRITABLE;
+    if (needLocalStdout) {
+        if (priv->localStdoutSource == NULL) {
+            priv->localStdoutSource = g_pollable_output_stream_create_source
+                (G_POLLABLE_OUTPUT_STREAM(priv->localStdout), NULL);
+            g_debug("stdout source %p",
+                    priv->localStdoutSource);
+            g_source_set_callback(priv->localStdoutSource,
+                                  (GSourceFunc)do_console_rpc_stdout_write,
+                                  console,
+                                  NULL);
+            g_source_attach(priv->localStdoutSource,
+                            g_main_context_default());
+        }
+    } else {
+        if (priv->localStdoutSource != NULL) {
+            g_debug("Remove stdout %p", priv->localStdoutSource);
+            g_source_destroy(priv->localStdoutSource);
+            g_source_unref(priv->localStdoutSource);
+            priv->localStdoutSource = NULL;
+        }
+    }
 
-    /* If we have RPC ready for RX we must read */
-    if (priv->rx)
-        cond |= GVIR_STREAM_IO_CONDITION_READABLE;
+    if (needLocalStderr) {
+        if (priv->localStderrSource == NULL) {
+            priv->localStderrSource = g_pollable_output_stream_create_source
+                (G_POLLABLE_OUTPUT_STREAM(priv->localStderr), NULL);
+            g_debug("stderr source %p",
+                    priv->localStderrSource);
+            g_source_set_callback(priv->localStderrSource,
+                                  (GSourceFunc)do_console_rpc_stderr_write,
+                                  console,
+                                  NULL);
+            g_source_attach(priv->localStderrSource,
+                            g_main_context_default());
+        }
+    } else {
+        if (priv->localStderrSource != NULL) {
+            g_debug("Remove stderr %p", priv->localStderrSource);
+            g_source_destroy(priv->localStderrSource);
+            g_source_unref(priv->localStderrSource);
+            priv->localStderrSource = NULL;
+        }
+    }
 
     if (priv->consoleWatch) {
         g_source_remove(priv->consoleWatch);
@@ -454,33 +603,36 @@ static void do_console_rpc_update_events(GVirSandboxConsoleRpc *console)
                                                    console);
 }
 
+
 static void do_console_rpc_close(GVirSandboxConsoleRpc *console,
-                                 GError *error)
+                                 GError *err)
 {
+    g_debug("Closing console %s", err ? err->message : "");
     gvir_sandbox_console_detach(GVIR_SANDBOX_CONSOLE(console), NULL);
-    g_signal_emit_by_name(console, "closed", error != NULL);
+    g_signal_emit_by_name(console, "closed", err != NULL);
 }
 
-static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
-                                        GError **error)
+static gboolean do_console_rpc_dispatch_proc(GVirSandboxConsoleRpc *console,
+                                             GVirSandboxRPCPacket *pkt,
+                                             GError **error)
 {
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     struct GVirSandboxProtocolMessageExit msgexit;
     gsize want;
 
-    if (!gvir_sandbox_rpcpacket_decode_header(priv->rx, error))
+    if (!gvir_sandbox_rpcpacket_decode_header(pkt, error))
         return FALSE;
 
-    if (priv->rx->header.status != GVIR_SANDBOX_PROTOCOL_STATUS_OK) {
+    if (pkt->header.status != GVIR_SANDBOX_PROTOCOL_STATUS_OK) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
                     _("Unexpected rpc status %u"),
-                    priv->rx->header.status);
+                    pkt->header.status);
         return FALSE;
     }
-
-    switch (priv->rx->header.proc) {
+    //g_debug("Procedure %d", pkt->header.proc);
+    switch (pkt->header.proc) {
     case GVIR_SANDBOX_PROTOCOL_PROC_STDOUT:
-        want = priv->rx->bufferLength - priv->rx->bufferOffset;
+        want = pkt->bufferLength - pkt->bufferOffset;
         if (!priv->localToStdout) {
             priv->localToStdoutOffset = 0;
             priv->localToStdoutLength = 0;
@@ -491,13 +643,13 @@ static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
                                           priv->localToStdoutLength + want);
         }
         memcpy(priv->localToStdout + priv->localToStdoutLength,
-               priv->rx->buffer + priv->rx->bufferOffset,
+               pkt->buffer + pkt->bufferOffset,
                want);
         priv->localToStdoutLength += want;
         break;
 
     case GVIR_SANDBOX_PROTOCOL_PROC_STDERR:
-        want = priv->rx->bufferLength - priv->rx->bufferOffset;
+        want = pkt->bufferLength - pkt->bufferOffset;
         if (!priv->localToStderr) {
             priv->localToStderrOffset = 0;
             priv->localToStderrLength = 0;
@@ -509,25 +661,33 @@ static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
         }
 
         memcpy(priv->localToStderr + priv->localToStderrLength,
-               priv->rx->buffer + priv->rx->bufferOffset,
+               pkt->buffer + pkt->bufferOffset,
                want);
         priv->localToStderrLength += want;
         break;
 
     case GVIR_SANDBOX_PROTOCOL_PROC_EXIT:
         memset(&msgexit, 0, sizeof(msgexit));
-        if (!(gvir_sandbox_rpcpacket_decode_payload_msg(priv->rx,
+        if (!(gvir_sandbox_rpcpacket_decode_payload_msg(pkt,
                                                         (xdrproc_t)xdr_GVirSandboxProtocolMessageExit,
                                                         (void*)&msgexit,
                                                         error)))
             return FALSE;
-        g_debug("Switch state to finished");
-        priv->state = GVIR_SANDBOX_CONSOLE_RPC_FINISHED;
-        priv->consoleEOF = TRUE;
 
         g_signal_emit_by_name(console, "exited", msgexit.status);
-        if (!gvir_sandbox_console_rpc_send_quit(console, error))
-            return FALSE;
+
+        if (priv->localToStdoutLength == 0 &&
+            priv->localToStderrLength == 0) {
+            if (!do_console_rpc_set_state(console,
+                                          GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED,
+                                          error))
+                return FALSE;
+        } else {
+            if (!do_console_rpc_set_state(console,
+                                          GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING,
+                                          error))
+                return FALSE;
+        }
         break;
 
     case GVIR_SANDBOX_PROTOCOL_PROC_QUIT:
@@ -535,26 +695,130 @@ static gboolean do_console_rpc_dispatch(GVirSandboxConsoleRpc *console,
     default:
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
                     _("Unexpected rpc proc %u"),
-                    priv->rx->header.proc);
+                    pkt->header.proc);
         return FALSE;
     }
     return TRUE;
 }
 
 
-static gboolean do_console_handshake_wait(gpointer opaque)
+static gboolean
+do_console_rpc_process_packet_rx(GVirSandboxConsoleRpc *console,
+                                 GVirSandboxRPCPacket *pkt,
+                                 GError **err)
+{
+    GVirSandboxConsoleRpcPrivate *priv = console->priv;
+
+    //g_debug("Process rx state=%d len=%zu",
+//            priv->state, pkt->bufferLength);
+
+    switch (priv->state) {
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING:
+        if (pkt->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC) {
+            if (!do_console_rpc_set_state(console,
+                                          GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING,
+                                          err))
+                return FALSE;
+        } else {
+            /* Try recv another byte */
+            priv->rx = gvir_sandbox_rpcpacket_new(FALSE);
+            priv->rx->bufferLength = 1; /* We need to recv a hanshake byte */
+        }
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING:
+        if (pkt->bufferLength == GVIR_SANDBOX_PROTOCOL_LEN_MAX) {
+            if (!gvir_sandbox_rpcpacket_decode_length(pkt, err))
+                return FALSE;
+            /* Setup new packet to receive the payload */
+            priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
+            memcpy(priv->rx, pkt, sizeof(*pkt));
+        } else {
+            if (!do_console_rpc_dispatch_proc(console, pkt, err))
+                return FALSE;
+
+            if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING &&
+                priv->localToStdoutLength < GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA &&
+                priv->localToStderrLength < GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA)
+                priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
+        }
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING:
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED:
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE:
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING:
+    default:
+        g_set_error(err, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
+                    _("Got rx in unexpected state %d"), priv->state);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+static gboolean do_console_handshake_wait_tx_queue(gpointer opaque)
 {
     GVirSandboxConsoleRpc *console = GVIR_SANDBOX_CONSOLE_RPC(opaque);
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
 
-    if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_WAITING)
-        gvir_sandbox_console_rpc_send_handshake_wait(GVIR_SANDBOX_CONSOLE_RPC(console));
-    else
-        gvir_sandbox_console_rpc_send_handshake_sync(GVIR_SANDBOX_CONSOLE_RPC(console));
+    if (priv->state != GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING)
+        return FALSE;
 
+    if (priv->tx != NULL)
+        return FALSE;
+
+    priv->tx = gvir_sandbox_console_rpc_build_handshake_wait();
     do_console_rpc_update_events(console);
 
     return FALSE;
+}
+
+
+static gboolean
+do_console_rpc_process_packet_tx(GVirSandboxConsoleRpc *console,
+                                 GVirSandboxRPCPacket *pkt,
+                                 GError **err)
+{
+    GVirSandboxConsoleRpcPrivate *priv = console->priv;
+
+    switch (priv->state) {
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING:
+        g_debug("Schedule another wait");
+        g_timeout_add(50,
+                      do_console_handshake_wait_tx_queue,
+                      console);
+        break;
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_SYNCING:
+        if (pkt->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT) {
+            g_debug("Schedule tx of sync packet");
+            priv->tx = gvir_sandbox_console_rpc_build_handshake_sync();
+        } else {
+            if (!do_console_rpc_set_state(console,
+                                          GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING,
+                                          err))
+                return FALSE;
+        }
+        break;
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED:
+        g_debug("Finished tx of last packet");
+        do_console_rpc_close(console, NULL);
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING:
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING:
+        /* no-op */
+        break;
+
+    case GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE:
+    default:
+        g_set_error(err, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0,
+                    _("Got rx in unexpected state %d"), priv->state);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -564,7 +828,8 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
 {
     GVirSandboxConsoleRpc *console = GVIR_SANDBOX_CONSOLE_RPC(opaque);
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
-
+    g_debug("Stream read write cond=%d state=%d rx=%p tx=%p",
+            cond, priv->state, priv->rx, priv->tx);
     if (cond & GVIR_STREAM_IO_CONDITION_READABLE) {
         while (priv->rx) {
             GError *err = NULL;
@@ -576,10 +841,11 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
                  &err);
             if (ret < 0) {
                 if (err && err->code == G_IO_ERROR_WOULD_BLOCK) {
+                    g_debug("Would block");
                     g_error_free(err);
                     break;
                 } else {
-                    g_debug("Error from stream recv %s", err ? err->message : "");
+                    g_debug("Error reading from stream");
                     do_console_rpc_close(console, err);
                     g_error_free(err);
                     goto cleanup;
@@ -588,57 +854,24 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
             if (ret == 0) { /* EOF */
                 goto done;
             }
+            g_debug("offset=%zu length=%zu ret=%zd",
+                    priv->rx->bufferOffset,
+                    priv->rx->bufferLength,
+                    ret);
             priv->rx->bufferOffset += ret;
-
             if (priv->rx->bufferOffset == priv->rx->bufferLength) {
-                switch (priv->state) {
-                case GVIR_SANDBOX_CONSOLE_RPC_WAITING:
-                    if (priv->rx->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC) {
-                        g_debug("Switch state to syncing");
-                        priv->state = GVIR_SANDBOX_CONSOLE_RPC_SYNCING;
-                        gvir_sandbox_rpcpacket_free(priv->rx);
-                        priv->rx = NULL;
-                    } else {
-                        /* Try recv another byte */
-                        priv->rx->bufferOffset = 0;
-                        priv->rx->bufferLength = 1;
-                    }
-                    break;
-
-                case GVIR_SANDBOX_CONSOLE_RPC_RUNNING:
-                case GVIR_SANDBOX_CONSOLE_RPC_FINISHED:
-                    if (priv->rx->bufferLength == GVIR_SANDBOX_PROTOCOL_LEN_MAX) {
-                        if (!gvir_sandbox_rpcpacket_decode_length(priv->rx, &err)) {
-                            g_debug("Error from decode length %s", err ? err->message : "");
-                            do_console_rpc_close(console, err);
-                            g_error_free(err);
-                            goto cleanup;
-                        }
-                    } else {
-                        if (!do_console_rpc_dispatch(console, &err)) {
-                            g_debug("Error from dispatch %s", err ? err->message : "");
-                            do_console_rpc_close(console, err);
-                            g_error_free(err);
-                            goto cleanup;
-                        }
-                        gvir_sandbox_rpcpacket_free(priv->rx);
-                        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_RUNNING &&
-                            priv->localToStdoutLength < 1024 &&
-                            priv->localToStderrLength < 1024)
-                            priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
-                        else
-                            priv->rx = NULL;
-                    }
-                    break;
-
-                case GVIR_SANDBOX_CONSOLE_RPC_INIT:
-                case GVIR_SANDBOX_CONSOLE_RPC_SYNCING:
-                default:
-                    g_debug("Got rx in unexpected state %d", priv->state);
+                GVirSandboxRPCPacket *pkt = priv->rx;
+                priv->rx = NULL;
+                if (!do_console_rpc_process_packet_rx(console,
+                                                      pkt,
+                                                      &err)) {
+                    gvir_sandbox_rpcpacket_free(pkt);
+                    g_debug("Error process rx packet");
                     do_console_rpc_close(console, err);
                     g_error_free(err);
                     goto cleanup;
                 }
+                gvir_sandbox_rpcpacket_free(pkt);
             }
         }
     }
@@ -652,7 +885,7 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
                                       NULL,
                                       &err);
         if (ret < 0) {
-            g_debug("Error from stream send %s", err ? err->message : "");
+            g_debug("Error writing to stream");
             do_console_rpc_close(console, err);
             g_error_free(err);
             goto cleanup;
@@ -660,28 +893,18 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
 
         priv->tx->bufferOffset += ret;
         if (priv->tx->bufferOffset == priv->tx->bufferLength) {
-            if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_WAITING) {
-                g_debug("Schedule another wait");
-                g_timeout_add(50,
-                              do_console_handshake_wait,
-                              console);
-            } else if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_SYNCING) {
-                if (priv->tx->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_WAIT) {
-                    gvir_sandbox_console_rpc_send_handshake_sync(GVIR_SANDBOX_CONSOLE_RPC(console));
-                } else {
-                    g_debug("Switch state to running");
-                    priv->state = GVIR_SANDBOX_CONSOLE_RPC_RUNNING;
-                    priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
-                }
-            } else if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_FINISHED) {
-                if (!priv->localToStdout &&
-                    !priv->localToStderr) {
-                    g_debug("Transmitted all data, with last pkt, done");
-                    do_console_rpc_close(console, NULL);
-                }
-            }
-            gvir_sandbox_rpcpacket_free(priv->tx);
+            GVirSandboxRPCPacket *pkt = priv->tx;
             priv->tx = NULL;
+            if (!do_console_rpc_process_packet_tx(console,
+                                                  pkt,
+                                                  &err)) {
+                gvir_sandbox_rpcpacket_free(pkt);
+                g_debug("Error process tx packet");
+                do_console_rpc_close(console, err);
+                g_error_free(err);
+                goto cleanup;
+            }
+            gvir_sandbox_rpcpacket_free(pkt);
         }
     }
 
@@ -715,7 +938,7 @@ static gboolean do_console_rpc_stdin_read(GObject *stream,
          buf, MAX_IO,
          NULL, &err);
     if (ret < 0) {
-        g_debug("Error from local read %s", err ? err->message : "");
+        g_debug("Error reading from stdin");
         do_console_rpc_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -723,14 +946,16 @@ static gboolean do_console_rpc_stdin_read(GObject *stream,
 
     if (ret == 0)
         priv->localEOF = TRUE;
-    else if (buf[0] ==
-             CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console)))) {
+    else if (priv->allowEscape &&
+             (buf[0] ==
+              CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console))))) {
+        g_debug("Got console escape");
         do_console_rpc_close(console, err);
         goto cleanup;
     }
 
-    if (!gvir_sandbox_console_rpc_send_stdin(console, buf, ret, &err)) {
-        g_debug("Error from RPC encode send %s", err ? err->message : "");
+    if (!(priv->tx = gvir_sandbox_console_rpc_build_stdin(console, buf, ret, &err))) {
+        g_debug("Failed to build stdin packet");
         do_console_rpc_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -750,13 +975,16 @@ static gboolean do_console_rpc_stdout_write(GObject *stream,
     GVirSandboxConsoleRpc *console = GVIR_SANDBOX_CONSOLE_RPC(opaque);
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GError *err = NULL;
+    g_debug("Stdout write %p %p",
+            priv->localStdoutSource,
+            priv->localToStdout);
     gssize ret = g_output_stream_write
         (G_OUTPUT_STREAM(localStdout),
          priv->localToStdout + priv->localToStdoutOffset,
          priv->localToStdoutLength - priv->localToStdoutOffset,
          NULL, &err);
     if (ret < 0) {
-        g_debug("Error from local write %s", err ? err->message : "");
+        g_debug("Failed write stdout");
         do_console_rpc_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -769,15 +997,30 @@ static gboolean do_console_rpc_stdout_write(GObject *stream,
         priv->localToStdout = NULL;
         priv->localToStdoutOffset = priv->localToStdoutLength = 0;
 
-        if (!priv->consoleEOF && !priv->rx)
+        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING &&
+            !priv->rx &&
+            priv->localToStderrLength < GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA)
             priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
 
-        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_FINISHED &&
-            priv->tx == NULL &&
-            priv->localToStderr == NULL) {
-            g_debug("Transmitted all data, with last stdout, done");
+        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING &&
+            priv->localToStderrLength == 0 &&
+            !do_console_rpc_set_state(console,
+                                      GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED,
+                                      &err)) {
+            g_debug("Failed set finished state");
             do_console_rpc_close(console, err);
+            g_error_free(err);
+            goto cleanup;
         }
+    } else if (0) {
+        memmove(priv->localToStdout,
+                priv->localToStdout + priv->localToStdoutOffset,
+                priv->localToStdoutLength - priv->localToStdoutOffset);
+        priv->localToStdoutLength -= priv->localToStdoutOffset;
+        priv->localToStdoutOffset = 0;
+        priv->localToStdout = g_renew(gchar,
+                                      priv->localToStdout,
+                                      priv->localToStdoutLength);
     }
     priv->localStdoutSource = NULL;
     do_console_rpc_update_events(console);
@@ -794,13 +1037,16 @@ static gboolean do_console_rpc_stderr_write(GObject *stream,
     GVirSandboxConsoleRpc *console = GVIR_SANDBOX_CONSOLE_RPC(opaque);
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
     GError *err = NULL;
+    g_debug("Stderr write %p %p",
+            priv->localStderrSource,
+            priv->localToStderr);
     gssize ret = g_output_stream_write
         (G_OUTPUT_STREAM(localStderr),
          priv->localToStderr,
          priv->localToStderrOffset,
          NULL, &err);
     if (ret < 0) {
-        g_debug("Error from local write %s", err ? err->message : "");
+        g_debug("Failed to write stderr");
         do_console_rpc_close(console, err);
         g_error_free(err);
         goto cleanup;
@@ -813,15 +1059,30 @@ static gboolean do_console_rpc_stderr_write(GObject *stream,
         priv->localToStderr = NULL;
         priv->localToStderrOffset = priv->localToStderrLength = 0;
 
-        if (!priv->consoleEOF && !priv->rx)
+        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_RUNNING &&
+            !priv->rx &&
+            priv->localToStdoutLength < GVIR_SANDBOX_CONSOLE_MAX_QUEUED_DATA)
             priv->rx = gvir_sandbox_rpcpacket_new(TRUE);
 
-        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_FINISHED &&
-            priv->tx == NULL &&
-            priv->localToStdout == NULL) {
-            g_debug("Transmitted all data, with last stderr, done");
+        if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_STOPPING &&
+            priv->localToStdoutLength == 0 &&
+            !do_console_rpc_set_state(console,
+                                      GVIR_SANDBOX_CONSOLE_RPC_STATE_FINISHED,
+                                      &err)) {
+            g_debug("Failed set finished state");
             do_console_rpc_close(console, err);
+            g_error_free(err);
+            goto cleanup;
         }
+    } else if (0) {
+        memmove(priv->localToStderr,
+                priv->localToStderr + priv->localToStderrOffset,
+                priv->localToStderrLength - priv->localToStderrOffset);
+        priv->localToStderrLength -= priv->localToStderrOffset;
+        priv->localToStderrOffset = 0;
+        priv->localToStderr = g_renew(gchar,
+                                      priv->localToStderr,
+                                      priv->localToStderrLength);
     }
 
     priv->localStderrSource = NULL;
@@ -844,7 +1105,7 @@ static gboolean gvir_sandbox_console_rpc_attach(GVirSandboxConsole *console,
     GVirDomain *dom = NULL;
     gchar *devname = NULL;
 
-    if (priv->state != GVIR_SANDBOX_CONSOLE_RPC_INIT) {
+    if (priv->state != GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE) {
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0, "%s",
                     _("Console is already attached to a stream"));
         return FALSE;
@@ -872,12 +1133,10 @@ static gboolean gvir_sandbox_console_rpc_attach(GVirSandboxConsole *console,
                                   devname, 0, error))
         goto cleanup;
 
-    gvir_sandbox_console_rpc_send_handshake_wait(GVIR_SANDBOX_CONSOLE_RPC(console));
-    g_debug("Switch state to waiting");
-    priv->state = GVIR_SANDBOX_CONSOLE_RPC_WAITING;
-    priv->rx = gvir_sandbox_rpcpacket_new(FALSE);
-    priv->rx->bufferLength = 1; /* We need to recv a hanshake byte first */
-
+    if (!do_console_rpc_set_state(GVIR_SANDBOX_CONSOLE_RPC(console),
+                                  GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING,
+                                  error))
+        goto cleanup;
     do_console_rpc_update_events(GVIR_SANDBOX_CONSOLE_RPC(console));
 
     ret = TRUE;
@@ -901,7 +1160,7 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
     GVirSandboxConsoleRpcPrivate *priv = GVIR_SANDBOX_CONSOLE_RPC(console)->priv;
     gboolean ret = FALSE;
 
-    if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_INIT) {
+    if (priv->state == GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE) {
         return TRUE;
 #if 0
         g_set_error(error, GVIR_SANDBOX_CONSOLE_RPC_ERROR, 0, "%s",
@@ -943,7 +1202,7 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
     gvir_sandbox_rpcpacket_free(priv->rx);
     priv->tx = priv->rx = NULL;
 
-    priv->state = GVIR_SANDBOX_CONSOLE_RPC_INIT;
+    priv->state = GVIR_SANDBOX_CONSOLE_RPC_STATE_INACTIVE;
 
     ret = TRUE;
 
