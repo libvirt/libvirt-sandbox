@@ -52,7 +52,7 @@ static void gvir_log_handler(const gchar *log_domain G_GNUC_UNUSED,
                              gpointer user_data)
 {
     if (user_data)
-        fprintf(stderr, "%s\n", message);
+        fprintf(stderr, "%s\n\r", message);
 }
 
 
