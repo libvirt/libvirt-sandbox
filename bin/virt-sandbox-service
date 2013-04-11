@@ -245,9 +245,6 @@ class Container:
         # Not sure we should remove content
         if os.path.exists(self.dest):
             shutil.rmtree(self.dest)
-            mount_path = self.get_image_path()
-            if mount_path:
-                os.remove(mount_path)
 
         image = self.get_image_path()
         if os.path.exists(image):
