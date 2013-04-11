@@ -242,9 +242,6 @@ class Container:
         if os.path.exists(config):
             os.remove(config)
 
-        print (_("You need to manually remove the '%s' content") % self.name)
-        return
-
         # Not sure we should remove content
         if os.path.exists(self.dest):
             shutil.rmtree(self.dest)
