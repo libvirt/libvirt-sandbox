@@ -261,6 +261,23 @@ static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
         return ret;
     }
 
+    if (GVIR_SANDBOX_IS_CONTEXT_INTERACTIVE(ctx)) {
+        GVirSandboxContextInteractive *ictx =
+            GVIR_SANDBOX_CONTEXT_INTERACTIVE(ctx);
+        if (!(con = gvir_sandbox_context_interactive_get_app_console(ictx, &err))) {
+            g_printerr(_("Unable to get app console: %s\n"),
+                       err && err->message ? err->message : _("Unknown failure"));
+            return ret;
+        }
+        g_signal_connect(con, "closed", (GCallback)do_close, loop);
+
+        if (!(gvir_sandbox_console_attach_stdio(con, &err))) {
+            g_printerr(_("Unable to attach sandbox console: %s\n"),
+                       err && err->message ? err->message : _("Unknown failure"));
+            return ret;
+        }
+    }
+
     g_main_loop_run(loop);
 
     return EXIT_SUCCESS;
