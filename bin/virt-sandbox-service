@@ -1059,7 +1059,7 @@ def gen_create_args(subparser):
                         help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
     parser.add_argument("-u", "--unitfile",
                         action=CheckUnit,
-                        dest="unitfiles",
+                        dest="unitfiles", default=[],
                         help=_("Systemd Unit file to run within the Service sandbox container. Commands cannot be specified with unit files."))
 
     requires_name(parser)
