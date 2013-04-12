@@ -280,82 +280,6 @@ class Container:
         except GLib.GError, e:
             return 0
 
-    def start(self):
-        def closed(obj, error):
-            self.loop.quit()
-
-        try:
-            self.connect()
-            context = self.context()
-            context.start()
-            console = context.get_log_console()
-            console.connect("closed", closed)
-            console.attach_stderr()
-            self.loop = GLib.MainLoop()
-            self.loop.run()
-            try:
-                console.detach()
-            except:
-                pass
-            try:
-                context.stop()
-            except:
-                pass
-        except GLib.GError, e:
-            raise OSError(str(e))
-
-    def stop(self):
-        try:
-            self.connect()
-            context = self.context()
-            context.attach()
-            context.stop()
-        except GLib.GError, e:
-            raise OSError(str(e))
-
-    def console(self):
-        def closed(obj, error):
-            self.loop.quit()
-
-        try:
-            self.connect()
-            context = self.context()
-            context.attach()
-            console = context.get_shell_console()
-            console.connect("closed", closed)
-            console.attach_stdio()
-            self.loop = GLib.MainLoop()
-            self.loop.run()
-            try:
-                console.detach()
-            except:
-                pass
-        except GLib.GError, e:
-            raise OSError(str(e))
-
-    def execute(self, command):
-        def closed(obj, error):
-            self.loop.quit()
-
-        try:
-            self.connect()
-            context = self.context()
-            context.attach()
-            console = context.get_shell_console()
-            console.connect("closed", closed)
-            console.attach_stdio()
-            print "not currently implemented"
-            console.detach()
-            return
-            self.loop = GLib.MainLoop()
-            self.loop.run()
-            try:
-                console.detach()
-            except:
-                pass
-        except GLib.GError, e:
-            raise OSError(str(e))
-
     def add_bind_mount(self, source, dest):
         mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
         self.config.add_mount(mount)
@@ -878,18 +802,12 @@ def start(args):
              "virt-sandbox-service-util",
              "-c", args.uri,
              "-s", args.name)
-#    config = read_config(args.name)
-#    container = Container(uri = args.uri, config=config)
-#    container.start()
 
 def stop(args):
     os.execl("/usr/libexec/virt-sandbox-service-util",
              "virt-sandbox-service-util",
              "-c", args.uri,
              "-S", args.name)
-#    config = read_config(args.name)
-#    container = Container(uri = args.uri, config=config)
-#    container.stop()
 
 def connect(args):
     print """\
@@ -900,9 +818,6 @@ Type 'Ctrl + ]' to detach from the console.
              "virt-sandbox-service-util",
              "-c", args.uri,
              "-a", args.name)
-#    config = read_config(args.name)
-#    container = Container(uri = args.uri, config=config)
-#    container.console()
 
 #
 # Search Path for command to execute within the container.
