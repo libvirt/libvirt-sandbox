@@ -42,17 +42,11 @@
 
 struct _GVirSandboxConfigServicePrivate
 {
-    gchar *bootTarget;
+    gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
+G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
 
-static gchar **gvir_sandbox_config_service_get_command(GVirSandboxConfig *config);
-
-enum {
-    PROP_0,
-    PROP_BOOT_TARGET,
-};
 
 enum {
     LAST_SIGNAL
@@ -70,84 +64,9 @@ gvir_sandbox_config_service_error_quark(void)
 }
 #endif
 
-static void gvir_sandbox_config_service_get_property(GObject *object,
-                                                     guint prop_id,
-                                                     GValue *value,
-                                                     GParamSpec *pspec)
-{
-    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-
-    switch (prop_id) {
-    case PROP_BOOT_TARGET:
-        g_value_set_string(value, priv->bootTarget);
-        break;
-
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-    }
-}
-
-
-static void gvir_sandbox_config_service_set_property(GObject *object,
-                                                     guint prop_id,
-                                                     const GValue *value,
-                                                     GParamSpec *pspec)
-{
-    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-
-    switch (prop_id) {
-    case PROP_BOOT_TARGET:
-        g_free(priv->bootTarget);
-        priv->bootTarget = g_value_dup_string(value);
-        break;
-
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-    }
-}
-
-
-static gboolean gvir_sandbox_config_service_load_config(GVirSandboxConfig *config,
-                                                        GKeyFile *file,
-                                                        GError **error)
-{
-    GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
-    gboolean ret = FALSE;
-
-    if (!GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
-        ->load_config(config, file, error))
-        goto cleanup;
-
-    if ((priv->bootTarget = g_key_file_get_string(file, "service", "bootTarget", error)) == NULL)
-        goto cleanup;
-
-    ret = TRUE;
-
-cleanup:
-    return ret;
-}
-
-
-static void gvir_sandbox_config_service_save_config(GVirSandboxConfig *config,
-                                                    GKeyFile *file)
-{
-    GVirSandboxConfigServicePrivate *priv = GVIR_SANDBOX_CONFIG_SERVICE(config)->priv;
-
-    GVIR_SANDBOX_CONFIG_CLASS(gvir_sandbox_config_service_parent_class)
-        ->save_config(config, file);
-
-    g_key_file_set_string(file, "service", "bootTarget", priv->bootTarget);
-}
-
 
 static void gvir_sandbox_config_service_finalize(GObject *object)
 {
-    GVirSandboxConfigService *config = GVIR_SANDBOX_CONFIG_SERVICE(object);
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-
-    g_free(priv->bootTarget);
 
     G_OBJECT_CLASS(gvir_sandbox_config_service_parent_class)->finalize(object);
 }
@@ -156,15 +75,8 @@ static void gvir_sandbox_config_service_finalize(GObject *object)
 static void gvir_sandbox_config_service_class_init(GVirSandboxConfigServiceClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    GVirSandboxConfigClass *config_class = GVIR_SANDBOX_CONFIG_CLASS(klass);
 
     object_class->finalize = gvir_sandbox_config_service_finalize;
-    object_class->get_property = gvir_sandbox_config_service_get_property;
-    object_class->set_property = gvir_sandbox_config_service_set_property;
-
-    config_class->load_config = gvir_sandbox_config_service_load_config;
-    config_class->save_config = gvir_sandbox_config_service_save_config;
-    config_class->get_command = gvir_sandbox_config_service_get_command;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigServicePrivate));
 }
@@ -173,59 +85,4 @@ static void gvir_sandbox_config_service_class_init(GVirSandboxConfigServiceClass
 static void gvir_sandbox_config_service_init(GVirSandboxConfigService *config)
 {
     config->priv = GVIR_SANDBOX_CONFIG_SERVICE_GET_PRIVATE(config);
-}
-
-
-/**
- * gvir_sandbox_config_service_new:
- * @name: the sandbox name
- *
- * Create a new service application sandbox configuration
- *
- * Returns: (transfer full): a new service sandbox config object
- */
-GVirSandboxConfigService *gvir_sandbox_config_service_new(const gchar *name)
-{
-    return GVIR_SANDBOX_CONFIG_SERVICE(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_SERVICE,
-                                                    "name", name,
-                                                    NULL));
-}
-
-
-/**
- * gvir_sandbox_config_service_get_boot_target:
- *
- * Returns: the boot target name
- */
-const gchar *gvir_sandbox_config_service_get_boot_target(GVirSandboxConfigService *config)
-{
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-    return priv->bootTarget;
-}
-
-
-void gvir_sandbox_config_service_set_boot_target(GVirSandboxConfigService *config,
-                                                 const gchar *target)
-{
-    GVirSandboxConfigServicePrivate *priv = config->priv;
-    g_free(priv->bootTarget);
-    priv->bootTarget = g_strdup(target);
-}
-
-
-static gchar **gvir_sandbox_config_service_get_command(GVirSandboxConfig *config)
-{
-    GVirSandboxConfigService *sconfig = GVIR_SANDBOX_CONFIG_SERVICE(config);
-    GVirSandboxConfigServicePrivate *priv = sconfig->priv;
-    gchar **command = g_new(gchar *, 7);
-
-    command[0] = g_strdup("/bin/systemd");
-    command[1] = g_strdup("--unit");
-    command[2] = g_strdup(priv->bootTarget);
-    command[3] = g_strdup("--log-target");
-    command[4] = g_strdup("console");
-    command[5] = g_strdup("--system");
-    command[6] = NULL;
-
-    return command;
 }

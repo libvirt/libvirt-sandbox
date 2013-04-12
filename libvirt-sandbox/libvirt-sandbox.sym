@@ -12,9 +12,11 @@ LIBVIRT_SANDBOX_0.1.0 {
 	gvir_sandbox_config_graphical_size_get_type;
 
 	gvir_sandbox_config_service_get_type;
-	gvir_sandbox_config_service_get_boot_target;
-	gvir_sandbox_config_service_new;
-	gvir_sandbox_config_service_set_boot_target;
+
+	gvir_sandbox_config_service_systemd_get_type;
+	gvir_sandbox_config_service_systemd_get_boot_target;
+	gvir_sandbox_config_service_systemd_new;
+	gvir_sandbox_config_service_systemd_set_boot_target;
 
 	gvir_sandbox_config_interactive_get_type;
 	gvir_sandbox_config_interactive_get_tty;

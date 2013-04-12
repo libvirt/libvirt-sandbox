@@ -429,7 +429,7 @@ class ServiceContainer(Container):
         self.copy = False
         self.unit_file_list = []
         if create:
-            self.config = LibvirtSandbox.ConfigService.new(name)
+            self.config = LibvirtSandbox.ConfigServiceSystemd.new(name)
         else:
             self.unitfile = self.get_unit_path()
 

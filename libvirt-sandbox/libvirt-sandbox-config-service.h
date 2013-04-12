@@ -57,12 +57,6 @@ struct _GVirSandboxConfigServiceClass
 
 GType gvir_sandbox_config_service_get_type(void);
 
-GVirSandboxConfigService *gvir_sandbox_config_service_new(const gchar *name);
-
-const gchar *gvir_sandbox_config_service_get_boot_target(GVirSandboxConfigService *config);
-void gvir_sandbox_config_service_set_boot_target(GVirSandboxConfigService *config,
-                                                 const gchar *target);
-
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_SERVICE_H__ */
