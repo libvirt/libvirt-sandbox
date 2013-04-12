@@ -17,7 +17,6 @@ LIBVIRT_SANDBOX_0.1.0 {
 	gvir_sandbox_config_service_set_boot_target;
 
 	gvir_sandbox_config_interactive_get_type;
-	gvir_sandbox_config_interactive_get_command;
 	gvir_sandbox_config_interactive_get_tty;
 	gvir_sandbox_config_interactive_new;
 	gvir_sandbox_config_interactive_set_command;
@@ -83,6 +82,7 @@ LIBVIRT_SANDBOX_0.1.0 {
 	gvir_sandbox_config_add_network;
 	gvir_sandbox_config_add_network_opts;
 	gvir_sandbox_config_add_network_strv;
+	gvir_sandbox_config_get_command;
 	gvir_sandbox_config_get_groupid;
 	gvir_sandbox_config_get_homedir;
 	gvir_sandbox_config_get_mounts;

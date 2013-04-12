@@ -1714,7 +1714,7 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     gchar *str;
     gboolean b;
     guint64 u;
-    guint i;
+    gsize i;
     GError *e = NULL;
     gboolean ret = FALSE;
 
@@ -1952,7 +1952,7 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
                                             GKeyFile *file)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
-    guint i;
+    gsize i;
     GList *tmp;
 
     g_key_file_set_string(file, "core", "name", priv->name);
@@ -2101,4 +2101,18 @@ cleanup:
 unlink:
     g_file_delete(f, NULL, NULL);
     goto cleanup;
+}
+
+
+/**
+ * gvir_sandbox_config_get_command:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieve the sandbox command and arguments
+ *
+ * Returns: (transfer full)(array zero-terminated=1): the command path and arguments
+ */
+gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config)
+{
+    return GVIR_SANDBOX_CONFIG_GET_CLASS(config)->get_command(config);
 }

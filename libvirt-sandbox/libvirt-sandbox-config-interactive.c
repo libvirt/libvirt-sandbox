@@ -49,6 +49,7 @@ struct _GVirSandboxConfigInteractivePrivate
 
 G_DEFINE_TYPE(GVirSandboxConfigInteractive, gvir_sandbox_config_interactive, GVIR_SANDBOX_TYPE_CONFIG);
 
+static gchar **gvir_sandbox_config_interactive_get_command(GVirSandboxConfig *config);
 
 enum {
     PROP_0,
@@ -197,6 +198,7 @@ static void gvir_sandbox_config_interactive_class_init(GVirSandboxConfigInteract
 
     config_class->load_config = gvir_sandbox_config_interactive_load_config;
     config_class->save_config = gvir_sandbox_config_interactive_save_config;
+    config_class->get_command = gvir_sandbox_config_interactive_get_command;
 
     g_object_class_install_property(object_class,
                                     PROP_TTY,
@@ -292,16 +294,9 @@ void gvir_sandbox_config_interactive_set_command(GVirSandboxConfigInteractive *c
 }
 
 
-/**
- * gvir_sandbox_config_interactive_get_command:
- * @config: (transfer none): the sandbox config
- *
- * Retrieve the sandbox command and arguments
- *
- * Returns: (transfer none)(array zero-terminated=1): the command path and arguments
- */
-gchar **gvir_sandbox_config_interactive_get_command(GVirSandboxConfigInteractive *config)
+static gchar **gvir_sandbox_config_interactive_get_command(GVirSandboxConfig *config)
 {
-    GVirSandboxConfigInteractivePrivate *priv = config->priv;
-    return priv->command;
+    GVirSandboxConfigInteractive *iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
+    GVirSandboxConfigInteractivePrivate *priv = iconfig->priv;
+    return g_strdupv(priv->command);
 }

@@ -63,7 +63,6 @@ void gvir_sandbox_config_interactive_set_tty(GVirSandboxConfigInteractive *confi
 gboolean gvir_sandbox_config_interactive_get_tty(GVirSandboxConfigInteractive *config);
 
 void gvir_sandbox_config_interactive_set_command(GVirSandboxConfigInteractive *config, gchar **argv);
-gchar **gvir_sandbox_config_interactive_get_command(GVirSandboxConfigInteractive *config);
 
 
 G_END_DECLS

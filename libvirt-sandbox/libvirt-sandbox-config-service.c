@@ -47,6 +47,7 @@ struct _GVirSandboxConfigServicePrivate
 
 G_DEFINE_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
 
+static gchar **gvir_sandbox_config_service_get_command(GVirSandboxConfig *config);
 
 enum {
     PROP_0,
@@ -163,6 +164,7 @@ static void gvir_sandbox_config_service_class_init(GVirSandboxConfigServiceClass
 
     config_class->load_config = gvir_sandbox_config_service_load_config;
     config_class->save_config = gvir_sandbox_config_service_save_config;
+    config_class->get_command = gvir_sandbox_config_service_get_command;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigServicePrivate));
 }
@@ -208,4 +210,22 @@ void gvir_sandbox_config_service_set_boot_target(GVirSandboxConfigService *confi
     GVirSandboxConfigServicePrivate *priv = config->priv;
     g_free(priv->bootTarget);
     priv->bootTarget = g_strdup(target);
+}
+
+
+static gchar **gvir_sandbox_config_service_get_command(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigService *sconfig = GVIR_SANDBOX_CONFIG_SERVICE(config);
+    GVirSandboxConfigServicePrivate *priv = sconfig->priv;
+    gchar **command = g_new(gchar *, 7);
+
+    command[0] = g_strdup("/bin/systemd");
+    command[1] = g_strdup("--unit");
+    command[2] = g_strdup(priv->bootTarget);
+    command[3] = g_strdup("--log-target");
+    command[4] = g_strdup("console");
+    command[5] = g_strdup("--system");
+    command[6] = NULL;
+
+    return command;
 }

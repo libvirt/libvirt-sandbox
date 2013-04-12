@@ -1044,13 +1044,15 @@ cleanup:
 
 
 static int
-run_interactive(GVirSandboxConfigInteractive *config)
+run_interactive(GVirSandboxConfig *config)
 {
+    GVirSandboxConfigInteractive *iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
     int sigpipe[2] = { -1, -1 };
     int host = -1;
     int ret = -1;
     struct termios  rawattr;
     const char *devname;
+    gchar **command = NULL;
 
     if (pipe(sigpipe) < 0) {
         g_printerr(_("libvirt-sandbox-init-common: unable to create signal pipe: %s"),
@@ -1063,7 +1065,7 @@ run_interactive(GVirSandboxConfigInteractive *config)
 
     /* XXX lame hack */
     if (getenv("LIBVIRT_LXC_NAME")) {
-        if (gvir_sandbox_config_get_shell(GVIR_SANDBOX_CONFIG(config)))
+        if (gvir_sandbox_config_get_shell(config))
             devname = "/dev/tty3";
         else
             devname = "/dev/tty2";
@@ -1087,14 +1089,15 @@ run_interactive(GVirSandboxConfigInteractive *config)
 
 
 
-    if (change_user(gvir_sandbox_config_get_username(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_userid(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_groupid(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_homedir(GVIR_SANDBOX_CONFIG(config))) < 0)
+    if (change_user(gvir_sandbox_config_get_username(config),
+                    gvir_sandbox_config_get_userid(config),
+                    gvir_sandbox_config_get_groupid(config),
+                    gvir_sandbox_config_get_homedir(config)) < 0)
         return -1;
 
-    if (!eventloop(gvir_sandbox_config_interactive_get_tty(config),
-                   gvir_sandbox_config_interactive_get_command(config),
+    command = gvir_sandbox_config_get_command(config);
+    if (!eventloop(gvir_sandbox_config_interactive_get_tty(iconfig),
+                   command,
                    sigpipe[0],
                    host))
         goto cleanup;
@@ -1102,6 +1105,7 @@ run_interactive(GVirSandboxConfigInteractive *config)
     ret = 0;
 
 cleanup:
+    g_strfreev(command);
     signal(SIGCHLD, SIG_DFL);
 
     if (sigpipe[0] != -1)
@@ -1114,34 +1118,19 @@ cleanup:
 
 
 static int
-run_service(GVirSandboxConfigService *config)
+run_service(GVirSandboxConfig *config)
 {
-    const char *initargv[] = {
-        "/bin/systemd",
-        "--unit",
-        gvir_sandbox_config_service_get_boot_target(config),
-        "--log-target",
-        "console",
-        "--system",
-        NULL,
-    };
-    const char *shargv[] = {
-        "/bin/sh",
-        NULL,
-    };
+    gchar **command = gvir_sandbox_config_get_command(config);
 
-    if (change_user(gvir_sandbox_config_get_username(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_userid(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_groupid(GVIR_SANDBOX_CONFIG(config)),
-                    gvir_sandbox_config_get_homedir(GVIR_SANDBOX_CONFIG(config))) < 0)
+    if (change_user(gvir_sandbox_config_get_username(config),
+                    gvir_sandbox_config_get_userid(config),
+                    gvir_sandbox_config_get_groupid(config),
+                    gvir_sandbox_config_get_homedir(config)) < 0)
         return -1;
 
-    if (debug)
-        execv(shargv[0], (char **)shargv);
-    else
-        execv(initargv[0], (char**)initargv);
+    execv(command[0], (char**)command);
     g_printerr(_("libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"),
-               __func__, debug ? shargv[0] : initargv[0], strerror(errno));
+               __func__, command[0], strerror(errno));
     return -1;
 }
 
@@ -1223,10 +1212,10 @@ int main(int argc, char **argv) {
         goto error;
 
     if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
-        if (run_interactive(GVIR_SANDBOX_CONFIG_INTERACTIVE(config)) < 0)
+        if (run_interactive(config) < 0)
             goto cleanup;
     } else if (GVIR_SANDBOX_IS_CONFIG_SERVICE(config)) {
-        if (run_service(GVIR_SANDBOX_CONFIG_SERVICE(config)) < 0)
+        if (run_service(config) < 0)
             goto cleanup;
     } else {
         GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);

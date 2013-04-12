@@ -58,6 +58,8 @@ struct _GVirSandboxConfigClass
                             GError **error);
     void (*save_config)(GVirSandboxConfig *config,
                         GKeyFile *file);
+
+    gchar **(*get_command)(GVirSandboxConfig *config);
 };
 
 GType gvir_sandbox_config_get_type(void);
@@ -143,6 +145,8 @@ gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config);
 gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
                                                const gchar *optstr,
                                                GError**error);
+
+gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config);
 
 G_END_DECLS
 
