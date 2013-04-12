@@ -874,13 +874,19 @@ def sandbox_reload(args):
     container.reload(args.unitfiles)
 
 def start(args):
-    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-s", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util",
+             "virt-sandbox-service-util",
+             "-c", args.uri,
+             "-s", args.name)
 #    config = read_config(args.name)
 #    container = Container(uri = args.uri, config=config)
 #    container.start()
 
 def stop(args):
-    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-S", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util",
+             "virt-sandbox-service-util",
+             "-c", args.uri,
+             "-S", args.name)
 #    config = read_config(args.name)
 #    container = Container(uri = args.uri, config=config)
 #    container.stop()
@@ -890,7 +896,10 @@ def connect(args):
 Connected to %s.
 Type 'Ctrl + ]' to detach from the console.
 """ % ( args.name )
-    os.execl("/usr/libexec/virt-sandbox-service-util", "virt-sandbox-service-util","-a", args.name)
+    os.execl("/usr/libexec/virt-sandbox-service-util",
+             "virt-sandbox-service-util",
+             "-c", args.uri,
+             "-a", args.name)
 #    config = read_config(args.name)
 #    container = Container(uri = args.uri, config=config)
 #    container.console()
