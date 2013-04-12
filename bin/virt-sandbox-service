@@ -266,9 +266,6 @@ class Container:
             self.conn = None
 
     def context(self):
-        if isinstance(self.config, gi.repository.LibvirtSandbox.ConfigInteractive):
-            return LibvirtSandbox.ContextInteractive.new(self.conn, self.config)
-
         return LibvirtSandbox.ContextService.new(self.conn, self.config)
 
     def running(self):
@@ -367,21 +364,18 @@ class Container:
         mount = LibvirtSandbox.ConfigMountRam.new(dest, size);
         self.config.add_mount(mount)
 
-class InteractiveContainer(Container):
+class GenericContainer(Container):
     def __init__(self, name=None, uri = "lxc:///", path = Container.DEFAULT_PATH, config=None, create=False):
         Container.__init__(self, name, uri, path, config, create)
 
         if create:
-            self.config = LibvirtSandbox.ConfigInteractive.new(name)
+            self.config = LibvirtSandbox.ConfigServiceGeneric.new(name)
 
     def gen_filesystems(self):
         Container.gen_filesystems(self)
         self.add_bind_mount(self.dest, self.path)
 
-    def create_interactive(self):
-        #
-        # Create an InteractiveContainer
-        #
+    def create_generic(self):
         Container.create(self)
         self.gen_filesystems()
 
@@ -395,7 +389,7 @@ class InteractiveContainer(Container):
 
     def create(self):
         try:
-            self.create_interactive()
+            self.create_generic()
         except Exception, e:
             try:
                 self.delete()
@@ -406,7 +400,7 @@ class InteractiveContainer(Container):
     def set_command(self, command):
         self.config.set_command(command)
 
-class ServiceContainer(Container):
+class SystemdContainer(Container):
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS       = [ "/etc", "/var" ]
     PROFILE_FILES      = [ ".bashrc", ".bash_profile" ]
@@ -737,9 +731,6 @@ PrivateNetwork=false
         self.fix_protection()
 
     def delete(self):
-        #
-        # Delete a ServiceContainer
-        #
         try:
             fd=open(self.dest + self.MACHINE_ID, "r")
             uuid = fd.read().rstrip()
@@ -772,10 +763,7 @@ PrivateNetwork=false
                 if not os.path.exists(target + ".wants"):
                     os.remove(target)
 
-    def create_service(self):
-        #
-        # Create a ServiceContainer
-        #
+    def create_systemd(self):
         self.extract_rpms()
         Container.create(self)
         self.gen_filesystems()
@@ -797,7 +785,7 @@ PrivateNetwork=false
             raise OSError(_("%s already exists") % self.dest)
 
         try:
-            self.create_service()
+            self.create_systemd()
         except Exception, e:
             try:
                 self.delete()
@@ -806,9 +794,6 @@ PrivateNetwork=false
             raise e
 
     def reload(self, unitfiles):
-        #
-        # Reload a ServiceContainer
-        #
         class Args:
             command = []
             noseclabel = None
@@ -822,10 +807,10 @@ MB = int(1000000)
 
 def delete(args):
     config = read_config(args.name)
-    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
-        container = InteractiveContainer(uri=args.uri, config = config)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        container = GenericContainer(uri=args.uri, config = config)
     else:
-        container = ServiceContainer(uri=args.uri, config = config)
+        container = SystemdContainer(uri=args.uri, config = config)
     container.delete()
 
 def create(args):
@@ -836,10 +821,10 @@ def create(args):
         raise ValueError([_("You must specify a command or a unit file")])
 
     if len(args.command) > 0:
-        container = InteractiveContainer(name = args.name, uri=args.uri, create = True)
+        container = GenericContainer(name = args.name, uri=args.uri, create = True)
         container.set_command(args.command)
     else:
-        container = ServiceContainer(name = args.name, uri=args.uri, create = True)
+        container = SystemdContainer(name = args.name, uri=args.uri, create = True)
         container.set_copy(args.copy)
         container.set_unit_file_list(args.unitfiles)
     for net in args.network:
@@ -868,10 +853,10 @@ def sandbox_list(args):
         try:
             c = LibvirtSandbox.Config.load_from_path(gc)
             if args.running:
-                if isinstance(c, gi.repository.LibvirtSandbox.ConfigInteractive):
-                    container = InteractiveContainer(uri=args.uri, config=c)
+                if isinstance(c, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+                    container = GenericContainer(uri=args.uri, config=c)
                 else:
-                    container = ServiceContainer(uri=args.uri, config=c)
+                    container = SystemdContainer(uri=args.uri, config=c)
 
                 if container.running():
                     print c.get_name()
@@ -883,9 +868,9 @@ def sandbox_list(args):
 
 def sandbox_reload(args):
     config = read_config(args.name)
-    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
-        raise ValueError(_("Interactive Containers do not support reload"))
-    container = ServiceContainer(uri = args.uri, config = config)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        raise ValueError(_("Generic Containers do not support reload"))
+    container = SystemdContainer(uri = args.uri, config = config)
     container.reload(args.unitfiles)
 
 def start(args):
@@ -957,8 +942,8 @@ def clone(args):
         shutil.copytree(old_path, new_path, symlinks=True)
         sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
-    if isinstance(config, gi.repository.LibvirtSandbox.ConfigInteractive):
-        container = InteractiveContainer(name=args.dest, uri=args.uri, create=True)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        container = GenericContainer(name=args.dest, uri=args.uri, create=True)
     else:
         fd = open(container.get_unit_path())
         recs = fd.read()
@@ -972,7 +957,7 @@ def clone(args):
         fd.close()
         sys.stdout.write(_("Created unit file %s\n") % new_unit)
 
-        container = ServiceContainer(name=args.dest, uri=args.uri, create=True)
+        container = SystemdContainer(name=args.dest, uri=args.uri, create=True)
         container.gen_machine_id()
         container.gen_hostname()
 
@@ -1057,11 +1042,11 @@ def gen_create_args(subparser):
     parser.add_argument("-u", "--unitfile",
                         action=CheckUnit,
                         dest="unitfiles", default=[],
-                        help=_("Systemd Unit file to run within the Service sandbox container. Commands cannot be specified with unit files."))
+                        help=_("Systemd Unit file to run within the systemd sandbox container. Commands cannot be specified with unit files."))
 
     requires_name(parser)
     parser.add_argument("command", default=[], nargs="*",
-                        help=_("Command to run within the Interactive sandbox container. Commands cannot be specified with unit files."))
+                        help=_("Command to run within the generic sandbox container. Commands cannot be specified with unit files."))
 
     parser.set_defaults(func=create)
 

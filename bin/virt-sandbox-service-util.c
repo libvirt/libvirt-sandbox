@@ -261,23 +261,6 @@ static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
         return ret;
     }
 
-    if (GVIR_SANDBOX_IS_CONTEXT_INTERACTIVE(ctx)) {
-        GVirSandboxContextInteractive *ictx =
-            GVIR_SANDBOX_CONTEXT_INTERACTIVE(ctx);
-        if (!(con = gvir_sandbox_context_interactive_get_app_console(ictx, &err))) {
-            g_printerr(_("Unable to get app console: %s\n"),
-                       err && err->message ? err->message : _("Unknown failure"));
-            return ret;
-        }
-        g_signal_connect(con, "closed", (GCallback)do_close, loop);
-
-        if (!(gvir_sandbox_console_attach_stdio(con, &err))) {
-            g_printerr(_("Unable to attach sandbox console: %s\n"),
-                       err && err->message ? err->message : _("Unknown failure"));
-            return ret;
-        }
-    }
-
     g_main_loop_run(loop);
 
     return EXIT_SUCCESS;
@@ -371,7 +354,7 @@ static gboolean libvirt_lxc_attach(const gchar *option_name,
 int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GVirSandboxConfig *config = NULL;
-    GVirSandboxContext *ctx = NULL;
+    GVirSandboxContextService *ctx = NULL;
     GError *err = NULL;
     GVirConnection *hv = NULL;
     int ret = EXIT_FAILURE;
@@ -466,37 +449,23 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if(!(config = gvir_sandbox_config_load_from_path(buf, &err))) {
+    if (!(config = gvir_sandbox_config_load_from_path(buf, &err))) {
         g_printerr(_("Unable to read config file %s: %s\n"), buf,
                    err && err->message ? err->message : _("unknown"));
         goto cleanup;
     }
 
-    if (GVIR_SANDBOX_IS_CONFIG_INTERACTIVE(config)) {
-        GVirSandboxContextInteractive *service;
-        if (!(service = gvir_sandbox_context_interactive_new(hv, GVIR_SANDBOX_CONFIG_INTERACTIVE(config)))) {
-            g_printerr(_("Unable to create new context service: %s\n"),
-                       err && err->message ? err->message : _("unknown"));
-            goto cleanup;
-        }
-        ctx = GVIR_SANDBOX_CONTEXT(service);
-    } else {
-        GVirSandboxContextService *service;
-
-        if (!(service = gvir_sandbox_context_service_new(hv, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
-            g_printerr(_("Unable to create new context service: %s\n"),
-                       err && err->message ? err->message : _("unknown"));
-            goto cleanup;
-        }
-        ctx = GVIR_SANDBOX_CONTEXT(service);
+    if (!(ctx = gvir_sandbox_context_service_new(hv, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
+        g_printerr(_("Unable to create new context service: %s\n"),
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
     }
 
     if (command) {
-        container_execute(ctx, command, pid);
-    }
-    else {
+        container_execute(GVIR_SANDBOX_CONTEXT(ctx), command, pid);
+    } else {
         loop = g_main_loop_new(g_main_context_default(), 1);
-        ret = container_func(ctx, loop);
+        ret = container_func(GVIR_SANDBOX_CONTEXT(ctx), loop);
     }
 
 cleanup:
