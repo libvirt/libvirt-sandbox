@@ -68,6 +68,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config-interactive.h \
 			libvirt-sandbox-config-service.h \
 			libvirt-sandbox-config-service-systemd.h \
+			libvirt-sandbox-config-service-generic.h \
 			libvirt-sandbox-cleaner.h \
 			libvirt-sandbox-builder.h \
 			libvirt-sandbox-builder-initrd.h \
@@ -98,6 +99,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config-interactive.c \
 			libvirt-sandbox-config-service.c \
 			libvirt-sandbox-config-service-systemd.c \
+			libvirt-sandbox-config-service-generic.c \
 			libvirt-sandbox-cleaner.c \
 			libvirt-sandbox-builder.c \
 			libvirt-sandbox-builder-initrd.c \

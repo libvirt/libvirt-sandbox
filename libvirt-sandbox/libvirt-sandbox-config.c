@@ -2020,6 +2020,7 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
     GVIR_SANDBOX_TYPE_CONFIG_GRAPHICAL;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD;
+    GVIR_SANDBOX_TYPE_CONFIG_SERVICE_GENERIC;
 
     if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, error))
         goto cleanup;

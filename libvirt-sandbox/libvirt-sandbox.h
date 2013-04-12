@@ -44,6 +44,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-interactive.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-service.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-service-systemd.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-service-generic.h>
 #include <libvirt-sandbox/libvirt-sandbox-cleaner.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder.h>
 #include <libvirt-sandbox/libvirt-sandbox-builder-initrd.h>
