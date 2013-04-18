@@ -4,7 +4,12 @@ virt-sandbox-service create - Create a Security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] create [-h] [ -u UNIT_FILE ] [ --copy ] [-p PATH] [-N NETWORK-OPTS] [-s SECURITY-OPTS] [-i SIZE] [-n] NAME [ COMMAND ]
+  virt-sandbox-service [-c URI] create [-h] [-C] [-f FILE_TYPE]
+                                   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
+                                   [-N NETWORK] [-p PATH] [-s SECURITY]
+                                   [-u UNITFILES] [--username USERNAME]
+                                   [-U UID]
+                                   name [command [command ...]]
 
 =head1 DESCRIPTION
 
@@ -14,7 +19,7 @@ technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
 container / virtual machines will be secured by SELinux and resource
 separated using cgroups.
 
-The create command can setup a sandbox for running one or more systemd unit files.  It can also setup a sandbox for running a command in an InteractiveContainer.  Specify a unit file to create the ServiceContainer and the command to create an InteractiveContainer.
+The create command can setup a sandbox for running one or more systemd unit files.  It can also setup a sandbox for running a command in an GenericContainer.  Specify a unit file to create the SystemdContainer and the command to create an GenericContainer.
 
 =head1 OPTIONS
 
@@ -24,24 +29,42 @@ The create command can setup a sandbox for running one or more systemd unit file
 
 Display help message
 
-=item B<-c> URI, B<--connect URI>
+=item B<-c URI>, B<--connect URI>
 
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
 
 =item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
-Name of the systemd unit file to be to run within the Service Container. Can be repeated if multiple unit files are required within the sandbox.  Cannot be specified if you are using a COMMAND.
+Name of the systemd unit file to be to run within the Systemd Container. Can be repeated if multiple unit files are required within the sandbox.  Cannot be specified if you are using a COMMAND.
 
 =item B<-C>, B<--copy>
 
 Copy content from /etc and /var directories that will be mounted within the container.
 
+=item B<-G GID>, B<--gid GID>
+
+Set login gid to use within the container. 
+
+Default: C<Login GID of UID>.
+
+=item B<-f FILETYPE>, B<--filetype FILETYPE>
+
+Set SELinux file type to use within container.
+
+Default: C<svirt_lxc_file_t>.
+
 =item B<-p PATH>, B<--path PATH>
 
-Select path to store container content.
+Set path to store container content.
 
 Default: C</var/lib/libvirt/filesystems>.
+
+=item B<--homedir HOMEDIR>
+
+Set homedir path to use within container.
+
+Default: C<UID's Homedir>.
 
 =item B<-N NETWORK-OPTIONS>, B<--network NETWORK-OPTIONS>
 
@@ -119,24 +142,36 @@ static,label=system_u:system_r:svirt_t:s0:c412,c355
 
 Create file system image file of this size to store container content.
 
-=item B<-u unitfile>, B<--unitfile unitfile>
+=item B<-u UNITFILE>, B<--unitfile UNITFILE>
 
 systemd Unit file to run within the container
+
+=item B<-U UID>, B<--uid UID>
+
+Set uid to use within container. 
+
+Default: C<CURRENT UID>.
+
+=item B<--username USERNAME>
+
+Set username to use within container.
+
+Default: C<UID's Username>.
 
 =back
 
 =head1 EXAMPLE
 
-Create httpd1 Service container
+Create httpd1 Systemd container
 
  # virt-sandbox-service create -C -u httpd.service httpd1
  Created container dir /var/lib/libvirt/filesystems/httpd1
  Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
  Created unit file /etc/systemd/system/httpd@httpd1.service
 
-Create foobar1 Service container
+Create foobar1 Generic container
 
- # virt-sandbox-service create foobar1 -- /usr/bin/foobar -a -b
+ # virt-sandbox-service create -U 1234 foobar1 -- /usr/bin/foobar -a -b
  Created container dir /var/lib/libvirt/filesystems/foobar1
  Created sandbox config /etc/libvirt-sandbox/foobar1.sandbox
 

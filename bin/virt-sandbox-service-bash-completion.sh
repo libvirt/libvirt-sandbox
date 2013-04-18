@@ -1,6 +1,6 @@
 # This file is part of libvirt-sandbox.
 #
-# Copyright 2012 Dan Walsh
+# Copyright (C) 2012-2013 Red Hat, Inc.
 #
 # systemd is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -14,7 +14,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with systemd; If not, see <http://www.gnu.org/licenses/>.
-
+#
+# Authors: Dan Walsh <dwalsh@redhat.com>
+#
 __contains_word () {
     local word=$1; shift
     for w in $*; do [[ $w = $word ]] && return 0; done
@@ -55,7 +57,7 @@ _virt_sandbox_service () {
     )
     local -A OPTS=(
         [ALL]='-h --help'
-        [CREATE]='-u --unitfile -p --path -f --filetype -C --copy -i --imagesize -N --network -s --security'
+        [CREATE]='-C --copy -f --filetype -G --gid  -i --imagesize --homedir -N --network -p --path -s --security -u --unitfile --username -U -uid'
         [LIST]='-r --running'
         [RELOAD]='-u --unitfile'
         [EXECUTE]='-N --noseclabel'

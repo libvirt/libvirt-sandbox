@@ -28,6 +28,7 @@ import exceptions
 import rpm
 from subprocess import Popen, PIPE, STDOUT
 import gettext
+import pwd
 
 if os.path.exists("/sys/fs/selinux"):
     import selinux
@@ -83,10 +84,28 @@ class Container:
         self.file_type = file_type
 
     def set_uid(self, uid):
-        self.uid = uid
+        self.config.set_userid(uid)
 
     def get_uid(self):
-        return self.uid
+        return self.config.get_userid(uid)
+
+    def set_gid(self, gid):
+        self.config.set_groupid(gid)
+
+    def get_gid(self):
+        return self.config.get_groupid(gid)
+
+    def set_username(self, username):
+        self.config.set_username(username)
+
+    def get_username(self):
+        return self.config.get_username()
+
+    def set_homedir(self, homedir):
+        self.config.set_homedir(homedir)
+
+    def get_homedir(self):
+        return self.config.get_homedir()
 
     def get_config_path(self, name = None):
         if not name:
@@ -755,6 +774,16 @@ def create(args):
         container.add_network(net)
     if args.security:
         container.set_security(args.security)
+    container.set_uid(args.uid)
+    if not args.homedir:
+        args.homedir = pwd.getpwuid(args.uid).pw_dir
+    container.set_homedir(args.homedir)
+    if not args.username:
+        args.username = pwd.getpwuid(args.uid).pw_name
+    container.set_username(args.username)
+    if not args.gid:
+        args.gid = pwd.getpwuid(args.uid).pw_gid
+    container.set_gid(args.gid)
     container.set_path(args.path)
     container.set_file_type(args.file_type)
     if args.imagesize:
@@ -952,6 +981,11 @@ def gen_create_args(subparser):
     parser.add_argument("-f", "--filetype", dest="file_type",
                         default=c.get_file_type(),
                         help=_("SELinux file type to assign to content within the sandbox.  Default: %s") % c.get_file_type())
+    parser.add_argument("--homedir", dest="homedir",
+                        help=_("Specify the homedir for the container. Default: UID homedir."))
+    parser.add_argument("-G", "--gid", dest="gid",
+                        default=None, type=int,
+                        help=_("Specify the login gid for the container. Default: login GID of the UID."))
     parser.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
@@ -967,6 +1001,11 @@ def gen_create_args(subparser):
                         action=CheckUnit,
                         dest="unitfiles", default=[],
                         help=_("Systemd Unit file to run within the systemd sandbox container. Commands cannot be specified with unit files."))
+    parser.add_argument("--username", dest="username",
+                        help=_("Specify the username for the container. Default: UID username."))
+    parser.add_argument("-U", "--uid", dest="uid",
+                        default=os.getuid(),type=int,
+                        help=_("Specify the uid for the container: Default to current UID."))
 
     requires_name(parser)
     parser.add_argument("command", default=[], nargs="*",
