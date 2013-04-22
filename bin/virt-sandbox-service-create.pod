@@ -5,11 +5,11 @@ virt-sandbox-service create - Create a Security container
 =head1 SYNOPSIS
 
   virt-sandbox-service [-c URI] create [-h] [-C] [-f FILE_TYPE]
-                                   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
-                                   [-N NETWORK] [-p PATH] [-s SECURITY]
-                                   [-u UNITFILES] [--username USERNAME]
-                                   [-U UID]
-                                   name [command [command ...]]
+				   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
+				   [-N NETWORK] [-p PATH] [-s SECURITY]
+				   [-u UNITFILES] [--username USERNAME]
+				   [-U UID]
+				   name [command [command ...]]
 
 =head1 DESCRIPTION
 
@@ -44,7 +44,7 @@ Copy content from /etc and /var directories that will be mounted within the cont
 
 =item B<-G GID>, B<--gid GID>
 
-Set login gid to use within the container. 
+Set login gid to use within the container.
 
 Default: C<Login GID of UID>.
 
@@ -148,7 +148,7 @@ systemd Unit file to run within the container
 
 =item B<-U UID>, B<--uid UID>
 
-Set uid to use within container. 
+Set uid to use within container.
 
 Default: C<CURRENT UID>.
 
