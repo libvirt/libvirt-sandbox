@@ -272,7 +272,8 @@ class Container:
     def create(self):
         self.connect()
         self.config.set_shell(True)
-        os.mkdir(self.dest)
+        if not os.path.exists(self.dest):
+            os.mkdir(self.dest)
 
     def connect(self):
         if not self.conn:
