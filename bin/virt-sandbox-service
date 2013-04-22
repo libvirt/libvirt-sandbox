@@ -271,7 +271,8 @@ class Container:
 
     def create(self):
         self.connect()
-        self.config.set_shell(True)
+        if self.uri != "lxc:///":
+            self.config.set_shell(True)
         if not os.path.exists(self.dest):
             os.mkdir(self.dest)
 
@@ -840,6 +841,18 @@ def stop(args):
              "-S", args.name)
 
 def connect(args):
+    if args.uri == "lxc:///":
+        class Args:
+            command = []
+            noseclabel = None
+            name = args.name
+            uri = args.uri
+
+        args = Args()
+        args.command = [ "/bin/sh" ]
+        execute(args)
+        return
+
     print """\
 Connected to %s.
 Type 'Ctrl + ]' to detach from the console.
