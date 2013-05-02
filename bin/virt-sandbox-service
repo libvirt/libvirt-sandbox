@@ -363,10 +363,11 @@ class SystemdContainer(Container):
 
     DEFAULT_UNIT       = "/etc/systemd/system/%s_sandbox.service"
 
-    def __init__(self, name=None, uri = "lxc:///", path = Container.DEFAULT_PATH, config=None, create=False):
+    def __init__(self, name=None, uri = "lxc:///", path = Container.DEFAULT_PATH, config=None, create=False, rpm=None):
         Container.__init__(self, name, uri, path, config, create)
         self.copy = False
         self.unit_file_list = []
+        self.rpm = rpm
         if create:
             self.config = LibvirtSandbox.ConfigServiceSystemd.new(name)
         else:
@@ -496,8 +497,18 @@ WantedBy=%(TARGET)s
 
         self.ts = rpm.ts()
 
+        nb_rpm = 0
         for u, src in self.unit_file_list:
-            self.extract_rpm_for_unit(src)
+            rpm_name = self.get_rpm_for_unit(src)
+            if rpm_name:
+                self.extract_rpm(rpm_name)
+                nb_rpm += 1
+
+        if nb_rpm == 0:
+            if self.rpm:
+                self.extract_rpm(self.rpm)
+            else:
+                raise ValueError([_("Cannot autodetect the package for unit files, please use --package")])
 
     def split_filename(self, filename):
         if filename[-4:] == '.rpm':
@@ -521,12 +532,21 @@ WantedBy=%(TARGET)s
         name = filename[epochIndex + 1:verIndex]
         return name, ver, rel, epoch, arch
 
-    def extract_rpm_for_unit(self, unitfile):
+    def get_rpm_for_unit(self, unitfile):
         mi = self.ts.dbMatch(rpm.RPMTAG_BASENAMES, unitfile)
         try:
             h = mi.next();
         except exceptions.StopIteration:
-            raise ValueError([_("Cannot find package containing %s") % unitfile])
+            return None
+        return h['name']
+
+
+    def extract_rpm(self, rpm_name):
+        mi = self.ts.dbMatch('name', rpm_name)
+        try:
+            h = mi.next();
+        except exceptions.StopIteration:
+            raise ValueError([_("Cannot find package named %s") % rpm_name])
 
         for fentry in h.fiFromHeader():
             fname = fentry[0]
@@ -765,11 +785,14 @@ def create(args):
     if len(args.command) == 0  and len(args.unitfiles) == 0:
         raise ValueError([_("You must specify a command or a unit file")])
 
+    if args.package and len(args.unitfiles) != 1:
+        raise ValueError([_("Option --package cannot be used without a unit file")])
+
     if len(args.command) > 0:
         container = GenericContainer(name = args.name, uri=args.uri, create = True)
         container.set_command(args.command)
     else:
-        container = SystemdContainer(name = args.name, uri=args.uri, create = True)
+        container = SystemdContainer(name = args.name, uri=args.uri, create = True, rpm = args.package)
         container.set_copy(args.copy)
         container.set_unit_file_list(args.unitfiles)
     for net in args.network:
@@ -972,6 +995,15 @@ class SetNet(argparse.Action):
             nets = [values]
         setattr(namespace, self.dest, nets)
 
+class CheckRpm(argparse.Action):
+    def __call__(self, parser, namespace, value, option_string=None):
+        nb_rpm = len(rpm.TransactionSet().dbMatch('name', value))
+        if nb_rpm == 0:
+            raise OSError(_("Cannot find %s rpm") % value)
+        elif nb_rpm > 1:
+            raise OSError(_("%s rpm is installed more than once") % value)
+        setattr(namespace, self.dest, value)
+
 def requires_name(parser):
     parser.add_argument("name",
                         help=_("name of the sandbox container"))
@@ -1015,6 +1047,10 @@ def gen_create_args(subparser):
                         action=CheckUnit,
                         dest="unitfiles", default=[],
                         help=_("Systemd Unit file to run within the systemd sandbox container. Commands cannot be specified with unit files."))
+    parser.add_argument("-P", "--package",
+                        action=CheckRpm,
+                        dest="package", default=None,
+                        help=_("Package configuration to use in the container. Default: autodetected from unit files, unless if using a custom unit file."))
     parser.add_argument("--username", dest="username",
                         help=_("Specify the username for the container. Default: UID username."))
     parser.add_argument("-U", "--uid", dest="uid",

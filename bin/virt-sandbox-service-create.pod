@@ -8,7 +8,7 @@ virt-sandbox-service create - Create a Security container
 				   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
 				   [-N NETWORK] [-p PATH] [-s SECURITY]
 				   [-u UNITFILES] [--username USERNAME]
-				   [-U UID]
+				   [-U UID] [-P package]
 				   name [command [command ...]]
 
 =head1 DESCRIPTION
@@ -145,6 +145,10 @@ Create file system image file of this size to store container content.
 =item B<-u UNITFILE>, B<--unitfile UNITFILE>
 
 systemd Unit file to run within the container
+
+=item B<-P PACKAGE>, B<--package PACKAGE>
+
+Package used to populate the container if not autodetected based on unit file.
 
 =item B<-U UID>, B<--uid UID>
 
