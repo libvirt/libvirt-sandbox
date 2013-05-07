@@ -18,7 +18,7 @@ Africa
 0.1.0    Karoo – a semi-desert region in South Africa
 0.1.1    Libyan Desert – part of the Sahara located in Libya
 0.1.2    Namib Desert – a desert in present day Namibia
-         Nubian Desert – a desert in present day Sudan
+0.2.0    Nubian Desert – a desert in present day Sudan
          Owami Desert – a desert in Nigeria
          Sahara Desert – the world's largest hot desert covering most of Northern Africa,
 

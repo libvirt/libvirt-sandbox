@@ -1,6 +1,50 @@
       libvirt Sandbox News
       ====================
 
+0.2.0 - "Nubian Desert" - 2013-05-07
+------------------------------------
+
+ - Requires systemd >= 198
+ - Fix termination of interactive sandbox client to
+   avoid loosing final I/O
+ - Stop hardcoding default security label
+ - Misc docs typos / fixes
+ - Fix infinite loop handling security opts
+ - Mandate enablement of introspection
+ - Handle NULL broadcast address for NICs
+ - Don't assume /var/log/journal exists
+ - Improve rollback if creation of service sandbox fails
+ - Block host NICs from sandbox
+ - Sanity check requested network config
+ - Fix sandbox journal location to be a dir not a file
+ - Fix parsing of --security option
+ - Change virt-sandbox-service to use --security opts
+   instead of SELinux specific -l/-t/-d args
+ - Replace use of YUM with RPM to improve performance
+ - Send dhclient output to /dev/null
+ - Avoid getting stuck in waitpid if non-primary process
+   exits
+ - Allow choice of host virtual networks
+ - Support network config with virt-sandbox-service
+ - Do not create any NIC in service sandbox by default
+ - Cope with SELinux label lacking a category pair
+ - Delay dropping credentials until after ttys are opened
+ - Fix tty permissions in QEMU init helper to be 0700 instead
+   of 0777
+ - Add support for non-systemd service containers
+ - Add support for i18n of all output strings
+ - Remove hardcoding of lxc:/// in virt-sandbox-service
+ - Correctly handle EOF from raw console
+ - Improve I/O performance of virt-sandbox
+ - Allow custom uid/gid for generic service sandboxes
+ - Do not run debug shell in service sandboxes
+ - Add --package option to virt-sandbox-service for cases
+   where the unit file is not owned by an RPM
+ - Use drop in systemd service override, instead of
+   includes
+ - Support templated systemd service units
+
+
 0.1.2 - "Namib Desert" - 2013-03-05
 -----------------------------------
 
