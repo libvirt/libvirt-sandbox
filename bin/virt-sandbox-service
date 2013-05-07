@@ -625,12 +625,16 @@ WantedBy=%(TARGET)s
                 self.add_bind_mount(source, d)
 
     def create_container_unit(self, src, dest, unit):
-            fd = open(dest + "/" + unit, "w")
-            fd.write(""".include %s
+            dropin_dir = "%s/%s.d" % (dest, unit)
+            if not os.path.exists(dropin_dir):
+                os.mkdir(dropin_dir)
+
+            fd = open(dropin_dir + "/virt-sandbox.conf", "w")
+            fd.write("""; file placed here by virt-sandbox-service
 [Service]
 PrivateTmp=false
 PrivateNetwork=false
-""" % src )
+""" )
             fd.close()
 
     def gen_content(self):
