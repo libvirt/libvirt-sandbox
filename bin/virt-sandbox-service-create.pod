@@ -37,6 +37,7 @@ supported currently).
 =item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
 Name of the systemd unit file to be to run within the Systemd Container. Can be repeated if multiple unit files are required within the sandbox.  Cannot be specified if you are using a COMMAND.
+If the unit file end with @, this will be considered as a template, and a instancied systemd unit will be created, using the name of the container as a instance identifier.
 
 =item B<-C>, B<--copy>
 

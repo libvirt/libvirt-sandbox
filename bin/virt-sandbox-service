@@ -345,6 +345,10 @@ class GenericContainer(Container):
     def set_command(self, command):
         self.config.set_command(command)
 
+
+def is_template_unit(unit):
+    return '@' in unit
+
 class SystemdContainer(Container):
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS       = [ "/etc", "/var" ]
@@ -624,7 +628,15 @@ WantedBy=%(TARGET)s
                 source = "%s%s" % ( self.dest, d)
                 self.add_bind_mount(source, d)
 
+    def get_expanded_unit_template(self, unit):
+        return unit.replace('@', '@' + self.name)
+
     def create_container_unit(self, src, dest, unit):
+            if is_template_unit(unit):
+                shutil.copy(src, dest + "/" + unit)
+                unit = self.get_expanded_unit_template(unit)
+                os.symlink(src, dest + "/" + unit)
+
             dropin_dir = "%s/%s.d" % (dest, unit)
             if not os.path.exists(dropin_dir):
                 os.mkdir(dropin_dir)
@@ -681,6 +693,8 @@ PrivateNetwork=false
 
         for i, src in self.unit_file_list:
             self.create_container_unit(src, self.dest + unitdir, i)
+            if is_template_unit(i):
+                i = self.get_expanded_unit_template(i)
             os.symlink("../" + i, self.dest + tgtdir + "/" + i)
 
         tgtfile = unitdir + "/multi-user.target"
