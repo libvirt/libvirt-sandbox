@@ -1,8 +1,8 @@
       libvirt Sandbox News
       ====================
 
-0.1.2 2013-03-05
-----------------
+0.1.2 - "Namib Desert" - 2013-03-05
+-----------------------------------
 
  - Requires libvirt >= 1.0.2
  - Split virt-sandbox-service manpage into separate docs,
@@ -18,8 +18,9 @@
    legacy init scripts starting
  - Skip binding files/dirs which don't exist in host
 
-0.1.1 2012-12-10
-----------------
+
+0.1.1 - "Libyan Desert" - 2012-12-10
+------------------------------------
 
  - Fix typos in POD docs for some classes
  - Only depend on libvirt-daemon-{kvm,qemu,lxc}, not
@@ -35,8 +36,9 @@
  - Rename sandbox.target to multi-user.target
  - Fix attachment to running containers
 
-0.1.0 2012-08-10
-----------------
+
+0.1.0 - "Karoo" - 2012-08-10
+----------------------------
 
  - ABI+API incompatible with previous library, so new soname
  - Some changes to CLI args for virt-sandbox command
@@ -67,8 +69,8 @@
  - Create custom systemd startup sequence
 
 
-0.0.3 2012-04-13
-----------------
+0.0.3 - "Kalahari Desert" - 2012-04-13
+--------------------------------------
 
  - Ensure root/config filesystems are readonly in KVM
  - Add support for mounting host disk images in guests
@@ -89,8 +91,9 @@
  - Turn on reboot-on-panic in KVM to ensure guest exists on
    fatal problems
 
-0.0.2 2012-01-12
-----------------
+
+0.0.2 - "Blue Desert" - 2012-01-12
+----------------------------------
 
  - Add ability to attach to an existing sandbox
  - Update to require libvirt-gobject 0.0.4
@@ -98,7 +101,8 @@
  - Add support for an admin debug shell
  - Switch to use /etc/libvirt-sandbox/scratch for config
 
-0.0.1 2012-01-11
-----------------
+
+0.0.1 - "Tatti Desert" - 2012-01-11
+-----------------------------------
 
  - First release

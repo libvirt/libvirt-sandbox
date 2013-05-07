@@ -1,0 +1,102 @@
+
+Naming concept: sandbox => sand => desert
+
+Release names assigned from the following list of deserts.
+
+  http://en.wikipedia.org/wiki/List_of_deserts
+
+Enough names for 60+ releases...then we'll start
+assigning names of cactus species, of which there
+are 1000's
+
+
+Africa
+
+0.0.1    Tatti Desert – part of the Sahara located in Algeria
+0.0.2    Blue Desert – a desert in Egypt
+0.0.3    Kalahari Desert – a desert covering much of Botswana and parts of Namibia and South Africa
+0.1.0    Karoo – a semi-desert region in South Africa
+0.1.1    Libyan Desert – part of the Sahara located in Libya
+0.1.2    Namib Desert – a desert in present day Namibia
+         Nubian Desert – a desert in present day Sudan
+         Owami Desert – a desert in Nigeria
+         Sahara Desert – the world's largest hot desert covering most of Northern Africa,
+
+Asia
+
+         Cholistan – a desert in Pakistan
+         Dasht-i-Margo SW afganistani
+         Gobi – a desert in Mongolia and China
+         Indus Valley Desert – a desert located in Pakistan
+         Kara Kum – a large Central Asian desert
+         Kharan desert – a desert located in Pakistan
+         Kyzyl Kum – a desert in Kazakhstan and Uzbekistan
+         Lop Desert – a desert in China
+         Ordos – a desert in northern China
+         Rub' al Khali – a desert located in Saudi Arabia
+         Taklamakan – a desert located in China
+         Thal Desert – a desert in Pakistan
+         Thar Desert – a desert in Pakistan and India
+         Arabian Desert – a vast desert complex on the Arabian Peninsula comprising the Al-Dahna Desert, Empty Quarter, Nefud Desert and other deserts
+         Dasht-e Kavir – a desert in central Iran
+         Dasht-e Lut – a large salt desert in southeastern Iran
+         Judaean Desert – a desert in eastern Israel and the West Bank
+         Maranjab Desert – a desert in central Iran
+         Negev – a desert located in southern Israel
+         Ramlat al-Sab`atayn – a sandy desert in central & northeastern Yemen, part of the Empty Quarter
+         Sinai Peninsula – a desert located on the Sinai Peninsula in Egypt
+         Wahiba Sands – a desert in Oman
+
+Europe
+
+         Accona Desert – a semi-desert in central Italy
+         Bardenas Reales – a semi-desert in Navarre, Spain (455 km²)
+         Błędowska Desert – a desert located in Lesser Poland Voivodeship, Poland (32 km²)
+         Deliblatska Peščara – a desert located in Vojvodina, Serbia (300 km²)
+         Highlands of Iceland – the interior plateau of Iceland; not a desert by climate, but effectively one because precipitation penetrates the volcanic soil so quickly that the land is infertile
+         Monegros Desert – a semi-desert in Aragón, Spain
+         Oleshky Sands – a desert located in Ukraine near Askania-Nova biosphere reserve (15 km in diameter)
+         Oltenian Sahara – a desert spanning approximately 80,000 hectares or 800 km² in the Romanian historical province of Oltenia[1]
+         Stranja Sahara - a desert in southeastern Bulgaria near the city of Burgas. It is about 80,000 hectares, sometimes estimated to about 850 km². It is near the borders of Turkey and northwestern Greece[2]
+         Tabernas Desert – a desert in Almería, Spain (280 km²)
+
+North America
+
+         Black Rock Desert
+         Central Valley of California (which is divided into the Sacramento Valley in the north, and the San Joaquin Valley in the south) – this area has largely been transformed, due to irrigation canals, to an agricultural area. It is technically a semi-arid climate
+         Chihuahuan Desert
+         Colorado Desert
+         Mojave Desert
+         Pumice Desert, the remains of an ash flow from the big eruption of Mount Mazama[3]
+         Sonoran Desert
+
+South America
+
+         Atacama – a desert in Chile and Peru, the driest place on Earth
+         La Guajira Desert – a desert in northern Colombia and Venezuela
+         Monte Desert – in Argentina, a smaller desert above the Patagonian Desert
+         Patagonian Desert – the largest desert in the Americas, located in Argentina and Chile
+         Sechura Desert – a desert located south of the Piura Region of Peru
+
+Australia
+
+         Central Desert – a central Australian desert
+         Gibson Desert – a central Australian desert
+         Great Sandy Desert – a northwestern Australian desert
+         Great Victoria Desert – the biggest desert in Australia
+         Little Sandy Desert – a western Australian desert
+         Simpson Desert – a central Australian desert
+         Strzelecki Desert – a south-central Australian desert
+         Tanami Desert – a northern Australian desert
+
+Zealandia
+
+         Rangipo Desert – a barren desert-like plateau (with 1.5-2.5 m/yr rainfall) on the North Island Volcanic Plateau in New Zealand
+
+Polar regions
+
+         Antarctica Desert – the largest desert in the world[4]
+         Arctic Desert – the second largest desert in the world
+         Greenland – a large tundra which is also the world's largest island
+         North American Arctic – a large tundra in North America
+         Russian Arctic – a large tundra in Russia
