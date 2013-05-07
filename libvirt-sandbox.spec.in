@@ -27,6 +27,7 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
+BuildRequires: intltool
 Requires: rpm-python
 Requires: glib2-devel >= 2.32.0
 # For virsh lxc-enter-namespace command
@@ -80,6 +81,8 @@ chmod a-x examples/*.py examples/*.pl examples/*.js
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/libvirt-sandbox-1.0.la
 
+%find_lang %{name}
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -98,7 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man1/virt-sandbox-service.1*
 %{_mandir}/man1/virt-sandbox-service-*.1*
 
-%files libs
+%files libs -f %{name}.lang
 %defattr(-,root,root,-)
 %doc README COPYING AUTHORS ChangeLog NEWS
 %dir %{_sysconfdir}/libvirt-sandbox

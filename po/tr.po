@@ -1,0 +1,583 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: libvirt-sandbox\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-07 17:18+0100\n"
+"PO-Revision-Date: 2013-05-07 16:18+0000\n"
+"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"Language-Team: Turkish (http://www.transifex.com/projects/p/fedora/language/tr/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: tr\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ../bin/virt-sandbox.c:48 ../bin/virt-sandbox-service-util.c:94
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1140
+#, c-format
+msgid "%s version %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:80
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1152
+msgid "display version information"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:82
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1154
+msgid "display verbose information"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:84
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1156
+msgid "display debugging information"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:86
+msgid "connect to hypervisor"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:88
+msgid "name of the sandbox"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:90
+msgid "mount a filesystem in the guest"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:92
+msgid "file to copy into custom dir"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:94
+msgid "file contain list of files to include"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:96
+msgid "setup network interface properties"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:98
+msgid "security properties"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:100
+msgid "run the command privileged"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:102
+msgid "start a shell"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:107
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:117
+msgid "Libvirt Sandbox"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:119
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1180
+msgid "- Libvirt Sandbox"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:132
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:148 ../bin/virt-sandbox-service-util.c:447
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:149 ../bin/virt-sandbox.c:166
+#: ../bin/virt-sandbox.c:172 ../bin/virt-sandbox.c:178
+#: ../bin/virt-sandbox.c:184 ../bin/virt-sandbox.c:190
+#: ../bin/virt-sandbox.c:205 ../bin/virt-sandbox.c:211
+#: ../bin/virt-sandbox.c:218 ../bin/virt-sandbox.c:224
+#: ../bin/virt-sandbox.c:232
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1238
+msgid "Unknown failure"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:165
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:171
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:177
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:183
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:189
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:204
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:210
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:217 ../bin/virt-sandbox.c:231
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox.c:223
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:118
+#, c-format
+msgid "Failed to open container process path %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:129
+#, c-format
+msgid "Failed to open container namespace path %s: %m\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:138
+#, c-format
+msgid "Failed to setup namespace: %m\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:167
+#, c-format
+msgid "Unable to get process context for pid %d\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:171
+#, c-format
+msgid "Unable to set executable context for pid %d\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:214
+#, c-format
+msgid "Unable to wait for child %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:221
+#, c-format
+msgid "Failed to execute %s: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:245
+#, c-format
+msgid "Unable to start container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:246
+#: ../bin/virt-sandbox-service-util.c:252
+#: ../bin/virt-sandbox-service-util.c:260
+#: ../bin/virt-sandbox-service-util.c:277
+#: ../bin/virt-sandbox-service-util.c:283
+#: ../bin/virt-sandbox-service-util.c:291
+#: ../bin/virt-sandbox-service-util.c:306
+#: ../bin/virt-sandbox-service-util.c:312
+#: ../bin/virt-sandbox-service-util.c:448
+#: ../bin/virt-sandbox-service-util.c:454
+#: ../bin/virt-sandbox-service-util.c:460
+msgid "unknown"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:251
+#, c-format
+msgid "Unable to get log console for container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:259
+#, c-format
+msgid "Unable to attach console to stderr in the container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:276
+#: ../bin/virt-sandbox-service-util.c:290
+#: ../bin/virt-sandbox-service-util.c:305
+#, c-format
+msgid "Unable to attach to container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:282
+#, c-format
+msgid "Unable to get shell console for container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:311
+#, c-format
+msgid "Unable to stop container: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:370
+msgid "Display version information"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:372
+msgid "Start a container"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:374
+msgid "Stop a container"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:376
+msgid "Attach to a container"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:378
+msgid "Execute command in a container"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:380
+msgid "Pid of process in container to which the command will run"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:382
+msgid "Connect to hypervisor Default:'lxc:///'"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:387
+msgid ""
+"Run 'virt-sandbox-service-util --help' to see a full list of available "
+"command line options\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:397
+msgid "- Libvirt Sandbox Service"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:409
+#, c-format
+msgid ""
+"Invalid command: You must specify --start, --stop, --execute or --attach\n"
+"%s"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:415
+#, c-format
+msgid "Invalid command CONTAINER_NAME required: %s"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:421
+#, c-format
+msgid ""
+"Invalid command: You must only one of specify a pid with --execute\n"
+"%s"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:428
+msgid "Libvirt Sandbox Service"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:432
+#, c-format
+msgid "Out of Memory\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:442
+#, c-format
+msgid "error opening connect to lxc:/// \n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:453
+#, c-format
+msgid "Unable to read config file %s: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:459
+#, c-format
+msgid "Unable to create new context service: %s\n"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-container.c:382
+msgid "Graphical sandboxes are not supported for containers"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:171
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:267
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:298
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:359
+#, c-format
+msgid "Cannot find module file for %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-machine.c:181
+#, c-format
+msgid "Cannot create initrd %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:881
+#, c-format
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:902
+#, c-format
+msgid "Cannot set static addresses with DHCP"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:922
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:931
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:981
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:989
+#, c-format
+msgid "Unable to parse address %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:961
+#, c-format
+msgid "Cannot set static routes with DHCP"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1009
+#, c-format
+msgid "Unknown parameter %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1020
+#, c-format
+msgid "Cannot set static routes without addresses"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1182
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1195
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1305
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1370
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1469
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1478
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1512
+msgid "Missing mount target in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1517
+msgid "Missing mount type in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1529
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1536
+msgid "Missing mount usage in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1545
+msgid "Missing mount source in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2030
+msgid "Missing class name in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2036
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2043
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:172
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:350
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:189
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:367
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:212
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:395
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:483
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1110
+msgid "Console is already attached to a stream"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:541
+msgid "Console is not attached to a stream"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:628
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:697
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:753
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:817
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1167
+msgid "ConsoleRpc is not attached to a stream"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:275
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:498
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:521
+#, c-format
+msgid "Domain is not currently running"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1058
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1077
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1132
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1158
+msgid "config file path"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1161
+msgid "Run '"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1171
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1178
+msgid "Libvirt Sandbox Init Common"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1196
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1222
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:69
+msgid "Unable to decode message length"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:76
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:86
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:130
+msgid "Unable to decode message header"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:174
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:235
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:303
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:329
+msgid "Unable to encode message length"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:180
+msgid "Unable to encode message header"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:192
+msgid "Unable to re-encode message length"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:222
+msgid "Unable to encode message payload"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:265
+msgid "Unable to decode message payload"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:290
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""

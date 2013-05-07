@@ -1,0 +1,584 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: libvirt-sandbox\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-05-07 17:18+0100\n"
+"PO-Revision-Date: 2013-05-07 16:18+0000\n"
+"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"Language-Team: Japanese <trans-ja@lists.fedoraproject.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ../bin/virt-sandbox.c:48 ../bin/virt-sandbox-service-util.c:94
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1140
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s バージョン %s\n"
+
+#: ../bin/virt-sandbox.c:80
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1152
+msgid "display version information"
+msgstr "バージョン情報の表示"
+
+#: ../bin/virt-sandbox.c:82
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1154
+msgid "display verbose information"
+msgstr "詳細情報の表示"
+
+#: ../bin/virt-sandbox.c:84
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1156
+msgid "display debugging information"
+msgstr "デバッグ情報の表示"
+
+#: ../bin/virt-sandbox.c:86
+msgid "connect to hypervisor"
+msgstr "ハイパーバイザーへの接続"
+
+#: ../bin/virt-sandbox.c:88
+msgid "name of the sandbox"
+msgstr "サンドボックスの名前"
+
+#: ../bin/virt-sandbox.c:90
+msgid "mount a filesystem in the guest"
+msgstr "仮想マシンにあるファイルシステムのマウント"
+
+#: ../bin/virt-sandbox.c:92
+msgid "file to copy into custom dir"
+msgstr "カスタムディレクトリにコピーするファイル"
+
+#: ../bin/virt-sandbox.c:94
+msgid "file contain list of files to include"
+msgstr "取り込むファイルの一覧"
+
+#: ../bin/virt-sandbox.c:96
+msgid "setup network interface properties"
+msgstr "ネットワークインターフェースのプロパティのセットアップ"
+
+#: ../bin/virt-sandbox.c:98
+msgid "security properties"
+msgstr "セキュリティ・プロパティ"
+
+#: ../bin/virt-sandbox.c:100
+msgid "run the command privileged"
+msgstr "特権コマンドの実行"
+
+#: ../bin/virt-sandbox.c:102
+msgid "start a shell"
+msgstr "シェルの開始"
+
+#: ../bin/virt-sandbox.c:107
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr "利用可能なコマンドラインオプションの一覧を確認するには 'virt-sandbox --help' を実行してください"
+
+#: ../bin/virt-sandbox.c:117
+msgid "Libvirt Sandbox"
+msgstr "Libvirt サンドボックス"
+
+#: ../bin/virt-sandbox.c:119
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1180
+msgid "- Libvirt Sandbox"
+msgstr "- Libvirt サンドボックス"
+
+#: ../bin/virt-sandbox.c:132
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr "\n使用法: %s [OPTIONS] COMMAND-PATH [ARGS...]\n\n%s\n\n"
+
+#: ../bin/virt-sandbox.c:148 ../bin/virt-sandbox-service-util.c:447
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "接続できません: %s\n"
+
+#: ../bin/virt-sandbox.c:149 ../bin/virt-sandbox.c:166
+#: ../bin/virt-sandbox.c:172 ../bin/virt-sandbox.c:178
+#: ../bin/virt-sandbox.c:184 ../bin/virt-sandbox.c:190
+#: ../bin/virt-sandbox.c:205 ../bin/virt-sandbox.c:211
+#: ../bin/virt-sandbox.c:218 ../bin/virt-sandbox.c:224
+#: ../bin/virt-sandbox.c:232
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1238
+msgid "Unknown failure"
+msgstr "不明なエラー"
+
+#: ../bin/virt-sandbox.c:165
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "mounts を構文解析できません: %s\n"
+
+#: ../bin/virt-sandbox.c:171
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "includes を構文解析できません: %s\n"
+
+#: ../bin/virt-sandbox.c:177
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "include file を構文解析できません: %s\n"
+
+#: ../bin/virt-sandbox.c:183
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "networks を構文解析できません: %s\n"
+
+#: ../bin/virt-sandbox.c:189
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "security を構文解析できません: %s\n"
+
+#: ../bin/virt-sandbox.c:204
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "サンドボックスを開始できません: %s\n"
+
+#: ../bin/virt-sandbox.c:210
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "ログコンソールを取得できません: %s\n"
+
+#: ../bin/virt-sandbox.c:217 ../bin/virt-sandbox.c:231
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "サンドボックスのコンソールを接続できません: %s\n"
+
+#: ../bin/virt-sandbox.c:223
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "アプリケーションのコンソールを取得できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:118
+#, c-format
+msgid "Failed to open container process path %s\n"
+msgstr "コンテナープロセスのパス %s を開けません\n"
+
+#: ../bin/virt-sandbox-service-util.c:129
+#, c-format
+msgid "Failed to open container namespace path %s: %m\n"
+msgstr "コンテナーの名前空間パス %s を開けません: %m\n"
+
+#: ../bin/virt-sandbox-service-util.c:138
+#, c-format
+msgid "Failed to setup namespace: %m\n"
+msgstr "名前空間のセットアップに失敗しました: %m\n"
+
+#: ../bin/virt-sandbox-service-util.c:167
+#, c-format
+msgid "Unable to get process context for pid %d\n"
+msgstr "PID %d のプロセスのコンテキストを取得できません\n"
+
+#: ../bin/virt-sandbox-service-util.c:171
+#, c-format
+msgid "Unable to set executable context for pid %d\n"
+msgstr "PID %d の実行可能コンテキストを設定できません\n"
+
+#: ../bin/virt-sandbox-service-util.c:214
+#, c-format
+msgid "Unable to wait for child %s\n"
+msgstr "子 %s を待機できません\n"
+
+#: ../bin/virt-sandbox-service-util.c:221
+#, c-format
+msgid "Failed to execute %s: %s\n"
+msgstr "%s の実行に失敗しました: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:245
+#, c-format
+msgid "Unable to start container: %s\n"
+msgstr "コンテナーを開始できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:246
+#: ../bin/virt-sandbox-service-util.c:252
+#: ../bin/virt-sandbox-service-util.c:260
+#: ../bin/virt-sandbox-service-util.c:277
+#: ../bin/virt-sandbox-service-util.c:283
+#: ../bin/virt-sandbox-service-util.c:291
+#: ../bin/virt-sandbox-service-util.c:306
+#: ../bin/virt-sandbox-service-util.c:312
+#: ../bin/virt-sandbox-service-util.c:448
+#: ../bin/virt-sandbox-service-util.c:454
+#: ../bin/virt-sandbox-service-util.c:460
+msgid "unknown"
+msgstr "不明"
+
+#: ../bin/virt-sandbox-service-util.c:251
+#, c-format
+msgid "Unable to get log console for container: %s\n"
+msgstr "コンテナーのログコンソールを取得できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:259
+#, c-format
+msgid "Unable to attach console to stderr in the container: %s\n"
+msgstr "コンソールをコンテナーの標準エラーに接続できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:276
+#: ../bin/virt-sandbox-service-util.c:290
+#: ../bin/virt-sandbox-service-util.c:305
+#, c-format
+msgid "Unable to attach to container: %s\n"
+msgstr "コンテナーに接続できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:282
+#, c-format
+msgid "Unable to get shell console for container: %s\n"
+msgstr "コンテナーのシェルコンソールを取得できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:311
+#, c-format
+msgid "Unable to stop container: %s\n"
+msgstr "コンテナーを停止できません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:370
+msgid "Display version information"
+msgstr "バージョン情報の表示"
+
+#: ../bin/virt-sandbox-service-util.c:372
+msgid "Start a container"
+msgstr "コンテナーの開始"
+
+#: ../bin/virt-sandbox-service-util.c:374
+msgid "Stop a container"
+msgstr "コンテナーの停止"
+
+#: ../bin/virt-sandbox-service-util.c:376
+msgid "Attach to a container"
+msgstr "コンテナーへの接続"
+
+#: ../bin/virt-sandbox-service-util.c:378
+msgid "Execute command in a container"
+msgstr "コンテナーにおいてコマンドの実行"
+
+#: ../bin/virt-sandbox-service-util.c:380
+msgid "Pid of process in container to which the command will run"
+msgstr "コマンドを実行するプロセスのコンテナーにおける PID"
+
+#: ../bin/virt-sandbox-service-util.c:382
+msgid "Connect to hypervisor Default:'lxc:///'"
+msgstr "ハイパーバイザーの標準 'lxc:///' への接続"
+
+#: ../bin/virt-sandbox-service-util.c:387
+msgid ""
+"Run 'virt-sandbox-service-util --help' to see a full list of available "
+"command line options\n"
+msgstr "利用可能なコマンドラインオプションの一覧を確認するには 'virt-sandbox-service-util --help' を実行してください\n"
+
+#: ../bin/virt-sandbox-service-util.c:397
+msgid "- Libvirt Sandbox Service"
+msgstr "- Libvirt サンドボックス・サービス"
+
+#: ../bin/virt-sandbox-service-util.c:409
+#, c-format
+msgid ""
+"Invalid command: You must specify --start, --stop, --execute or --attach\n"
+"%s"
+msgstr "無効なコマンド: --start, --stop, --execute または --attach を指定する必要があります\n%s"
+
+#: ../bin/virt-sandbox-service-util.c:415
+#, c-format
+msgid "Invalid command CONTAINER_NAME required: %s"
+msgstr "無効なコマンド: CONTAINER_NAME が必要です: %s"
+
+#: ../bin/virt-sandbox-service-util.c:421
+#, c-format
+msgid ""
+"Invalid command: You must only one of specify a pid with --execute\n"
+"%s"
+msgstr "無効なコマンド: --execute に PID を一つだけ指定する必要があります\n%s"
+
+#: ../bin/virt-sandbox-service-util.c:428
+msgid "Libvirt Sandbox Service"
+msgstr "libvirt サンドボックスサービス"
+
+#: ../bin/virt-sandbox-service-util.c:432
+#, c-format
+msgid "Out of Memory\n"
+msgstr "メモリー不足\n"
+
+#: ../bin/virt-sandbox-service-util.c:442
+#, c-format
+msgid "error opening connect to lxc:/// \n"
+msgstr "lxc:/// に接続中にエラーが発生しました \n"
+
+#: ../bin/virt-sandbox-service-util.c:453
+#, c-format
+msgid "Unable to read config file %s: %s\n"
+msgstr "設定ファイル %s を読み込めません: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:459
+#, c-format
+msgid "Unable to create new context service: %s\n"
+msgstr "新しいコンテキストサービスを作成できません: %s\n"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-container.c:382
+msgid "Graphical sandboxes are not supported for containers"
+msgstr "グラフィカルサンドボックスはコンテナーに対してサポートされません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:171
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "一時ディレクトリ %s を作成できません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:267
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "%s にある項目を読み込めません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:298
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "%s にアクセスできません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-initrd.c:359
+#, c-format
+msgid "Cannot find module file for %s"
+msgstr "%s 向けのモジュールファイルを見つけられません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-builder-machine.c:181
+#, c-format
+msgid "Cannot create initrd %s"
+msgstr "initrd %s を作成できません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:881
+#, c-format
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr "スタティックルート/アドレスで DHCP をリクエストできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:902
+#, c-format
+msgid "Cannot set static addresses with DHCP"
+msgstr "DHCP を用いてスタティックアドレスを設定できません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:922
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:931
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:981
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:989
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "アドレス %s を構文解析できません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:961
+#, c-format
+msgid "Cannot set static routes with DHCP"
+msgstr "DHCP を用いてスタティックルートを設定できません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1009
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "不明なパラメーター %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1020
+#, c-format
+msgid "Cannot set static routes without addresses"
+msgstr "アドレスを持たずスタティックルートを設定できません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1182
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "%s にマウント形式のプレフィックスがありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1195
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "不明なマウント形式プレフィックスが %s にあります"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1305
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1370
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "%s の下にプレフィックスを持つマウントがありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1469
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1478
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "未知のセキュリティオプション '%s'"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1512
+msgid "Missing mount target in config file"
+msgstr "設定ファイルにマウントターゲットがありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1517
+msgid "Missing mount type in config file"
+msgstr "設定ファイルにマウント形式がありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1529
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "不明なマウント形式 %s が設定ファイルにあります"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1536
+msgid "Missing mount usage in config file"
+msgstr "設定ファイルにマウントの使用法がありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1545
+msgid "Missing mount source in config file"
+msgstr "設定ファイルにマウントソースがありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2030
+msgid "Missing class name in config file"
+msgstr "クラス名が設定ファイルにありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2036
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "不明な形式名 '%s' が設定ファイルにあります"
+
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2043
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr "設定ファイルにある形式名 '%s' が不正な親を持ちます"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:172
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:350
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "terminal 属性を問い合わせできません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:189
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:367
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "terminal 属性を更新できません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:212
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:395
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "terminal 属性を復元できません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:483
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1110
+msgid "Console is already attached to a stream"
+msgstr "コンソールがすでにストリームに接続されています"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:541
+msgid "Console is not attached to a stream"
+msgstr "コンソールがストリームに接続されていません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:628
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "予期しない RPC 状態 %u"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:697
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "予期しない RPC プロセス %u"
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:753
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:817
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1167
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "ConsoleRpc がストリームに接続されていません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:275
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:498
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:521
+#, c-format
+msgid "Domain is not currently running"
+msgstr "ドメインが現在実行中ではありません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1058
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr "libvirt-sandbox-init-common: シグナルパイプを作成できません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1077
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common: %s を開けません: %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1132
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common: %s: %s を実行できません: %s\n"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1158
+msgid "config file path"
+msgstr "設定ファイルのパス"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1161
+msgid "Run '"
+msgstr "実行 '"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1171
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s: root として起動する必要があります\n"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1178
+msgid "Libvirt Sandbox Init Common"
+msgstr "Libvirt サンドボックス Init Common"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1196
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s: 設定 %s を読み込めません: %s\n"
+
+#: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1222
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "サポートされない設定形式 %s"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:69
+msgid "Unable to decode message length"
+msgstr "メッセージ長をデコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:76
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr "サーバーから受信したパケット %u バイトが小さすぎます、%u バイトが期待されます"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:86
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr "サーバーから受信したパケット %u バイトが大きすぎます、%d バイトが期待されます"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:130
+msgid "Unable to decode message header"
+msgstr "メッセージヘッダーをデコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:174
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:235
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:303
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:329
+msgid "Unable to encode message length"
+msgstr "メッセージ長をエンコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:180
+msgid "Unable to encode message header"
+msgstr "メッセージヘッダーをエンコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:192
+msgid "Unable to re-encode message length"
+msgstr "メッセージ長を再エンコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:222
+msgid "Unable to encode message payload"
+msgstr "メッセージペイロードをエンコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:265
+msgid "Unable to decode message payload"
+msgstr "メッセージペイロードをデコードできません"
+
+#: ../libvirt-sandbox/libvirt-sandbox-rpcpacket.c:290
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr "送信する生データが長すぎます (%zu バイト必要、%zu バイト利用可能)"
