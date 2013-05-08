@@ -1,4 +1,4 @@
-LIBVIRT_SANDBOX_0.2.0 {
+LIBVIRT_SANDBOX_0.2.1 {
    global:
 	gvir_sandbox_init;
 	gvir_sandbox_init_check;

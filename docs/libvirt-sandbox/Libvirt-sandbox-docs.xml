@@ -15,7 +15,6 @@
     <xi:include href="xml/libvirt-sandbox-builder-container.xml"/>
     <xi:include href="xml/libvirt-sandbox-builder-initrd.xml"/>
     <xi:include href="xml/libvirt-sandbox-builder-machine.xml"/>
-    <xi:include href="xml/libvirt-sandbox-cleaner.xml"/>
     <xi:include href="xml/libvirt-sandbox-config.xml"/>
     <xi:include href="xml/libvirt-sandbox-config-graphical.xml"/>
     <xi:include href="xml/libvirt-sandbox-config-initrd.xml"/>

@@ -70,40 +70,50 @@ gvir_sandbox_builder_error_quark(void)
 
 static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
                                                       GVirSandboxConfig *config,
+                                                      const gchar *tmpdir,
                                                       const gchar *configdir,
-                                                      GVirSandboxCleaner *cleaner,
                                                       GVirConfigDomain *domain,
                                                       GError **error);
 static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder,
                                                      GVirSandboxConfig *config,
+                                                     const gchar *tmpdir,
                                                      const gchar *configdir,
-                                                     GVirSandboxCleaner *cleaner,
                                                      GVirConfigDomain *domain,
                                                      GError **error);
 static gboolean gvir_sandbox_builder_construct_os(GVirSandboxBuilder *builder,
                                                   GVirSandboxConfig *config,
+                                                  const gchar *tmpdir,
                                                   const gchar *configdir,
-                                                  GVirSandboxCleaner *cleaner,
                                                   GVirConfigDomain *domain,
                                                   GError **error);
 static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *builder,
                                                         GVirSandboxConfig *config,
+                                                        const gchar *tmpdir,
                                                         const gchar *configdir,
-                                                        GVirSandboxCleaner *cleaner,
                                                         GVirConfigDomain *domain,
                                                         GError **error);
 static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder,
                                                        GVirSandboxConfig *config,
+                                                       const gchar *tmpdir,
                                                        const gchar *configdir,
-                                                       GVirSandboxCleaner *cleaner,
                                                        GVirConfigDomain *domain,
                                                        GError **error);
 static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder,
                                                         GVirSandboxConfig *config,
+                                                        const gchar *tmpdir,
                                                         const gchar *configdir,
-                                                        GVirSandboxCleaner *cleaner,
                                                         GVirConfigDomain *domain,
                                                         GError **error);
+static gboolean gvir_sandbox_builder_clean_post_start_default(GVirSandboxBuilder *builder,
+                                                              GVirSandboxConfig *config,
+                                                              const gchar *tmpdir,
+                                                              const gchar *configdir,
+                                                              GError **error);
+static gboolean gvir_sandbox_builder_clean_post_stop_default(GVirSandboxBuilder *builder,
+                                                             GVirSandboxConfig *config,
+                                                             const gchar *tmpdir,
+                                                             const gchar *configdir,
+                                                             GError **error);
 
 static void gvir_sandbox_builder_get_property(GObject *object,
                                              guint prop_id,
@@ -171,6 +181,8 @@ static void gvir_sandbox_builder_class_init(GVirSandboxBuilderClass *klass)
     klass->construct_features = gvir_sandbox_builder_construct_features;
     klass->construct_devices = gvir_sandbox_builder_construct_devices;
     klass->construct_security = gvir_sandbox_builder_construct_security;
+    klass->clean_post_start = gvir_sandbox_builder_clean_post_start_default;
+    klass->clean_post_stop = gvir_sandbox_builder_clean_post_stop_default;
 
     g_object_class_install_property(object_class,
                                     PROP_CONNECTION,
@@ -244,26 +256,26 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
 
 static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
                                                       GVirSandboxConfig *config,
+                                                      const gchar *tmpdir,
                                                       const gchar *configdir,
-                                                      GVirSandboxCleaner *cleaner,
                                                       GVirConfigDomain *domain,
                                                       GError **error)
 {
     GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
 
-    if (!(klass->construct_basic(builder, config, configdir, cleaner, domain, error)))
+    if (!(klass->construct_basic(builder, config, tmpdir, configdir, domain, error)))
         return FALSE;
 
-    if (!(klass->construct_os(builder, config, configdir, cleaner, domain, error)))
+    if (!(klass->construct_os(builder, config, tmpdir, configdir, domain, error)))
         return FALSE;
 
-    if (!(klass->construct_features(builder, config, configdir, cleaner, domain, error)))
+    if (!(klass->construct_features(builder, config, tmpdir, configdir, domain, error)))
         return FALSE;
 
-    if (!(klass->construct_devices(builder, config, configdir, cleaner, domain, error)))
+    if (!(klass->construct_devices(builder, config, tmpdir, configdir, domain, error)))
         return FALSE;
 
-    if (!(klass->construct_security(builder, config, configdir, cleaner, domain, error)))
+    if (!(klass->construct_security(builder, config, tmpdir, configdir, domain, error)))
         return FALSE;
 
     return TRUE;
@@ -272,8 +284,8 @@ static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builde
 
 static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                      GVirSandboxConfig *config,
+                                                     const gchar *tmpdir G_GNUC_UNUSED,
                                                      const gchar *configdir G_GNUC_UNUSED,
-                                                     GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                      GVirConfigDomain *domain,
                                                      GError **error G_GNUC_UNUSED)
 {
@@ -292,8 +304,8 @@ static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder
 
 static gboolean gvir_sandbox_builder_construct_os(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                   GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                  const gchar *tmpdir G_GNUC_UNUSED,
                                                   const gchar *configdir G_GNUC_UNUSED,
-                                                  GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                   GVirConfigDomain *domain G_GNUC_UNUSED,
                                                   GError **error G_GNUC_UNUSED)
 {
@@ -303,8 +315,8 @@ static gboolean gvir_sandbox_builder_construct_os(GVirSandboxBuilder *builder G_
 
 static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                         GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                        const gchar *tmpdir G_GNUC_UNUSED,
                                                         const gchar *configdir G_GNUC_UNUSED,
-                                                        GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                         GVirConfigDomain *domain G_GNUC_UNUSED,
                                                         GError **error G_GNUC_UNUSED)
 {
@@ -314,8 +326,8 @@ static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *buil
 
 static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                        GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                       const gchar *tmpdir G_GNUC_UNUSED,
                                                        const gchar *configdir G_GNUC_UNUSED,
-                                                       GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                        GVirConfigDomain *domain G_GNUC_UNUSED,
                                                        GError **error G_GNUC_UNUSED)
 {
@@ -325,8 +337,8 @@ static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *build
 
 static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder G_GNUC_UNUSED,
                                                         GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                        const gchar *tmpdir G_GNUC_UNUSED,
                                                         const gchar *configdir G_GNUC_UNUSED,
-                                                        GVirSandboxCleaner *cleaner G_GNUC_UNUSED,
                                                         GVirConfigDomain *domain,
                                                         GError **error G_GNUC_UNUSED)
 {
@@ -362,11 +374,29 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
 }
 
 
+static gboolean gvir_sandbox_builder_clean_post_start_default(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                              GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                              const gchar *tmpdir G_GNUC_UNUSED,
+                                                              const gchar *configdir G_GNUC_UNUSED,
+                                                              GError **error G_GNUC_UNUSED)
+{
+    return TRUE;
+}
+
+static gboolean gvir_sandbox_builder_clean_post_stop_default(GVirSandboxBuilder *builder G_GNUC_UNUSED,
+                                                             GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                             const gchar *tmpdir G_GNUC_UNUSED,
+                                                             const gchar *configdir G_GNUC_UNUSED,
+                                                             GError **error G_GNUC_UNUSED)
+{
+    return TRUE;
+}
+
 /**
  * gvir_sandbox_builder_construct:
  * @builder: (transfer none): the sandbox builder
  * @config: (transfer none): the sandbox configuration
- * @cleaner: (transfer none): the sandbox cleaner
+ * @configdir: (transfer none): the configuration directory
  * @error: (out): the error location
  *
  * Create a domain configuration from the sandbox configuration
@@ -375,17 +405,65 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
  */
 GVirConfigDomain *gvir_sandbox_builder_construct(GVirSandboxBuilder *builder,
                                                  GVirSandboxConfig *config,
+                                                 const gchar *tmpdir,
                                                  const gchar *configdir,
-                                                 GVirSandboxCleaner *cleaner,
                                                  GError **error)
 {
     GVirConfigDomain *domain = gvir_config_domain_new();
     GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
 
-    if (!(klass->construct_domain(builder, config, configdir, cleaner, domain, error))) {
+    if (!(klass->construct_domain(builder, config, tmpdir, configdir, domain, error))) {
         g_object_unref(domain);
         return NULL;
     }
 
     return domain;
+}
+
+
+/**
+ * gvir_sandbox_builder_clean_post_start:
+ * @builder: (transfer none): the sandbox builder
+ * @config: (transfer none): the sandbox configuration
+ * @configdir: (transfer none): the configuration directory
+ * @error: (out): the error location
+ *
+ * Cleanup temporary files which are not required once the sandbox
+ * has been started.
+ *
+ * Returns: TRUE on success, FALSE on error
+ */
+gboolean gvir_sandbox_builder_clean_post_start(GVirSandboxBuilder *builder,
+                                               GVirSandboxConfig *config,
+                                               const gchar *tmpdir,
+                                               const gchar *configdir,
+                                               GError **error)
+{
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+
+    return klass->clean_post_start(builder, config, tmpdir, configdir, error);
+}
+
+
+/**
+ * gvir_sandbox_builder_clean_post_stop:
+ * @builder: (transfer none): the sandbox builder
+ * @config: (transfer none): the sandbox configuration
+ * @configdir: (transfer none): the configuration directory
+ * @error: (out): the error location
+ *
+ * Cleanup temporary files which are not required once the sandbox
+ * has been started.
+ *
+ * Returns: TRUE on success, FALSE on error
+ */
+gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
+                                              GVirSandboxConfig *config,
+                                              const gchar *tmpdir,
+                                              const gchar *configdir,
+                                              GError **error)
+{
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+
+    return klass->clean_post_stop(builder, config, tmpdir, configdir, error);
 }
