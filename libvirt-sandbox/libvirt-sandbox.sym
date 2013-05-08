@@ -156,6 +156,8 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_context_get_connection;
 	gvir_sandbox_context_get_log_console;
 	gvir_sandbox_context_get_shell_console;
+	gvir_sandbox_context_get_autodestroy;
+	gvir_sandbox_context_set_autodestroy;
 	gvir_sandbox_context_start;
 	gvir_sandbox_context_stop;
 

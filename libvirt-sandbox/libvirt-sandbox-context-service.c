@@ -139,5 +139,6 @@ GVirSandboxContextService *gvir_sandbox_context_service_new(GVirConnection *conn
     return GVIR_SANDBOX_CONTEXT_SERVICE(g_object_new(GVIR_SANDBOX_TYPE_CONTEXT_SERVICE,
                                                      "connection", connection,
                                                      "config", config,
+                                                     "autodestroy", FALSE,
                                                      NULL));
 }

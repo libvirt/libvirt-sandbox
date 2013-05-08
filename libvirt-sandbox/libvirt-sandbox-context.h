@@ -66,6 +66,10 @@ GType gvir_sandbox_context_get_type(void);
 
 GVirSandboxConfig *gvir_sandbox_context_get_config(GVirSandboxContext *ctxt);
 
+void gvir_sandbox_context_set_autodestroy(GVirSandboxContext *ctxt,
+                                          gboolean state);
+gboolean gvir_sandbox_context_get_autodestroy(GVirSandboxContext *ctxt);
+
 gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error);
