@@ -5,11 +5,12 @@ virt-sandbox-service create - Create a Security container
 =head1 SYNOPSIS
 
   virt-sandbox-service [-c URI] create [-h] [-C] [-f FILE_TYPE]
-				   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
-				   [-N NETWORK] [-p PATH] [-s SECURITY]
-				   [-u UNITFILES] [--username USERNAME]
-				   [-U UID] [-P package]
-				   name [command [command ...]]
+                                   [--homedir HOMEDIR] [-G GID] [-i IMAGESIZE]
+                                   [[-m TYPE:DST=SRC ] ...]
+                                   [-N NETWORK] [-p PATH] [-s SECURITY]
+                                   [[-u UNITFILES] ...] [--username USERNAME]
+                                   [-U UID] [-P package]
+                                   name [command [command ...]]
 
 =head1 DESCRIPTION
 
@@ -66,6 +67,44 @@ Default: C</var/lib/libvirt/filesystems>.
 Set homedir path to use within container.
 
 Default: C<UID's Homedir>.
+
+=item B<-m TYPE:DST=SRC>, B<--mount TYPE:DST=SRC>
+
+Sets up a mount inside the sandbox at B<DST> backed by B<SRC>. The meaning of B<SRC> depends on the value of "TYPE" specified:
+
+=over 4
+
+=item host-bind
+
+If B<TYPE> is B<host-bind>, then B<SRC> is interpreted as the path to a directory on the host filesystem. If "SRC" is the empty string, then a temporary (empty) directory is created on the host before starting the sandbox and deleted afterwards. The "--include" option is useful for populating these temporary directories with copies of host files.
+
+=back
+
+=over 4
+
+=item host-image
+
+If B<TYPE> is B<host-image>, then B<SRC> is interpreted as the path to a disk image file on the host filesystem. The image should be formatted with a filesystem that can be auto-detected by the sandbox, such as B<ext3, ext4>, etc. The disk image itself should be a raw file, not qcow2 or any other special format
+
+=back
+
+=over 4
+
+=item guest-bind
+
+If B<TYPE> is B<guest-bind>, then B<SRC> is interpreted as the path to another directory in the container filesystem.
+
+=back
+
+=over 4
+
+=item Some examples
+
+    -m host-bind:/tmp=/var/lib/sandbox/demo/tmp
+    -m host-image:/=/var/lib/sandbox/demo.img
+    -m guest-bind:/home=/tmp/home
+
+=back
 
 =item B<-N NETWORK-OPTIONS>, B<--network NETWORK-OPTIONS>
 

@@ -57,7 +57,7 @@ _virt_sandbox_service () {
     )
     local -A OPTS=(
         [ALL]='-h --help'
-        [CREATE]='-C --copy -f --filetype -G --gid  -i --imagesize --homedir -N --network -p --path -s --security -u --unitfile --username -U -uid'
+        [CREATE]='-C --copy -f --filetype -G --gid  -i --imagesize --homedir -m --mount -N --network -p --path -s --security -u --unitfile --username -U -uid'
         [LIST]='-r --running'
         [RELOAD]='-u --unitfile'
         [EXECUTE]='-N --noseclabel'
@@ -115,6 +115,8 @@ _virt_sandbox_service () {
         COMPREPLY=( $(compgen -W "$( __get_all_file_types ) " -- "$cur") )
         return 0
         elif test "$prev" = "-s" || test "$prev" = "--security" ; then
+        return 0
+        elif test "$prev" = "-m" || test "$prev" = "--mount" ; then
         return 0
         elif test "$prev" = "-n" || test "$prev" = "--network" ; then
         return 0

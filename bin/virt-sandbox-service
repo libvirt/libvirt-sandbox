@@ -76,6 +76,7 @@ class Container:
         self.conn = None
         self.image = None
         self.uid = 0
+        self.mounts = []
 
     def get_file_type(self):
         return self.file_type
@@ -106,6 +107,15 @@ class Container:
 
     def get_homedir(self):
         return self.config.get_homedir()
+
+    def set_mounts(self, mounts):
+        self.mounts = mounts
+
+    def get_mounts(self):
+        return self.mounts
+
+    def add_mounts(self):
+        self.config.add_mount_strv(self.mounts)
 
     def get_config_path(self, name = None):
         if not name:
@@ -319,6 +329,7 @@ class GenericContainer(Container):
     def gen_filesystems(self):
         Container.gen_filesystems(self)
         self.add_bind_mount(self.dest, self.path)
+        self.add_mounts()
 
     def create_generic(self):
         Container.create(self)
@@ -627,6 +638,7 @@ WantedBy=%(TARGET)s
             if not found:
                 source = "%s%s" % ( self.dest, d)
                 self.add_bind_mount(source, d)
+        self.add_mounts()
 
     def get_expanded_unit_template(self, unit):
         return unit.replace('@', '@' + self.name)
@@ -829,6 +841,7 @@ def create(args):
     container.set_gid(args.gid)
     container.set_path(args.path)
     container.set_file_type(args.file_type)
+    container.set_mounts(args.mounts)
     if args.imagesize:
         container.set_image(args.imagesize)
 
@@ -1053,6 +1066,8 @@ def gen_create_args(subparser):
     parser.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
+    parser.add_argument("-m", "--mount", dest="mounts",default=[], nargs="*",
+                        help=_("Mount a filesytem in the sandbox"))
     parser.add_argument("-N", "--network", dest="network",
                         action=SetNet, default=[],
                         help=_("Specify the network configuration"))
