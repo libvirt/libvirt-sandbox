@@ -9,7 +9,7 @@ virt-sandbox-service create - Create a Security container
                                    [[-m TYPE:DST=SRC ] ...]
                                    [-N NETWORK] [-p PATH] [-s SECURITY]
                                    [[-u UNITFILES] ...] [--username USERNAME]
-                                   [-U UID] [-P package]
+                                   [-U UID] [[-P package] ... ]
                                    name [command [command ...]]
 
 =head1 DESCRIPTION
@@ -188,7 +188,7 @@ systemd Unit file to run within the container
 
 =item B<-P PACKAGE>, B<--package PACKAGE>
 
-Package used to populate the container if not autodetected based on unit file.
+Package(s) to be used within the container.
 
 =item B<-U UID>, B<--uid UID>
 
