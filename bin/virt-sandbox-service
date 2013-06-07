@@ -181,18 +181,6 @@ class Container:
             mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest)
             self.config.add_mount(mount)
 
-        # 10 MB /run
-        mount = LibvirtSandbox.ConfigMountRam.new("/run", 10 * 1024 * 1024);
-        self.config.add_mount(mount)
-
-        # 100 MB /tmp
-        mount = LibvirtSandbox.ConfigMountRam.new("/tmp", 100 * 1024 * 1024);
-        self.config.add_mount(mount)
-
-        # 100 MB /tmp
-        mount = LibvirtSandbox.ConfigMountRam.new("/dev/shm", 100 * 1024 * 1024);
-        self.config.add_mount(mount)
-
     def fix_stat(self, f):
         try:
             s = os.stat(f)
@@ -619,6 +607,18 @@ WantedBy=%(TARGET)s
 
     def gen_filesystems(self):
         Container.gen_filesystems(self)
+        # 10 MB /run
+        mount = LibvirtSandbox.ConfigMountRam.new("/run", 10 * 1024 * 1024);
+        self.config.add_mount(mount)
+
+        # 100 MB /tmp
+        mount = LibvirtSandbox.ConfigMountRam.new("/tmp", 100 * 1024 * 1024);
+        self.config.add_mount(mount)
+
+        # 100 MB /tmp
+        mount = LibvirtSandbox.ConfigMountRam.new("/dev/shm", 100 * 1024 * 1024);
+        self.config.add_mount(mount)
+
         for d in self.BIND_SYSTEM_DIRS:
             if os.path.exists(d):
                 source = "%s%s" % ( self.dest, d)
