@@ -138,10 +138,12 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_config_initrd_set_kmoddir;
 
 	gvir_sandbox_console_get_type;
+	gvir_sandbox_console_get_direct;
 	gvir_sandbox_console_attach;
 	gvir_sandbox_console_attach_stdio;
 	gvir_sandbox_console_attach_stderr;
 	gvir_sandbox_console_detach;
+	gvir_sandbox_console_set_direct;
 
 	gvir_sandbox_console_raw_get_type;
 	gvir_sandbox_console_raw_new;

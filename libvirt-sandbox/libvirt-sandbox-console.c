@@ -48,6 +48,7 @@ struct _GVirSandboxConsolePrivate
     GVirDomain *domain;
     gchar *devname;
     gchar escape;
+    gboolean direct;
 };
 
 
@@ -60,6 +61,7 @@ enum {
     PROP_DOMAIN,
     PROP_DEVNAME,
     PROP_ESCAPE,
+    PROP_DIRECT,
 };
 
 enum {
@@ -91,6 +93,10 @@ static void gvir_sandbox_console_get_property(GObject *object,
 
     case PROP_ESCAPE:
         g_value_set_schar(value, priv->escape);
+        break;
+
+    case PROP_DIRECT:
+        g_value_set_boolean(value, priv->direct);
         break;
 
     default:
@@ -126,6 +132,10 @@ static void gvir_sandbox_console_set_property(GObject *object,
 
     case PROP_ESCAPE:
         priv->escape = g_value_get_schar(value);
+        break;
+
+    case PROP_DIRECT:
+        priv->direct = g_value_get_boolean(value);
         break;
 
     default:
@@ -208,6 +218,18 @@ static void gvir_sandbox_console_class_init(GVirSandboxConsoleClass *klass)
                                                       G_PARAM_STATIC_NAME |
                                                       G_PARAM_STATIC_NICK |
                                                       G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_DIRECT,
+                                    g_param_spec_boolean("direct",
+                                                         "Direct",
+                                                         "Direct pty access",
+                                                         FALSE,
+                                                         G_PARAM_READABLE |
+                                                         G_PARAM_WRITABLE |
+                                                         G_PARAM_CONSTRUCT_ONLY |
+                                                         G_PARAM_STATIC_NAME |
+                                                         G_PARAM_STATIC_NICK |
+                                                         G_PARAM_STATIC_BLURB));
 
     g_signal_new("closed",
                  G_OBJECT_CLASS_TYPE(object_class),
@@ -294,4 +316,17 @@ void gvir_sandbox_console_set_escape(GVirSandboxConsole *console,
 gchar gvir_sandbox_console_get_escape(GVirSandboxConsole *console)
 {
     return console->priv->escape;
+}
+
+
+void gvir_sandbox_console_set_direct(GVirSandboxConsole *console,
+                                     gboolean direct)
+{
+    console->priv->direct = direct;
+}
+
+
+gboolean gvir_sandbox_console_get_direct(GVirSandboxConsole *console)
+{
+    return console->priv->direct;
 }

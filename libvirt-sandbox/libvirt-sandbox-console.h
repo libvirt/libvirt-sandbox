@@ -95,6 +95,10 @@ void gvir_sandbox_console_set_escape(GVirSandboxConsole *console,
                                      gchar escape);
 gchar gvir_sandbox_console_get_escape(GVirSandboxConsole *console);
 
+void gvir_sandbox_console_set_direct(GVirSandboxConsole *console,
+                                     gboolean direct);
+gboolean gvir_sandbox_console_get_direct(GVirSandboxConsole *console);
+
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONSOLE_H__ */
