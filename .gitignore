@@ -29,6 +29,7 @@ po/Makefile
 po/POTFILES
 po/stamp-it
 po/libvirt-sandbox.pot
+po/*.gmo
 stamp-h1
 INSTALL
 libvirt-sandbox-1.0.pc
