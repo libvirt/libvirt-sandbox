@@ -3,6 +3,7 @@ bin/virt-sandbox-service-util.c
 libvirt-sandbox/libvirt-sandbox-builder-container.c
 libvirt-sandbox/libvirt-sandbox-builder-initrd.c
 libvirt-sandbox/libvirt-sandbox-config.c
+libvirt-sandbox/libvirt-sandbox-console.c
 libvirt-sandbox/libvirt-sandbox-console-raw.c
 libvirt-sandbox/libvirt-sandbox-console-rpc.c
 libvirt-sandbox/libvirt-sandbox-context.c

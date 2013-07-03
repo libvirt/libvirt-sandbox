@@ -91,6 +91,9 @@ gboolean gvir_sandbox_console_attach(GVirSandboxConsole *console,
 gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error);
 
+gboolean gvir_sandbox_console_isolate(GVirSandboxConsole *console,
+                                      GError **error);
+
 void gvir_sandbox_console_set_escape(GVirSandboxConsole *console,
                                      gchar escape);
 gchar gvir_sandbox_console_get_escape(GVirSandboxConsole *console);

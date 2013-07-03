@@ -22,6 +22,8 @@
 
 #include <config.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -69,6 +71,15 @@ enum {
 };
 
 //static gint signals[LAST_SIGNAL];
+
+#define GVIR_SANDBOX_CONSOLE_ERROR gvir_sandbox_console_error_quark()
+
+static GQuark
+gvir_sandbox_console_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-console");
+}
+
 
 static void gvir_sandbox_console_get_property(GObject *object,
                                               guint prop_id,
@@ -303,6 +314,29 @@ gboolean gvir_sandbox_console_detach(GVirSandboxConsole *console,
                                      GError **error)
 {
     return GVIR_SANDBOX_CONSOLE_GET_CLASS(console)->detach(console, error);
+}
+
+gboolean gvir_sandbox_console_isolate(GVirSandboxConsole *console,
+                                      GError **error)
+{
+    GVirSandboxConsolePrivate *priv = console->priv;
+
+    if (!console->priv->direct) {
+        g_set_error(error, GVIR_SANDBOX_CONSOLE_ERROR, 0, "%s",
+                    _("Unable to isolate console unless direct access flag is set"));
+        return FALSE;
+    }
+
+    if (priv->connection) {
+        g_object_unref(priv->connection);
+        priv->connection = NULL;
+    }
+    if (priv->domain) {
+        g_object_unref(priv->domain);
+        priv->domain = NULL;
+    }
+
+    return TRUE;
 }
 
 
