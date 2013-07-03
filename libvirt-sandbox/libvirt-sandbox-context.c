@@ -51,7 +51,6 @@ struct _GVirSandboxContextPrivate
     GVirConnection *connection;
     GVirDomain *domain;
     GVirSandboxConfig *config;
-    GVirSandboxConsole *console;
     gboolean active;
     gboolean autodestroy;
 
@@ -448,7 +447,6 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
     gchar *tmpdir;
     gchar *configdir;
     gboolean ret = FALSE;
-    const gchar *devname;
     int flags = 0;
 
     if (priv->domain) {
@@ -492,16 +490,6 @@ gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
 
     if (!gvir_sandbox_context_clean_post_start(ctxt, error))
         goto error;
-
-    /* XXX get from config */
-    if (strstr(gvir_connection_get_uri(priv->connection), "lxc"))
-        devname = "console0";
-    else
-        devname = "serial0";
-
-    priv->console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection,
-                                                                      priv->domain,
-                                                                      devname));
 
     priv->active = TRUE;
     ret = TRUE;
@@ -579,11 +567,6 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
         priv->builder = NULL;
     }
 
-    if (priv->console) {
-        g_object_unref(priv->console);
-        priv->console = NULL;
-    }
-
     priv->active = FALSE;
 
     return ret;
@@ -600,14 +583,26 @@ GVirSandboxConsole *gvir_sandbox_context_get_log_console(GVirSandboxContext *ctx
                                                          GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
+    GVirSandboxConsole *console;
+    const char *devname = NULL;
 
-    if (!priv->console) {
+    if (!priv->domain) {
         g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
                     _("Domain is not currently running"));
         return NULL;
     }
 
-    return g_object_ref(priv->console);
+    /* XXX get from config */
+    if (strstr(gvir_connection_get_uri(priv->connection), "lxc"))
+        devname = "console0";
+    else
+        devname = "serial0";
+
+    console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection,
+                                                                priv->domain,
+                                                                devname));
+
+    return console;
 }
 
 
