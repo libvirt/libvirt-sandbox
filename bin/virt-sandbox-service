@@ -939,13 +939,10 @@ def execute(args):
         raise ValueError([_("Can only execute commands inside of linux containers.")])
 
     myexec = [ "virsh", "-c", args.uri, "lxc-enter-namespace" ]
-#    myexec = [ "virt-sandbox-service-util", "execute" ]
     if args.noseclabel:
         myexec.append("--noseclabel")
     myexec.extend([ args.name, "--", fullpath(args.command[0])] +  args.command[1:])
     os.execv("/usr/bin/virsh", myexec)
-#    myexec.extend( "-e", cmd, args.name ]
-#    os.execv("/usr/libexec/virt-sandbox-service-util", myexec)
 
 def clone(args):
     config = read_config(args.source)

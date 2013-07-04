@@ -24,7 +24,6 @@ Source0: ftp://libvirt.org/libvirt/sandbox/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: libvirt-gobject-devel >= 0.0.9
 BuildRequires: gobject-introspection-devel
-BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
 BuildRequires: intltool
