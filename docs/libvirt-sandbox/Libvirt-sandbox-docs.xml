@@ -19,9 +19,24 @@
     <xi:include href="xml/libvirt-sandbox-config-graphical.xml"/>
     <xi:include href="xml/libvirt-sandbox-config-initrd.xml"/>
     <xi:include href="xml/libvirt-sandbox-config-mount.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-mount.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-mount-guest-bind.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-mount-host-bind.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-mount-host-image.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-mount-ram.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-network.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-network-address.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-network-route.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-service.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-service-generic.xml"/>
+    <xi:include href="xml/libvirt-sandbox-config-service-systemd.xml"/>
     <xi:include href="xml/libvirt-sandbox-console.xml"/>
+    <xi:include href="xml/libvirt-sandbox-console-raw.xml"/>
+    <xi:include href="xml/libvirt-sandbox-console-rpc.xml"/>
     <xi:include href="xml/libvirt-sandbox-context.xml"/>
     <xi:include href="xml/libvirt-sandbox-context-graphical.xml"/>
+    <xi:include href="xml/libvirt-sandbox-context-interactive.xml"/>
+    <xi:include href="xml/libvirt-sandbox-context-service.xml"/>
   </chapter>
   <chapter id="object-tree">
     <title>Object Hierarchy</title>
