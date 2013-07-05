@@ -520,7 +520,7 @@ gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (priv->domain) {
+    if (priv->active) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
                              "%s", "A previously built sandbox still exists");
         return FALSE;
@@ -542,6 +542,30 @@ gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
                                                               error)))
         return FALSE;
 
+    priv->active = TRUE;
+
+    return TRUE;
+}
+
+
+gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+
+    if (!priv->active)
+        return TRUE;
+
+    if (priv->domain) {
+        g_object_unref(priv->domain);
+        priv->domain = NULL;
+    }
+    if (priv->builder) {
+        g_object_unref(priv->builder);
+        priv->builder = NULL;
+    }
+
+    priv->active = FALSE;
+
     return TRUE;
 }
 
@@ -550,6 +574,9 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
     gboolean ret = TRUE;
+
+    if (!priv->active)
+        return TRUE;
 
     if (priv->domain) {
         if (!gvir_domain_stop(priv->domain, 0, error))

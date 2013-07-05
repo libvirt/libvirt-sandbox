@@ -73,6 +73,7 @@ gboolean gvir_sandbox_context_get_autodestroy(GVirSandboxContext *ctxt);
 gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error);
+gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error);
 
 GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
                                             GError **error);

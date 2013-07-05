@@ -111,6 +111,8 @@ static int container_start(const char *uri, const char *name, GMainLoop *loop)
         goto cleanup;
     }
 
+    gvir_sandbox_console_set_direct(con, TRUE);
+
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
 
     if (gvir_sandbox_console_attach_stderr(con, &err) < 0) {
@@ -118,6 +120,17 @@ static int container_start(const char *uri, const char *name, GMainLoop *loop)
                    err && err->message ? err->message : _("unknown"));
         goto cleanup;
     }
+
+    /* Stop holding open libvirt connection */
+    if (gvir_sandbox_console_isolate(con, &err) < 0) {
+        g_printerr(_("Unable to disconnect console from libvirt: %s\n"),
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
+    }
+
+    gvir_sandbox_context_detach(ctx, NULL);
+    g_object_unref(ctx);
+    ctx = NULL;
 
     g_main_loop_run(loop);
 
@@ -153,6 +166,8 @@ static int container_attach(const char *uri, const char *name, GMainLoop *loop)
         goto cleanup;
     }
 
+    gvir_sandbox_console_set_direct(con, TRUE);
+
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
 
     if (!(gvir_sandbox_console_attach_stdio(con, &err))) {
@@ -160,6 +175,18 @@ static int container_attach(const char *uri, const char *name, GMainLoop *loop)
                    err && err->message ? err->message : _("unknown"));
         goto cleanup;
     }
+
+    /* Stop holding open libvirt connection */
+    if (gvir_sandbox_console_isolate(con, &err) < 0) {
+        g_printerr(_("Unable to disconnect console from libvirt: %s\n"),
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
+    }
+
+    gvir_sandbox_context_detach(ctx, NULL);
+
+    g_object_unref(ctx);
+    ctx = NULL;
 
     g_main_loop_run(loop);
 

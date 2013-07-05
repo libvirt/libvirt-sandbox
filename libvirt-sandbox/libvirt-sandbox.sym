@@ -153,6 +153,7 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_console_rpc_new;
 
 	gvir_sandbox_context_attach;
+	gvir_sandbox_context_detach;
 	gvir_sandbox_context_get_type;
 	gvir_sandbox_context_get_config;
 	gvir_sandbox_context_get_domain;
