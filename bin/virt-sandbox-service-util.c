@@ -45,22 +45,70 @@ static void libvirt_sandbox_version(void)
 }
 
 
-static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
+static GVirSandboxContext *libvirt_sandbox_get_context(const char *uri,
+                                                       const char *name)
+{
+    GVirSandboxConfig *config = NULL;
+    GVirSandboxContextService *ctx = NULL;
+    GError *err = NULL;
+    GVirConnection *conn = NULL;
+    gchar *configfile = NULL;
 
+    configfile = g_strdup_printf("/etc/libvirt-sandbox/services/%s.sandbox", name);
+
+    if (uri)
+        conn = gvir_connection_new(uri);
+    else
+        conn = gvir_connection_new("lxc:///");
+
+    if (!gvir_connection_open(conn, NULL, &err)) {
+        g_printerr(_("Unable to open connection: %s\n"),
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
+    }
+
+    if (!(config = gvir_sandbox_config_load_from_path(configfile, &err))) {
+        g_printerr(_("Unable to read config file %s: %s\n"), configfile,
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
+    }
+
+    if (!(ctx = gvir_sandbox_context_service_new(conn, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
+        g_printerr(_("Unable to create new context service: %s\n"),
+                   err && err->message ? err->message : _("unknown"));
+        goto cleanup;
+    }
+
+cleanup:
+    g_free(configfile);
+    if (conn)
+        g_object_unref(conn);
+    if (config)
+        g_object_unref(config);
+
+    return ctx ? GVIR_SANDBOX_CONTEXT(ctx) : NULL;
+}
+
+static int container_start(const char *uri, const char *name, GMainLoop *loop)
+{
     int ret = EXIT_FAILURE;
     GError *err = NULL;
     GVirSandboxConsole *con = NULL;
+    GVirSandboxContext *ctx = NULL;
+
+    if (!(ctx = libvirt_sandbox_get_context(uri, name)))
+        goto cleanup;
 
     if (!(gvir_sandbox_context_start(ctx, &err))) {
         g_printerr(_("Unable to start container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     if (!(con = gvir_sandbox_context_get_log_console(ctx, &err)))  {
         g_printerr(_("Unable to get log console for container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
@@ -68,30 +116,41 @@ static int container_start( GVirSandboxContext *ctx, GMainLoop *loop ) {
     if (gvir_sandbox_console_attach_stderr(con, &err) < 0) {
         g_printerr(_("Unable to attach console to stderr in the container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     g_main_loop_run(loop);
 
-    return EXIT_SUCCESS;
+    ret = EXIT_SUCCESS;
+
+cleanup:
+    if (ctx)
+        g_object_unref(ctx);
+    if (con)
+        g_object_unref(con);
+    return ret;
 }
 
-static int container_attach( GVirSandboxContext *ctx,  GMainLoop *loop ) {
-
+static int container_attach(const char *uri, const char *name, GMainLoop *loop)
+{
+    int ret = EXIT_FAILURE;
     GError *err = NULL;
     GVirSandboxConsole *con = NULL;
-    int ret = EXIT_FAILURE;
+    GVirSandboxContext *ctx = NULL;
+
+    if (!(ctx = libvirt_sandbox_get_context(uri, name)))
+        goto cleanup;
 
     if (!(gvir_sandbox_context_attach(ctx, &err))) {
         g_printerr(_("Unable to attach to container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     if (!(con = gvir_sandbox_context_get_shell_console(ctx, &err)))  {
         g_printerr(_("Unable to get shell console for container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     g_signal_connect(con, "closed", (GCallback)do_close, loop);
@@ -99,34 +158,51 @@ static int container_attach( GVirSandboxContext *ctx,  GMainLoop *loop ) {
     if (!(gvir_sandbox_console_attach_stdio(con, &err))) {
         g_printerr(_("Unable to attach to container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return ret;
+        goto cleanup;
     }
 
     g_main_loop_run(loop);
 
-    return EXIT_SUCCESS;
+    ret = EXIT_SUCCESS;
+
+cleanup:
+    if (ctx)
+        g_object_unref(ctx);
+    if (con)
+        g_object_unref(con);
+    return ret;
 }
 
-static int container_stop( GVirSandboxContext *ctx, GMainLoop *loop G_GNUC_UNUSED) {
-
+static int container_stop(const char *uri, const char *name, GMainLoop *loop)
+{
+    int ret = EXIT_FAILURE;
     GError *err = NULL;
+    GVirSandboxContext *ctx = NULL;
+
+    if (!(ctx = libvirt_sandbox_get_context(uri, name)))
+        goto cleanup;
 
     if (!(gvir_sandbox_context_attach(ctx, &err))) {
         g_printerr(_("Unable to attach to container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return EXIT_FAILURE;
+        goto cleanup;
     }
 
     if (!(gvir_sandbox_context_stop(ctx, &err))) {
         g_printerr(_("Unable to stop container: %s\n"),
                    err && err->message ? err->message : _("unknown"));
-        return EXIT_FAILURE;
+        goto cleanup;
     }
 
-    return EXIT_SUCCESS;
+    ret = EXIT_SUCCESS;
+
+cleanup:
+    if (ctx)
+        g_object_unref(ctx);
+    return ret;
 }
 
-static int (*container_func)( GVirSandboxContext *ctx, GMainLoop *loop ) = NULL;
+static int (*container_func)(const char *uri, const char *name, GMainLoop *loop) = NULL;
 
 static gboolean libvirt_lxc_start(const gchar *option_name,
                                   const gchar *value,
@@ -161,15 +237,12 @@ static gboolean libvirt_lxc_attach(const gchar *option_name,
     return TRUE;
 }
 
-int main(int argc, char **argv) {
-    GMainLoop *loop = NULL;
-    GVirSandboxConfig *config = NULL;
-    GVirSandboxContextService *ctx = NULL;
+int main(int argc, char **argv)
+{
     GError *err = NULL;
-    GVirConnection *hv = NULL;
+    GMainLoop *loop = NULL;
     int ret = EXIT_FAILURE;
     pid_t pid = 0;
-    gchar *buf=NULL;
     gchar *uri = NULL;
 
     gchar **cmdargs = NULL;
@@ -228,51 +301,10 @@ int main(int argc, char **argv) {
 
     g_set_application_name(_("Libvirt Sandbox Service"));
 
-    buf = g_strdup_printf("/etc/libvirt-sandbox/services/%s.sandbox", cmdargs[0]);
-    if (!buf) {
-        g_printerr(_("Out of Memory\n"));
-        goto cleanup;
-    }
-
-    if (uri)
-        hv = gvir_connection_new(uri);
-    else
-        hv = gvir_connection_new("lxc:///");
-
-    if (!hv) {
-        g_printerr(_("error opening connect to lxc:/// \n"));
-        goto cleanup;
-    }
-
-    if (!gvir_connection_open(hv, NULL, &err)) {
-        g_printerr(_("Unable to open connection: %s\n"),
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
-    }
-
-    if (!(config = gvir_sandbox_config_load_from_path(buf, &err))) {
-        g_printerr(_("Unable to read config file %s: %s\n"), buf,
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
-    }
-
-    if (!(ctx = gvir_sandbox_context_service_new(hv, GVIR_SANDBOX_CONFIG_SERVICE(config)))) {
-        g_printerr(_("Unable to create new context service: %s\n"),
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
-    }
-
     loop = g_main_loop_new(g_main_context_default(), 1);
-    ret = container_func(GVIR_SANDBOX_CONTEXT(ctx), loop);
+    ret = container_func(uri, cmdargs[0], loop);
+    g_main_loop_unref(loop);
 
 cleanup:
-    if (hv)
-        gvir_connection_close(hv);
-
-    free(buf);
-
-    if (config)
-        g_object_unref(config);
-
     exit(ret);
 }
