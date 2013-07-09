@@ -150,10 +150,10 @@ class Container:
         self.dest = "%s/%s" % (self.path, self.name)
 
     def set_security(self, val):
-        return self.config.set_security_opts(val)
+        self.config.set_security_opts(val)
 
     def add_network(self, val):
-        return self.config.add_network_opts(val)
+        self.config.add_network_opts(val)
 
     def get_security_dynamic(self):
         return self.config.get_security_dynamic()
