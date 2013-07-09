@@ -80,7 +80,6 @@ virt_sandbox_service_util_LDFLAGS = \
 		$(GIO_UNIX_LIBS) \
 		$(LIBVIRT_GOBJECT_LIBS) \
 		../libvirt-sandbox/libvirt-sandbox-1.0.la \
-		-lselinux \
 		$(WARN_CFLAGS) \
 		$(NULL)
 
