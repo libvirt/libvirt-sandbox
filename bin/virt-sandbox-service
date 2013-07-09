@@ -300,7 +300,10 @@ class Container:
             return 0
 
     def add_bind_mount(self, source, dest):
-        mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
+        if self.image is None:
+            mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
+        else:
+            mount = LibvirtSandbox.ConfigMountGuestBind.new(source, dest)
         self.config.add_mount(mount)
 
     def add_ram_mount(self, dest, size):
