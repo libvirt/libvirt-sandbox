@@ -65,6 +65,10 @@ void gvir_sandbox_config_network_set_source(GVirSandboxConfigNetwork *config,
                                              const gchar *network);
 const gchar *gvir_sandbox_config_network_get_source(GVirSandboxConfigNetwork *config);
 
+void gvir_sandbox_config_network_set_mac(GVirSandboxConfigNetwork *config,
+                                         const gchar *mac);
+const gchar *gvir_sandbox_config_network_get_mac(GVirSandboxConfigNetwork *config);
+
 void gvir_sandbox_config_network_set_dhcp(GVirSandboxConfigNetwork *config,
                                           gboolean dhcp);
 gboolean gvir_sandbox_config_network_get_dhcp(GVirSandboxConfigNetwork *config);

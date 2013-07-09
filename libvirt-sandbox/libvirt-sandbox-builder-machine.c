@@ -542,7 +542,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {
-        const gchar *source;
+        const gchar *source, *mac;
         GVirSandboxConfigNetwork *network = GVIR_SANDBOX_CONFIG_NETWORK(tmp->data);
 
         source = gvir_sandbox_config_network_get_source(network);
@@ -553,6 +553,10 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         } else {
             iface = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_user_new());
         }
+
+        mac = gvir_sandbox_config_network_get_mac(network);
+        if (mac)
+            gvir_config_domain_interface_set_mac(iface, mac);
 
         gvir_config_domain_interface_set_model(iface,
                                                "virtio");

@@ -888,6 +888,9 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
         } else if (g_str_has_prefix(param, "source=")) {
             gvir_sandbox_config_network_set_source(net,
                                                    param + strlen("source="));
+        } else if (g_str_has_prefix(param, "mac=")) {
+            gvir_sandbox_config_network_set_mac(net,
+                                                param + strlen("mac="));
         } else if (g_str_has_prefix(param, "address=")) {
             GVirSandboxConfigNetworkAddress *addr;
             GInetAddress *primaryaddr;
@@ -1618,6 +1621,11 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
         gvir_sandbox_config_network_set_source(config, str1);
     g_free(str1);
 
+    str1 = g_key_file_get_string(file, key, "mac", NULL);
+    if (str1)
+        gvir_sandbox_config_network_set_mac(config, str1);
+    g_free(str1);
+
     g_free(key);
     key = NULL;
 
@@ -1941,6 +1949,8 @@ static void gvir_sandbox_config_save_config_network(GVirSandboxConfigNetwork *co
     g_key_file_set_boolean(file, key, "dhcp", gvir_sandbox_config_network_get_dhcp(config));
     if (gvir_sandbox_config_network_get_source(config))
         g_key_file_set_string(file, key, "source", gvir_sandbox_config_network_get_source(config));
+    if (gvir_sandbox_config_network_get_mac(config))
+        g_key_file_set_string(file, key, "mac", gvir_sandbox_config_network_get_mac(config));
     g_key_file_set_uint64(file, key, "addresses", j);
     g_key_file_set_uint64(file, key, "routes", k);
     g_free(key);

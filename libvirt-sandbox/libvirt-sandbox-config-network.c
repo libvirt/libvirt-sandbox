@@ -44,6 +44,7 @@ struct _GVirSandboxConfigNetworkPrivate
 {
     gboolean dhcp;
     gchar *source;
+    gchar *mac;
     GList *routes;
     GList *addrs;
 };
@@ -55,6 +56,7 @@ enum {
     PROP_0,
     PROP_DHCP,
     PROP_SOURCE,
+    PROP_MAC,
 };
 
 enum {
@@ -81,6 +83,10 @@ static void gvir_sandbox_config_network_get_property(GObject *object,
         g_value_set_string(value, priv->source);
         break;
 
+    case PROP_MAC:
+        g_value_set_string(value, priv->mac);
+        break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -105,6 +111,11 @@ static void gvir_sandbox_config_network_set_property(GObject *object,
         priv->source = g_value_dup_string(value);
         break;
 
+    case PROP_MAC:
+        g_free(priv->mac);
+        priv->mac = g_value_dup_string(value);
+        break;
+
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
@@ -117,6 +128,7 @@ static void gvir_sandbox_config_network_finalize(GObject *object)
     GVirSandboxConfigNetworkPrivate *priv = config->priv;
 
     g_free(priv->source);
+    g_free(priv->mac);
     g_list_foreach(priv->addrs, (GFunc)g_object_unref, NULL);
     g_list_foreach(priv->routes, (GFunc)g_object_unref, NULL);
 
@@ -148,6 +160,18 @@ static void gvir_sandbox_config_network_class_init(GVirSandboxConfigNetworkClass
                                     g_param_spec_string("source",
                                                         "Source",
                                                         "Source network",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+
+    g_object_class_install_property(object_class,
+                                    PROP_MAC,
+                                    g_param_spec_string("mac",
+                                                        "MAC",
+                                                        "MAC address",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -195,6 +219,22 @@ const gchar *gvir_sandbox_config_network_get_source(GVirSandboxConfigNetwork *co
 {
     GVirSandboxConfigNetworkPrivate *priv = config->priv;
     return priv->source;
+}
+
+
+void gvir_sandbox_config_network_set_mac(GVirSandboxConfigNetwork *config,
+                                              const gchar *mac)
+{
+    GVirSandboxConfigNetworkPrivate *priv = config->priv;
+    g_free(priv->mac);
+    priv->mac = g_strdup(mac);
+}
+
+
+const gchar *gvir_sandbox_config_network_get_mac(GVirSandboxConfigNetwork *config)
+{
+    GVirSandboxConfigNetworkPrivate *priv = config->priv;
+    return priv->mac;
 }
 
 
