@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-05-07 17:18+0100\n"
-"PO-Revision-Date: 2013-05-07 16:18+0000\n"
+"POT-Creation-Date: 2013-07-09 20:49+0100\n"
+"PO-Revision-Date: 2013-07-09 19:50+0000\n"
 "Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "MIME-Version: 1.0\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Language: uk\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ../bin/virt-sandbox.c:48 ../bin/virt-sandbox-service-util.c:94
+#: ../bin/virt-sandbox.c:48 ../bin/virt-sandbox-service-util.c:43
 #: ../libvirt-sandbox/libvirt-sandbox-init-common.c:1140
 #, c-format
 msgid "%s version %s\n"
@@ -100,7 +100,7 @@ msgid ""
 "\n"
 msgstr "\nКористування: %s [ПАРАМЕТРИ] ШЛЯХ-ДО-КОМАНДИ [АРГУМЕНТИ...]\n\n%s\n\n"
 
-#: ../bin/virt-sandbox.c:148 ../bin/virt-sandbox-service-util.c:447
+#: ../bin/virt-sandbox.c:148 ../bin/virt-sandbox-service-util.c:65
 #, c-format
 msgid "Unable to open connection: %s\n"
 msgstr "Не вдалося відкрити з’єднання: %s\n"
@@ -160,169 +160,120 @@ msgstr "Не вдалося долучити консоль пісочниці: 
 msgid "Unable to get app console: %s\n"
 msgstr "Не вдалося отримати консоль програм: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:118
-#, c-format
-msgid "Failed to open container process path %s\n"
-msgstr "Не вдалося відкрити шлях до процесу контейнера %s\n"
-
-#: ../bin/virt-sandbox-service-util.c:129
-#, c-format
-msgid "Failed to open container namespace path %s: %m\n"
-msgstr "Не вдалося відкрити шлях до простору назв контейнера %s: %m\n"
-
-#: ../bin/virt-sandbox-service-util.c:138
-#, c-format
-msgid "Failed to setup namespace: %m\n"
-msgstr "Не вдалося налаштувати простір назв: %m\n"
-
-#: ../bin/virt-sandbox-service-util.c:167
-#, c-format
-msgid "Unable to get process context for pid %d\n"
-msgstr "Не вдалося отримати контекст процесу для pid %d\n"
-
-#: ../bin/virt-sandbox-service-util.c:171
-#, c-format
-msgid "Unable to set executable context for pid %d\n"
-msgstr "Не вдалося встановити контекст виконуваного файла для pid %d\n"
-
+#: ../bin/virt-sandbox-service-util.c:66 ../bin/virt-sandbox-service-util.c:72
+#: ../bin/virt-sandbox-service-util.c:78
+#: ../bin/virt-sandbox-service-util.c:104
+#: ../bin/virt-sandbox-service-util.c:110
+#: ../bin/virt-sandbox-service-util.c:120
+#: ../bin/virt-sandbox-service-util.c:127
+#: ../bin/virt-sandbox-service-util.c:159
+#: ../bin/virt-sandbox-service-util.c:165
+#: ../bin/virt-sandbox-service-util.c:175
+#: ../bin/virt-sandbox-service-util.c:182
 #: ../bin/virt-sandbox-service-util.c:214
-#, c-format
-msgid "Unable to wait for child %s\n"
-msgstr "Не вдалося дочекатися на дочірній процес %s\n"
+#: ../bin/virt-sandbox-service-util.c:220
+msgid "unknown"
+msgstr "невідомо"
 
-#: ../bin/virt-sandbox-service-util.c:221
+#: ../bin/virt-sandbox-service-util.c:71
 #, c-format
-msgid "Failed to execute %s: %s\n"
-msgstr "Не вдалося виконати %s: %s\n"
+msgid "Unable to read config file %s: %s\n"
+msgstr "Не вдалося прочитати файл налаштувань %s: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:245
+#: ../bin/virt-sandbox-service-util.c:77
+#, c-format
+msgid "Unable to create new context service: %s\n"
+msgstr "Не вдалося створити службу контексту: %s\n"
+
+#: ../bin/virt-sandbox-service-util.c:103
 #, c-format
 msgid "Unable to start container: %s\n"
 msgstr "Не вдалося запустити контейнер: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:246
-#: ../bin/virt-sandbox-service-util.c:252
-#: ../bin/virt-sandbox-service-util.c:260
-#: ../bin/virt-sandbox-service-util.c:277
-#: ../bin/virt-sandbox-service-util.c:283
-#: ../bin/virt-sandbox-service-util.c:291
-#: ../bin/virt-sandbox-service-util.c:306
-#: ../bin/virt-sandbox-service-util.c:312
-#: ../bin/virt-sandbox-service-util.c:448
-#: ../bin/virt-sandbox-service-util.c:454
-#: ../bin/virt-sandbox-service-util.c:460
-msgid "unknown"
-msgstr "невідомо"
-
-#: ../bin/virt-sandbox-service-util.c:251
+#: ../bin/virt-sandbox-service-util.c:109
 #, c-format
 msgid "Unable to get log console for container: %s\n"
 msgstr "Не вдалося отримати консоль журналу для контейнера: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:259
+#: ../bin/virt-sandbox-service-util.c:119
 #, c-format
 msgid "Unable to attach console to stderr in the container: %s\n"
 msgstr "Не вдалося долучити консоль до stderr у контейнері: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:276
-#: ../bin/virt-sandbox-service-util.c:290
-#: ../bin/virt-sandbox-service-util.c:305
+#: ../bin/virt-sandbox-service-util.c:126
+#: ../bin/virt-sandbox-service-util.c:181
+#, c-format
+msgid "Unable to disconnect console from libvirt: %s\n"
+msgstr ""
+
+#: ../bin/virt-sandbox-service-util.c:158
+#: ../bin/virt-sandbox-service-util.c:174
+#: ../bin/virt-sandbox-service-util.c:213
 #, c-format
 msgid "Unable to attach to container: %s\n"
 msgstr "Не вдалося долучити до контейнера: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:282
+#: ../bin/virt-sandbox-service-util.c:164
 #, c-format
 msgid "Unable to get shell console for container: %s\n"
 msgstr "Не вдалося отримати консоль командної оболонки для контейнера: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:311
+#: ../bin/virt-sandbox-service-util.c:219
 #, c-format
 msgid "Unable to stop container: %s\n"
 msgstr "Не вдалося зупинити роботу контейнера: %s\n"
 
-#: ../bin/virt-sandbox-service-util.c:370
+#: ../bin/virt-sandbox-service-util.c:279
 msgid "Display version information"
 msgstr "Показати інформацію щодо версії"
 
-#: ../bin/virt-sandbox-service-util.c:372
+#: ../bin/virt-sandbox-service-util.c:281
 msgid "Start a container"
 msgstr "Розпочати роботу контейнера"
 
-#: ../bin/virt-sandbox-service-util.c:374
+#: ../bin/virt-sandbox-service-util.c:283
 msgid "Stop a container"
 msgstr "Зупинити роботу контейнера"
 
-#: ../bin/virt-sandbox-service-util.c:376
+#: ../bin/virt-sandbox-service-util.c:285
 msgid "Attach to a container"
 msgstr "Долучити до контейнера"
 
-#: ../bin/virt-sandbox-service-util.c:378
-msgid "Execute command in a container"
-msgstr "Виконати команду у контейнері"
-
-#: ../bin/virt-sandbox-service-util.c:380
+#: ../bin/virt-sandbox-service-util.c:287
 msgid "Pid of process in container to which the command will run"
 msgstr "PID процесу у контейнері, для якого слід виконати команду"
 
-#: ../bin/virt-sandbox-service-util.c:382
+#: ../bin/virt-sandbox-service-util.c:289
 msgid "Connect to hypervisor Default:'lxc:///'"
 msgstr "З’єднатися з гіпервізором. Типовим гіпервізором є «lxc:///»"
 
-#: ../bin/virt-sandbox-service-util.c:387
+#: ../bin/virt-sandbox-service-util.c:294
 msgid ""
 "Run 'virt-sandbox-service-util --help' to see a full list of available "
 "command line options\n"
 msgstr "Щоб переглянути список можливих параметрів командного рядка повністю, віддайте команду «virt-sandbox-service-util --help»\n"
 
-#: ../bin/virt-sandbox-service-util.c:397
+#: ../bin/virt-sandbox-service-util.c:304
 msgid "- Libvirt Sandbox Service"
 msgstr "- Служба пісочниць Libvirt"
 
-#: ../bin/virt-sandbox-service-util.c:409
+#: ../bin/virt-sandbox-service-util.c:316
 #, c-format
 msgid ""
-"Invalid command: You must specify --start, --stop, --execute or --attach\n"
+"Invalid command: You must specify --start, --stop or --attach\n"
 "%s"
-msgstr "Некоректна команда: вслід вказати --start, --stop, --execute або --attach\n%s"
+msgstr ""
 
-#: ../bin/virt-sandbox-service-util.c:415
+#: ../bin/virt-sandbox-service-util.c:322
 #, c-format
 msgid "Invalid command CONTAINER_NAME required: %s"
 msgstr "Некоректна команда: слід вказати CONTAINER_NAME: %s"
 
-#: ../bin/virt-sandbox-service-util.c:421
-#, c-format
-msgid ""
-"Invalid command: You must only one of specify a pid with --execute\n"
-"%s"
-msgstr "Некоректна команда: вказувати pid з --execute можна лише один раз\n%s"
-
-#: ../bin/virt-sandbox-service-util.c:428
+#: ../bin/virt-sandbox-service-util.c:329
 msgid "Libvirt Sandbox Service"
 msgstr "Служба пісочниць Libvirt"
 
-#: ../bin/virt-sandbox-service-util.c:432
-#, c-format
-msgid "Out of Memory\n"
-msgstr "Не вистачає пам'яті\n"
-
-#: ../bin/virt-sandbox-service-util.c:442
-#, c-format
-msgid "error opening connect to lxc:/// \n"
-msgstr "помилка під час спроби відкрити з’єднання з lxc:/// \n"
-
-#: ../bin/virt-sandbox-service-util.c:453
-#, c-format
-msgid "Unable to read config file %s: %s\n"
-msgstr "Не вдалося прочитати файл налаштувань %s: %s\n"
-
-#: ../bin/virt-sandbox-service-util.c:459
-#, c-format
-msgid "Unable to create new context service: %s\n"
-msgstr "Не вдалося створити службу контексту: %s\n"
-
-#: ../libvirt-sandbox/libvirt-sandbox-builder-container.c:382
+#: ../libvirt-sandbox/libvirt-sandbox-builder-container.c:387
 msgid "Graphical sandboxes are not supported for containers"
 msgstr "Для контейнерів не передбачено графічних пісочниць"
 
@@ -346,127 +297,136 @@ msgstr "Не вдалося отримати доступ до %s: %s"
 msgid "Cannot find module file for %s"
 msgstr "Не вдалося знайти файла модуля для %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-builder-machine.c:181
-#, c-format
-msgid "Cannot create initrd %s"
-msgstr "Не можна створювати initrd %s"
-
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:881
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:936
 #, c-format
 msgid "Cannot request DHCP with static routes/addresses"
 msgstr "Не можна надсилати запит щодо використання DHCP, якщо використовуються статичні маршрути або адреси"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:902
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:960
 #, c-format
 msgid "Cannot set static addresses with DHCP"
 msgstr "Не можна встановлювати статичні адреси, якщо використовується DHCP"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:922
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:931
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:981
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:980
 #: ../libvirt-sandbox/libvirt-sandbox-config.c:989
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1039
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1047
 #, c-format
 msgid "Unable to parse address %s"
 msgstr "Не вдалося обробити адресу %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:961
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1019
 #, c-format
 msgid "Cannot set static routes with DHCP"
 msgstr "Не можна встановлювати статичні маршрути, якщо використовується DHCP"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1009
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1067
 #, c-format
 msgid "Unknown parameter %s"
 msgstr "Невідомий параметр %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1020
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1078
 #, c-format
 msgid "Cannot set static routes without addresses"
 msgstr "Не можна встановлювати статичні маршрути без адрес"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1182
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1240
 #, c-format
 msgid "No mount type prefix on %s"
 msgstr "У %s немає префікса типу монтування"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1195
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1253
 #, c-format
 msgid "Unknown mount type prefix on %s"
 msgstr "Невідомий префікс типу монтування у %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1305
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1370
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1363
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1428
 #, c-format
 msgid "No mount with a prefix under %s"
 msgstr "У %s немає точки монтування з префіксом"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1469
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1478
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1527
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1536
 #, c-format
 msgid "Unknown security option '%s'"
 msgstr "Невідомий параметр захисту, «%s»"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1512
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1570
 msgid "Missing mount target in config file"
 msgstr "У файлі налаштувань не вказано призначення монтування"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1517
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1575
 msgid "Missing mount type in config file"
 msgstr "У файлі налаштувань не вказано тип монтування"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1529
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1587
 #, c-format
 msgid "Unknown mount type %s in config file"
 msgstr "У файлі налаштувань виявлено невідомий тип монтування, %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1536
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1594
 msgid "Missing mount usage in config file"
 msgstr "У файлі налаштувань не вказано використання монтування"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:1545
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:1603
 msgid "Missing mount source in config file"
 msgstr "У файлі налаштувань не вказано джерело монтування"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:2030
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2101
 msgid "Missing class name in config file"
 msgstr "У файлі налаштувань не вказано назву класу"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:2036
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2107
 #, c-format
 msgid "Unknown type name '%s' in config file"
 msgstr "Невідома назва типу, «%s» у файлі налаштувань"
 
-#: ../libvirt-sandbox/libvirt-sandbox-config.c:2043
+#: ../libvirt-sandbox/libvirt-sandbox-config.c:2114
 #, c-format
 msgid "Type name '%s' in config file had wrong parent"
 msgstr "Тип з назвою «%s» у файлі налаштувань мав помилковий батьківський елемент"
 
-#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:172
+#: ../libvirt-sandbox/libvirt-sandbox-console.c:326
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:184
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:350
 #, c-format
 msgid "Unable to query terminal attributes: %s"
 msgstr "Не вдалося отримати атрибути термінала: %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:189
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:201
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:367
 #, c-format
 msgid "Unable to update terminal attributes: %s"
 msgstr "Не вдалося оновити атрибути термінала: %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:212
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:224
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:395
 #, c-format
 msgid "Unable to restore terminal attributes: %s"
 msgstr "Не вдалося відновити атрибути термінала: %s"
 
-#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:483
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:630
+msgid "No devices found for domain"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:660
+#, c-format
+msgid "No device %s found for domain"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:666
+#, c-format
+msgid "Unable to open console %s"
+msgstr ""
+
+#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:699
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1110
 msgid "Console is already attached to a stream"
 msgstr "Консоль вже долучено до потоку даних"
-
-#: ../libvirt-sandbox/libvirt-sandbox-console-raw.c:541
-msgid "Console is not attached to a stream"
-msgstr "Консоль не долучено до потоку даних"
 
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:628
 #, c-format
@@ -482,15 +442,15 @@ msgstr "Неочікувана процедура RPC %u"
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:817
 #, c-format
 msgid "Got rx in unexpected state %d"
-msgstr ""
+msgstr "Отримано rx у неочікуваному стані %d"
 
 #: ../libvirt-sandbox/libvirt-sandbox-console-rpc.c:1167
 msgid "ConsoleRpc is not attached to a stream"
 msgstr "ConsoleRpc не долучено до потоку даних"
 
-#: ../libvirt-sandbox/libvirt-sandbox-context.c:275
-#: ../libvirt-sandbox/libvirt-sandbox-context.c:498
-#: ../libvirt-sandbox/libvirt-sandbox-context.c:521
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:278
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:618
+#: ../libvirt-sandbox/libvirt-sandbox-context.c:651
 #, c-format
 msgid "Domain is not currently running"
 msgstr "Зараз домен не запущено"
