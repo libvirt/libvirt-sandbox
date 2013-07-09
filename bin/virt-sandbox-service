@@ -736,7 +736,7 @@ PrivateNetwork=false
         try:
             uuid = self.config.get_uuid()
             jpath = "/var/log/journal/" + uuid
-            if os.path.exists(jpath):
+            if os.path.lexists(jpath):
                 os.remove(jpath)
         except Exception, e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
