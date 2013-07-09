@@ -879,7 +879,7 @@ def sandbox_list(args):
 def sandbox_reload(args):
     config = read_config(args.name)
     if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
-        raise ValueError(_("Generic Containers do not support reload"))
+        raise ValueError([_("Generic Containers do not support reload")])
     container = SystemdContainer(uri = args.uri, config = config)
     container.reload(args.unitfiles)
 
@@ -932,7 +932,7 @@ def fullpath(cmd):
 
 def execute(args):
     if args.uri != "lxc:///":
-        raise ValueError(_("Can only execute commands inside of linux containers."))
+        raise ValueError([_("Can only execute commands inside of linux containers.")])
 
     myexec = [ "virsh", "-c", args.uri, "lxc-enter-namespace" ]
 #    myexec = [ "virt-sandbox-service-util", "execute" ]
