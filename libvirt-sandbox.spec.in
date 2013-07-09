@@ -28,8 +28,8 @@ BuildRequires: libselinux-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
 BuildRequires: intltool
+BuildRequires: glib2-devel >= 2.32.0
 Requires: rpm-python
-Requires: glib2-devel >= 2.32.0
 # For virsh lxc-enter-namespace command
 Requires: libvirt-client >= %{libvirt_version}
 Requires: systemd >= 198
