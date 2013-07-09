@@ -1,0 +1,8 @@
+[main]
+host = https://www.transifex.com
+
+[libvirt-sandbox.libvirt-sandboxpot]
+file_filter = po/<lang>.po
+source_file = po/libvirt-sandbox.pot
+source_lang = en
+type = PO
