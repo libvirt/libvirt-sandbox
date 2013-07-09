@@ -736,9 +736,10 @@ PrivateNetwork=false
     def delete(self):
         try:
             uuid = self.config.get_uuid()
-            jpath = "/var/log/journal/" + uuid
-            if os.path.lexists(jpath):
-                os.remove(jpath)
+            if uuid is not None:
+                jpath = "/var/log/journal/" + uuid
+                if os.path.lexists(jpath):
+                    os.remove(jpath)
         except Exception, e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
