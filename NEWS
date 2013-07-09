@@ -1,6 +1,24 @@
       libvirt Sandbox News
       ====================
 
+0.2.1 - "Owami Desert" - 2013-07-09
+-----------------------------------
+
+ - Requires libvirt-glib >= 0.1.7
+ - ABI change: Removed GVirSandboxCleaner class
+ - Don't add link in /var/log/journal for image based containers
+ - Don't hold open libvirt connection when displaying service
+   sandbox consoles
+ - Record container UUID in config for service sandboxes
+ - Add missing RPMs deps
+ - Allow custom mounts to be specified to virt-sandbox-service
+ - Fix misc bugs in sandbox creation/deletion
+ - Use 'guest bind' for configuring image based service sandboxes
+ - Allow NIC MAC address to be chosen
+ - Include systemd-initctl.socket in service sandboxes by default
+   to allow libvirt initiated graceful shutdown
+
+
 0.2.0 - "Nubian Desert" - 2013-05-07
 ------------------------------------
 
