@@ -599,17 +599,18 @@ WantedBy=%(TARGET)s
         fd.write("%s\n" % uuid)
         fd.close()
 
-        # Link /var/log/journal within the container to /var/log/journal/UUID
-        # on host.  This will allow the hosts journalctl to easily read
-        # containers journal information.
-        jdir = "/var/log/journal/"
-        jpath = jdir + uuid
-        if not os.path.exists(self.dest + jpath):
-            os.makedirs(self.dest + jpath)
-        if not os.path.exists(jdir):
-            os.makedirs(jdir)
+        if not self.use_image:
+            # Link /var/log/journal within the container to /var/log/journal/UUID
+            # on host.  This will allow the hosts journalctl to easily read
+            # containers journal information.
+            jdir = "/var/log/journal/"
+            jpath = jdir + uuid
+            if not os.path.exists(self.dest + jpath):
+                os.makedirs(self.dest + jpath)
+            if not os.path.exists(jdir):
+                os.makedirs(jdir)
 
-        os.symlink(self.dest + jpath, jpath)
+            os.symlink(self.dest + jpath, jpath)
 
     def gen_filesystems(self):
         Container.gen_filesystems(self)
