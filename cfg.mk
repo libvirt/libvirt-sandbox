@@ -18,7 +18,6 @@
 # Tests not to run as part of "make distcheck".
 local-checks-to-skip =			\
   changelog-check			\
-  check-AUTHORS				\
   makefile-check			\
   makefile_path_separator_check		\
   patch-check				\
@@ -127,20 +126,6 @@ sc_copyright_format:
 
 # We don't use this feature of maint.mk.
 prev_version_file = /dev/null
-
-# Give credit where due:
-# Ensure that each commit author email address (possibly mapped via
-# git log's .mailmap) appears in our AUTHORS file.
-sc_check_author_list:
-	@fail=0;							\
-	for i in $$(git log --pretty=format:%aE%n|sort -u|grep -v '^$$'); do \
-	  sanitized=$$(echo "$$i"|LC_ALL=C sed 's/\([^a-zA-Z0-9_@-]\)/\\\1/g'); \
-	  grep -iq "<$$sanitized>" $(srcdir)/AUTHORS			\
-	    || { printf '%s\n' "$$i" >&2; fail=1; };			\
-	done;								\
-	test $$fail = 1							\
-	  && echo '$(ME): committer(s) not listed in AUTHORS' >&2;	\
-	test $$fail = 0
 
 exclude_file_name_regexp--sc_libvirt_unmarked_diagnostics = ^libvirt-sandbox/tests
 
