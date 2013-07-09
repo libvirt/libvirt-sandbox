@@ -323,7 +323,7 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
     tmp = networks = gvir_sandbox_config_get_networks(config);
     while (tmp) {
-        const gchar *source;
+        const gchar *source, *mac;
         GVirSandboxConfigNetwork *network = GVIR_SANDBOX_CONFIG_NETWORK(tmp->data);
 
         iface = gvir_config_domain_interface_network_new();
@@ -332,6 +332,11 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
             gvir_config_domain_interface_network_set_source(iface, source);
         else
             gvir_config_domain_interface_network_set_source(iface, "default");
+
+        mac = gvir_sandbox_config_network_get_mac(network);
+        if (mac)
+            gvir_config_domain_interface_set_mac(GVIR_CONFIG_DOMAIN_INTERFACE(iface),
+                                                 mac);
 
         gvir_config_domain_add_device(domain,
                                       GVIR_CONFIG_DOMAIN_DEVICE(iface));

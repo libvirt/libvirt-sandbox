@@ -91,6 +91,11 @@ where 'source' is the name of any libvirt virtual network.
 Set the name of the network to connect the interface to. C<NETWORK>
 is the name of any libvirt virtual network. See also B<virsh net-list>
 
+=item mac=NN:NN:NN:NN:NN:NN
+
+Set the MAC address of the network interface, where each NN is a pair
+of hex digits.
+
 =item address=IP-ADDRESS/PREFIX%BROADCAST
 
 Configure the network interface with the static IPv4 or IPv6 address
