@@ -594,6 +594,7 @@ WantedBy=%(TARGET)s
         uuid_fd = open("/proc/sys/kernel/random/uuid")
         uuid = uuid_fd.read().replace("-","").rstrip()
         uuid_fd.close()
+        self.config.set_uuid(uuid)
         fd=open(self.dest + self.MACHINE_ID, "w")
         fd.write("%s\n" % uuid)
         fd.close()
@@ -733,14 +734,10 @@ PrivateNetwork=false
 
     def delete(self):
         try:
-            machineid = self.dest + self.MACHINE_ID;
-            if os.path.exists(machineid):
-                fd=open(machineid, "r")
-                uuid = fd.read().rstrip()
-                fd.close()
-                jpath = "/var/log/journal/" + uuid
-                if os.path.exists(jpath):
-                    os.remove(jpath)
+            uuid = self.config.get_uuid()
+            jpath = "/var/log/journal/" + uuid
+            if os.path.exists(jpath):
+                os.remove(jpath)
         except Exception, e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
