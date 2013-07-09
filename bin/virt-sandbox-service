@@ -731,12 +731,14 @@ PrivateNetwork=false
 
     def delete(self):
         try:
-            fd=open(self.dest + self.MACHINE_ID, "r")
-            uuid = fd.read().rstrip()
-            fd.close()
-            jpath = "/var/log/journal/" + uuid
-            if os.path.exists(jpath):
-                os.remove(jpath)
+            machineid = self.dest + self.MACHINE_ID;
+            if os.path.exists(machineid):
+                fd=open(machineid, "r")
+                uuid = fd.read().rstrip()
+                fd.close()
+                jpath = "/var/log/journal/" + uuid
+                if os.path.exists(jpath):
+                    os.remove(jpath)
         except Exception, e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
