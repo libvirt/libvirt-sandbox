@@ -72,6 +72,9 @@ gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
 
 const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_set_uuid(GVirSandboxConfig *config, const gchar *uuid);
+const gchar *gvir_sandbox_config_get_uuid(GVirSandboxConfig *config);
+
 void gvir_sandbox_config_set_root(GVirSandboxConfig *config, const gchar *hostdir);
 const gchar *gvir_sandbox_config_get_root(GVirSandboxConfig *config);
 

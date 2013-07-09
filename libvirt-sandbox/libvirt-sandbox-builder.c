@@ -279,6 +279,11 @@ static gboolean gvir_sandbox_builder_construct_basic(GVirSandboxBuilder *builder
 {
     gvir_config_domain_set_name(domain,
                                 gvir_sandbox_config_get_name(config));
+#if 0
+    /* Missing API in libvirt-gconfig */
+    gvir_config_domain_set_uuid(domain,
+                                gvir_sandbox_config_get_uuid(config));
+#endif
     /* XXX configurable */
     gvir_config_domain_set_memory(domain, 1024*512);
     return TRUE;

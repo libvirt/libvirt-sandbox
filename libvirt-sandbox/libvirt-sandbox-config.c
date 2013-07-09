@@ -46,6 +46,7 @@
 struct _GVirSandboxConfigPrivate
 {
     gchar *name;
+    gchar *uuid;
     gchar *root;
     gchar *arch;
     gchar *kernrelease;
@@ -72,6 +73,7 @@ enum {
     PROP_0,
 
     PROP_NAME,
+    PROP_UUID,
     PROP_ROOT,
     PROP_ARCH,
     PROP_SHELL,
@@ -119,6 +121,10 @@ static void gvir_sandbox_config_get_property(GObject *object,
     switch (prop_id) {
     case PROP_NAME:
         g_value_set_string(value, priv->name);
+        break;
+
+    case PROP_UUID:
+        g_value_set_string(value, priv->uuid);
         break;
 
     case PROP_ROOT:
@@ -187,6 +193,11 @@ static void gvir_sandbox_config_set_property(GObject *object,
     case PROP_NAME:
         g_free(priv->name);
         priv->name = g_value_dup_string(value);
+        break;
+
+    case PROP_UUID:
+        g_free(priv->uuid);
+        priv->uuid = g_value_dup_string(value);
         break;
 
     case PROP_ROOT:
@@ -264,6 +275,7 @@ static void gvir_sandbox_config_finalize(GObject *object)
 
 
     g_free(priv->name);
+    g_free(priv->uuid);
     g_free(priv->root);
     g_free(priv->arch);
     g_free(priv->kernrelease);
@@ -291,6 +303,18 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                     g_param_spec_string("name",
                                                         "Name",
                                                         "The sandbox name",
+                                                        NULL,
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
+                                                        G_PARAM_CONSTRUCT_ONLY |
+                                                        G_PARAM_STATIC_NAME |
+                                                        G_PARAM_STATIC_NICK |
+                                                        G_PARAM_STATIC_BLURB));
+    g_object_class_install_property(object_class,
+                                    PROP_UUID,
+                                    g_param_spec_string("uuid",
+                                                        "UUID",
+                                                        "The sandbox UUID",
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
@@ -472,6 +496,37 @@ const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config)
 {
     GVirSandboxConfigPrivate *priv = config->priv;
     return priv->name;
+}
+
+
+/**
+ * gvir_sandbox_config_set_uuid:
+ * @config: (transfer none): the sandbox config
+ * @uuid: (transfer none): the uuid in string format
+ *
+ * Set the UUID for the container, to overide the automatically
+ * generated value.
+ */
+void gvir_sandbox_config_set_uuid(GVirSandboxConfig *config, const gchar *uuid)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_free(priv->uuid);
+    priv->uuid = g_strdup(uuid);
+}
+
+
+/**
+ * gvir_sandbox_config_get_uuid:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox UUID
+ *
+ * Returns: (transfer none): the current uuid
+ */
+const gchar *gvir_sandbox_config_get_uuid(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->uuid;
 }
 
 
@@ -1730,6 +1785,10 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
         g_free(priv->name);
         priv->name = str;
     }
+    if ((str = g_key_file_get_string(file, "core", "uuid", NULL)) != NULL) {
+        g_free(priv->uuid);
+        priv->uuid = str;
+    }
     if ((str = g_key_file_get_string(file, "core", "root", NULL)) != NULL) {
         g_free(priv->root);
         priv->root = str;
@@ -1966,6 +2025,8 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     GList *tmp;
 
     g_key_file_set_string(file, "core", "name", priv->name);
+    if (priv->uuid)
+        g_key_file_set_string(file, "core", "uuid", priv->uuid);
     g_key_file_set_string(file, "core", "root", priv->root);
     g_key_file_set_string(file, "core", "arch", priv->arch);
     if (priv->kernrelease)

@@ -269,6 +269,8 @@ class Container:
 
     def create(self):
         self.connect()
+        if self.config.get_security_dynamic() and not self.use_image:
+            raise ValueError([_("Dynamic security label only supported for image based containers")])
         if self.uri != "lxc:///":
             self.config.set_shell(True)
         if not os.path.exists(self.dest):
