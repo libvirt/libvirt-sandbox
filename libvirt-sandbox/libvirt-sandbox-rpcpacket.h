@@ -25,8 +25,6 @@
 
 # include "libvirt-sandbox-protocol.h"
 
-typedef struct GVirSandboxProtocolHeader GVirSandboxProtocolHeader;
-
 typedef struct _GVirSandboxRPCPacket GVirSandboxRPCPacket;
 
 /* Never allocate this (huge) buffer on the stack. Always
