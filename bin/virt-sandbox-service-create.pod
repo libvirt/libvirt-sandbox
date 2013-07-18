@@ -187,10 +187,6 @@ static,label=system_u:system_r:svirt_t:s0:c412,c355
 
 Create file system image file of this size to store container content.
 
-=item B<-u UNITFILE>, B<--unitfile UNITFILE>
-
-systemd Unit file to run within the container
-
 =item B<-P PACKAGE>, B<--package PACKAGE>
 
 Package(s) to be used within the container.
