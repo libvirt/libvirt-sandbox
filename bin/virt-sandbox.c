@@ -438,7 +438,9 @@ Run an interactive shell under LXC, replace $HOME with the contents
 of $HOME/scratch
 
   # mkdir $HOME/scratch
-  # virt-sandbox -c lxc:/// --host-bind $HOME=$HOME/scratch /bin/sh
+  # echo "hello" > $HOME/scratch/foo
+  # echo "sandbox" > $HOME/scratch/bar
+  # virt-sandbox -c lxc:/// -m host-bind:$HOME=$HOME/scratch -i $HOME/scratch/foo -i $HOME/scratch/bar /bin/sh
 
 Convert an OGG file to WAV inside QEMU
 
