@@ -1,13 +1,11 @@
 # -*- rpm-spec -*-
 
-%define with_tcg 1
-%define with_kvm 1
+%define with_qemu 1
 
 # RHEL does not provide the 9p.ko kernel module
 # nor the virtio-9p KVM backend driver.
 %if 0%{?rhel}
-%define with_tcg 0
-%define with_kvm 0
+%define with_qemu 0
 %endif
 
 %define libvirt_version 1.0.2
@@ -39,13 +37,12 @@ Requires: libselinux-python
 Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
-%ifarch %{ix86} x86_64
-%if %{with_kvm}
+%if %{with_qemu}
+% ifarch %{ix86} x86_64
 Requires: libvirt-daemon-kvm >= %{libvirt_version}
-%endif
-%endif
-%if %{with_tcg}
+% else
 Requires: libvirt-daemon-qemu >= %{libvirt_version}
+% endif
 %endif
 Requires: libvirt-daemon-lxc >= %{libvirt_version}
 
