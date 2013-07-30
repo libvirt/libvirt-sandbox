@@ -52,8 +52,6 @@ struct _GVirSandboxContextPrivate
     GVirSandboxConfig *config;
     gboolean active;
     gboolean autodestroy;
-
-    GVirSandboxBuilder *builder;
 };
 
 G_DEFINE_ABSTRACT_TYPE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
@@ -342,6 +340,7 @@ gboolean gvir_sandbox_context_get_autodestroy(GVirSandboxContext *ctxt)
 
 
 static gboolean gvir_sandbox_context_clean_post_start(GVirSandboxContext *ctxt,
+                                                      GVirSandboxBuilder *builder,
                                                       GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
@@ -354,7 +353,7 @@ static gboolean gvir_sandbox_context_clean_post_start(GVirSandboxContext *ctxt,
                               gvir_sandbox_config_get_name(priv->config),
                               NULL);
 
-    if (!gvir_sandbox_builder_clean_post_start(priv->builder,
+    if (!gvir_sandbox_builder_clean_post_start(builder,
                                                priv->config,
                                                tmpdir,
                                                error))
@@ -366,6 +365,7 @@ static gboolean gvir_sandbox_context_clean_post_start(GVirSandboxContext *ctxt,
 
 
 static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
+                                                     GVirSandboxBuilder *builder,
                                                      GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
@@ -400,7 +400,7 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
         errno != ENOENT)
         ret = FALSE;
 
-    if (!gvir_sandbox_builder_clean_post_stop(priv->builder,
+    if (!gvir_sandbox_builder_clean_post_stop(builder,
                                               priv->config,
                                               statedir,
                                               error))
@@ -418,6 +418,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
     GVirConfigDomain *config = NULL;
+    GVirSandboxBuilder *builder = NULL;
     const gchar *cachedir;
     gchar *statedir;
     gchar *configdir;
@@ -432,8 +433,8 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
         return FALSE;
     }
 
-    if (!(priv->builder = gvir_sandbox_builder_for_connection(priv->connection,
-                                                              error)))
+    if (!(builder = gvir_sandbox_builder_for_connection(priv->connection,
+                                                        error)))
         return FALSE;
 
     cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
@@ -453,7 +454,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
 
     g_mkdir_with_parents(emptydir, 0755);
 
-    if (!(config = gvir_sandbox_builder_construct(priv->builder,
+    if (!(config = gvir_sandbox_builder_construct(builder,
                                                   priv->config,
                                                   statedir,
                                                   error))) {
@@ -469,7 +470,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
                                                       error)))
         goto error;
 
-    if (!gvir_sandbox_context_clean_post_start(ctxt, error))
+    if (!gvir_sandbox_context_clean_post_start(ctxt, builder, error))
         goto error;
 
     priv->active = TRUE;
@@ -481,14 +482,12 @@ cleanup:
     g_free(emptydir);
     if (config)
         g_object_unref(config);
+    if (builder)
+        g_object_unref(builder);
 
     return ret;
 
 error:
-    if (priv->builder) {
-        g_object_unref(priv->builder);
-        priv->builder = NULL;
-    }
     if (priv->domain) {
         gvir_domain_stop(priv->domain, 0, NULL);
         g_object_unref(priv->domain);
@@ -521,10 +520,6 @@ static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GE
         return FALSE;
     }
 
-    if (!(priv->builder = gvir_sandbox_builder_for_connection(priv->connection,
-                                                              error)))
-        return FALSE;
-
     priv->active = TRUE;
 
     return TRUE;
@@ -542,10 +537,6 @@ static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GE
         g_object_unref(priv->domain);
         priv->domain = NULL;
     }
-    if (priv->builder) {
-        g_object_unref(priv->builder);
-        priv->builder = NULL;
-    }
 
     priv->active = FALSE;
 
@@ -556,6 +547,7 @@ static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GE
 static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
+    GVirSandboxBuilder *builder;
     gboolean ret = TRUE;
 
     if (!priv->active)
@@ -569,13 +561,16 @@ static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GErr
         priv->domain = NULL;
     }
 
-    if (!gvir_sandbox_context_clean_post_stop(ctxt, error))
+    if (!(builder = gvir_sandbox_builder_for_connection(priv->connection,
+                                                        error)))
         ret = FALSE;
 
-    if (priv->builder) {
-        g_object_unref(priv->builder);
-        priv->builder = NULL;
-    }
+    if (builder &&
+        !gvir_sandbox_context_clean_post_stop(ctxt, builder, error))
+        ret = FALSE;
+
+    if (builder)
+        g_object_unref(builder);
 
     priv->active = FALSE;
 
