@@ -196,6 +196,7 @@ static void gvir_sandbox_context_class_init(GVirSandboxContextClass *klass)
                                                         "The sandbox domain",
                                                         GVIR_TYPE_DOMAIN,
                                                         G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
