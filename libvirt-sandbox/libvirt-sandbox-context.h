@@ -55,6 +55,12 @@ struct _GVirSandboxContextClass
 {
     GObjectClass parent_class;
 
+    /* Class method overrides */
+    gboolean (*start)(GVirSandboxContext *ctxt, GError **error);
+    gboolean (*stop)(GVirSandboxContext *ctxt, GError **error);
+    gboolean (*attach)(GVirSandboxContext *ctxt, GError **error);
+    gboolean (*detach)(GVirSandboxContext *ctxt, GError **error);
+
     gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 

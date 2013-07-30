@@ -72,6 +72,12 @@ enum {
     LAST_SIGNAL
 };
 
+static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GError **error);
+static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GError **error);
+static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GError **error);
+static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GError **error);
+
+
 //static gint signals[LAST_SIGNAL];
 
 #define GVIR_SANDBOX_CONTEXT_ERROR gvir_sandbox_context_error_quark()
@@ -176,6 +182,11 @@ static void gvir_sandbox_context_class_init(GVirSandboxContextClass *klass)
     object_class->finalize = gvir_sandbox_context_finalize;
     object_class->get_property = gvir_sandbox_context_get_property;
     object_class->set_property = gvir_sandbox_context_set_property;
+
+    klass->start = gvir_sandbox_context_start_default;
+    klass->stop = gvir_sandbox_context_stop_default;
+    klass->attach = gvir_sandbox_context_attach_default;
+    klass->detach = gvir_sandbox_context_detach_default;
 
     g_object_class_install_property(object_class,
                                     PROP_CONFIG,
@@ -408,7 +419,7 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
 }
 
 
-gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
+static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
     GVirConfigDomain *config = NULL;
@@ -494,7 +505,7 @@ error:
 }
 
 
-gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
+static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
@@ -526,7 +537,7 @@ gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
 }
 
 
-gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error)
+static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
@@ -548,7 +559,7 @@ gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error)
 }
 
 
-gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
+static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
     gboolean ret = TRUE;
@@ -639,4 +650,27 @@ GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *c
     console = GVIR_SANDBOX_CONSOLE(gvir_sandbox_console_raw_new(priv->connection, priv->domain,
                                                                 devname));
     return console;
+}
+
+gboolean gvir_sandbox_context_start(GVirSandboxContext *ctxt, GError **error)
+{
+    return GVIR_SANDBOX_CONTEXT_GET_CLASS(ctxt)->start(ctxt, error);
+}
+
+
+gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error)
+{
+    return GVIR_SANDBOX_CONTEXT_GET_CLASS(ctxt)->stop(ctxt, error);
+}
+
+
+gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
+{
+    return GVIR_SANDBOX_CONTEXT_GET_CLASS(ctxt)->attach(ctxt, error);
+}
+
+
+gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error)
+{
+    return GVIR_SANDBOX_CONTEXT_GET_CLASS(ctxt)->detach(ctxt, error);
 }
