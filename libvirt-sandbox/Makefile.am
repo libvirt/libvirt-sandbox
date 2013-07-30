@@ -53,6 +53,7 @@ SANDBOX_RPC_FILES = \
 SANDBOX_HEADER_FILES = \
 			libvirt-sandbox.h \
 			libvirt-sandbox-main.h \
+			libvirt-sandbox-util.h \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-network.h \
 			libvirt-sandbox-config-network-address.h \

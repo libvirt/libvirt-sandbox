@@ -53,6 +53,7 @@ struct _GVirSandboxConfigMountGuestBindClass
 {
     GVirSandboxConfigMountFileClass parent_class;
 
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_config_mount_guest_bind_get_type(void);

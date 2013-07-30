@@ -54,6 +54,8 @@ struct _GVirSandboxConsoleRawClass
     GVirSandboxConsoleClass parent_class;
 
     void (*closed)(GVirSandboxConsoleRaw *console, gboolean err);
+
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_console_raw_get_type(void);

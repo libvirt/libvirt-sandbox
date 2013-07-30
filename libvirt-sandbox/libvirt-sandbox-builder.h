@@ -102,6 +102,8 @@ struct _GVirSandboxBuilderClass
                                 const gchar *tmpdir,
                                 const gchar *configdir,
                                 GError **error);
+
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_builder_get_type(void);

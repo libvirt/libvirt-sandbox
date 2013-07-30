@@ -55,6 +55,8 @@ struct _GVirSandboxConsoleRpcClass
 
     void (*exited)(GVirSandboxConsoleRpc *console, int status);
     void (*closed)(GVirSandboxConsoleRpc *console, gboolean err);
+
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_console_rpc_get_type(void);

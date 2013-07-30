@@ -70,6 +70,8 @@ struct _GVirSandboxConsoleClass
                        GError **error);
     gboolean (*detach)(GVirSandboxConsole *console,
                        GError **error);
+
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 

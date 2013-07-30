@@ -55,6 +55,7 @@ struct _GVirSandboxConfigNetworkAddressClass
 {
     GObjectClass parent_class;
 
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_config_network_address_get_type(void);

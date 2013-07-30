@@ -53,6 +53,7 @@ struct _GVirSandboxContextInteractiveClass
 {
     GVirSandboxContextClass parent_class;
 
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_context_interactive_get_type(void);

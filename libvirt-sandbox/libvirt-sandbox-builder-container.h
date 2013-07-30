@@ -53,6 +53,7 @@ struct _GVirSandboxBuilderContainerClass
 {
     GVirSandboxBuilderClass parent_class;
 
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_builder_container_get_type(void);

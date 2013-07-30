@@ -55,7 +55,7 @@ struct _GVirSandboxContextClass
 {
     GObjectClass parent_class;
 
-    /* XXX padding */
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_context_get_type(void);

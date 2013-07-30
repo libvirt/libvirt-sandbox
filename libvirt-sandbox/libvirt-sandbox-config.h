@@ -60,6 +60,8 @@ struct _GVirSandboxConfigClass
                         GKeyFile *file);
 
     gchar **(*get_command)(GVirSandboxConfig *config);
+
+    gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
 GType gvir_sandbox_config_get_type(void);
