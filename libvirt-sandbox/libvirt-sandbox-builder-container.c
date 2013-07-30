@@ -60,6 +60,7 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+#if 0
 #define GVIR_SANDBOX_BUILDER_CONTAINER_ERROR gvir_sandbox_builder_container_error_quark()
 
 static GQuark
@@ -67,7 +68,7 @@ gvir_sandbox_builder_container_error_quark(void)
 {
     return g_quark_from_static_string("gvir-sandbox-builder-container");
 }
-
+#endif
 
 static void gvir_sandbox_builder_container_get_property(GObject *object,
                                                       guint prop_id,
@@ -382,12 +383,6 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     }
 
 
-    if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
-        g_set_error(error, GVIR_SANDBOX_BUILDER_CONTAINER_ERROR, 0,
-                    "%s", _("Graphical sandboxes are not supported for containers"));
-        return FALSE;
-    }
-
     return TRUE;
 }
 
@@ -420,9 +415,9 @@ static void gvir_sandbox_builder_container_init(GVirSandboxBuilderContainer *bui
  * gvir_sandbox_builder_container_new:
  * @connection: (transfer none): the connection
  *
- * Create a new graphical application sandbox builderuration
+ * Create a new pplication sandbox builder for containers
  *
- * Returns: (transfer full): a new graphical sandbox builder object
+ * Returns: (transfer full): a new sandbox builder object
  */
 GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *connection)
 {

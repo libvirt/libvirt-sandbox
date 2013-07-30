@@ -64,7 +64,6 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config-mount-guest-bind.h \
 			libvirt-sandbox-config-mount-ram.h \
 			libvirt-sandbox-config-initrd.h \
-			libvirt-sandbox-config-graphical.h \
 			libvirt-sandbox-config-interactive.h \
 			libvirt-sandbox-config-service.h \
 			libvirt-sandbox-config-service-systemd.h \
@@ -77,7 +76,6 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-console-raw.h \
 			libvirt-sandbox-console-rpc.h \
 			libvirt-sandbox-context.h \
-			libvirt-sandbox-context-graphical.h \
 			libvirt-sandbox-context-interactive.h \
 			libvirt-sandbox-context-service.h \
 			$(NULL)
@@ -94,7 +92,6 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config-mount-guest-bind.c \
 			libvirt-sandbox-config-mount-ram.c \
 			libvirt-sandbox-config-initrd.c \
-			libvirt-sandbox-config-graphical.c \
 			libvirt-sandbox-config-interactive.c \
 			libvirt-sandbox-config-service.c \
 			libvirt-sandbox-config-service-systemd.c \
@@ -107,7 +104,6 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-console-raw.c \
 			libvirt-sandbox-console-rpc.c \
 			libvirt-sandbox-context.c \
-			libvirt-sandbox-context-graphical.c \
 			libvirt-sandbox-context-interactive.c \
 			libvirt-sandbox-context-service.c \
 			$(NULL)

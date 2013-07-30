@@ -32,7 +32,6 @@
  * SECTION: libvirt-sandbox-config
  * @short_description: Basic sandbox configuration details
  * @include: libvirt-sandbox/libvirt-sandbox.h
- * @see_also: #GVirSandboxConfigGraphical
  *
  * Provides a base object to store configurations for the application sandbox
  *
@@ -2088,7 +2087,6 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
 
     /** XXX hack */
     GVIR_SANDBOX_TYPE_CONFIG_INTERACTIVE;
-    GVIR_SANDBOX_TYPE_CONFIG_GRAPHICAL;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_GENERIC;

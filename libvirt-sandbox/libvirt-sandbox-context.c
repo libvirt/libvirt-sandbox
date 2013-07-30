@@ -33,7 +33,6 @@
  * SECTION: libvirt-sandbox-context
  * @short_description: Application sandbox context
  * @include: libvirt-sandbox/libvirt-sandbox.h
- * @see_also: #GVirSandboxContextGraphical
  *
  * Provides a base class for implementing console based application sandboxes
  *

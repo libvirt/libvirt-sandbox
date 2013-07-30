@@ -40,7 +40,6 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-network.h>
 #include <libvirt-sandbox/libvirt-sandbox-config.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-initrd.h>
-#include <libvirt-sandbox/libvirt-sandbox-config-graphical.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-interactive.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-service.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-service-systemd.h>
@@ -53,7 +52,6 @@
 #include <libvirt-sandbox/libvirt-sandbox-console-raw.h>
 #include <libvirt-sandbox/libvirt-sandbox-console-rpc.h>
 #include <libvirt-sandbox/libvirt-sandbox-context.h>
-#include <libvirt-sandbox/libvirt-sandbox-context-graphical.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-interactive.h>
 #include <libvirt-sandbox/libvirt-sandbox-context-service.h>
 

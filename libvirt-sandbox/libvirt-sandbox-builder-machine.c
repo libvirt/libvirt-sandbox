@@ -458,7 +458,6 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     GVirConfigDomainDisk *disk;
     GVirConfigDomainInterface *iface;
     GVirConfigDomainMemballoon *ball;
-    GVirConfigDomainGraphicsSpice *graph;
     GVirConfigDomainConsole *con;
     GVirConfigDomainSerial *ser;
     GVirConfigDomainChardevSourcePty *src;
@@ -619,14 +618,6 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         g_object_unref(con);
     }
 
-    if (GVIR_SANDBOX_IS_CONFIG_GRAPHICAL(config)) {
-        graph = gvir_config_domain_graphics_spice_new();
-        gvir_config_domain_graphics_spice_set_port(graph, -1);
-        gvir_config_domain_add_device(domain,
-                                      GVIR_CONFIG_DOMAIN_DEVICE(graph));
-        g_object_unref(graph);
-    }
-
     return TRUE;
 }
 
@@ -699,9 +690,9 @@ static void gvir_sandbox_builder_machine_init(GVirSandboxBuilderMachine *builder
  * gvir_sandbox_builder_machine_new:
  * @connection: (transfer none): the connection
  *
- * Create a new graphical application sandbox builderuration
+ * Create a new application sandbox builder for virtual machines
  *
- * Returns: (transfer full): a new graphical sandbox builder object
+ * Returns: (transfer full): a new sandbox builder object
  */
 GVirSandboxBuilderMachine *gvir_sandbox_builder_machine_new(GVirConnection *connection)
 {
