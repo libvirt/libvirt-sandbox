@@ -347,24 +347,20 @@ static gboolean gvir_sandbox_context_clean_post_start(GVirSandboxContext *ctxt,
     GVirSandboxContextPrivate *priv = ctxt->priv;
     const gchar *cachedir;
     gchar *tmpdir;
-    gchar *configdir;
     gboolean ret = TRUE;
 
     cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
     tmpdir = g_build_filename(cachedir, "libvirt-sandbox",
                               gvir_sandbox_config_get_name(priv->config),
                               NULL);
-    configdir = g_build_filename(tmpdir, "config", NULL);
 
     if (!gvir_sandbox_builder_clean_post_start(priv->builder,
                                                priv->config,
                                                tmpdir,
-                                               configdir,
                                                error))
         ret = FALSE;
 
     g_free(tmpdir);
-    g_free(configdir);
     return ret;
 }
 
@@ -374,17 +370,17 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
     const gchar *cachedir;
-    gchar *tmpdir;
+    gchar *statedir;
     gchar *configdir;
     gchar *configfile;
     gchar *emptydir;
     gboolean ret = TRUE;
 
     cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    tmpdir = g_build_filename(cachedir, "libvirt-sandbox",
+    statedir = g_build_filename(cachedir, "libvirt-sandbox",
                               gvir_sandbox_config_get_name(priv->config),
                               NULL);
-    configdir = g_build_filename(tmpdir, "config", NULL);
+    configdir = g_build_filename(statedir, "config", NULL);
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
 
@@ -400,20 +396,19 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
         errno != ENOENT)
         ret = FALSE;
 
-    if (rmdir(tmpdir) < 0 &&
+    if (rmdir(statedir) < 0 &&
         errno != ENOENT)
         ret = FALSE;
 
     if (!gvir_sandbox_builder_clean_post_stop(priv->builder,
                                               priv->config,
-                                              tmpdir,
-                                              configdir,
+                                              statedir,
                                               error))
         ret = FALSE;
 
     g_free(configfile);
     g_free(emptydir);
-    g_free(tmpdir);
+    g_free(statedir);
     g_free(configdir);
     return ret;
 }
@@ -424,7 +419,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
     GVirSandboxContextPrivate *priv = ctxt->priv;
     GVirConfigDomain *config = NULL;
     const gchar *cachedir;
-    gchar *tmpdir;
+    gchar *statedir;
     gchar *configdir;
     gchar *emptydir;
     gchar *configfile;
@@ -442,14 +437,14 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
         return FALSE;
 
     cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    tmpdir = g_build_filename(cachedir, "libvirt-sandbox",
+    statedir = g_build_filename(cachedir, "libvirt-sandbox",
                               gvir_sandbox_config_get_name(priv->config),
                               NULL);
-    configdir = g_build_filename(tmpdir, "config", NULL);
+    configdir = g_build_filename(statedir, "config", NULL);
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
 
-    g_mkdir_with_parents(tmpdir, 0700);
+    g_mkdir_with_parents(statedir, 0700);
     g_mkdir_with_parents(configdir, 0700);
 
     unlink(configfile);
@@ -460,8 +455,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
 
     if (!(config = gvir_sandbox_builder_construct(priv->builder,
                                                   priv->config,
-                                                  tmpdir,
-                                                  configdir,
+                                                  statedir,
                                                   error))) {
         goto error;
     }
@@ -481,7 +475,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
     priv->active = TRUE;
     ret = TRUE;
 cleanup:
-    g_free(tmpdir);
+    g_free(statedir);
     g_free(configdir);
     g_free(configfile);
     g_free(emptydir);

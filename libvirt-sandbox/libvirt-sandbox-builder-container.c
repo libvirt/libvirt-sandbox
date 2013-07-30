@@ -141,15 +141,14 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config G
 
 static gboolean gvir_sandbox_builder_container_construct_basic(GVirSandboxBuilder *builder,
                                                                GVirSandboxConfig *config,
-                                                               const gchar *tmpdir,
-                                                               const gchar *configdir,
+                                                               const gchar *statedir,
                                                                GVirConfigDomain *domain,
                                                                GError **error)
 {
     gchar **features;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
-        construct_basic(builder, config, tmpdir, configdir, domain, error))
+        construct_basic(builder, config, statedir, domain, error))
         return FALSE;
 
     gvir_config_domain_set_virt_type(domain,
@@ -166,8 +165,7 @@ static gboolean gvir_sandbox_builder_container_construct_basic(GVirSandboxBuilde
 
 static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *builder,
                                                             GVirSandboxConfig *config,
-                                                            const gchar *tmpdir,
-                                                            const gchar *configdir,
+                                                            const gchar *statedir,
                                                             GVirConfigDomain *domain,
                                                             GError **error)
 {
@@ -175,7 +173,7 @@ static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *
     GVirConfigDomainOs *os;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
-        construct_os(builder, config, tmpdir, configdir, domain, error))
+        construct_os(builder, config, statedir, domain, error))
         return FALSE;
 
     cmdline = gvir_sandbox_builder_container_cmdline(config);
@@ -198,13 +196,12 @@ static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *
 
 static gboolean gvir_sandbox_builder_container_construct_features(GVirSandboxBuilder *builder,
                                                                   GVirSandboxConfig *config,
-                                                                  const gchar *tmpdir,
-                                                                  const gchar *configdir,
+                                                                  const gchar *statedir,
                                                                   GVirConfigDomain *domain,
                                                                   GError **error)
 {
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
-        construct_features(builder, config, tmpdir, configdir, domain, error))
+        construct_features(builder, config, statedir, domain, error))
         return FALSE;
 
     return TRUE;
@@ -212,8 +209,7 @@ static gboolean gvir_sandbox_builder_container_construct_features(GVirSandboxBui
 
 static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuilder *builder,
                                                                  GVirSandboxConfig *config,
-                                                                 const gchar *tmpdir,
-                                                                 const gchar *configdir,
+                                                                 const gchar *statedir,
                                                                  GVirConfigDomain *domain,
                                                                  GError **error)
 {
@@ -222,10 +218,12 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     GVirConfigDomainConsole *con;
     GVirConfigDomainChardevSourcePty *src;
     GList *tmp = NULL, *mounts = NULL, *networks = NULL;
+    gchar *configdir = g_strdup_printf("%s/config", statedir);
+    gboolean ret = FALSE;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
-        construct_devices(builder, config, tmpdir, configdir, domain, error))
-        return FALSE;
+        construct_devices(builder, config, statedir, domain, error))
+        goto cleanup;
 
     fs = gvir_config_domain_filesys_new();
     gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
@@ -382,8 +380,10 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
         g_object_unref(con);
     }
 
-
-    return TRUE;
+    ret = TRUE;
+cleanup:
+    g_free(configdir);
+    return ret;
 }
 
 

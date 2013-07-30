@@ -57,50 +57,42 @@ struct _GVirSandboxBuilderClass
 
     gboolean (*construct_basic)(GVirSandboxBuilder *builder,
                                 GVirSandboxConfig *config,
-                                const gchar *tmpdir,
-                                const gchar *configdir,
+                                const gchar *statedir,
                                 GVirConfigDomain *domain,
                                 GError **error);
     gboolean (*construct_os)(GVirSandboxBuilder *builder,
                              GVirSandboxConfig *config,
-                             const gchar *tmpdir,
-                             const gchar *configdir,
+                             const gchar *statedir,
                              GVirConfigDomain *domain,
                              GError **error);
     gboolean (*construct_features)(GVirSandboxBuilder *builder,
                                    GVirSandboxConfig *config,
-                                   const gchar *tmpdir,
-                                   const gchar *configdir,
+                                   const gchar *statedir,
                                    GVirConfigDomain *domain,
                                    GError **error);
     gboolean (*construct_devices)(GVirSandboxBuilder *builder,
                                   GVirSandboxConfig *config,
-                                  const gchar *tmpdir,
-                                  const gchar *configdir,
+                                  const gchar *statedir,
                                   GVirConfigDomain *domain,
                                   GError **error);
     gboolean (*construct_security)(GVirSandboxBuilder *builder,
                                    GVirSandboxConfig *config,
-                                   const gchar *tmpdir,
-                                   const gchar *configdir,
+                                   const gchar *statedir,
                                    GVirConfigDomain *domain,
                                    GError **error);
     gboolean (*construct_domain)(GVirSandboxBuilder *builder,
                                  GVirSandboxConfig *config,
-                                 const gchar *tmpdir,
-                                 const gchar *configdir,
+                                 const gchar *statedir,
                                  GVirConfigDomain *domain,
                                  GError **error);
 
     gboolean (*clean_post_start)(GVirSandboxBuilder *builder,
                                  GVirSandboxConfig *config,
-                                 const gchar *tmpdir,
-                                 const gchar *configdir,
+                                 const gchar *statedir,
                                  GError **error);
     gboolean (*clean_post_stop)(GVirSandboxBuilder *builder,
                                 GVirSandboxConfig *config,
-                                const gchar *tmpdir,
-                                const gchar *configdir,
+                                const gchar *statedir,
                                 GError **error);
 
     gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
@@ -115,19 +107,16 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
 
 GVirConfigDomain *gvir_sandbox_builder_construct(GVirSandboxBuilder *builder,
                                                  GVirSandboxConfig *config,
-                                                 const gchar *tmpdir,
-                                                 const gchar *configdir,
+                                                 const gchar *statedir,
                                                  GError **error);
 
 gboolean gvir_sandbox_builder_clean_post_start(GVirSandboxBuilder *builder,
                                                GVirSandboxConfig *config,
-                                               const gchar *tmpdir,
-                                               const gchar *configdir,
+                                               const gchar *statedir,
                                                GError **error);
 gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
                                               GVirSandboxConfig *config,
-                                              const gchar *tmpdir,
-                                              const gchar *configdir,
+                                              const gchar *statedir,
                                               GError **error);
 
 G_END_DECLS
