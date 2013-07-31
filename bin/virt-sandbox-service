@@ -240,15 +240,31 @@ class Container:
             raise OSError(_("Failed to mount image %s on %s") %  (self.image, self.dest))
 
     def save_config(self):
-        config_path = self.get_config_path()
-        if os.path.exists(config_path):
-            os.remove(config_path)
-        self.config.save_to_path(config_path)
-        if selinux is not None:
-            selinux.restorecon(config_path)
+        self.connect()
+        context = self.context()
+        context.define()
+        try:
+            config_path = self.get_config_path()
+            if os.path.exists(config_path):
+                os.remove(config_path)
+            self.config.save_to_path(config_path)
+            if selinux is not None:
+                selinux.restorecon(config_path)
+        except Exception, e:
+            try:
+                context.undefine()
+            except:
+                pass
+            try:
+                if os.path.exists(config_path):
+                    os.remove(config_path)
+            except:
+                pass
+            raise e
         sys.stdout.write(_("Created sandbox config %s\n") % config_path)
 
     def delete(self):
+        self.connect()
         # Stop service if it is running
         try:
             self.stop()
@@ -266,6 +282,10 @@ class Container:
         image = self.get_image_path()
         if os.path.exists(image):
             os.remove(image)
+
+        context = self.context()
+        context.undefine()
+
 
     def create(self):
         self.connect()

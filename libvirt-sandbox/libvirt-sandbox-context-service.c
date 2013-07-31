@@ -109,6 +109,7 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
     GVirSandboxBuilder *builder = NULL;
     GVirSandboxConfig *config;
     GVirConnection *connection;
+    GVirDomain *domain = NULL;
     const gchar *cachedir;
     gchar *statedir;
     gchar *configdir;
@@ -134,12 +135,6 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
     g_mkdir_with_parents(statedir, 0700);
     g_mkdir_with_parents(configdir, 0700);
 
-    unlink(configfile);
-    if (!gvir_sandbox_config_save_to_path(config, configfile, error))
-        goto cleanup;
-
-    g_mkdir_with_parents(emptydir, 0755);
-
     if (!(configdom = gvir_sandbox_builder_construct(builder,
                                                      config,
                                                      statedir,
@@ -147,12 +142,29 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
         goto cleanup;
     }
 
+    if (!(domain = gvir_connection_create_domain(connection,
+                                                 configdom,
+                                                 error))) {
+        goto cleanup;
+    }
+
+    unlink(configfile);
+    if (!gvir_sandbox_config_save_to_path(config, configfile, error))
+        goto cleanup;
+
+    g_mkdir_with_parents(emptydir, 0755);
+
     ret = TRUE;
 cleanup:
+    if (!ret)
+        unlink(configfile);
+
     g_free(statedir);
     g_free(configdir);
     g_free(configfile);
     g_free(emptydir);
+    if (domain)
+        g_object_unref(domain);
     if (configdom)
         g_object_unref(configdom);
     if (builder)
@@ -171,6 +183,7 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
     GVirSandboxBuilder *builder = NULL;
     GVirSandboxConfig *config;
     GVirConnection *connection;
+    GVirDomain *domain = NULL;
     const gchar *cachedir;
     gchar *statedir;
     gchar *configdir;
@@ -188,6 +201,16 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
     configdir = g_build_filename(statedir, "config", NULL);
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
+
+    if (!gvir_connection_fetch_domains(connection, NULL, error))
+        goto cleanup;
+
+    if ((domain = gvir_connection_find_domain_by_name(
+             connection,
+             gvir_sandbox_config_get_name(config))) != NULL) {
+        if (!gvir_domain_delete(domain, 0, error))
+            ret = FALSE;
+    }
 
     if (!(builder = gvir_sandbox_builder_for_connection(connection,
                                                         error))) {
@@ -218,6 +241,8 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
         ret = FALSE;
 
 cleanup:
+    if (domain)
+        g_object_unref(domain);
     if (builder)
         g_object_unref(builder);
     if (connection)
@@ -346,7 +371,6 @@ GVirSandboxContextService *gvir_sandbox_context_service_new(GVirConnection *conn
     return GVIR_SANDBOX_CONTEXT_SERVICE(g_object_new(GVIR_SANDBOX_TYPE_CONTEXT_SERVICE,
                                                      "connection", connection,
                                                      "config", config,
-                                                     "autodestroy", FALSE,
                                                      NULL));
 }
 
