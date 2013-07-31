@@ -77,6 +77,8 @@ gboolean gvir_sandbox_context_stop(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error);
 gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error);
 
+gboolean gvir_sandbox_context_is_attached(GVirSandboxContext *ctxt);
+
 GVirDomain *gvir_sandbox_context_get_domain(GVirSandboxContext *ctxt,
                                             GError **error);
 GVirConnection *gvir_sandbox_context_get_connection(GVirSandboxContext *ctxt);

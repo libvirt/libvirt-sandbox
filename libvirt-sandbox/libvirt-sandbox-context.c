@@ -50,7 +50,6 @@ struct _GVirSandboxContextPrivate
     GVirConnection *connection;
     GVirDomain *domain;
     GVirSandboxConfig *config;
-    gboolean active;
     gboolean autodestroy;
 };
 
@@ -159,11 +158,9 @@ static void gvir_sandbox_context_finalize(GObject *object)
     GVirSandboxContext *ctxt = GVIR_SANDBOX_CONTEXT(object);
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (priv->active)
+    if (priv->domain)
         gvir_sandbox_context_stop(ctxt, NULL);
 
-    if (priv->domain)
-        g_object_unref(priv->domain);
     if (priv->connection)
         g_object_unref(priv->connection);
     if (priv->config)
@@ -473,7 +470,6 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
     if (!gvir_sandbox_context_clean_post_start(ctxt, builder, error))
         goto error;
 
-    priv->active = TRUE;
     ret = TRUE;
 cleanup:
     g_free(statedir);
@@ -502,7 +498,7 @@ static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GE
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (priv->active) {
+    if (priv->domain) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
                              "%s", "A previously built sandbox still exists");
         return FALSE;
@@ -520,8 +516,6 @@ static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GE
         return FALSE;
     }
 
-    priv->active = TRUE;
-
     return TRUE;
 }
 
@@ -530,15 +524,11 @@ static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GE
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (!priv->active)
+    if (!priv->domain)
         return TRUE;
 
-    if (priv->domain) {
-        g_object_unref(priv->domain);
-        priv->domain = NULL;
-    }
-
-    priv->active = FALSE;
+    g_object_unref(priv->domain);
+    priv->domain = NULL;
 
     return TRUE;
 }
@@ -550,16 +540,14 @@ static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GErr
     GVirSandboxBuilder *builder;
     gboolean ret = TRUE;
 
-    if (!priv->active)
+    if (!priv->domain)
         return TRUE;
 
-    if (priv->domain) {
-        if (!gvir_domain_stop(priv->domain, 0, error))
-            ret = FALSE;
+    if (!gvir_domain_stop(priv->domain, 0, error))
+        ret = FALSE;
 
-        g_object_unref(priv->domain);
-        priv->domain = NULL;
-    }
+    g_object_unref(priv->domain);
+    priv->domain = NULL;
 
     if (!(builder = gvir_sandbox_builder_for_connection(priv->connection,
                                                         error)))
@@ -571,8 +559,6 @@ static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GErr
 
     if (builder)
         g_object_unref(builder);
-
-    priv->active = FALSE;
 
     return ret;
 }
@@ -662,4 +648,10 @@ gboolean gvir_sandbox_context_attach(GVirSandboxContext *ctxt, GError **error)
 gboolean gvir_sandbox_context_detach(GVirSandboxContext *ctxt, GError **error)
 {
     return GVIR_SANDBOX_CONTEXT_GET_CLASS(ctxt)->detach(ctxt, error);
+}
+
+gboolean gvir_sandbox_context_is_attached(GVirSandboxContext *ctxt)
+{
+    GVirSandboxContextPrivate *priv = ctxt->priv;
+    return priv->domain != NULL;
 }
