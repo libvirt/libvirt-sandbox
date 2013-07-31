@@ -27,6 +27,8 @@
 #include <glib/gi18n.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
+#include <errno.h>
+#include <selinux/selinux.h>
 
 /**
  * SECTION: libvirt-sandbox-config
@@ -1521,6 +1523,18 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
         gvir_sandbox_config_set_security_dynamic(config, TRUE);
     } else if (g_str_equal(tmp, "static")) {
         gvir_sandbox_config_set_security_dynamic(config, FALSE);
+    } else if (g_str_equal(tmp, "inherit")) {
+        gvir_sandbox_config_set_security_dynamic(config, FALSE);
+        security_context_t scon;
+        if (getcon(&scon) < 0) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("Unable to get SELinux context of user: %s"),
+                            strerror(errno));
+                return FALSE;
+        }
+        gvir_sandbox_config_set_security_label(config, scon);
+        freecon(scon);
+
     } else {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                     _("Unknown security option '%s'"), tmp);

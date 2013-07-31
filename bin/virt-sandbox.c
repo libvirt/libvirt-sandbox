@@ -417,6 +417,10 @@ USER:ROLE:TYPE:LEVEL, instead of the default base context.
 To set a completely static label. For example,
 static,label=system_u:system_r:svirt_t:s0:c412,c355
 
+=item inherit
+
+Inherit the context from the process that is executing virt-sandbox.
+
 =back
 
 =item B<-p>, B<--privileged>

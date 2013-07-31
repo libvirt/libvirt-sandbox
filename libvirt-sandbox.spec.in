@@ -25,6 +25,7 @@ BuildRequires: gobject-introspection-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
 BuildRequires: intltool
+BuildRequires: libselinux-devel
 BuildRequires: glib2-devel >= 2.32.0
 Requires: rpm-python
 # For virsh lxc-enter-namespace command
