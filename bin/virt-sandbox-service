@@ -312,18 +312,6 @@ class Container:
     def context(self):
         return LibvirtSandbox.ContextService.new(self.conn, self.config)
 
-    def running(self):
-        def closed(obj, error):
-            self.loop.quit()
-        try:
-            self.connect()
-            context = self.context()
-            context.attach()
-            self.disconnect()
-            return 1
-        except GLib.GError, e:
-            return 0
-
     def add_bind_mount(self, source, dest):
         if self.image is None:
             mount = LibvirtSandbox.ConfigMountHostBind.new(source, dest)
@@ -432,13 +420,17 @@ After=libvirtd.service
 %(FOLLOW)s
 [Service]
 Type=simple
-ExecStart=/usr/bin/virt-sandbox-service start %(NAME)s
-ExecReload=/usr/bin/virt-sandbox-service reload -u %(RELOAD)s %(NAME)s
-ExecStop=/usr/bin/virt-sandbox-service stop %(NAME)s
+ExecStart=/usr/libexec/virt-sandbox-service-util -c %(URI)s -s %(NAME)s
+ExecReload=/usr/bin/virt-sandbox-service reload -c %(URI)s reload -u %(RELOAD)s %(NAME)s
+ExecStop=/usr/bin/virsh -c %(URI)s destroy %(NAME)s
 
 [Install]
 WantedBy=multi-user.target
-""" % { 'NAME':self.name, 'FOLLOW':self.follow_units(), 'RELOAD': " -u ".join(map(lambda x: x[0], self.unit_file_list)) }
+""" % { 'NAME':self.name,
+        'FOLLOW':self.follow_units(),
+        'RELOAD': " -u ".join(map(lambda x: x[0], self.unit_file_list)),
+        'URI': self.uri,
+        }
 
         fd = open(self.unitfile, "w")
         fd.write(unit)
@@ -843,45 +835,12 @@ def usage(parser, msg):
     sys.stderr.flush()
     sys.exit(1)
 
-def sandbox_list(args):
-    import glob
-    g = glob.glob(CONFIG_PATH + "*.sandbox")
-    g.sort()
-    for gc in g:
-        try:
-            c = LibvirtSandbox.Config.load_from_path(gc)
-            if args.running:
-                if isinstance(c, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
-                    container = GenericContainer(uri=args.uri, config=c)
-                else:
-                    container = SystemdContainer(uri=args.uri, config=c)
-
-                if container.running():
-                    print c.get_name()
-            else:
-                print c.get_name()
-
-        except OSError, e:
-            print "Invalid container %s: %s", (gc, e)
-
 def sandbox_reload(args):
     config = read_config(args.name)
     if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
         raise ValueError([_("Generic Containers do not support reload")])
     container = SystemdContainer(uri = args.uri, config = config)
     container.reload(args.unitfiles)
-
-def start(args):
-    os.execl("/usr/libexec/virt-sandbox-service-util",
-             "virt-sandbox-service-util",
-             "-c", args.uri,
-             "-s", args.name)
-
-def stop(args):
-    os.execl("/usr/libexec/virt-sandbox-service-util",
-             "virt-sandbox-service-util",
-             "-c", args.uri,
-             "-S", args.name)
 
 def connect(args):
     if args.uri == "lxc:///":
@@ -1104,18 +1063,6 @@ def gen_execute_args(subparser):
                         help=_("command to execute within the container"))
     parser.set_defaults(func=execute)
 
-def gen_start_args(subparser):
-    parser = subparser.add_parser("start",
-                                   help=_("Start a sandbox container"))
-    requires_name(parser)
-    parser.set_defaults(func=start)
-
-def gen_stop_args(subparser):
-    parser = subparser.add_parser("stop",
-                                   help=_("Stop a sandbox container"))
-    requires_name(parser)
-    parser.set_defaults(func=stop)
-
 def gen_reload_args(subparser):
     parser = subparser.add_parser("reload",
                                    help=_("Reload a running sandbox container"))
@@ -1144,14 +1091,6 @@ def gen_delete_args(subparser):
     requires_name(parser)
     parser.set_defaults(func=delete)
 
-def gen_list_args(subparser):
-    parser = subparser.add_parser("list",
-                                  help=_("List all sandbox container"))
-    parser.add_argument("-r", "--running", dest="running",
-                        default=False, action="store_true",
-                        help=_("list only running sandbox containers"))
-    parser.set_defaults(func=sandbox_list)
-
 if __name__ == '__main__':
     c = Container()
 
@@ -1165,10 +1104,7 @@ if __name__ == '__main__':
     gen_connect_args(subparser)
     gen_delete_args(subparser)
     gen_execute_args(subparser)
-    gen_list_args(subparser)
     gen_reload_args(subparser)
-    gen_start_args(subparser)
-    gen_stop_args(subparser)
 
     try:
         args = parser.parse_args()

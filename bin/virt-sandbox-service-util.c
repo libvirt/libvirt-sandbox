@@ -200,34 +200,6 @@ cleanup:
     return ret;
 }
 
-static int container_stop(const char *uri, const char *name, GMainLoop *loop)
-{
-    int ret = EXIT_FAILURE;
-    GError *err = NULL;
-    GVirSandboxContext *ctx = NULL;
-
-    if (!(ctx = libvirt_sandbox_get_context(uri, name)))
-        goto cleanup;
-
-    if (!(gvir_sandbox_context_attach(ctx, &err))) {
-        g_printerr(_("Unable to attach to container: %s\n"),
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
-    }
-
-    if (!(gvir_sandbox_context_stop(ctx, &err))) {
-        g_printerr(_("Unable to stop container: %s\n"),
-                   err && err->message ? err->message : _("unknown"));
-        goto cleanup;
-    }
-
-    ret = EXIT_SUCCESS;
-
-cleanup:
-    if (ctx)
-        g_object_unref(ctx);
-    return ret;
-}
 
 static int (*container_func)(const char *uri, const char *name, GMainLoop *loop) = NULL;
 
@@ -239,17 +211,6 @@ static gboolean libvirt_lxc_start(const gchar *option_name,
 {
     if (container_func) return FALSE;
     container_func = container_start;
-    return TRUE;
-}
-
-static gboolean libvirt_lxc_stop(const gchar *option_name,
-                                 const gchar *value,
-                                 const gpointer *data,
-                                 const GError **error)
-
-{
-    if (container_func) return FALSE;
-    container_func = container_stop;
     return TRUE;
 }
 
@@ -279,8 +240,6 @@ int main(int argc, char **argv)
           libvirt_sandbox_version, N_("Display version information"), NULL },
         { "start", 's', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           libvirt_lxc_start, N_("Start a container"), NULL },
-        { "stop", 'S', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          libvirt_lxc_stop, N_("Stop a container"), NULL },
         { "attach", 'a', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           libvirt_lxc_attach, N_("Attach to a container"), NULL },
         { "pid", 'p', 0, G_OPTION_ARG_INT, &pid,
@@ -313,7 +272,7 @@ int main(int argc, char **argv)
     }
 
     if ( container_func == NULL ) {
-        g_printerr(_("Invalid command: You must specify --start, --stop or --attach\n%s"),
+        g_printerr(_("Invalid command: You must specify --start or --attach\n%s"),
                    gettext(help_msg));
         goto cleanup;
     }
