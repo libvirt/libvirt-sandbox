@@ -889,10 +889,15 @@ def execute(args):
 
 def clone(args):
     config = read_config(args.source)
-    container = Container(uri = args.uri, config=config)
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        container = GenericContainer(uri=args.uri, config=config)
+    else:
+        container = SystemdContainer(uri=args.uri, config=config)
+
     fd = open(container.get_config_path(),"r")
     recs = fd.read()
     fd.close()
+
     old_path = container.get_filesystem_path()
     new_path = container.get_filesystem_path(args.dest)
     newrec = recs.replace(old_path + "/", new_path + "/")
@@ -914,16 +919,20 @@ def clone(args):
         fd = open(container.get_unit_path())
         recs = fd.read()
         fd.close()
+
         fd = open(container.get_unit_path(args.dest), "wx")
         fd.write(recs.replace(args.source, args.dest))
         fd.close()
+
         new_unit = container.get_config_path(args.dest)
         fd = open(new_unit,"wx")
         fd.write(newrec)
         fd.close()
+
         sys.stdout.write(_("Created unit file %s\n") % new_unit)
 
-        container = SystemdContainer(name=args.dest, uri=args.uri, create=True)
+        config = read_config(args.dest)
+        container = SystemdContainer(config=config, uri=args.uri)
         container.gen_machine_id()
         container.gen_hostname()
 
