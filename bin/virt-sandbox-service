@@ -54,7 +54,10 @@ def get_config_path(name):
     return CONFIG_PATH + name + ".sandbox"
 
 def read_config(name):
-    return LibvirtSandbox.Config.load_from_path(get_config_path(name))
+    path = get_config_path(name)
+    if not os.path.exists(path):
+        return None
+    return LibvirtSandbox.Config.load_from_path(path)
 
 class Container:
     DEFAULT_PATH       = "/var/lib/libvirt/filesystems"
@@ -784,6 +787,10 @@ MB = int(1000000)
 
 def delete(args):
     config = read_config(args.name)
+    if config is None:
+        sys.stderr.write("Sandbox '%s' does not exist\n" % args.name)
+        sys.exit(1)
+
     if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
         container = GenericContainer(uri=args.uri, config = config)
     else:
