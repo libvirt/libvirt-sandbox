@@ -38,11 +38,11 @@ Group: Development/Libraries
 Summary: libvirt application sandbox framework libraries
 # So we get the full libvirtd daemon, not just client libs
 %if %{with_qemu}
-% ifarch %{ix86} x86_64
+ %ifarch %{ix86} x86_64
 Requires: libvirt-daemon-kvm >= %{libvirt_version}
-% else
+ %else
 Requires: libvirt-daemon-qemu >= %{libvirt_version}
-% endif
+ %endif
 %endif
 Requires: libvirt-daemon-lxc >= %{libvirt_version}
 
