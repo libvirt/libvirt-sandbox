@@ -53,6 +53,9 @@ struct _GVirSandboxContextServiceClass
 {
     GVirSandboxContextClass parent_class;
 
+    gboolean (*define)(GVirSandboxContextService *ctxt, GError **error);
+    gboolean (*undefine)(GVirSandboxContextService *ctxt, GError **error);
+
     gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };
 
@@ -60,6 +63,9 @@ GType gvir_sandbox_context_service_get_type(void);
 
 GVirSandboxContextService *gvir_sandbox_context_service_new(GVirConnection *connection,
                                                             GVirSandboxConfigService *config);
+
+gboolean gvir_sandbox_context_service_define(GVirSandboxContextService *ctxt, GError **error);
+gboolean gvir_sandbox_context_service_undefine(GVirSandboxContextService *ctxt, GError **error);
 
 G_END_DECLS
 

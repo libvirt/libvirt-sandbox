@@ -160,6 +160,8 @@ LIBVIRT_SANDBOX_0.2.1 {
 
 	gvir_sandbox_context_service_get_type;
 	gvir_sandbox_context_service_new;
+	gvir_sandbox_context_service_define;
+	gvir_sandbox_context_service_undefine;
 
 	gvir_sandbox_context_interactive_get_type;
 	gvir_sandbox_context_interactive_get_app_console;

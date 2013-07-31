@@ -336,93 +336,9 @@ gboolean gvir_sandbox_context_get_autodestroy(GVirSandboxContext *ctxt)
 }
 
 
-static gboolean gvir_sandbox_context_clean_post_start(GVirSandboxContext *ctxt,
-                                                      GVirSandboxBuilder *builder,
-                                                      GError **error)
-{
-    GVirSandboxContextPrivate *priv = ctxt->priv;
-    const gchar *cachedir;
-    gchar *tmpdir;
-    gboolean ret = TRUE;
-
-    cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    tmpdir = g_build_filename(cachedir, "libvirt-sandbox",
-                              gvir_sandbox_config_get_name(priv->config),
-                              NULL);
-
-    if (!gvir_sandbox_builder_clean_post_start(builder,
-                                               priv->config,
-                                               tmpdir,
-                                               error))
-        ret = FALSE;
-
-    g_free(tmpdir);
-    return ret;
-}
-
-
-static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
-                                                     GVirSandboxBuilder *builder,
-                                                     GError **error)
-{
-    GVirSandboxContextPrivate *priv = ctxt->priv;
-    const gchar *cachedir;
-    gchar *statedir;
-    gchar *configdir;
-    gchar *configfile;
-    gchar *emptydir;
-    gboolean ret = TRUE;
-
-    cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    statedir = g_build_filename(cachedir, "libvirt-sandbox",
-                              gvir_sandbox_config_get_name(priv->config),
-                              NULL);
-    configdir = g_build_filename(statedir, "config", NULL);
-    configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
-    emptydir = g_build_filename(configdir, "empty", NULL);
-
-    if (unlink(configfile) < 0 &&
-        errno != ENOENT)
-        ret = FALSE;
-
-    if (rmdir(emptydir) < 0 &&
-        errno != ENOENT)
-        ret = FALSE;
-
-    if (rmdir(configdir) < 0 &&
-        errno != ENOENT)
-        ret = FALSE;
-
-    if (rmdir(statedir) < 0 &&
-        errno != ENOENT)
-        ret = FALSE;
-
-    if (!gvir_sandbox_builder_clean_post_stop(builder,
-                                              priv->config,
-                                              statedir,
-                                              error))
-        ret = FALSE;
-
-    g_free(configfile);
-    g_free(emptydir);
-    g_free(statedir);
-    g_free(configdir);
-    return ret;
-}
-
-
 static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
-    GVirConfigDomain *config = NULL;
-    GVirSandboxBuilder *builder = NULL;
-    const gchar *cachedir;
-    gchar *statedir;
-    gchar *configdir;
-    gchar *emptydir;
-    gchar *configfile;
-    gboolean ret = FALSE;
-    int flags = 0;
 
     if (priv->domain) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
@@ -430,67 +346,7 @@ static gboolean gvir_sandbox_context_start_default(GVirSandboxContext *ctxt, GEr
         return FALSE;
     }
 
-    if (!(builder = gvir_sandbox_builder_for_connection(priv->connection,
-                                                        error)))
-        return FALSE;
-
-    cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    statedir = g_build_filename(cachedir, "libvirt-sandbox",
-                              gvir_sandbox_config_get_name(priv->config),
-                              NULL);
-    configdir = g_build_filename(statedir, "config", NULL);
-    configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
-    emptydir = g_build_filename(configdir, "empty", NULL);
-
-    g_mkdir_with_parents(statedir, 0700);
-    g_mkdir_with_parents(configdir, 0700);
-
-    unlink(configfile);
-    if (!gvir_sandbox_config_save_to_path(priv->config, configfile, error))
-        goto error;
-
-    g_mkdir_with_parents(emptydir, 0755);
-
-    if (!(config = gvir_sandbox_builder_construct(builder,
-                                                  priv->config,
-                                                  statedir,
-                                                  error))) {
-        goto error;
-    }
-
-    if (priv->autodestroy)
-        flags |= GVIR_DOMAIN_START_AUTODESTROY;
-
-    if (!(priv->domain = gvir_connection_start_domain(priv->connection,
-                                                      config,
-                                                      flags,
-                                                      error)))
-        goto error;
-
-    if (!gvir_sandbox_context_clean_post_start(ctxt, builder, error))
-        goto error;
-
-    ret = TRUE;
-cleanup:
-    g_free(statedir);
-    g_free(configdir);
-    g_free(configfile);
-    g_free(emptydir);
-    if (config)
-        g_object_unref(config);
-    if (builder)
-        g_object_unref(builder);
-
-    return ret;
-
-error:
-    if (priv->domain) {
-        gvir_domain_stop(priv->domain, 0, NULL);
-        g_object_unref(priv->domain);
-        priv->domain = NULL;
-    }
-
-    goto cleanup;
+    return TRUE;
 }
 
 
@@ -524,8 +380,11 @@ static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GE
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
 
-    if (!priv->domain)
-        return TRUE;
+    if (!priv->domain) {
+        g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                    _("Sandbox is not currently running"));
+        return FALSE;
+    }
 
     g_object_unref(priv->domain);
     priv->domain = NULL;
@@ -537,30 +396,14 @@ static gboolean gvir_sandbox_context_detach_default(GVirSandboxContext *ctxt, GE
 static gboolean gvir_sandbox_context_stop_default(GVirSandboxContext *ctxt, GError **error)
 {
     GVirSandboxContextPrivate *priv = ctxt->priv;
-    GVirSandboxBuilder *builder;
-    gboolean ret = TRUE;
 
-    if (!priv->domain)
-        return TRUE;
+    if (!priv->domain) {
+        g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
+                    _("Sandbox is not currently running"));
+        return FALSE;
+    }
 
-    if (!gvir_domain_stop(priv->domain, 0, error))
-        ret = FALSE;
-
-    g_object_unref(priv->domain);
-    priv->domain = NULL;
-
-    if (!(builder = gvir_sandbox_builder_for_connection(priv->connection,
-                                                        error)))
-        ret = FALSE;
-
-    if (builder &&
-        !gvir_sandbox_context_clean_post_stop(ctxt, builder, error))
-        ret = FALSE;
-
-    if (builder)
-        g_object_unref(builder);
-
-    return ret;
+    return TRUE;
 }
 
 
@@ -579,7 +422,7 @@ GVirSandboxConsole *gvir_sandbox_context_get_log_console(GVirSandboxContext *ctx
 
     if (!priv->domain) {
         g_set_error(error, GVIR_SANDBOX_CONTEXT_ERROR, 0,
-                    _("Domain is not currently running"));
+                    _("Sandbox is not currently running"));
         return NULL;
     }
 
