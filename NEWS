@@ -1,6 +1,33 @@
       libvirt Sandbox News
       ====================
 
+0.5.0 - "Sahara Desert" - 2013-08-01
+------------------------------------
+
+ - Switch to use persistent libvirt configuration files for
+   service sandboxes
+ - Store service configs in /etc/libvirt-sandbox/services/$NAME/
+   instead of /etc/libvirt-sandbox/services/$NAME.sandbox to
+   allow storage of multiple files per sandbox
+ - Add a new 'virt-sandbox-service upgrade NAME' command,
+   to be run by admin for all existing service sandboxes to
+   upgrade their configuration to be compatible with the new
+   release
+ - Remove start, stop, list commands from virt-sandbox-service,
+   with recomendation to use start, destroy & list commands in
+   virsh instead.
+ - Remove duplicate -u option in man page
+ - Update man page examples
+ - Stop generating a UNIT_sandbox.target unit, instead letting
+   the sandbox unit tie into multi-user.target as normal
+ - Remove unimplemented APIs for graphical sandboxes, to be
+   re-added at a later date when actually functional
+ - Add padding to public structs, to facilitate preservation
+   of public ABI compatibility in future
+ - Add note about default libvirt URIs in man page
+ - Fix cloning of sandboxes
+
+
 0.2.1 - "Owami Desert" - 2013-07-09
 -----------------------------------
 

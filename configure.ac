@@ -1,4 +1,4 @@
-AC_INIT(libvirt-sandbox, 0.2.2)
+AC_INIT(libvirt-sandbox, 0.5.0)
 AC_CONFIG_SRCDIR(libvirt-sandbox/libvirt-sandbox.h)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_HEADERS([config.h])
@@ -46,7 +46,7 @@ LIBVIRT_SANDBOX_VERSION=$LIBVIRT_SANDBOX_MAJOR_VERSION.$LIBVIRT_SANDBOX_MINOR_VE
 # in the so version'd symlinks, and this is based on AGE.REVISION
 #
 # Until we declare ABI stability, this can be toggled upon release
-LIBVIRT_SANDBOX_SONUM=3
+LIBVIRT_SANDBOX_SONUM=4
 
 AGE=`expr $LIBVIRT_SANDBOX_MAJOR_VERSION '*' 1000 + $LIBVIRT_SANDBOX_MINOR_VERSION`
 REVISION=$LIBVIRT_SANDBOX_MICRO_VERSION

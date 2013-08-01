@@ -20,7 +20,7 @@ Africa
 0.1.2    Namib Desert – a desert in present day Namibia
 0.2.0    Nubian Desert – a desert in present day Sudan
 0.2.1    Owami Desert – a desert in Nigeria
-         Sahara Desert – the world's largest hot desert covering most of Northern Africa,
+0.5.0    Sahara Desert – the world's largest hot desert covering most of Northern Africa,
 
 Asia
 
