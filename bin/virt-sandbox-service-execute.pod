@@ -6,7 +6,7 @@ virt-sandbox-service execute - execute commands inside Secure container
 
 Execute a command within a security container
 
-  virt-sandbox-service [-c URI] execute [-h] [-N] NAME -- COMMAND
+  virt-sandbox-service [-c URI] execute [-h] [-N] NAME -- COMMAND [ARG1 [ARG2...]]
 
 =head1 DESCRIPTION
 

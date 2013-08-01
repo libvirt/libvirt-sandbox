@@ -10,7 +10,7 @@ virt-sandbox-service create - Create a Security container
                                    [-N NETWORK] [-p PATH] [-s SECURITY]
                                    [[-u UNITFILES] ...] [--username USERNAME]
                                    [-U UID] [[-P package] ... ]
-                                   name [command [command ...]]
+                                   NAME -- COMMAND [ARG1 [ARG2...]]
 
 =head1 DESCRIPTION
 
@@ -20,7 +20,10 @@ technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
 container / virtual machines will be secured by SELinux and resource
 separated using cgroups.
 
-The create command can setup a sandbox for running one or more systemd unit files.  It can also setup a sandbox for running a command in an GenericContainer.  Specify a unit file to create the SystemdContainer and the command to create an GenericContainer.
+The create command can setup a sandbox for running one or more systemd unit files.
+It can also setup a sandbox for running a command in an GenericContainer.
+Specify a unit file to create the SystemdContainer and the command to create an
+GenericContainer.
 
 =head1 OPTIONS
 
@@ -37,8 +40,12 @@ supported currently).
 
 =item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
-Name of the systemd unit file to be to run within the Systemd Container. Can be repeated if multiple unit files are required within the sandbox.  Cannot be specified if you are using a COMMAND.
-If the unit file end with @, this will be considered as a template, and a instancied systemd unit will be created, using the name of the container as a instance identifier.
+Name of the systemd unit file to be to run within the Systemd Container.
+Can be repeated if multiple unit files are required within the sandbox.
+Cannot be specified if you are using a COMMAND. If the unit file end
+with @, this will be considered as a template, and a instantiated
+systemd unit will be created, using the name of the container as a
+instance identifier.
 
 =item B<-C>, B<--copy>
 
@@ -211,14 +218,14 @@ Create httpd1 Systemd container
 
  # virt-sandbox-service create -C -u httpd.service httpd1
  Created container dir /var/lib/libvirt/filesystems/httpd1
- Created sandbox config /etc/libvirt-sandbox/httpd1.sandbox
+ Created sandbox config /etc/libvirt-sandbox/services/httpd1/config/sandbox.cfg
  Created unit file /etc/systemd/system/httpd@httpd1.service
 
 Create foobar1 Generic container
 
  # virt-sandbox-service create -U 1234 foobar1 -- /usr/bin/foobar -a -b
  Created container dir /var/lib/libvirt/filesystems/foobar1
- Created sandbox config /etc/libvirt-sandbox/foobar1.sandbox
+ Created sandbox config /etc/libvirt-sandbox/services/foobar1/config/sandbox.cfg
 
 =head1 SEE ALSO
 
