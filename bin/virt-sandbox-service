@@ -51,7 +51,7 @@ except IOError:
 
 CONFIG_PATH = "/etc/libvirt-sandbox/services/"
 def get_config_path(name):
-    return CONFIG_PATH + name + ".sandbox"
+    return CONFIG_PATH + name + "/config/sandbox.cfg"
 
 def read_config(name):
     path = get_config_path(name)
@@ -246,25 +246,7 @@ class Container:
         self.connect()
         context = self.context()
         context.define()
-        try:
-            config_path = self.get_config_path()
-            if os.path.exists(config_path):
-                os.remove(config_path)
-            self.config.save_to_path(config_path)
-            if selinux is not None:
-                selinux.restorecon(config_path)
-        except Exception, e:
-            try:
-                context.undefine()
-            except:
-                pass
-            try:
-                if os.path.exists(config_path):
-                    os.remove(config_path)
-            except:
-                pass
-            raise e
-        sys.stdout.write(_("Created sandbox config %s\n") % config_path)
+        sys.stdout.write(_("Created sandbox config %s\n") % get_config_path(self.name))
 
     def delete(self):
         self.connect()
@@ -273,10 +255,6 @@ class Container:
             self.stop()
         except:
             pass
-
-        config = self.get_config_path()
-        if os.path.exists(config):
-            os.remove(config)
 
         # Not sure we should remove content
         if os.path.exists(self.dest):
@@ -920,18 +898,14 @@ def clone(args):
         recs = fd.read()
         fd.close()
 
-        fd = open(container.get_unit_path(args.dest), "wx")
+        new_unit = container.get_unit_path(args.dest)
+        fd = open(new_unit, "wx")
         fd.write(recs.replace(args.source, args.dest))
-        fd.close()
-
-        new_unit = container.get_config_path(args.dest)
-        fd = open(new_unit,"wx")
-        fd.write(newrec)
         fd.close()
 
         sys.stdout.write(_("Created unit file %s\n") % new_unit)
 
-        config = read_config(args.dest)
+        config = LibvirtSandbox.Config.load_from_data(newrec)
         container = SystemdContainer(config=config, uri=args.uri)
         container.gen_machine_id()
         container.gen_hostname()

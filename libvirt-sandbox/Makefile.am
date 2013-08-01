@@ -130,6 +130,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-DRUNDIR="\"$(rundir)\"" \
+			-DSYSCONFDIR="\"$(sysconfdir)\"" \
 			-DLOCALEDIR="\"$(datadir)/locale"\" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \

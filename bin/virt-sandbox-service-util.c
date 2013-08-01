@@ -54,7 +54,7 @@ static GVirSandboxContext *libvirt_sandbox_get_context(const char *uri,
     GVirConnection *conn = NULL;
     gchar *configfile = NULL;
 
-    configfile = g_strdup_printf("/etc/libvirt-sandbox/services/%s.sandbox", name);
+    configfile = g_strdup_printf("/etc/libvirt-sandbox/services/%s/config/sandbox.cfg", name);
 
     if (uri)
         conn = gvir_connection_new(uri);

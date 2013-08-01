@@ -110,8 +110,10 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
     GVirSandboxConfig *config;
     GVirConnection *connection;
     GVirDomain *domain = NULL;
-    const gchar *cachedir;
+    const gchar *sysconfdir;
+    gchar *servicedir;
     gchar *statedir;
+    gchar *sandboxdir;
     gchar *configdir;
     gchar *emptydir;
     gchar *configfile;
@@ -120,8 +122,10 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
     connection = gvir_sandbox_context_get_connection(GVIR_SANDBOX_CONTEXT(ctxt));
     config = gvir_sandbox_context_get_config(GVIR_SANDBOX_CONTEXT(ctxt));
 
-    cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    statedir = g_build_filename(cachedir, "libvirt-sandbox",
+    sysconfdir = (getuid() ? g_get_user_config_dir() : SYSCONFDIR);
+    sandboxdir = g_build_filename(sysconfdir, "libvirt-sandbox", NULL);
+    servicedir = g_build_filename(sandboxdir, "services", NULL);
+    statedir = g_build_filename(servicedir,
                                 gvir_sandbox_config_get_name(config),
                                 NULL);
     configdir = g_build_filename(statedir, "config", NULL);
@@ -132,6 +136,8 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
                                                         error)))
         goto cleanup;
 
+    g_mkdir_with_parents(sandboxdir, 0700);
+    g_mkdir_with_parents(servicedir, 0700);
     g_mkdir_with_parents(statedir, 0700);
     g_mkdir_with_parents(configdir, 0700);
 
@@ -159,6 +165,8 @@ cleanup:
     if (!ret)
         unlink(configfile);
 
+    g_free(servicedir);
+    g_free(sandboxdir);
     g_free(statedir);
     g_free(configdir);
     g_free(configfile);
@@ -184,7 +192,9 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
     GVirSandboxConfig *config;
     GVirConnection *connection;
     GVirDomain *domain = NULL;
-    const gchar *cachedir;
+    const gchar *sysconfdir;
+    gchar *servicedir;
+    gchar *sandboxdir;
     gchar *statedir;
     gchar *configdir;
     gchar *configfile;
@@ -194,8 +204,10 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
     connection = gvir_sandbox_context_get_connection(GVIR_SANDBOX_CONTEXT(ctxt));
     config = gvir_sandbox_context_get_config(GVIR_SANDBOX_CONTEXT(ctxt));
 
-    cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
-    statedir = g_build_filename(cachedir, "libvirt-sandbox",
+    sysconfdir = (getuid() ? g_get_user_config_dir() : SYSCONFDIR);
+    sandboxdir = g_build_filename(sysconfdir, "libvirt-sandbox", NULL);
+    servicedir = g_build_filename(sandboxdir, "services", NULL);
+    statedir = g_build_filename(servicedir,
                                 gvir_sandbox_config_get_name(config),
                                 NULL);
     configdir = g_build_filename(statedir, "config", NULL);
@@ -241,6 +253,12 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
         ret = FALSE;
 
 cleanup:
+    g_free(servicedir);
+    g_free(sandboxdir);
+    g_free(statedir);
+    g_free(configdir);
+    g_free(configfile);
+    g_free(emptydir);
     if (domain)
         g_object_unref(domain);
     if (builder)
@@ -249,11 +267,6 @@ cleanup:
         g_object_unref(connection);
     if (config)
         g_object_unref(config);
-
-    g_free(configfile);
-    g_free(emptydir);
-    g_free(statedir);
-    g_free(configdir);
     return ret;
 }
 
