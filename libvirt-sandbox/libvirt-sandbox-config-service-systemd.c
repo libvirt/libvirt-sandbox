@@ -219,7 +219,7 @@ static gchar **gvir_sandbox_config_service_systemd_get_command(GVirSandboxConfig
     GVirSandboxConfigServiceSystemdPrivate *priv = sconfig->priv;
     gchar **command = g_new(gchar *, 7);
 
-    command[0] = g_strdup("/bin/systemd");
+    command[0] = g_strdup("/lib/systemd/systemd");
     command[1] = g_strdup("--unit");
     command[2] = g_strdup(priv->bootTarget);
     command[3] = g_strdup("--log-target");
