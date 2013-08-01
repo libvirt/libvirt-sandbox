@@ -68,9 +68,13 @@ GType gvir_sandbox_config_get_type(void);
 
 GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
                                                       GError **error);
+GVirSandboxConfig *gvir_sandbox_config_load_from_data(const gchar *data,
+                                                      GError **error);
 gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
                                           const gchar *path,
                                           GError **error);
+gchar *gvir_sandbox_config_save_to_data(GVirSandboxConfig *config,
+                                        GError **error);
 
 const gchar *gvir_sandbox_config_get_name(GVirSandboxConfig *config);
 

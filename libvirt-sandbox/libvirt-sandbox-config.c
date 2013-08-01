@@ -2069,18 +2069,11 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
 }
 
 
-/**
- * gvir_sandbox_config_load_from_path:
- * @path: the local path to load
- * @error: the loader error
- *
- * Returns: (transfer full): the new config or NULL
- */
-GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
-                                                      GError **error)
+static GVirSandboxConfig *
+gvir_sandbox_config_load_from_keyfile(GKeyFile *file,
+                                      GError **error)
 {
     GVirSandboxConfigClass *klass;
-    GKeyFile *file = g_key_file_new();
     GVirSandboxConfig *config = NULL;
     gchar *str = NULL;
     GType type;
@@ -2090,9 +2083,6 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_GENERIC;
-
-    if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, error))
-        goto cleanup;
 
     if ((str = g_key_file_get_string(file, "api", "class", NULL)) == NULL) {
         g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
@@ -2123,30 +2113,86 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
     }
 
 cleanup:
-    g_key_file_free(file);
     g_free(str);
     return config;
 }
 
+/**
+ * gvir_sandbox_config_load_from_path:
+ * @path: the local path to load
+ * @error: the loader error
+ *
+ * Returns: (transfer full): the new config or NULL
+ */
+GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
+                                                      GError **error)
+{
+    GKeyFile *file = g_key_file_new();
+    GVirSandboxConfig *config = NULL;
+
+    if (!g_key_file_load_from_file(file, path, G_KEY_FILE_NONE, error))
+        goto cleanup;
+
+    config = gvir_sandbox_config_load_from_keyfile(file, error);
+
+cleanup:
+    g_key_file_free(file);
+    return config;
+}
+
+
+/**
+ * gvir_sandbox_config_load_from_data:
+ * @data: the .ini data string to load
+ * @error: the loader error
+ *
+ * Returns: (transfer full): the new config or NULL
+ */
+GVirSandboxConfig *gvir_sandbox_config_load_from_data(const gchar *data,
+                                                      GError **error)
+{
+    GKeyFile *file = g_key_file_new();
+    GVirSandboxConfig *config = NULL;
+
+    if (!g_key_file_load_from_data(file, data, strlen(data), G_KEY_FILE_NONE, error))
+        goto cleanup;
+
+    config = gvir_sandbox_config_load_from_keyfile(file, error);
+
+cleanup:
+    g_key_file_free(file);
+    return config;
+}
+
+
+static void
+gvir_sandbox_config_save_to_keyfile(GVirSandboxConfig *config,
+                                    GKeyFile **keyfile)
+{
+    GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
+
+    *keyfile = g_key_file_new();
+
+    g_key_file_set_string(*keyfile, "api", "class",
+                          g_type_name(G_TYPE_FROM_CLASS(klass)));
+    g_key_file_set_string(*keyfile, "api", "version",
+                          VERSION);
+
+    klass->save_config(config, *keyfile);
+}
 
 gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
                                           const gchar *path,
                                           GError **error)
 {
-    GVirSandboxConfigClass *klass = GVIR_SANDBOX_CONFIG_GET_CLASS(config);
-    GKeyFile *file = g_key_file_new();
+    GKeyFile *file = NULL;
     gboolean ret = FALSE;
     gchar *data = NULL;
     GFile *f = g_file_new_for_path(path);
     GOutputStream *os = NULL;
     gsize len;
 
-    g_key_file_set_string(file, "api", "class",
-                          g_type_name(G_TYPE_FROM_CLASS(klass)));
-    g_key_file_set_string(file, "api", "version",
-                          VERSION);
-
-    klass->save_config(config, file);
+    gvir_sandbox_config_save_to_keyfile(config, &file);
 
     if (!(data = g_key_file_to_data(file, &len, error)))
         goto cleanup;
@@ -2172,6 +2218,23 @@ cleanup:
 unlink:
     g_file_delete(f, NULL, NULL);
     goto cleanup;
+}
+
+gchar *gvir_sandbox_config_save_to_data(GVirSandboxConfig *config,
+                                        GError **error)
+{
+    GKeyFile *file = NULL;
+    gchar *data = NULL;
+    gsize datalen;
+
+    gvir_sandbox_config_save_to_keyfile(config, &file);
+
+    if (!(data = g_key_file_to_data(file, &datalen, error)))
+        goto cleanup;
+
+cleanup:
+    g_key_file_free(file);
+    return data;
 }
 
 

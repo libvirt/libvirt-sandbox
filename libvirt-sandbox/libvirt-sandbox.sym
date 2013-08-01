@@ -101,7 +101,9 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_config_has_networks;
 	gvir_sandbox_config_has_mounts;
 	gvir_sandbox_config_has_mounts_with_type;
+	gvir_sandbox_config_load_from_data;
 	gvir_sandbox_config_load_from_path;
+	gvir_sandbox_config_save_to_data;
 	gvir_sandbox_config_save_to_path;
 	gvir_sandbox_config_set_root;
 	gvir_sandbox_config_set_shell;
