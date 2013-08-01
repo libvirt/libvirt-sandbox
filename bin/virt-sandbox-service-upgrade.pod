@@ -1,0 +1,70 @@
+=head1 NAME
+
+virt-sandbox-service upgrade - upgrade an existing Secure container
+
+=head1 SYNOPSIS
+
+Upgrade a Security container
+
+  virt-sandbox-service [-c URI] upgrade NAME
+
+=head1 DESCRIPTION
+
+virt-sandbox-service is used to manage secure sandboxed system services.
+These applications will be launched via libvirt and run within a virtualization
+technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
+container / virtual machines will be secured by SELinux and resource
+separated using cgroups.
+
+The upgrade command will update the config files for NAME to be compatible
+with the currently installed software version. NB this works in an upgrade
+direction only, it is not possible to install older versions of the software
+and use this command to downgrade the configs.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h>, B<--help>
+
+Display help message
+
+=item B<-c> URI, B<--connect URI>
+
+The connection URI for the hypervisor (only LXC or QEMU are
+supported currently).
+
+=back
+
+=head1 EXAMPLE
+
+Execute /bin/sh in httpd1 container
+
+ # virt-sandbox-service upgrade httpd
+
+=head1 SEE ALSO
+
+C<libvirt(8)>, C<selinux(8)>, C<systemd(8)>, C<virt-sandbox-service(1)>
+
+=head1 FILES
+
+Container content will be stored in subdirectories of
+/var/lib/libvirt/filesystems, by default.  You can manage the
+content in these directories outside of the container and
+processes within the container will see the content.
+
+=head1 AUTHORS
+
+Daniel Walsh <dwalsh@redhat.com>
+Daniel P. Berrange <dan@berrange.com>
+
+=head1 COPYRIGHT
+
+Copyright (C) 2011-2013 Red Hat, Inc.
+
+=head1 LICENSE
+
+virt-sandbox is distributed under the terms of the GNU LGPL v2+.
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE

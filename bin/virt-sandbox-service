@@ -23,6 +23,7 @@ from gi.repository import LibvirtGObject
 from gi.repository import LibvirtSandbox
 from gi.repository import GLib
 import gi
+import re
 import os, sys, shutil, errno, stat
 import exceptions
 import rpm
@@ -52,6 +53,9 @@ except IOError:
 CONFIG_PATH = "/etc/libvirt-sandbox/services/"
 def get_config_path(name):
     return CONFIG_PATH + name + "/config/sandbox.cfg"
+
+def get_legacy_config_path(name):
+    return CONFIG_PATH + name + ".sandbox"
 
 def read_config(name):
     path = get_config_path(name)
@@ -399,7 +403,7 @@ After=libvirtd.service
 [Service]
 Type=simple
 ExecStart=/usr/libexec/virt-sandbox-service-util -c %(URI)s -s %(NAME)s
-ExecReload=/usr/bin/virt-sandbox-service reload -c %(URI)s reload -u %(RELOAD)s %(NAME)s
+ExecReload=/usr/bin/virt-sandbox-service -c %(URI)s reload -u %(RELOAD)s %(NAME)s
 ExecStop=/usr/bin/virsh -c %(URI)s destroy %(NAME)s
 
 [Install]
@@ -915,6 +919,61 @@ def clone(args):
     container.set_security_label()
     container.save_config()
 
+
+def upgrade_config_legacy(path):
+    config = LibvirtSandbox.Config.load_from_path(path)
+
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        container = GenericContainer(uri=args.uri, config=config)
+    else:
+        container = SystemdContainer(uri=args.uri, config=config)
+
+    fd = open(container.get_unit_path())
+    unitfile = fd.read()
+    fd.close()
+
+    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service start",
+                                "/usr/libexec/virt-sandbox-service-util -c lxc:/// -s")
+    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service reload",
+                                "/usr/bin/virt-sandbox-service -c lxc:/// reload")
+    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service stop",
+                                "/usr/bin/virsh -c lxc:/// destroy")
+
+    unitfile = re.sub("WantedBy=.*\.target",
+                      "WantedBy=multi-user.target",
+                      unitfile)
+
+    os.remove(container.get_unit_path())
+    fd = open(container.get_unit_path(), "wx")
+    fd.write(unitfile)
+    fd.close()
+
+    sys.stdout.write(_("Created unit file %s\n") %
+                     container.get_unit_path())
+
+    # Create new config file + libvirt persistent XML config
+    container.save_config()
+    # Kill legacy config file
+    os.remove(path)
+
+
+def upgrade_config(args):
+    configfile = get_legacy_config_path(args.name)
+    if os.path.exists(configfile):
+        upgrade_config_legacy(configfile)
+
+
+def upgrade_filesystem(args):
+    # This is where we'd look at RPM DB and upgrade the
+    # filesystem with new info for the unit files
+    pass
+
+# This function must be capable of reading configs created by
+# old releases and "fixing" them to work with the new release
+def upgrade(args):
+    upgrade_config(args)
+    upgrade_filesystem(args)
+
 import argparse
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -1074,6 +1133,12 @@ def gen_delete_args(subparser):
     requires_name(parser)
     parser.set_defaults(func=delete)
 
+def gen_upgrade_args(subparser):
+    parser = subparser.add_parser("upgrade",
+                                   help=_("Upgrade the sandbox container"))
+    requires_name(parser)
+    parser.set_defaults(func=upgrade)
+
 if __name__ == '__main__':
     c = Container()
 
@@ -1088,6 +1153,7 @@ if __name__ == '__main__':
     gen_delete_args(subparser)
     gen_execute_args(subparser)
     gen_reload_args(subparser)
+    gen_upgrade_args(subparser)
 
     try:
         args = parser.parse_args()

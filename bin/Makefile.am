@@ -10,11 +10,30 @@ virtsandboxcompdir = $(datarootdir)/bash-completion/completions/
 crondailydir = $(sysconfdir)/cron.daily
 crondaily_SCRIPTS = virt-sandbox-service.logrotate
 
-POD_FILES = virt-sandbox-service.pod virt-sandbox-service-execute.pod virt-sandbox-service-create.pod virt-sandbox-service-clone.pod virt-sandbox-service-connect.pod virt-sandbox-service-delete.pod virt-sandbox-service-reload.pod
+POD_FILES = \
+	virt-sandbox-service.pod \
+	virt-sandbox-service-execute.pod \
+	virt-sandbox-service-create.pod \
+	virt-sandbox-service-clone.pod \
+	virt-sandbox-service-connect.pod \
+	virt-sandbox-service-delete.pod \
+	virt-sandbox-service-reload.pod \
+	virt-sandbox-service-upgrade.pod \
+	$(NULL)
 EXTRA_DIST = $(bin_SCRIPTS) $(POD_FILES) virt-sandbox-service-bash-completion.sh virt-sandbox-service.logrotate
 EXTRA_DIST += virt-sandbox-service-bash-completion.sh
 
-man1_MANS = virt-sandbox.1 virt-sandbox-service.1 virt-sandbox-service-execute.1 virt-sandbox-service-create.1 virt-sandbox-service-clone.1 virt-sandbox-service-connect.1 virt-sandbox-service-delete.1 virt-sandbox-service-reload.1
+man1_MANS = \
+	virt-sandbox.1 \
+	virt-sandbox-service.1 \
+	virt-sandbox-service-execute.1 \
+	virt-sandbox-service-create.1 \
+	virt-sandbox-service-clone.1 \
+	virt-sandbox-service-connect.1 \
+	virt-sandbox-service-delete.1 \
+	virt-sandbox-service-reload.1 \
+	virt-sandbox-service-upgrade.1 \
+	$(NULL)
 
 POD2MAN = pod2man -c "Virtualization Support" -r "$(PACKAGE)-$(VERSION)"
 
@@ -33,12 +52,6 @@ virt-sandbox-service-clone.1: virt-sandbox-service-clone.pod Makefile
 virt-sandbox-service-create.1: virt-sandbox-service-create.pod Makefile
 	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
 
-virt-sandbox-service-start.1: virt-sandbox-service-start.pod Makefile
-	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
-
-virt-sandbox-service-stop.1: virt-sandbox-service-stop.pod Makefile
-	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
-
 virt-sandbox-service-connect.1: virt-sandbox-service-connect.pod Makefile
 	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
 
@@ -48,7 +61,7 @@ virt-sandbox-service-delete.1: virt-sandbox-service-delete.pod Makefile
 virt-sandbox-service-reload.1: virt-sandbox-service-reload.pod Makefile
 	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
 
-virt-sandbox-service-list.1: virt-sandbox-service-list.pod Makefile
+virt-sandbox-service-upgrade.1: virt-sandbox-service-upgrade.pod Makefile
 	$(AM_V_GEN)$(POD2MAN) $< $(srcdir)/$@
 
 CLEANFILES = $(man1_MANS)
