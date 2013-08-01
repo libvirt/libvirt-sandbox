@@ -22,11 +22,18 @@ virt-sandbox-service - Secure container tool
 
 =head1 DESCRIPTION
 
-virt-sandbox-service is used to manage secure sandboxed system services.
+virt-sandbox-service is used to provision secure sandboxed system services.
 These applications will be launched via libvirt and run within a virtualization
 technology such as LinuX Containers (LXC), or optionally QEMU/KVM. The
 container / virtual machines will be secured by SELinux and resource
 separated using cgroups.
+
+By default, it will use the libvirt LXC driver, with the C<lxc:///> URI.
+This is different from libvirt's normal behaviour, which is to probe
+for the best URI to use. Thus if using C<virsh> to get a list of containers,
+one must specify an explicit URI for it, C<virsh -c lxc:///>. Alternatively
+the C<LIBVIRT_DEFAULT_URI> environment variable can be set, or the config
+file C</etc/libvirt/libvirt.conf> can have a default URI set.
 
 =head1 OPTIONS
 
