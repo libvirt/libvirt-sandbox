@@ -254,11 +254,11 @@ class Container:
 
     def delete(self):
         self.connect()
-        # Stop service if it is running
-        try:
-            self.stop()
-        except:
-            pass
+        self.conn.fetch_domains(None)
+        dom = self.conn.find_domain_by_name(self.name)
+        info = dom.get_info()
+        if info.state == LibvirtGObject.DomainState.RUNNING:
+            raise ValueError([_("Cannot delete running container")])
 
         # Not sure we should remove content
         if os.path.exists(self.dest):
