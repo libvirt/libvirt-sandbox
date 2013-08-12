@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     gchar *security = NULL;
     gchar **networks = NULL;
     gchar **cmdargs = NULL;
+    gchar *root = NULL;
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
     gboolean shell = FALSE;
@@ -86,6 +87,8 @@ int main(int argc, char **argv) {
           N_("connect to hypervisor"), "URI"},
         { "name", 'n', 0, G_OPTION_ARG_STRING, &name,
           N_("name of the sandbox"), "NAME" },
+        { "root", 'r', 0, G_OPTION_ARG_STRING, &root,
+          N_("root directory of the sandbox"), "DIR" },
         { "mount", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
           N_("mount a filesystem in the guest"), "TYPE:TARGET=SOURCE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
@@ -153,6 +156,9 @@ int main(int argc, char **argv) {
     icfg = gvir_sandbox_config_interactive_new(name ? name : "sandbox");
     cfg = GVIR_SANDBOX_CONFIG(icfg);
     gvir_sandbox_config_interactive_set_command(icfg, cmdargs);
+
+    if (root)
+        gvir_sandbox_config_set_root(cfg, root);
 
     if (privileged) {
         gvir_sandbox_config_set_userid(cfg, 0);
@@ -287,6 +293,14 @@ Set the unique name for the sandbox. This defaults to B<sandbox>
 but this will need to be changed if more than one sandbox is to
 be run concurrently. This is used as the name of the libvirt
 virtual machine or container.
+
+=item B<-r DIR>, B<--root DIR>
+
+Use B<DIR> as the root directory of the sandbox, instead of
+inheriting the host's root filesystem.
+
+NB. C<DIR> must contain a matching install of the libvirt-sandbox
+package. This restriction may be lifted in a future version.
 
 =item B<-m TYPE:DST=SRC>, B<--mount TYPE:DST=SRC>
 
