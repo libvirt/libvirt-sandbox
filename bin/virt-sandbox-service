@@ -928,28 +928,28 @@ def upgrade_config_legacy(path):
     else:
         container = SystemdContainer(uri=args.uri, config=config)
 
-    fd = open(container.get_unit_path())
-    unitfile = fd.read()
-    fd.close()
+        fd = open(container.get_unit_path())
+        unitfile = fd.read()
+        fd.close()
 
-    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service start",
-                                "/usr/libexec/virt-sandbox-service-util -c lxc:/// -s")
-    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service reload",
-                                "/usr/bin/virt-sandbox-service -c lxc:/// reload")
-    unitfile = unitfile.replace("/usr/bin/virt-sandbox-service stop",
-                                "/usr/bin/virsh -c lxc:/// destroy")
+        unitfile = unitfile.replace("/usr/bin/virt-sandbox-service start",
+                                    "/usr/libexec/virt-sandbox-service-util -c lxc:/// -s")
+        unitfile = unitfile.replace("/usr/bin/virt-sandbox-service reload",
+                                    "/usr/bin/virt-sandbox-service -c lxc:/// reload")
+        unitfile = unitfile.replace("/usr/bin/virt-sandbox-service stop",
+                                    "/usr/bin/virsh -c lxc:/// destroy")
 
-    unitfile = re.sub("WantedBy=.*\.target",
-                      "WantedBy=multi-user.target",
-                      unitfile)
+        unitfile = re.sub("WantedBy=.*\.target",
+                          "WantedBy=multi-user.target",
+                          unitfile)
 
-    os.remove(container.get_unit_path())
-    fd = open(container.get_unit_path(), "wx")
-    fd.write(unitfile)
-    fd.close()
+        os.remove(container.get_unit_path())
+        fd = open(container.get_unit_path(), "wx")
+        fd.write(unitfile)
+        fd.close()
 
-    sys.stdout.write(_("Created unit file %s\n") %
-                     container.get_unit_path())
+        sys.stdout.write(_("Created unit file %s\n") %
+                         container.get_unit_path())
 
     # Create new config file + libvirt persistent XML config
     container.save_config()
