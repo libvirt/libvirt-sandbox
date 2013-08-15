@@ -332,6 +332,13 @@ file, not qcow2 or any other special format
 If B<TYPE> is B<guest-bind>, then B<SRC> is interpreted as the path
 to another directory in the container filesystem.
 
+=item B<ram>
+
+If B<TYPE> is B<ram>, then B<SRC> is interpreted as specifying the
+size of the RAM disk in bytes. The suffix B<K>, B<KiB>, B<M>,
+B<MiB>, B<G>, B<GiB> can used to alter the units from bytes to a
+coarser level.
+
 =back
 
 Some examples
@@ -339,6 +346,7 @@ Some examples
  -m host-bind:/tmp=/var/lib/sandbox/demo/tmp
  -m host-image:/=/var/lib/sandbox/demo.img
  -m guest-bind:/home=/tmp/home
+ -m ram:/tmp=500M
 
 =item B<-I HOST-PATH>, B<--includefile=HOST-PATH>
 
