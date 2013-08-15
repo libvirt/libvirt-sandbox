@@ -557,8 +557,9 @@ static void set_debug(void)
     if (fp && fgets(line, sizeof line, fp)) {
         if (strstr(line, "debug"))
             debug=1;
-        fclose(fp);
     }
+    if (fp)
+        fclose(fp);
     if (umount("/proc") < 0) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot unmount /proc: %s\n",
                 __func__, strerror(errno));
