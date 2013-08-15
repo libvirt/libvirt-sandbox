@@ -541,7 +541,11 @@ print_uptime(void)
 
 static void set_debug(void)
 {
-    mkdir("/proc", 0755);
+    if (mkdir("/proc", 0755) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mkdir /proc: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
     if (mount("none", "/proc", "proc", 0, "") < 0) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount /proc: %s\n",
                 __func__, strerror(errno));
