@@ -283,7 +283,10 @@ not allowed to open any other files.
 =item B<-c URI>, B<--connect=URI>
 
 Set the libvirt connection URI, defaults to qemu:///session if
-omitted. Currently only the QEMU and LXC drivers are supported.
+omitted. Alternatively the C<LIBVIRT_DEFAULT_URI> environment
+variable can be set, or the config file C</etc/libvirt/libvirt.conf>
+can have a default URI set.  Currently only the QEMU and LXC drivers
+are supported.
 
 =item B<-n NAME>, B<--name=NAME>
 
