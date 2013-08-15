@@ -179,8 +179,7 @@ cleanup:
         g_object_unref(builder);
     if (connection)
         g_object_unref(connection);
-    if (config)
-        g_object_unref(config);
+    g_object_unref(config);
 
     return ret;
 }
@@ -265,8 +264,7 @@ cleanup:
         g_object_unref(builder);
     if (connection)
         g_object_unref(connection);
-    if (config)
-        g_object_unref(config);
+    g_object_unref(config);
     return ret;
 }
 
