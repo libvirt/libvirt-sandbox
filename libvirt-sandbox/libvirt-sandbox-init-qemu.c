@@ -123,7 +123,8 @@ mount_mkfile(const char *file, int mode)
                     __func__, file, strerror(errno));
         exit_poweroff();
     }
-    close(fd);
+    if (fd != -1)
+        close(fd);
 }
 
 static void
