@@ -91,12 +91,11 @@ static void gvir_sandbox_config_interactive_set_property(GObject *object,
     GVirSandboxConfigInteractivePrivate *priv = config->priv;
 
     switch (prop_id) {
-
-    default:
     case PROP_TTY:
         priv->tty = g_value_get_boolean(value);
         break;
 
+    default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
     }
 }
