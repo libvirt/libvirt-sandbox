@@ -153,7 +153,6 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     GVirSandboxConfigInitrd *initrd = gvir_sandbox_config_initrd_new();
     GVirSandboxBuilderInitrd *builder = gvir_sandbox_builder_initrd_new();
     gchar *targetfile = g_strdup_printf("%s/initrd.img", statedir);
-    int fd = -1;
     gchar *kver = gvir_sandbox_builder_machine_get_kernrelease(config);
     const gchar *kmodpath = gvir_sandbox_config_get_kmodpath(config);
     if (!kmodpath)
@@ -183,8 +182,6 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
         goto cleanup;
 
 cleanup:
-    if (fd != -1)
-        close(fd);
     if (*error) {
         g_free(targetfile);
         targetfile = NULL;
