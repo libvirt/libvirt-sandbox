@@ -1076,7 +1076,7 @@ run_interactive(GVirSandboxConfig *config)
     if ((host = open(devname, O_RDWR)) < 0) {
         g_printerr(_("libvirt-sandbox-init-common: cannot open %s: %s"),
                    devname, strerror(errno));
-        return -1;
+        goto cleanup;
     }
 
     tcgetattr(STDIN_FILENO, &rawattr);
@@ -1093,7 +1093,7 @@ run_interactive(GVirSandboxConfig *config)
                     gvir_sandbox_config_get_userid(config),
                     gvir_sandbox_config_get_groupid(config),
                     gvir_sandbox_config_get_homedir(config)) < 0)
-        return -1;
+        goto cleanup;
 
     command = gvir_sandbox_config_get_command(config);
     if (!eventloop(gvir_sandbox_config_interactive_get_tty(iconfig),
@@ -1112,6 +1112,8 @@ cleanup:
         close(sigpipe[0]);
     if (sigpipe[1] != -1)
         close(sigpipe[1]);
+    if (host != -1)
+        close(host);
 
     return ret;
 }
