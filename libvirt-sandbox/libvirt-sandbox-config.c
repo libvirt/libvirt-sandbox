@@ -1224,6 +1224,7 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
  * - host-bind:/tmp=/var/lib/sandbox/demo/tmp
  * - host-image:/=/var/lib/sandbox/demo.img
  * - guest-bind:/home=/tmp/home
+ * - ram:/tmp=500M
  */
 gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
                                             const char *mount,
@@ -1262,13 +1263,16 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
         source = tmp + 1;
     }
 
+    if (!tmp) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Missing mount source string on %s"), mount);
+        return FALSE;
+    }
+
     if (type == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM) {
         gint size;
         gchar *end;
-        gchar *sizestr;
-        *tmp = '\0';
-        sizestr = tmp + 1;
-        size = strtol(sizestr, &end, 10);
+        size = strtol(source, &end, 10);
 
         if (end) {
             if (g_str_equal(end, "KiB") || g_str_equal(end, "K"))
