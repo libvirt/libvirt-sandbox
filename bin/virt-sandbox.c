@@ -263,8 +263,6 @@ virt-sandbox - Run cmd under a virtual machine sandbox
 
 virt-sandbox [OPTIONS...] COMMAND [CMDARG1 [CMDARG2 [...]]]
 
-virt-sandbox [OPTIONS...] -S
-
 =head1 DESCRIPTION
 
 Run the C<cmd>  application within a tightly confined virtual machine. The
