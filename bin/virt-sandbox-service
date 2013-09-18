@@ -745,7 +745,7 @@ PrivateNetwork=false
             try:
                 self.delete()
             except Exception, e2:
-                pass
+                sys.stderr.write("Cleanup failed: %s\n" % str(e2))
             raise e
 
     def reload(self, unitfiles):
