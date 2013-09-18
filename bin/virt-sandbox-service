@@ -196,7 +196,7 @@ class Container:
             os.chmod(path, s.st_mode)
         except OSError, e:
             if not e.errno == errno.ENOENT:
-                raise e
+                raise
 
     def fix_protection(self):
         l = len(self.dest)
@@ -214,7 +214,7 @@ class Container:
             os.makedirs(path)
         except OSError, e:
             if not e.errno == errno.EEXIST:
-                raise e
+                raise
 
     def makefile(self, f):
         self.makedirs(os.path.dirname(f))
@@ -224,7 +224,7 @@ class Container:
             fd.close()
         except OSError, e:
             if not e.errno == errno.EEXIST:
-                raise e
+                raise
 
     def umount(self):
         p = Popen(["/bin/umount", self.dest])
@@ -691,7 +691,7 @@ PrivateNetwork=false
             fd.close()
         except OSError, e:
             if not e.errno == errno.EEXIST:
-                raise e
+                raise
 
         for p in self.PROFILE_FILES:
             profile = "/etc/skel/" + p
@@ -747,7 +747,7 @@ PrivateNetwork=false
                 self.delete()
             except Exception, e2:
                 sys.stderr.write("Cleanup failed: %s\n" % str(e2))
-            raise e
+            raise
 
     def reload(self, unitfiles):
         class Args:
