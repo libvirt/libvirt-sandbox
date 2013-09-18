@@ -256,9 +256,10 @@ class Container:
         self.connect()
         self.conn.fetch_domains(None)
         dom = self.conn.find_domain_by_name(self.name)
-        info = dom.get_info()
-        if info.state == LibvirtGObject.DomainState.RUNNING:
-            raise ValueError([_("Cannot delete running container")])
+        if dom is not None:
+            info = dom.get_info()
+            if info.state == LibvirtGObject.DomainState.RUNNING:
+                raise ValueError([_("Cannot delete running container")])
 
         # Not sure we should remove content
         if os.path.exists(self.dest):
