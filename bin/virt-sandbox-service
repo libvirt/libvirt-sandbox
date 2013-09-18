@@ -63,6 +63,41 @@ def read_config(name):
         return None
     return LibvirtSandbox.Config.load_from_path(path)
 
+# shutil.copytree throws a fit if it finds sockets
+# or fifos, and has really bad behaviour on block
+# and character devices too.
+def copydirtree(src, dst):
+    filenames = os.listdir(src)
+    os.makedirs(dst)
+
+    for filename in filenames:
+        srcfilepath = os.path.join(src, filename)
+        dstfilepath = os.path.join(dst, filename)
+
+        st = os.lstat(srcfilepath)
+        if stat.S_ISDIR(st.st_mode):
+            copydirtree(srcfilepath, dstfilepath)
+
+            os.utime(dstfilepath, (st.st_atime, st.st_mtime))
+            os.chmod(dstfilepath, stat.S_IMODE(st.st_mode))
+        elif stat.S_ISREG(st.st_mode):
+            with open(srcfilepath, 'rb') as fsrc:
+                with open(dstfilepath, 'wb') as fdst:
+                    while 1:
+                        buf = fsrc.read(1024*32)
+                        if not buf:
+                            break
+                        fdst.write(buf)
+
+            os.utime(dstfilepath, (st.st_atime, st.st_mtime))
+            os.chmod(dstfilepath, stat.S_IMODE(st.st_mode))
+        elif stat.S_ISLNK(st.st_mode):
+            linkdst = os.readlink(srcfilepath)
+            os.symlink(linkdst, dstfilepath)
+        else:
+            # Ignore all other special files (block/char/sock/fifo)
+            pass
+
 class Container:
     DEFAULT_PATH       = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE      = "/var/lib/libvirt/images/%s.raw"
@@ -638,7 +673,7 @@ PrivateNetwork=false
     def gen_content(self):
         if self.copy:
             for d in self.dirs:
-                shutil.copytree(d, "%s%s" % (self.dest, d), symlinks=True)
+                copydirtree(d, "%s%s" % (self.dest, d))
             for f in self.files:
                 self.makedirs(os.path.dirname(f))
                 shutil.copy(f, "%s%s" % (self.dest, f))
@@ -894,7 +929,7 @@ def clone(args):
         sys.stdout.write(_("Created sandbox container image %s\n") % new_image_path)
         os.mkdir(new_path)
     else:
-        shutil.copytree(old_path, new_path, symlinks=True)
+        copydirtree(old_path, new_path)
         sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
     if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
