@@ -371,6 +371,7 @@ class SystemdContainer(Container):
         self.packages = packages
         if create:
             self.config = LibvirtSandbox.ConfigServiceSystemd.new(name)
+            self.unitfile = None
         else:
             self.unitfile = self.get_unit_path()
 
