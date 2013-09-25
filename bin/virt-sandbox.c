@@ -413,8 +413,7 @@ separated by commas. The following options are valid for SELinux
 
 Dynamically allocate an SELinux label, using the default base context.
 The default base context is system_u:system_r:svirt_lxc_net_t:s0 for LXC,
-system_u:system_r:svirt_t:s0 for KVM, system_u:system_r:svirt_tcg_t:s0
-for QEMU.
+system_u:system_r:svirt_qemu_net_t:s0 for KVM or QEMU.
 
 =item dynamic,label=USER:ROLE:TYPE:LEVEL
 
@@ -424,7 +423,7 @@ USER:ROLE:TYPE:LEVEL, instead of the default base context.
 =item static,label=USER:ROLE:TYPE:LEVEL
 
 To set a completely static label. For example,
-static,label=system_u:system_r:svirt_t:s0:c412,c355
+static,label=system_u:system_r:svirt_lxc_net_t:s0:c412,c355
 
 =item inherit
 
