@@ -71,6 +71,9 @@ int main(int argc, char **argv) {
     gchar **networks = NULL;
     gchar **cmdargs = NULL;
     gchar *root = NULL;
+    gchar *kernver = NULL;
+    gchar *kernpath = NULL;
+    gchar *kmodpath = NULL;
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
     gboolean shell = FALSE;
@@ -103,6 +106,12 @@ int main(int argc, char **argv) {
           N_("run the command privileged"), NULL },
         { "shell", 'l', 0, G_OPTION_ARG_NONE, &shell,
           N_("start a shell"), NULL, },
+	{ "kernver", 0, 0, G_OPTION_ARG_STRING, &kernver,
+	  N_("kernel version"), NULL, },
+	{ "kernpath", 0, 0, G_OPTION_ARG_STRING, &kernpath,
+	  N_("kernel binary path"), NULL, },
+	{ "kmodpath", 0, 0, G_OPTION_ARG_STRING, &kmodpath,
+	  N_("kernel module directory"), NULL, },
         { G_OPTION_REMAINING, '\0', 0, G_OPTION_ARG_STRING_ARRAY, &cmdargs,
           NULL, "COMMAND-PATH [ARGS...]" },
         { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
@@ -159,6 +168,13 @@ int main(int argc, char **argv) {
 
     if (root)
         gvir_sandbox_config_set_root(cfg, root);
+
+    if (kernver)
+        gvir_sandbox_config_set_kernrelease(cfg, kernver);
+    if (kernpath)
+        gvir_sandbox_config_set_kernpath(cfg, kernpath);
+    if (kmodpath)
+        gvir_sandbox_config_set_kmodpath(cfg, kmodpath);
 
     if (privileged) {
         gvir_sandbox_config_set_userid(cfg, 0);
@@ -430,6 +446,22 @@ static,label=system_u:system_r:svirt_lxc_net_t:s0:c412,c355
 Inherit the context from the process that is executing virt-sandbox.
 
 =back
+
+=item B<--kernver=VERSION>
+
+Specify the kernel version to run for machine based sandboxes. If
+omitted, defaults to match the current running host version.
+
+=item B<--kernpath=FILE-PATH>
+
+Specify the path to the kernel binary. If omitted, defaults
+to C</boot/vmlinuz-$KERNEL-VERSION>.
+
+=item B<--kmodpath=DIR-PATH>
+
+Specify the path to the kernel module base directory. If omitted, defaults
+to C</lib/modules>. The suffix C<$KERNEL-VERSION/kernel> will be appended
+to this path to locate the modules.
 
 =item B<-p>, B<--privileged>
 
