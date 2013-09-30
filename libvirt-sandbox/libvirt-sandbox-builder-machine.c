@@ -199,10 +199,10 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
     gchar *tmp;
 
     /* Now kernel args */
-    g_string_append(str, " console=ttyS0");
+    g_string_append(str, " console=ttyS0 earlyprintk=ttyS0");
     if (getenv("LIBVIRT_SANDBOX_DEBUG") &&
         g_str_equal(getenv("LIBVIRT_SANDBOX_DEBUG"), "2"))
-        g_string_append(str, " debug loglevel=10 earlyprintk=ttyS0");
+        g_string_append(str, " debug loglevel=10");
     else
         g_string_append(str, " quiet loglevel=0");
 
