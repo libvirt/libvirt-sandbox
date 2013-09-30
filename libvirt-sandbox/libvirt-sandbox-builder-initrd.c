@@ -208,14 +208,22 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
                                                      GFile *dir,
                                                      GError **error)
 {
-    GFileEnumerator *children = g_file_enumerate_children(dir,
-                                                          "standard::name,standard::type",
-                                                          G_FILE_QUERY_INFO_NONE,
-                                                          NULL,
-                                                          error);
+    GFileEnumerator *children;
     GFileInfo *childinfo;
     GList *modfiles = NULL;
-    if (!children)
+
+    if (!g_file_query_exists(dir, NULL)) {
+        g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, 0,
+	            _("Kernel module dir %s does not exist"),
+	            g_file_get_path(dir));
+	return NULL;
+    }
+
+    if (!(children = g_file_enumerate_children(dir,
+					       "standard::name,standard::type",
+					       G_FILE_QUERY_INFO_NONE,
+					       NULL,
+					       error)))
         return NULL;
 
     while ((childinfo = g_file_enumerator_next_file(children, NULL, error)) != NULL) {
