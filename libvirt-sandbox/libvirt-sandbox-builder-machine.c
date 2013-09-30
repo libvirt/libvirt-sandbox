@@ -62,7 +62,6 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
-#if 0
 #define GVIR_SANDBOX_BUILDER_MACHINE_ERROR gvir_sandbox_builder_machine_error_quark()
 
 static GQuark
@@ -70,7 +69,6 @@ gvir_sandbox_builder_machine_error_quark(void)
 {
     return g_quark_from_static_string("gvir-sandbox-builder-machine");
 }
-#endif
 
 static void gvir_sandbox_builder_machine_get_property(GObject *object,
                                                       guint prop_id,
@@ -388,7 +386,9 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     gchar *kernel = NULL;
     gchar *initrd = NULL;
     gchar *cmdline = NULL;
+    GFile *kfile = NULL;
     GVirConfigDomainOs *os;
+    gboolean ret = FALSE;
 
     if (!GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_machine_parent_class)->
         construct_os(builder, config, statedir, domain, error))
@@ -402,6 +402,14 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     kernel = gvir_sandbox_builder_machine_get_kernpath(config);
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
+    kfile = g_file_new_for_path(kernel);
+    if (!g_file_query_exists(kfile, NULL)) {
+        g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
+	            _("Kernel image %s does not exist"),
+		    kernel);
+	goto cleanup;
+    }
+
     os = gvir_config_domain_os_new();
     gvir_config_domain_os_set_os_type(os,
                                       GVIR_CONFIG_DOMAIN_OS_TYPE_HVM);
@@ -413,11 +421,14 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
 
     gvir_config_domain_set_os(domain, os);
 
+    ret = TRUE;
+ cleanup:
     g_free(kernel);
     g_free(cmdline);
     g_free(initrd);
+    g_object_unref(kfile);
 
-    return TRUE;
+    return ret;
 }
 
 
