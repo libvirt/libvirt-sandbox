@@ -166,7 +166,7 @@ mount_9pfs(const char *src, const char *dst, int mode, int readonly)
     if (readonly)
         flags |= MS_RDONLY;
 
-    if (mount(src, dst, "9p", flags, "trans=virtio") < 0) {
+    if (mount(src, dst, "9p", flags, "trans=virtio,version=9p2000.u") < 0) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (9p): %s\n",
                 __func__, src, dst, strerror(errno));
         exit_poweroff();
