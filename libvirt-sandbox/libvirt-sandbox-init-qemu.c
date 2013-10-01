@@ -285,7 +285,6 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     /* Main special filesystems */
     mount_other("/dev", "tmpfs", 0755);
     mount_other_opts("/dev/pts", "devpts", "gid=5,mode=620,ptmxmode=000", 0755);
-    mount_other("/root", "tmpfs", 0755);
     mount_other("/sys", "sysfs", 0755);
     mount_other("/proc", "proc", 0755);
     //mount_other("/selinux", "selinuxfs", 0755);
