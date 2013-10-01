@@ -154,6 +154,12 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
 
+    if (!gvir_sandbox_builder_clean_post_stop(builder,
+                                              config,
+                                              statedir,
+                                              error))
+        ret = FALSE;
+
     if (unlink(configfile) < 0 &&
         errno != ENOENT)
         ret = FALSE;
@@ -168,12 +174,6 @@ static gboolean gvir_sandbox_context_clean_post_stop(GVirSandboxContext *ctxt,
 
     if (rmdir(statedir) < 0 &&
         errno != ENOENT)
-        ret = FALSE;
-
-    if (!gvir_sandbox_builder_clean_post_stop(builder,
-                                              config,
-                                              statedir,
-                                              error))
         ret = FALSE;
 
     g_object_unref(config);
@@ -248,6 +248,10 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
 cleanup:
     if (!ret && domain)
         gvir_domain_stop(domain, 0, NULL);
+    if (!ret && builder) {
+        gvir_sandbox_context_clean_post_start(ctxt, builder, NULL);
+        gvir_sandbox_context_clean_post_stop(ctxt, builder, NULL);
+    }
     g_free(statedir);
     g_free(configdir);
     g_free(configfile);
