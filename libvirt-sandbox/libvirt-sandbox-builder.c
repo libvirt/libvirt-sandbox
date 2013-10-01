@@ -67,48 +67,6 @@ gvir_sandbox_builder_error_quark(void)
 {
     return g_quark_from_static_string("gvir-sandbox-builder");
 }
-#include <selinux/selinux.h>
-#include <errno.h>
-static char line[1024];
-
-static const char *get_label(int type) {
-    const char *path = selinux_lxc_contexts_path();
-
-    FILE *fp = fopen(path, "r");
-    if (fp) {
-        GType gt = gvir_config_domain_virt_type_get_type ();
-        GEnumClass *cls = g_type_class_ref (gt);
-        GEnumValue *val = g_enum_get_value (cls, type);
-
-        while (val && fgets(line, sizeof line, fp)) {
-            int len = strlen(line);
-            if (len > 2)
-                continue;
-            if (line[len-1] == '\n')
-                line[len-1] = '\0';
-            char *name = line;
-            char *value = strchr(name, '=');
-            if (!value)
-                continue;
-            *value = '\0';
-            value++;
-            if (strcmp(name,val->value_nick))
-                continue;
-            return value;
-        }
-        fclose(fp);
-    }
-
-    switch (type) {
-    case GVIR_CONFIG_DOMAIN_VIRT_KVM:
-        return "system_u:system_r:svirt_qemu_net_t:s0";
-    case GVIR_CONFIG_DOMAIN_VIRT_QEMU:
-        return "system_u:system_r:svirt_qemu_net_t:s0";
-    case GVIR_CONFIG_DOMAIN_VIRT_LXC:
-    default:
-        return "system_u:system_r:svirt_lxc_net_t:s0";
-    }
-}
 
 static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
                                                       GVirSandboxConfig *config,
@@ -377,11 +335,17 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
     if (gvir_sandbox_config_get_security_dynamic(config)) {
         gvir_config_domain_seclabel_set_type(sec,
                                              GVIR_CONFIG_DOMAIN_SECLABEL_DYNAMIC);
-        if (!label)
-            label = get_label(gvir_config_domain_get_virt_type(domain));
-
-        gvir_config_domain_seclabel_set_baselabel(sec, label);
-
+        if (label)
+            gvir_config_domain_seclabel_set_baselabel(sec, label);
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_LXC)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_lxc_net_t:s0");
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_QEMU)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_tcg_t:s0");
+        else if (gvir_config_domain_get_virt_type(domain) ==
+                 GVIR_CONFIG_DOMAIN_VIRT_KVM)
+            gvir_config_domain_seclabel_set_baselabel(sec, "system_u:system_r:svirt_t:s0");
     } else {
         gvir_config_domain_seclabel_set_type(sec,
                                              GVIR_CONFIG_DOMAIN_SECLABEL_STATIC);

@@ -101,7 +101,7 @@ def copydirtree(src, dst):
 class Container:
     DEFAULT_PATH       = "/var/lib/libvirt/filesystems"
     DEFAULT_IMAGE      = "/var/lib/libvirt/images/%s.raw"
-    SELINUX_FILE_TYPE  = "svirt_sandbox_file_t"
+    SELINUX_FILE_TYPE  = "svirt_lxc_file_t"
 
     def __init__(self, name=None, uri = "lxc:///", path = DEFAULT_PATH, config=None, create=False):
         self.uri = uri
