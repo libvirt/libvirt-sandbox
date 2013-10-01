@@ -192,6 +192,33 @@ cleanup:
 }
 
 
+static gchar *gvir_sandbox_builder_machine_copykern(GVirSandboxConfig *config,
+                                                    const char *statedir,
+                                                    GError **error)
+{
+    gchar *target = g_strdup_printf("%s/vmlinuz", statedir);
+    gchar *source = gvir_sandbox_builder_machine_get_kernpath(config);
+    gboolean ret = FALSE;
+    GFile *tfile = g_file_new_for_path(target);
+    GFile *sfile = g_file_new_for_path(source);
+
+    if (!g_file_copy(sfile, tfile, G_FILE_COPY_NONE,
+		     NULL, NULL, NULL, error))
+        goto cleanup;
+
+    ret = TRUE;
+ cleanup:
+    g_free(source);
+    if (!ret) {
+        g_free(target);
+        target = NULL;
+    }
+    g_object_unref(sfile);
+    g_object_unref(tfile);
+    return target;
+}
+
+
 static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_GNUC_UNUSED)
 {
     GString *str = g_string_new("");
@@ -399,7 +426,13 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
                                                          error)))
         return FALSE;
 
-    kernel = gvir_sandbox_builder_machine_get_kernpath(config);
+    if (!(kernel = gvir_sandbox_builder_machine_copykern(config,
+                                                         statedir,
+                                                         error))) {
+        g_free(initrd);
+        return FALSE;
+    }
+
     cmdline = gvir_sandbox_builder_machine_cmdline(config);
 
     kfile = g_file_new_for_path(kernel);
@@ -637,13 +670,18 @@ static gboolean gvir_sandbox_builder_machine_clean_post_start(GVirSandboxBuilder
                                                               GError **error)
 {
     gchar *initrd = g_strdup_printf("%s/initrd.img", statedir);
+    gchar *kernel = g_strdup_printf("%s/vmlinuz", statedir);
     gboolean ret = TRUE;
 
     if (unlink(initrd) < 0 &&
         errno != ENOENT)
         ret = FALSE;
+    if (unlink(kernel) < 0 &&
+        errno != ENOENT)
+        ret = FALSE;
 
     g_free(initrd);
+    g_free(kernel);
     return ret;
 }
 
