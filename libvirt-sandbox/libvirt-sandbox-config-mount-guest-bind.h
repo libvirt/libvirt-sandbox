@@ -64,3 +64,12 @@ GVirSandboxConfigMountGuestBind *gvir_sandbox_config_mount_guest_bind_new(const 
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_MOUNT_GUEST_BIND_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

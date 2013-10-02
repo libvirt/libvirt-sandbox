@@ -67,3 +67,12 @@ void gvir_sandbox_config_service_systemd_set_boot_target(GVirSandboxConfigServic
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_SERVICE_SYSTEMD_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

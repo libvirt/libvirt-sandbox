@@ -57,3 +57,12 @@
 #include <libvirt-sandbox/libvirt-sandbox-context-service.h>
 
 #endif /* __LIBVIRT_SANDBOX_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

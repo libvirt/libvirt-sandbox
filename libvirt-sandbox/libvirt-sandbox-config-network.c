@@ -313,3 +313,12 @@ GList *gvir_sandbox_config_network_get_routes(GVirSandboxConfigNetwork *config)
     g_list_foreach(priv->routes, (GFunc)g_object_ref, NULL);
     return g_list_copy(priv->routes);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

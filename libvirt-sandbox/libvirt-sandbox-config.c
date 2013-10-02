@@ -2268,3 +2268,12 @@ gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config)
 {
     return GVIR_SANDBOX_CONFIG_GET_CLASS(config)->get_command(config);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

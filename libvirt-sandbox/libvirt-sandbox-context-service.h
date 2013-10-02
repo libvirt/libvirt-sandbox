@@ -70,3 +70,12 @@ gboolean gvir_sandbox_context_service_undefine(GVirSandboxContextService *ctxt, 
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONTEXT_SERVICE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

@@ -305,3 +305,12 @@ GInetAddress *gvir_sandbox_config_network_route_get_target(GVirSandboxConfigNetw
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
     return priv->target;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

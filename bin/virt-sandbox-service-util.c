@@ -294,3 +294,12 @@ int main(int argc, char **argv)
 cleanup:
     exit(ret);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

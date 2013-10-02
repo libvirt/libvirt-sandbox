@@ -63,3 +63,12 @@ GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_BUILDER_CONTAINER_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

@@ -76,3 +76,12 @@ GInetAddress *gvir_sandbox_config_network_route_get_target(GVirSandboxConfigNetw
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_NETWORK_ROUTE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

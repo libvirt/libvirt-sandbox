@@ -69,3 +69,12 @@ void gvir_sandbox_config_interactive_set_command(GVirSandboxConfigInteractive *c
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_INTERACTIVE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

@@ -70,3 +70,12 @@ GHashTable *gvir_sandbox_config_mount_get_includes(GVirSandboxConfigMount *confi
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_MOUNT_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

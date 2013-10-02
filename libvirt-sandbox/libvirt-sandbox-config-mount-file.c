@@ -171,3 +171,12 @@ const gchar *gvir_sandbox_config_mount_file_get_source(GVirSandboxConfigMountFil
     GVirSandboxConfigMountFilePrivate *priv = config->priv;
     return priv->source;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

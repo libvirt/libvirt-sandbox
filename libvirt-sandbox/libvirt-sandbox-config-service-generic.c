@@ -214,3 +214,12 @@ static gchar **gvir_sandbox_config_service_generic_get_command(GVirSandboxConfig
     GVirSandboxConfigServiceGenericPrivate *priv = iconfig->priv;
     return g_strdupv(priv->command);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

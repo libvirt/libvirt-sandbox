@@ -425,3 +425,12 @@ GVirSandboxBuilderContainer *gvir_sandbox_builder_container_new(GVirConnection *
                                                        "connection", connection,
                                                        NULL));
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

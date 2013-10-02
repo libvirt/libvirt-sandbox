@@ -445,3 +445,12 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
 
     return klass->clean_post_stop(builder, config, statedir, error);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

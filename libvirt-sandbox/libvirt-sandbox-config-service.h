@@ -61,3 +61,12 @@ GType gvir_sandbox_config_service_get_type(void);
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_SERVICE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

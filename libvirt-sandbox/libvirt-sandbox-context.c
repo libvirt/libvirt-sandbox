@@ -436,3 +436,12 @@ gboolean gvir_sandbox_context_is_attached(GVirSandboxContext *ctxt)
     GVirSandboxContextPrivate *priv = ctxt->priv;
     return priv->domain != NULL;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

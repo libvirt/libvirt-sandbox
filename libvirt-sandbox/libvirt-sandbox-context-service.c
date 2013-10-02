@@ -396,3 +396,12 @@ gboolean gvir_sandbox_context_service_undefine(GVirSandboxContextService *ctxt, 
 {
     return GVIR_SANDBOX_CONTEXT_SERVICE_GET_CLASS(ctxt)->undefine(ctxt, error);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

@@ -364,3 +364,12 @@ gboolean gvir_sandbox_console_get_direct(GVirSandboxConsole *console)
 {
     return console->priv->direct;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

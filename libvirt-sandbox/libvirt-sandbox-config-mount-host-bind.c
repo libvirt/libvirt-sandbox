@@ -79,3 +79,12 @@ GVirSandboxConfigMountHostBind *gvir_sandbox_config_mount_host_bind_new(const gc
                                                             "target", targetdir,
                                                             NULL));
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

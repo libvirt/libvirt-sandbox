@@ -64,3 +64,12 @@ const gchar *gvir_sandbox_config_mount_file_get_source(GVirSandboxConfigMountFil
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_MOUNT_FILE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

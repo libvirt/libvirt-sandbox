@@ -319,3 +319,12 @@ GList *gvir_sandbox_config_initrd_get_modules(GVirSandboxConfigInitrd *config)
     GVirSandboxConfigInitrdPrivate *priv = config->priv;
     return g_list_copy(priv->modules);
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

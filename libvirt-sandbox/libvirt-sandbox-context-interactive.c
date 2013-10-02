@@ -383,3 +383,12 @@ GVirSandboxConsole *gvir_sandbox_context_interactive_get_app_console(GVirSandbox
     g_object_unref(domain);
     return console;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

@@ -87,3 +87,12 @@ GVirSandboxConsole *gvir_sandbox_context_get_shell_console(GVirSandboxContext *c
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONTEXT_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

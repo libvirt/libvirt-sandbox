@@ -179,3 +179,12 @@ guint64 gvir_sandbox_config_mount_ram_get_usage(GVirSandboxConfigMountRam *confi
     GVirSandboxConfigMountRamPrivate *priv = config->priv;
     return priv->usage;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

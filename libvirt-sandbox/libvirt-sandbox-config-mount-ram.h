@@ -67,3 +67,12 @@ guint64 gvir_sandbox_config_mount_ram_get_usage(GVirSandboxConfigMountRam *confi
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONFIG_MOUNT_RAM_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

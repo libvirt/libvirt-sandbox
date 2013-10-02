@@ -79,3 +79,12 @@ GVirSandboxConfigMountHostImage *gvir_sandbox_config_mount_host_image_new(const 
                                                              "target", targetdir,
                                                              NULL));
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

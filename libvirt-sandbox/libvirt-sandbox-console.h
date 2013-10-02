@@ -107,3 +107,12 @@ gboolean gvir_sandbox_console_get_direct(GVirSandboxConsole *console);
 G_END_DECLS
 
 #endif /* __LIBVIRT_SANDBOX_CONSOLE_H__ */
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */

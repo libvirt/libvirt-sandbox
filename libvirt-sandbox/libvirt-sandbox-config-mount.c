@@ -196,3 +196,12 @@ GHashTable *gvir_sandbox_config_mount_get_includes(GVirSandboxConfigMount *confi
     GVirSandboxConfigMountPrivate *priv = config->priv;
     return priv->includes;
 }
+
+/*
+ * Local variables:
+ *  c-indent-level: 4
+ *  c-basic-offset: 4
+ *  indent-tabs-mode: nil
+ *  tab-width: 8
+ * End:
+ */
