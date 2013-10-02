@@ -716,7 +716,7 @@ PrivateNetwork=false
             self.create_container_unit(src, self.dest + unitdir, i)
             if is_template_unit(i):
                 i = self.get_expanded_unit_template(i)
-            os.symlink("../" + i, self.dest + tgtdir + "/" + i)
+            os.symlink(src, self.dest + tgtdir + "/" + i)
 
         tgtfile = unitdir + "/multi-user.target"
         try:
