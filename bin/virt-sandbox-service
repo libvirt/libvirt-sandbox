@@ -913,52 +913,63 @@ def clone(args):
         container = GenericContainer(uri=args.uri, config=config)
     else:
         container = SystemdContainer(uri=args.uri, config=config)
+    newcontainer = None
 
     container.set_path(args.path)
-    fd = open(container.get_config_path(),"r")
-    recs = fd.read()
-    fd.close()
 
     old_path = container.get_filesystem_path()
     new_path = container.get_filesystem_path(args.dest)
-    newrec = recs.replace(old_path + "/", new_path + "/")
-    newrec = newrec.replace("name=" + args.source, "name=" + args.dest)
-    old_image_path = container.get_image_path()
-    if os.path.exists(old_image_path):
-        new_image_path = container.get_image_path(args.dest)
-        newrec = newrec.replace(old_image_path, new_image_path)
-        shutil.copy(old_image_path, new_image_path)
-        sys.stdout.write(_("Created sandbox container image %s\n") % new_image_path)
-        os.mkdir(new_path)
-    else:
-        copydirtree(old_path, new_path)
-        sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
-    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
-        container = GenericContainer(name=args.dest, uri=args.uri, create=True)
-        container.set_path(args.path)
-    else:
-        fd = open(container.get_unit_path())
+    if os.path.exists(new_path):
+        raise OSError(_("%s already exists") % new_path)
+
+    try:
+        fd = open(container.get_config_path(),"r")
         recs = fd.read()
         fd.close()
 
-        new_unit = container.get_unit_path(args.dest)
-        fd = open(new_unit, "wx")
-        fd.write(recs.replace(args.source, args.dest))
-        fd.close()
+        newrec = recs.replace(old_path + "/", new_path + "/")
+        newrec = newrec.replace("name=" + args.source, "name=" + args.dest)
+        old_image_path = container.get_image_path()
+        if os.path.exists(old_image_path):
+            new_image_path = container.get_image_path(args.dest)
+            newrec = newrec.replace(old_image_path, new_image_path)
+            shutil.copy(old_image_path, new_image_path)
+            sys.stdout.write(_("Created sandbox container image %s\n") % new_image_path)
+            os.mkdir(new_path)
+        else:
+            copydirtree(old_path, new_path)
+            sys.stdout.write(_("Created sandbox container dir %s\n") % new_path)
 
-        sys.stdout.write(_("Created unit file %s\n") % new_unit)
+        if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+            newcontainer = GenericContainer(name=args.dest, uri=args.uri, create=True)
+            newcontainer.set_path(args.path)
+        else:
+            fd = open(container.get_unit_path())
+            recs = fd.read()
+            fd.close()
 
-        config = LibvirtSandbox.Config.load_from_data(newrec)
-        container = SystemdContainer(config=config, uri=args.uri)
-        container.set_path(args.path)
-        container.gen_machine_id()
-        container.gen_hostname()
+            new_unit = container.get_unit_path(args.dest)
+            fd = open(new_unit, "wx")
+            fd.write(recs.replace(args.source, args.dest))
+            fd.close()
 
-    if args.security:
-        container.set_security(args.security)
-    container.set_security_label()
-    container.save_config()
+            sys.stdout.write(_("Created unit file %s\n") % new_unit)
+
+            config = LibvirtSandbox.Config.load_from_data(newrec)
+            newcontainer = SystemdContainer(config=config, uri=args.uri)
+            newcontainer.set_path(args.path)
+            newcontainer.gen_machine_id()
+            newcontainer.gen_hostname()
+
+        if args.security:
+            newcontainer.set_security(args.security)
+        newcontainer.set_security_label()
+        newcontainer.save_config()
+    except Exception, e:
+        if newcontainer is not None:
+            newcontainer.delete()
+        raise
 
 
 def upgrade_config_legacy(path):
