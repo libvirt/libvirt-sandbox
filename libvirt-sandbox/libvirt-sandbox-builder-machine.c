@@ -203,7 +203,7 @@ static gchar *gvir_sandbox_builder_machine_copykern(GVirSandboxConfig *config,
     GFile *sfile = g_file_new_for_path(source);
 
     if (!g_file_copy(sfile, tfile, G_FILE_COPY_NONE,
-		     NULL, NULL, NULL, error))
+                     NULL, NULL, NULL, error))
         goto cleanup;
 
     ret = TRUE;
@@ -438,9 +438,9 @@ static gboolean gvir_sandbox_builder_machine_construct_os(GVirSandboxBuilder *bu
     kfile = g_file_new_for_path(kernel);
     if (!g_file_query_exists(kfile, NULL)) {
         g_set_error(error, GVIR_SANDBOX_BUILDER_MACHINE_ERROR, 0,
-	            _("Kernel image %s does not exist"),
-		    kernel);
-	goto cleanup;
+                    _("Kernel image %s does not exist"),
+                    kernel);
+        goto cleanup;
     }
 
     os = gvir_config_domain_os_new();
