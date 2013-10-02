@@ -37,8 +37,8 @@
  * as a sandbox.
  */
 
-#define GVIR_SANDBOX_CONFIG_INITRD_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_INITRD, GVirSandboxConfigInitrdPrivate))
+#define GVIR_SANDBOX_CONFIG_INITRD_GET_PRIVATE(obj)                     \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_INITRD, GVirSandboxConfigInitrdPrivate))
 
 struct _GVirSandboxConfigInitrdPrivate
 {
@@ -66,9 +66,9 @@ enum {
 
 
 static void gvir_sandbox_config_initrd_get_property(GObject *object,
-                                                   guint prop_id,
-                                                   GValue *value,
-                                                   GParamSpec *pspec)
+                                                    guint prop_id,
+                                                    GValue *value,
+                                                    GParamSpec *pspec)
 {
     GVirSandboxConfigInitrd *config = GVIR_SANDBOX_CONFIG_INITRD(object);
     GVirSandboxConfigInitrdPrivate *priv = config->priv;
@@ -93,9 +93,9 @@ static void gvir_sandbox_config_initrd_get_property(GObject *object,
 
 
 static void gvir_sandbox_config_initrd_set_property(GObject *object,
-                                                       guint prop_id,
-                                                       const GValue *value,
-                                                       GParamSpec *pspec)
+                                                    guint prop_id,
+                                                    const GValue *value,
+                                                    GParamSpec *pspec)
 {
     GVirSandboxConfigInitrd *config = GVIR_SANDBOX_CONFIG_INITRD(object);
     GVirSandboxConfigInitrdPrivate *priv = config->priv;

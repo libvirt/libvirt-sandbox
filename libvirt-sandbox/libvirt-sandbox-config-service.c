@@ -37,8 +37,8 @@
  * the extra information required to setup a service sandbox
  */
 
-#define GVIR_SANDBOX_CONFIG_SERVICE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE, GVirSandboxConfigServicePrivate))
+#define GVIR_SANDBOX_CONFIG_SERVICE_GET_PRIVATE(obj)                    \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE, GVirSandboxConfigServicePrivate))
 
 struct _GVirSandboxConfigServicePrivate
 {

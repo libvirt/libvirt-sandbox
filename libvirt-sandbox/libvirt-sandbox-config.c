@@ -41,8 +41,8 @@
  * create application sandboxes with a simple text based console.
  */
 
-#define GVIR_SANDBOX_CONFIG_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG, GVirSandboxConfigPrivate))
+#define GVIR_SANDBOX_CONFIG_GET_PRIVATE(obj)                            \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG, GVirSandboxConfigPrivate))
 
 struct _GVirSandboxConfigPrivate
 {
@@ -1085,7 +1085,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
     g_object_unref(net);
 
     ret = TRUE;
-cleanup:
+ cleanup:
     return ret;
 }
 
@@ -1444,7 +1444,7 @@ gboolean gvir_sandbox_config_add_host_include_file(GVirSandboxConfig *config,
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (dis)
         g_object_unref(dis);
     g_object_unref(file);
@@ -1531,10 +1531,10 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
         gvir_sandbox_config_set_security_dynamic(config, FALSE);
         security_context_t scon;
         if (getcon(&scon) < 0) {
-                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            _("Unable to get SELinux context of user: %s"),
-                            strerror(errno));
-                return FALSE;
+            g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                        _("Unable to get SELinux context of user: %s"),
+                        strerror(errno));
+            return FALSE;
         }
         gvir_sandbox_config_set_security_label(config, scon);
         freecon(scon);
@@ -1557,7 +1557,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     g_free(tmp);
     return ret;
 }
@@ -1648,14 +1648,14 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
     }
 
 
-cleanup:
+ cleanup:
     g_free(target);
     g_free(source);
     g_free(type);
     g_free(key);
     return config;
 
-error:
+ error:
     g_object_unref(config);
     config = NULL;
     goto cleanup;
@@ -1779,7 +1779,7 @@ static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFil
 
     return config;
 
-error:
+ error:
     g_free(key);
     g_object_unref(config);
     return NULL;
@@ -1893,7 +1893,7 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     }
 
     ret = TRUE;
-cleanup:
+ cleanup:
     return ret;
 }
 
@@ -1923,7 +1923,7 @@ static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config
     } else {
         g_key_file_set_string(file, key, "source",
                               gvir_sandbox_config_mount_file_get_source(
-                                  GVIR_SANDBOX_CONFIG_MOUNT_FILE(config)));
+                                                                        GVIR_SANDBOX_CONFIG_MOUNT_FILE(config)));
     }
     g_free(key);
 
@@ -2130,7 +2130,7 @@ gvir_sandbox_config_load_from_keyfile(GKeyFile *file,
         goto cleanup;
     }
 
-cleanup:
+ cleanup:
     g_free(str);
     return config;
 }
@@ -2153,7 +2153,7 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_path(const gchar *path,
 
     config = gvir_sandbox_config_load_from_keyfile(file, error);
 
-cleanup:
+ cleanup:
     g_key_file_free(file);
     return config;
 }
@@ -2177,7 +2177,7 @@ GVirSandboxConfig *gvir_sandbox_config_load_from_data(const gchar *data,
 
     config = gvir_sandbox_config_load_from_keyfile(file, error);
 
-cleanup:
+ cleanup:
     g_key_file_free(file);
     return config;
 }
@@ -2225,7 +2225,7 @@ gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
         goto unlink;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_free(data);
     g_key_file_free(file);
     g_object_unref(f);
@@ -2233,7 +2233,7 @@ cleanup:
         g_object_unref(os);
     return ret;
 
-unlink:
+ unlink:
     g_file_delete(f, NULL, NULL);
     goto cleanup;
 }
@@ -2250,7 +2250,7 @@ gchar *gvir_sandbox_config_save_to_data(GVirSandboxConfig *config,
     if (!(data = g_key_file_to_data(file, &datalen, error)))
         goto cleanup;
 
-cleanup:
+ cleanup:
     g_key_file_free(file);
     return data;
 }

@@ -43,8 +43,8 @@
  * ramdisks for booting virtual machine based sandboxes.
  */
 
-#define GVIR_SANDBOX_BUILDER_INITRD_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_INITRD, GVirSandboxBuilderInitrdPrivate))
+#define GVIR_SANDBOX_BUILDER_INITRD_GET_PRIVATE(obj)                    \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_INITRD, GVirSandboxBuilderInitrdPrivate))
 
 struct _GVirSandboxBuilderInitrdPrivate
 {
@@ -74,9 +74,9 @@ gvir_sandbox_builder_initrd_error_quark(void)
 
 
 static void gvir_sandbox_builder_initrd_get_property(GObject *object,
-                                                      guint prop_id,
-                                                      GValue *value G_GNUC_UNUSED,
-                                                      GParamSpec *pspec)
+                                                     guint prop_id,
+                                                     GValue *value G_GNUC_UNUSED,
+                                                     GParamSpec *pspec)
 {
 #if 0
     GVirSandboxBuilderInitrd *builder = GVIR_SANDBOX_BUILDER_INITRD(object);
@@ -92,9 +92,9 @@ static void gvir_sandbox_builder_initrd_get_property(GObject *object,
 
 
 static void gvir_sandbox_builder_initrd_set_property(GObject *object,
-                                                      guint prop_id,
-                                                      const GValue *value G_GNUC_UNUSED,
-                                                      GParamSpec *pspec)
+                                                     guint prop_id,
+                                                     const GValue *value G_GNUC_UNUSED,
+                                                     GParamSpec *pspec)
 {
 #if 0
     GVirSandboxBuilderInitrd *builder = GVIR_SANDBOX_BUILDER_INITRD(object);
@@ -148,7 +148,7 @@ static void gvir_sandbox_builder_initrd_init(GVirSandboxBuilderInitrd *builder)
 GVirSandboxBuilderInitrd *gvir_sandbox_builder_initrd_new(void)
 {
     return GVIR_SANDBOX_BUILDER_INITRD(g_object_new(GVIR_SANDBOX_TYPE_BUILDER_INITRD,
-                                                     NULL));
+                                                    NULL));
 }
 
 
@@ -173,7 +173,7 @@ static gchar *gvir_sandbox_builder_initrd_create_tempdir(GError **error)
         goto cleanup;
     }
 
-cleanup:
+ cleanup:
     return dir;
 }
 
@@ -195,7 +195,7 @@ static gboolean gvir_sandbox_builder_initrd_copy_file(const gchar *srcpath,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     g_object_unref(tgt);
     g_object_unref(src);
     return ret;
@@ -255,7 +255,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
         g_object_unref(childinfo);
     }
 
-cleanup:
+ cleanup:
     if (*error) {
         g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
         g_list_free(modfiles);
@@ -325,7 +325,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
             g_object_unref(child);
     }
 
-cleanup:
+ cleanup:
     if (*error) {
         g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
         g_list_free(modfiles);
@@ -374,7 +374,7 @@ static GList *gvir_sandbox_builder_initrd_find_modules(GList *modnames,
         tmp1 = tmp1->next;
     }
 
-cleanup:
+ cleanup:
     g_free(moddirpath);
     g_object_unref(moddir);
     return modfiles;
@@ -395,8 +395,8 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
     GError *e = NULL;
 
     if (!gvir_sandbox_builder_initrd_copy_file(
-            gvir_sandbox_config_initrd_get_init(config),
-            tmpdir, "init", error))
+                                               gvir_sandbox_config_initrd_get_init(config),
+                                               tmpdir, "init", error))
         return FALSE;
 
     modnames = gvir_sandbox_config_initrd_get_modules(config);
@@ -445,7 +445,7 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
     g_list_free(modfiles);
     g_list_free(modnames);
@@ -467,14 +467,14 @@ static gboolean gvir_sandbox_builder_initrd_create_initrd(const gchar *tmpdir,
     gchar *tgt = g_shell_quote(outputfile);
 
     gchar *cmd = g_strdup_printf(
-        "/bin/sh -c \"(cd %s && ( find | cpio --quiet -o -H newc | gzip -9 ) ) > %s\"",
-        src, tgt);
+                                 "/bin/sh -c \"(cd %s && ( find | cpio --quiet -o -H newc | gzip -9 ) ) > %s\"",
+                                 src, tgt);
 
     if (!g_spawn_command_line_sync(cmd, NULL, NULL, NULL, error))
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_free(src);
     g_free(tgt);
     g_free(cmd);
@@ -506,7 +506,7 @@ static gboolean gvir_sandbox_builder_initrd_remove_tmpdir(const gchar *tmpdir,
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_file_delete(dir, NULL, error && !*error ? error : NULL);
     g_object_unref(dir);
 
@@ -536,7 +536,7 @@ gboolean gvir_sandbox_builder_initrd_construct(GVirSandboxBuilderInitrd *builder
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (tmpdir &&
         !gvir_sandbox_builder_initrd_remove_tmpdir(tmpdir, ret ? error : NULL))
         ret = FALSE;

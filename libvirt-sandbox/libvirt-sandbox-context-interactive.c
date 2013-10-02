@@ -39,8 +39,8 @@
  * desktop.
  */
 
-#define GVIR_SANDBOX_CONTEXT_INTERACTIVE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT_INTERACTIVE, GVirSandboxContextInteractivePrivate))
+#define GVIR_SANDBOX_CONTEXT_INTERACTIVE_GET_PRIVATE(obj)               \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT_INTERACTIVE, GVirSandboxContextInteractivePrivate))
 
 struct _GVirSandboxContextInteractivePrivate
 {
@@ -207,8 +207,8 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
 
     cachedir = (getuid() ? g_get_user_cache_dir() : RUNDIR);
     statedir = g_build_filename(cachedir, "libvirt-sandbox",
-                              gvir_sandbox_config_get_name(config),
-                              NULL);
+                                gvir_sandbox_config_get_name(config),
+                                NULL);
     configdir = g_build_filename(statedir, "config", NULL);
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
@@ -245,7 +245,7 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
     g_object_set(ctxt, "domain", domain, NULL);
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (!ret && domain)
         gvir_domain_stop(domain, 0, NULL);
     if (!ret && builder) {

@@ -37,8 +37,8 @@
  * #GVirDomain instances from #GVirSandboxConfig instances.
  */
 
-#define GVIR_SANDBOX_BUILDER_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER, GVirSandboxBuilderPrivate))
+#define GVIR_SANDBOX_BUILDER_GET_PRIVATE(obj)                           \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER, GVirSandboxBuilderPrivate))
 
 struct _GVirSandboxBuilderPrivate
 {
@@ -108,9 +108,9 @@ static gboolean gvir_sandbox_builder_clean_post_stop_default(GVirSandboxBuilder 
                                                              GError **error);
 
 static void gvir_sandbox_builder_get_property(GObject *object,
-                                             guint prop_id,
-                                             GValue *value,
-                                             GParamSpec *pspec)
+                                              guint prop_id,
+                                              GValue *value,
+                                              GParamSpec *pspec)
 {
     GVirSandboxBuilder *ctxt = GVIR_SANDBOX_BUILDER(object);
     GVirSandboxBuilderPrivate *priv = ctxt->priv;

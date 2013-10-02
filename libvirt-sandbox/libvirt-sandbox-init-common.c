@@ -168,7 +168,7 @@ static gboolean add_address(const gchar *devname,
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_free(addrstr);
     g_free(bcaststr);
     g_free(fulladdrstr);
@@ -201,7 +201,7 @@ static gboolean add_route(const gchar *devname,
         goto cleanup;
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_free(fulltargetstr);
     g_free(gatewaystr);
     g_free(targetstr);
@@ -245,7 +245,7 @@ static gboolean setup_network_device(GVirSandboxConfigNetwork *config,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     g_list_foreach(addrs, (GFunc)g_object_unref, NULL);
     g_list_free(addrs);
     g_list_foreach(routes, (GFunc)g_object_unref, NULL);
@@ -277,7 +277,7 @@ static gboolean setup_network(GVirSandboxConfig *config, GError **error)
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     g_free(devname);
     g_list_foreach(nets, (GFunc)g_object_unref, NULL);
     g_list_free(nets);
@@ -434,7 +434,7 @@ static gboolean run_command(gboolean interactive, gchar **argv,
     *child = pid;
     return TRUE;
 
-error:
+ error:
     if (interactive) {
         if (master != -1)
             close(master);
@@ -480,7 +480,7 @@ static GVirSandboxRPCPacket *gvir_sandbox_encode_stdout(const gchar *data,
                 len, pkt->bufferLength, pkt->bufferOffset);
     return pkt;
 
-error:
+ error:
     gvir_sandbox_rpcpacket_free(pkt);
     return NULL;
 }
@@ -505,7 +505,7 @@ static GVirSandboxRPCPacket *gvir_sandbox_encode_stderr(const gchar *data,
 
     return pkt;
 
-error:
+ error:
     gvir_sandbox_rpcpacket_free(pkt);
     return NULL;
 }
@@ -536,7 +536,7 @@ static GVirSandboxRPCPacket *gvir_sandbox_encode_exit(int status,
 
     return pkt;
 
-error:
+ error:
     gvir_sandbox_rpcpacket_free(pkt);
     return NULL;
 }
@@ -548,7 +548,7 @@ static gssize read_data(int fd, char *buf, size_t len)
 {
     gssize got;
 
-reread:
+ reread:
     got = read(fd, buf, len);
     if (got < 0) {
         if (errno == EAGAIN)
@@ -567,7 +567,7 @@ static gssize write_data(int fd, const char *buf, size_t len)
 {
     gssize got;
 
-rewrite:
+ rewrite:
     got = write(fd, buf, len);
     if (got < 0) {
         if (errno == EAGAIN)
@@ -710,7 +710,7 @@ static gboolean eventloop(gboolean interactive,
                                 if (debug)
                                     fprintf(stderr, "Encoding exit status sigchild %d\n", exitstatus);
                                 if (!(tx = gvir_sandbox_encode_exit(exitstatus, serial++, NULL)))
-                                goto cleanup;
+                                    goto cleanup;
                             }
                         }
                     }
@@ -1027,7 +1027,7 @@ static gboolean eventloop(gboolean interactive,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     if (appin != -1) {
         close(appin);
         if (appin == appout)
@@ -1104,7 +1104,7 @@ run_interactive(GVirSandboxConfig *config)
 
     ret = 0;
 
-cleanup:
+ cleanup:
     g_strfreev(command);
     signal(SIGCHLD, SIG_DFL);
 
@@ -1228,13 +1228,13 @@ int main(int argc, char **argv) {
 
     ret = EXIT_SUCCESS;
 
-cleanup:
+ cleanup:
     if (error)
         g_error_free(error);
 
     return ret;
 
-error:
+ error:
     g_printerr("%s: %s",
                argv[0],
                error && error->message ? error->message : _("Unknown failure"));

@@ -40,8 +40,8 @@
  * content.
  */
 
-#define GVIR_SANDBOX_CONFIG_MOUNT_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT, GVirSandboxConfigMountPrivate))
+#define GVIR_SANDBOX_CONFIG_MOUNT_GET_PRIVATE(obj)                      \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT, GVirSandboxConfigMountPrivate))
 
 struct _GVirSandboxConfigMountPrivate
 {
@@ -84,9 +84,9 @@ static void gvir_sandbox_config_mount_get_property(GObject *object,
 
 
 static void gvir_sandbox_config_mount_set_property(GObject *object,
-                                                       guint prop_id,
-                                                       const GValue *value,
-                                                       GParamSpec *pspec)
+                                                   guint prop_id,
+                                                   const GValue *value,
+                                                   GParamSpec *pspec)
 {
     GVirSandboxConfigMount *config = GVIR_SANDBOX_CONFIG_MOUNT(object);
     GVirSandboxConfigMountPrivate *priv = config->priv;

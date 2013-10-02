@@ -41,8 +41,8 @@
  * using full machine virtualization technologies such as KVM.
  */
 
-#define GVIR_SANDBOX_BUILDER_MACHINE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_MACHINE, GVirSandboxBuilderMachinePrivate))
+#define GVIR_SANDBOX_BUILDER_MACHINE_GET_PRIVATE(obj)                   \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_MACHINE, GVirSandboxBuilderMachinePrivate))
 
 struct _GVirSandboxBuilderMachinePrivate
 {
@@ -179,7 +179,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     if (!gvir_sandbox_builder_initrd_construct(builder, initrd, targetfile, error))
         goto cleanup;
 
-cleanup:
+ cleanup:
     if (*error) {
         g_free(targetfile);
         targetfile = NULL;
@@ -342,7 +342,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
 #endif
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
     g_list_free(mounts);
     if (fos)
@@ -582,7 +582,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         if (source) {
             iface = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_network_new());
             gvir_config_domain_interface_network_set_source(
-                GVIR_CONFIG_DOMAIN_INTERFACE_NETWORK(iface), source);
+                                                            GVIR_CONFIG_DOMAIN_INTERFACE_NETWORK(iface), source);
         } else {
             iface = GVIR_CONFIG_DOMAIN_INTERFACE(gvir_config_domain_interface_user_new());
         }
@@ -657,7 +657,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     }
 
     ret = TRUE;
-  cleanup:
+ cleanup:
     g_free(configdir);
     return ret;
 }

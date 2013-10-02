@@ -42,8 +42,8 @@
  * application's stdio.
  */
 
-#define GVIR_SANDBOX_CONTEXT_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT, GVirSandboxContextPrivate))
+#define GVIR_SANDBOX_CONTEXT_GET_PRIVATE(obj)                           \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT, GVirSandboxContextPrivate))
 
 struct _GVirSandboxContextPrivate
 {
@@ -302,8 +302,8 @@ static gboolean gvir_sandbox_context_attach_default(GVirSandboxContext *ctxt, GE
         return FALSE;
 
     if (!(priv->domain = gvir_connection_find_domain_by_name(
-              priv->connection,
-              gvir_sandbox_config_get_name(priv->config)))) {
+                                                             priv->connection,
+                                                             gvir_sandbox_config_get_name(priv->config)))) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_ERROR, 0,
                              "Sandbox %s does not exist",
                              gvir_sandbox_config_get_name(priv->config));

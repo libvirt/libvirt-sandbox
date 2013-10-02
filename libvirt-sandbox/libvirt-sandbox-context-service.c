@@ -39,8 +39,8 @@
  * desktop.
  */
 
-#define GVIR_SANDBOX_CONTEXT_SERVICE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT_SERVICE, GVirSandboxContextServicePrivate))
+#define GVIR_SANDBOX_CONTEXT_SERVICE_GET_PRIVATE(obj)                   \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONTEXT_SERVICE, GVirSandboxContextServicePrivate))
 
 struct _GVirSandboxContextServicePrivate
 {
@@ -161,7 +161,7 @@ static gboolean gvir_sandbox_context_service_define_default(GVirSandboxContextSe
     g_mkdir_with_parents(emptydir, 0755);
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (!ret)
         unlink(configfile);
 
@@ -217,8 +217,8 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
         goto cleanup;
 
     if ((domain = gvir_connection_find_domain_by_name(
-             connection,
-             gvir_sandbox_config_get_name(config))) != NULL) {
+                                                      connection,
+                                                      gvir_sandbox_config_get_name(config))) != NULL) {
         if (!gvir_domain_delete(domain, 0, error))
             ret = FALSE;
     }
@@ -251,7 +251,7 @@ static gboolean gvir_sandbox_context_service_undefine_default(GVirSandboxContext
                                               error))
         ret = FALSE;
 
-cleanup:
+ cleanup:
     g_free(servicedir);
     g_free(sandboxdir);
     g_free(statedir);
@@ -286,8 +286,8 @@ static gboolean gvir_sandbox_context_service_start(GVirSandboxContext *ctxt, GEr
         goto cleanup;
 
     if (!(domain = gvir_connection_find_domain_by_name(
-              connection,
-              gvir_sandbox_config_get_name(config)))) {
+                                                       connection,
+                                                       gvir_sandbox_config_get_name(config)))) {
         *error = g_error_new(GVIR_SANDBOX_CONTEXT_SERVICE_ERROR, 0,
                              "Sandbox %s does not exist",
                              gvir_sandbox_config_get_name(config));
@@ -300,7 +300,7 @@ static gboolean gvir_sandbox_context_service_start(GVirSandboxContext *ctxt, GEr
     g_object_set(ctxt, "domain", domain, NULL);
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_object_unref(config);
     g_object_unref(connection);
     if (domain)

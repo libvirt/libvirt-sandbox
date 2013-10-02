@@ -40,8 +40,8 @@
  * content.
  */
 
-#define GVIR_SANDBOX_CONFIG_MOUNT_RAM_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM, GVirSandboxConfigMountRamPrivate))
+#define GVIR_SANDBOX_CONFIG_MOUNT_RAM_GET_PRIVATE(obj)                  \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT_RAM, GVirSandboxConfigMountRamPrivate))
 
 struct _GVirSandboxConfigMountRamPrivate
 {

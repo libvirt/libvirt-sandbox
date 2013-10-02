@@ -37,8 +37,8 @@
  * route, broadcast route and network route.
  */
 
-#define GVIR_SANDBOX_CONFIG_NETWORK_ROUTE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ROUTE, GVirSandboxConfigNetworkRoutePrivate))
+#define GVIR_SANDBOX_CONFIG_NETWORK_ROUTE_GET_PRIVATE(obj)              \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ROUTE, GVirSandboxConfigNetworkRoutePrivate))
 
 struct _GVirSandboxConfigNetworkRoutePrivate
 {
@@ -92,9 +92,9 @@ static void gvir_sandbox_config_network_route_get_property(GObject *object,
 
 
 static void gvir_sandbox_config_network_route_set_property(GObject *object,
-                                                             guint prop_id,
-                                                             const GValue *value,
-                                                             GParamSpec *pspec)
+                                                           guint prop_id,
+                                                           const GValue *value,
+                                                           GParamSpec *pspec)
 {
     GVirSandboxConfigNetworkRoute *config = GVIR_SANDBOX_CONFIG_NETWORK_ROUTE(object);
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
@@ -283,7 +283,7 @@ GInetAddress *gvir_sandbox_config_network_route_get_gateway(GVirSandboxConfigNet
  * Sets the interface route target address
  */
 void gvir_sandbox_config_network_route_set_target(GVirSandboxConfigNetworkRoute *config,
-                                                     GInetAddress *addr)
+                                                  GInetAddress *addr)
 {
     GVirSandboxConfigNetworkRoutePrivate *priv = config->priv;
     if (priv->target)

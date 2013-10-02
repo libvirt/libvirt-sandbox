@@ -40,8 +40,8 @@
  * content.
  */
 
-#define GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE, GVirSandboxConfigMountHostImagePrivate))
+#define GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE_GET_PRIVATE(obj)           \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE, GVirSandboxConfigMountHostImagePrivate))
 
 struct _GVirSandboxConfigMountHostImagePrivate
 {

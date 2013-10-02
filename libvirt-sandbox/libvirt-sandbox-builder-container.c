@@ -39,8 +39,8 @@
  * using OS container virtualization technologies such as LXC.
  */
 
-#define GVIR_SANDBOX_BUILDER_CONTAINER_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_CONTAINER, GVirSandboxBuilderContainerPrivate))
+#define GVIR_SANDBOX_BUILDER_CONTAINER_GET_PRIVATE(obj)                 \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_BUILDER_CONTAINER, GVirSandboxBuilderContainerPrivate))
 
 struct _GVirSandboxBuilderContainerPrivate
 {
@@ -71,9 +71,9 @@ gvir_sandbox_builder_container_error_quark(void)
 #endif
 
 static void gvir_sandbox_builder_container_get_property(GObject *object,
-                                                      guint prop_id,
-                                                      GValue *value G_GNUC_UNUSED,
-                                                      GParamSpec *pspec)
+                                                        guint prop_id,
+                                                        GValue *value G_GNUC_UNUSED,
+                                                        GParamSpec *pspec)
 {
 #if 0
     GVirSandboxBuilderContainer *builder = GVIR_SANDBOX_BUILDER_CONTAINER(object);
@@ -89,9 +89,9 @@ static void gvir_sandbox_builder_container_get_property(GObject *object,
 
 
 static void gvir_sandbox_builder_container_set_property(GObject *object,
-                                                      guint prop_id,
-                                                      const GValue *value G_GNUC_UNUSED,
-                                                      GParamSpec *pspec)
+                                                        guint prop_id,
+                                                        const GValue *value G_GNUC_UNUSED,
+                                                        GParamSpec *pspec)
 {
 #if 0
     GVirSandboxBuilderContainer *builder = GVIR_SANDBOX_BUILDER_CONTAINER(object);
@@ -381,7 +381,7 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
     }
 
     ret = TRUE;
-cleanup:
+ cleanup:
     g_free(configdir);
     return ret;
 }

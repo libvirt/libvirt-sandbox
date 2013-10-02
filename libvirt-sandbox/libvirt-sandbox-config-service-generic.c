@@ -37,8 +37,8 @@
  * the extra information required to setup a service sandbox with generic
  */
 
-#define GVIR_SANDBOX_CONFIG_SERVICE_GENERIC_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE_GENERIC, GVirSandboxConfigServiceGenericPrivate))
+#define GVIR_SANDBOX_CONFIG_SERVICE_GENERIC_GET_PRIVATE(obj)            \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE_GENERIC, GVirSandboxConfigServiceGenericPrivate))
 
 struct _GVirSandboxConfigServiceGenericPrivate
 {
@@ -110,7 +110,7 @@ static gboolean gvir_sandbox_config_service_generic_load_config(GVirSandboxConfi
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     return ret;
 }
 

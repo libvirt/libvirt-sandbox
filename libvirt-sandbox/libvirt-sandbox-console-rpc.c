@@ -218,7 +218,7 @@ gvir_sandbox_console_rpc_build_quit(GVirSandboxConsoleRpc *console,
 
     return pkt;
 
-error:
+ error:
     gvir_sandbox_rpcpacket_free(pkt);
     return NULL;
 }
@@ -247,7 +247,7 @@ gvir_sandbox_console_rpc_build_stdin(GVirSandboxConsoleRpc *console,
 
     return pkt;
 
-error:
+ error:
     gvir_sandbox_rpcpacket_free(pkt);
     return NULL;
 }
@@ -710,7 +710,7 @@ do_console_rpc_process_packet_rx(GVirSandboxConsoleRpc *console,
     GVirSandboxConsoleRpcPrivate *priv = console->priv;
 
     //g_debug("Process rx state=%d len=%zu",
-//            priv->state, pkt->bufferLength);
+    //            priv->state, pkt->bufferLength);
 
     switch (priv->state) {
     case GVIR_SANDBOX_CONSOLE_RPC_STATE_WAITING:
@@ -908,11 +908,11 @@ static gboolean do_console_rpc_stream_readwrite(GVirStream *stream,
         }
     }
 
-done:
+ done:
     priv->consoleWatch = 0;
     do_console_rpc_update_events(console);
 
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -961,7 +961,7 @@ static gboolean do_console_rpc_stdin_read(GObject *stream,
         goto cleanup;
     }
     priv->localStdinSource = NULL;
-cleanup:
+ cleanup:
     do_console_rpc_update_events(console);
     g_free(buf);
     return FALSE;
@@ -1025,7 +1025,7 @@ static gboolean do_console_rpc_stdout_write(GObject *stream,
     priv->localStdoutSource = NULL;
     do_console_rpc_update_events(console);
 
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -1088,7 +1088,7 @@ static gboolean do_console_rpc_stderr_write(GObject *stream,
     priv->localStderrSource = NULL;
     do_console_rpc_update_events(console);
 
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -1140,7 +1140,7 @@ static gboolean gvir_sandbox_console_rpc_attach(GVirSandboxConsole *console,
     do_console_rpc_update_events(GVIR_SANDBOX_CONSOLE_RPC(console));
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (!ret)
         gvir_sandbox_console_rpc_stop_term(GVIR_SANDBOX_CONSOLE_RPC(console),
                                            localStdin, NULL);
@@ -1206,7 +1206,7 @@ static gboolean gvir_sandbox_console_rpc_detach(GVirSandboxConsole *console,
 
     ret = TRUE;
 
-//cleanup:
+    //cleanup:
     return ret;
 }
 

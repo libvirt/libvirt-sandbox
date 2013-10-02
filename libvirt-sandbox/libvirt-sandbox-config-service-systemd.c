@@ -37,8 +37,8 @@
  * the extra information required to setup a service sandbox with systemd
  */
 
-#define GVIR_SANDBOX_CONFIG_SERVICE_SYSTEMD_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD, GVirSandboxConfigServiceSystemdPrivate))
+#define GVIR_SANDBOX_CONFIG_SERVICE_SYSTEMD_GET_PRIVATE(obj)            \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD, GVirSandboxConfigServiceSystemdPrivate))
 
 struct _GVirSandboxConfigServiceSystemdPrivate
 {
@@ -125,7 +125,7 @@ static gboolean gvir_sandbox_config_service_systemd_load_config(GVirSandboxConfi
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     return ret;
 }
 

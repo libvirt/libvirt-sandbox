@@ -38,8 +38,8 @@
  * sandbox.
  */
 
-#define GVIR_SANDBOX_CONFIG_INTERACTIVE_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_INTERACTIVE, GVirSandboxConfigInteractivePrivate))
+#define GVIR_SANDBOX_CONFIG_INTERACTIVE_GET_PRIVATE(obj)                \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_INTERACTIVE, GVirSandboxConfigInteractivePrivate))
 
 struct _GVirSandboxConfigInteractivePrivate
 {
@@ -148,7 +148,7 @@ static gboolean gvir_sandbox_config_interactive_load_config(GVirSandboxConfig *c
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     if (argv)
         g_strfreev(argv);
     return ret;

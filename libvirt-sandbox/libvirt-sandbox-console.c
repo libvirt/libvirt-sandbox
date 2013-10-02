@@ -40,7 +40,7 @@
  *
  */
 
-#define GVIR_SANDBOX_CONSOLE_GET_PRIVATE(obj)                       \
+#define GVIR_SANDBOX_CONSOLE_GET_PRIVATE(obj)                           \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONSOLE, GVirSandboxConsolePrivate))
 
 
@@ -294,7 +294,7 @@ gboolean gvir_sandbox_console_attach_stdio(GVirSandboxConsole *console_,
 
 
 gboolean gvir_sandbox_console_attach_stderr(GVirSandboxConsole *console_,
-                                           GError **error)
+                                            GError **error)
 {
     GOutputStream *localStderr = g_unix_output_stream_new(STDERR_FILENO, FALSE);
     gboolean ret;

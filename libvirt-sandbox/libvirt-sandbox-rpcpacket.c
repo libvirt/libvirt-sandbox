@@ -94,7 +94,7 @@ gboolean gvir_sandbox_rpcpacket_decode_length(GVirSandboxRPCPacket *msg,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     xdr_destroy(&xdr);
     return ret;
 }
@@ -135,7 +135,7 @@ gboolean gvir_sandbox_rpcpacket_decode_header(GVirSandboxRPCPacket *msg,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     xdr_destroy(&xdr);
     return ret;
 }
@@ -197,7 +197,7 @@ gboolean gvir_sandbox_rpcpacket_encode_header(GVirSandboxRPCPacket *msg,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     xdr_destroy(&xdr);
     return ret;
 }
@@ -241,7 +241,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_msg(GVirSandboxRPCPacket *msg,
     msg->bufferOffset = 0;
     return TRUE;
 
-error:
+ error:
     xdr_destroy(&xdr);
     return FALSE;
 }
@@ -271,7 +271,7 @@ gboolean gvir_sandbox_rpcpacket_decode_payload_msg(GVirSandboxRPCPacket *msg,
     xdr_destroy(&xdr);
     return TRUE;
 
-error:
+ error:
     xdr_destroy(&xdr);
     return FALSE;
 }
@@ -309,7 +309,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_raw(GVirSandboxRPCPacket *msg,
     msg->bufferOffset = 0;
     return TRUE;
 
-error:
+ error:
     xdr_destroy(&xdr);
     return FALSE;
 }
@@ -335,7 +335,7 @@ gboolean gvir_sandbox_rpcpacket_encode_payload_empty(GVirSandboxRPCPacket *msg,
     msg->bufferOffset = 0;
     return TRUE;
 
-error:
+ error:
     xdr_destroy(&xdr);
     return FALSE;
 }

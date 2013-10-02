@@ -438,11 +438,11 @@ static gboolean do_console_raw_stream_readwrite(GVirStream *stream,
         priv->localToConsoleOffset -= ret;
     }
 
-done:
+ done:
     priv->consoleWatch = 0;
     do_console_raw_update_events(console);
 
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -484,7 +484,7 @@ static gboolean do_console_raw_local_read(GObject *stream,
 
     priv->localStdinSource = NULL;
     do_console_raw_update_events(console);
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -517,7 +517,7 @@ static gboolean do_console_raw_local_write(GObject *stream,
 
     priv->localStdoutSource = NULL;
     do_console_raw_update_events(console);
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -546,7 +546,7 @@ static gboolean do_console_raw_console_read(GObject *stream,
         do_console_raw_close(console, NULL);
         goto cleanup;
     } else if (priv->consoleToLocal[priv->consoleToLocalOffset] ==
-             CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console)))) {
+               CONTROL(gvir_sandbox_console_get_escape(GVIR_SANDBOX_CONSOLE(console)))) {
         do_console_raw_close(console, err);
         goto cleanup;
     }
@@ -555,13 +555,13 @@ static gboolean do_console_raw_console_read(GObject *stream,
 
     priv->consoleInputSource = NULL;
     do_console_raw_update_events(console);
-cleanup:
+ cleanup:
     return FALSE;
 }
 
 
 static gboolean do_console_raw_console_write(GObject *stream,
-                                           gpointer opaque)
+                                             gpointer opaque)
 {
     GUnixOutputStream *consoleOutput = G_UNIX_OUTPUT_STREAM(stream);
     GVirSandboxConsoleRaw *console = GVIR_SANDBOX_CONSOLE_RAW(opaque);
@@ -588,7 +588,7 @@ static gboolean do_console_raw_console_write(GObject *stream,
 
     priv->consoleOutputSource = NULL;
     do_console_raw_update_events(console);
-cleanup:
+ cleanup:
     return FALSE;
 }
 
@@ -673,7 +673,7 @@ static gboolean gvir_sandbox_console_open_remote(GVirSandboxConsoleRaw *console,
 
     ret = TRUE;
 
-cleanup:
+ cleanup:
     if (conf)
         g_object_unref(conf);
     if (conn)
@@ -725,7 +725,7 @@ static gboolean gvir_sandbox_console_raw_attach(GVirSandboxConsole *console,
     do_console_raw_update_events(GVIR_SANDBOX_CONSOLE_RAW(console));
 
     ret = TRUE;
-cleanup:
+ cleanup:
     if (!ret && localStdin)
         gvir_sandbox_console_raw_stop_term(GVIR_SANDBOX_CONSOLE_RAW(console),
                                            localStdin, NULL);
@@ -798,7 +798,7 @@ static gboolean gvir_sandbox_console_raw_detach(GVirSandboxConsole *console,
 
     ret = TRUE;
 
-//cleanup:
+    //cleanup:
     return ret;
 }
 

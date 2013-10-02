@@ -37,8 +37,8 @@
  * as a sandbox.
  */
 
-#define GVIR_SANDBOX_CONFIG_NETWORK_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK, GVirSandboxConfigNetworkPrivate))
+#define GVIR_SANDBOX_CONFIG_NETWORK_GET_PRIVATE(obj)                    \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK, GVirSandboxConfigNetworkPrivate))
 
 struct _GVirSandboxConfigNetworkPrivate
 {
@@ -223,7 +223,7 @@ const gchar *gvir_sandbox_config_network_get_source(GVirSandboxConfigNetwork *co
 
 
 void gvir_sandbox_config_network_set_mac(GVirSandboxConfigNetwork *config,
-                                              const gchar *mac)
+                                         const gchar *mac)
 {
     GVirSandboxConfigNetworkPrivate *priv = config->priv;
     g_free(priv->mac);

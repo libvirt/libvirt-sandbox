@@ -37,8 +37,8 @@
  * address, broadcast address and network address.
  */
 
-#define GVIR_SANDBOX_CONFIG_NETWORK_ADDRESS_GET_PRIVATE(obj)                         \
-        (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ADDRESS, GVirSandboxConfigNetworkAddressPrivate))
+#define GVIR_SANDBOX_CONFIG_NETWORK_ADDRESS_GET_PRIVATE(obj)            \
+    (G_TYPE_INSTANCE_GET_PRIVATE((obj), GVIR_SANDBOX_TYPE_CONFIG_NETWORK_ADDRESS, GVirSandboxConfigNetworkAddressPrivate))
 
 struct _GVirSandboxConfigNetworkAddressPrivate
 {

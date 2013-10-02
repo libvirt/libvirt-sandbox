@@ -120,7 +120,7 @@ mount_mkfile(const char *file, int mode)
     if ((fd = open(file, O_CREAT|O_WRONLY, mode)) < 0 &&
         errno != EEXIST) {
         fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot open file %s: %s\n",
-                    __func__, file, strerror(errno));
+                __func__, file, strerror(errno));
         exit_poweroff();
     }
     if (fd != -1)
