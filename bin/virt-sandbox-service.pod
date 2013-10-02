@@ -45,10 +45,10 @@ file C</etc/libvirt/libvirt.conf> can have a default URI set.
 
 Display help message
 
-=item B<-c> URI, B<--connect URI>
+=item B<-c URI>, B<--connect URI>
 
-The connection URI for the hypervisor (only LXC or QEMU are
-supported currently).
+The connection URI for the hypervisor (currently only LXC URIs are
+supported).
 
 =back
 

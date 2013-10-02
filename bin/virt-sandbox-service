@@ -1202,6 +1202,9 @@ if __name__ == '__main__':
 
     try:
         args = parser.parse_args()
+        if args.uri[0:3] != "lxc":
+            sys.stderr.write("%s: only lxc:/// URIs are currently supported\n" % sys.argv[0])
+            sys.exit(1)
         args.func(args)
         sys.exit(0)
     except KeyboardInterrupt, e:

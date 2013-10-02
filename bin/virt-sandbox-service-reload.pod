@@ -24,15 +24,15 @@ The reload command will reload a sandbox container.  This is used when software 
 
 Display help message
 
-=item B<-c> URI, B<--connect URI>
+=item B<-c URI>, B<--connect URI>
+
+The connection URI for the hypervisor (currently only LXC URIs are
+supported).
 
 =item B<-u UNIT_FILE>, B<--unitfile UNIT_FILE>
 
 Name of the systemd unit file to reload within the container. Can be repeated
 if multiple unit files need to be reloaded within the sandbox.
-
-The connection URI for the hypervisor (only LXC or QEMU are
-supported currently).
 
 =back
 

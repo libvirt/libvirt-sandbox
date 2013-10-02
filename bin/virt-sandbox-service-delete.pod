@@ -26,8 +26,8 @@ Display help message
 
 =item B<-c URI>, B<--connect URI>
 
-The connection URI for the hypervisor (only LXC or QEMU are
-supported currently).
+The connection URI for the hypervisor (currently only LXC URIs are
+supported).
 
 =item B<-p PATH>, B<--path PATH>
 
