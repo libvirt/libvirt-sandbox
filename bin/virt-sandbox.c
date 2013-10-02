@@ -411,8 +411,8 @@ specifies the broadcast address. Some examples
 
 Configure the network interface with the static IPv4 or IPv6 route
 B<IP-NETWORK>. The B<PREFIX> value is the length of the network
-prefix in B<IP-NETWORK>. The optional B<GATEWAY> parameter
-specifies the address of the gateway. Some examples
+prefix in B<IP-NETWORK>. The B<GATEWAY> parameter specifies the
+address of the gateway for the route. Some examples
 
   route=192.168.122.255/24%192.168.1.1
 

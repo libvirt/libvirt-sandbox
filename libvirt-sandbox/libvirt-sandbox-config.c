@@ -1033,6 +1033,10 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
             if (tmp) {
                 *tmp = '\0';
                 gateway = tmp+1;
+            } else {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("Missing gateway in route %s"), param);
+                goto cleanup;
             }
 
             if (!(targetaddr = g_inet_address_new_from_string(target))) {
