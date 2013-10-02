@@ -65,7 +65,9 @@ Default: C<svirt_lxc_file_t>.
 
 =item B<-p PATH>, B<--path PATH>
 
-Set path to store container content.
+Set path to store container content. NB if this argument is used when creating
+a container, the exact same argument must also be used when later cloning or
+deleting the container.
 
 Default: C</var/lib/libvirt/filesystems>.
 

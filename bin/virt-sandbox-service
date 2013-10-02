@@ -167,7 +167,7 @@ class Container:
     def get_filesystem_path(self, name = None):
         if not name:
             name = self.get_name()
-        return self.DEFAULT_PATH + "/" + name
+        return "%s/%s" % (self.path, name)
 
     def get_image_path(self, name = None):
         if not name:
@@ -806,6 +806,7 @@ def delete(args):
         container = GenericContainer(uri=args.uri, config = config)
     else:
         container = SystemdContainer(uri=args.uri, config = config)
+    container.set_path(args.path)
     container.delete()
 
 def create(args):
@@ -913,6 +914,7 @@ def clone(args):
     else:
         container = SystemdContainer(uri=args.uri, config=config)
 
+    container.set_path(args.path)
     fd = open(container.get_config_path(),"r")
     recs = fd.read()
     fd.close()
@@ -934,6 +936,7 @@ def clone(args):
 
     if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
         container = GenericContainer(name=args.dest, uri=args.uri, create=True)
+        container.set_path(args.path)
     else:
         fd = open(container.get_unit_path())
         recs = fd.read()
@@ -948,6 +951,7 @@ def clone(args):
 
         config = LibvirtSandbox.Config.load_from_data(newrec)
         container = SystemdContainer(config=config, uri=args.uri)
+        container.set_path(args.path)
         container.gen_machine_id()
         container.gen_hostname()
 
@@ -1155,6 +1159,8 @@ def gen_clone_args(subparser):
     parser = subparser.add_parser("clone",
                                   help=_("Clone an existing sandbox container"))
     parser.set_defaults(func=clone)
+    parser.add_argument("-p", "--path", dest="path",  default=c.DEFAULT_PATH,
+                        help=_("select path to copy sandbox content from/to.  Default: %s") % c.DEFAULT_PATH)
     parser.add_argument("-s", "--security", dest="security",
                         default=default_security_opts(),
                         help=_("Specify the security model configuration for the sandbox: Defaults to dynamic"))
@@ -1167,6 +1173,8 @@ def gen_clone_args(subparser):
 def gen_delete_args(subparser):
     parser = subparser.add_parser("delete",
                                    help=_("Delete a sandbox container"))
+    parser.add_argument("-p", "--path", dest="path",  default=c.DEFAULT_PATH,
+                        help=_("select path to delete sandbox content from.  Default: %s") % c.DEFAULT_PATH)
     requires_name(parser)
     parser.set_defaults(func=delete)
 

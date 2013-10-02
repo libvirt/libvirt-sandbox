@@ -6,7 +6,7 @@ virt-sandbox-service clone - clone an existing Secure container
 
 Clone a Security container
 
-  virt-sandbox-service [-c URI] clone [-h] [-s SECURITY-OPTS] SOURCE DEST
+  virt-sandbox-service [-c URI] clone [-h] [-p PATH] [-s SECURITY-OPTS] SOURCE DEST
 
 =head1 DESCRIPTION
 
@@ -30,6 +30,13 @@ Display help message
 
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
+
+=item B<-p PATH>, B<--path PATH>
+
+Set path to copy container content from/to. This argument must match the value of
+the C<-p> arg given when creating the original source container.
+
+Default: C</var/lib/libvirt/filesystems>.
 
 =item B<-s SECURITY-OPTIONS>, B<--security=SECURITY-OPTIONS>
 

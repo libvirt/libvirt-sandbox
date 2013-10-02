@@ -4,7 +4,7 @@ virt-sandbox-service delete - Delete a security container
 
 =head1 SYNOPSIS
 
-  virt-sandbox-service [-c URI] delete [-h] NAME
+  virt-sandbox-service [-c URI] delete [-h] [-p PATH] NAME
 
 =head1 DESCRIPTION
 
@@ -24,10 +24,17 @@ The delete command will delete a sandbox container.
 
 Display help message
 
-=item B<-c> URI, B<--connect URI>
+=item B<-c URI>, B<--connect URI>
 
 The connection URI for the hypervisor (only LXC or QEMU are
 supported currently).
+
+=item B<-p PATH>, B<--path PATH>
+
+Set path to delete container content from. This argument must match the value of
+the C<-p> arg given when creating the original source container.
+
+Default: C</var/lib/libvirt/filesystems>.
 
 =back
 
