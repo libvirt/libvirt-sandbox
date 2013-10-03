@@ -33,6 +33,7 @@ Requires: libvirt-client >= %{libvirt_version}
 Requires: systemd >= 198
 Requires: pygobject3-base
 Requires: libselinux-python
+Requires: %{name}-libs = %{version}-%{release}
 
 %package libs
 Group: Development/Libraries
