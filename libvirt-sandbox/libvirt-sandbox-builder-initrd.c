@@ -349,32 +349,6 @@ static GList *gvir_sandbox_builder_initrd_find_modules(GList *modnames,
                                                              moddir,
                                                              error);
 
-    GList *tmp1 = modnames;
-
-    if (!modfiles)
-        goto cleanup;
-
-    while (tmp1) {
-        gboolean found = FALSE;
-        GList *tmp2 = modfiles;
-        while (tmp2) {
-            if (g_str_equal(g_file_get_basename(tmp2->data), tmp1->data))
-                found = TRUE;
-            tmp2 = tmp2->next;
-        }
-        if (!found) {
-            g_set_error(error, GVIR_SANDBOX_BUILDER_INITRD_ERROR, 0,
-                        _("Cannot find module file for %s"), (const gchar*)tmp1->data);
-            g_list_foreach(modfiles, (GFunc)g_object_unref, NULL);
-            g_list_free(modfiles);
-            modfiles = NULL;
-            goto cleanup;
-        }
-
-        tmp1 = tmp1->next;
-    }
-
- cleanup:
     g_free(moddirpath);
     g_object_unref(moddir);
     return modfiles;
