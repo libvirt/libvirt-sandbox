@@ -164,6 +164,9 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     gvir_sandbox_config_initrd_set_init(initrd, LIBEXECDIR "/libvirt-sandbox-init-qemu");
 
     gvir_sandbox_config_initrd_add_module(initrd, "fscache.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "virtio.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "virtio_ring.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "virtio_pci.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "9pnet.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "9p.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "9pnet_virtio.ko");
@@ -172,6 +175,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     if (gvir_sandbox_config_has_mounts_with_type(config,
                                                  GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE))
         gvir_sandbox_config_initrd_add_module(initrd, "virtio_blk.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "virtio_console.ko");
 #if 0
     gvir_sandbox_config_initrd_add_module(initrd, "virtio_balloon.ko");
 #endif
