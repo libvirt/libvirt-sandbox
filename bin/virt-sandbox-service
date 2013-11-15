@@ -1027,6 +1027,15 @@ def upgrade(args):
     upgrade_filesystem(args)
 
 import argparse
+class AddMount(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        newval = getattr(namespace, self.dest)
+        if not newval:
+            newval = []
+        for v in values:
+            newval.append(v)
+        setattr(namespace, self.dest, newval)
+
 class SizeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, int(values))
@@ -1110,7 +1119,7 @@ def gen_create_args(subparser):
     parser.add_argument("-i", "--imagesize", dest="imagesize", default = None,
                        action=SizeAction,
                        help=_("create image of this many megabytes."))
-    parser.add_argument("-m", "--mount", dest="mounts",default=[], nargs="*",
+    parser.add_argument("-m", "--mount", dest="mounts",default=[], nargs="*", action=AddMount,
                         help=_("Mount a filesytem in the sandbox"))
     parser.add_argument("-N", "--network", dest="network",
                         action=SetNet, default=[],
