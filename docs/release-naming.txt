@@ -24,7 +24,7 @@ Africa
 
 Asia
 
-         Cholistan – a desert in Pakistan
+0.5.1    Cholistan – a desert in Pakistan
          Dasht-i-Margo SW afganistani
          Gobi – a desert in Mongolia and China
          Indus Valley Desert – a desert located in Pakistan

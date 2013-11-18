@@ -1,6 +1,54 @@
       libvirt Sandbox News
       ====================
 
+0.5.1 - "Cholistan" - 2013-11-18
+--------------------------------
+
+ - Fix path to systemd binary (prefers dir /lib/systemd not /bin)
+ - Remove obsolete commands from virt-sandbox-service man page
+ - Fix delete of running service container
+ - Allow use of custom root dirs with 'virt-sandbox --root DIR'
+ - Fix 'upgrade' command for virt-sandbox-service generic services
+ - Fix logrotate script to use virsh for listing sandboxed services
+ - Add 'inherit' option for virt-sandbox '-s' security context
+   option, to auto-copy calling process' context
+ - Remove non-existant '-S' option froom virt-sandbox-service man
+   page
+ - Fix line break formatting of man page
+ - Mention LIBVIRT_DEFAULT_URI in virt-sandbox-service man page
+ - Check some return values in libvirt-sandbox-init-qemu
+ - Remove unused variables
+ - Fix crash with partially specified mount option string
+ - Add man page docs for 'ram' mount type
+ - Avoid close of un-opened file descriptor
+ - Fix leak of file handles in init helpers
+ - Log a message if sandbox cleanup fails
+ - Cope with domain being missing when deleting container
+ - Improve stack trace diagnostics in virt-sandbox-service
+ - Fix virt-sandbox-service content copying code when faced with
+   non-regular files.
+ - Improve error reporting if kernel does not exist
+ - Allow kernel version/path/kmod to be set with virt-sandbox
+ - Don't overmount '/root' in QEMU sandboxes by default
+ - Fix nosuid / nodev mount options for tmpfs
+ - Force 9p2000.u protocol version to avoid QEMU bugs
+ - Fix cleanup when failing to start interactive sandbox
+ - Create copy of kernel from /boot to allow relabelling
+ - Bulk re-indent of code
+ - Avoid crash when gateway is missing in network options
+ - Fix symlink target created in multi-user.target.wants
+ - Add '-p PATH' option for virt-sandbox-service clone/delete
+   to match 'create' command option.
+ - Only allow 'lxc:///' URIs with virt-sandbox-service
+   until further notice
+ - Rollback state if cloning a service sandbox fails
+ - Add more kernel modules instead of assuming they are
+   all builtins
+ - Don't complain if some kmods are missing, as they may
+   be builtins
+ - Allow --mount to be repeated with virt-sandbox-service
+
+
 0.5.0 - "Sahara Desert" - 2013-08-01
 ------------------------------------
 
