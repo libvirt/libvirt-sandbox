@@ -130,7 +130,9 @@ static void gvir_sandbox_config_network_finalize(GObject *object)
     g_free(priv->source);
     g_free(priv->mac);
     g_list_foreach(priv->addrs, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->addrs);
     g_list_foreach(priv->routes, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->routes);
 
     G_OBJECT_CLASS(gvir_sandbox_config_network_parent_class)->finalize(object);
 }
