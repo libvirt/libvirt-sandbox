@@ -1225,6 +1225,9 @@ if __name__ == '__main__':
         if args.uri[0:3] != "lxc":
             sys.stderr.write("%s: only lxc:/// URIs are currently supported\n" % sys.argv[0])
             sys.exit(1)
+        if os.geteuid() != 0:
+            sys.stderr.write("%s: lxc:/// URIs are only supported when run as root\n" % sys.argv[0])
+            sys.exit(1)
         args.func(args)
         sys.exit(0)
     except KeyboardInterrupt, e:
