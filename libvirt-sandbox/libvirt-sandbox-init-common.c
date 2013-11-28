@@ -112,14 +112,21 @@ start_shell(void)
 static gboolean start_dhcp(const gchar *devname, GError **error)
 {
     const gchar *argv[] = { "/sbin/dhclient", "--no-pid", devname, NULL };
+    gboolean ret;
+    sigset_t newset;
+    sigset_t oldset;
 
-    if (!g_spawn_async(NULL, (gchar**)argv, NULL,
-                       G_SPAWN_STDOUT_TO_DEV_NULL |
-                       G_SPAWN_STDERR_TO_DEV_NULL,
-                       NULL, NULL, NULL, error))
-        return FALSE;
+    sigemptyset(&newset);
+    sigaddset(&newset, SIGHUP);
 
-    return TRUE;
+    sigprocmask(SIG_BLOCK, &newset, &oldset);
+    ret = g_spawn_async(NULL, (gchar**)argv, NULL,
+                        G_SPAWN_STDOUT_TO_DEV_NULL |
+                        G_SPAWN_STDERR_TO_DEV_NULL,
+                        NULL, NULL, NULL, error);
+    sigprocmask(SIG_SETMASK, &oldset, NULL);
+
+    return ret;
 }
 
 
