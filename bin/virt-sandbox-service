@@ -287,6 +287,13 @@ class Container:
         context.define()
         sys.stdout.write(_("Created sandbox config %s\n") % get_config_path(self.name))
 
+    def update_config(self):
+        self.connect()
+        context = self.context()
+        context.undefine()
+        context.define()
+        sys.stdout.write(_("Re-created sandbox config %s\n") % get_config_path(self.name))
+
     def delete(self):
         self.connect()
         self.conn.fetch_domains(None)
@@ -1009,10 +1016,28 @@ def upgrade_config_legacy(path):
     os.remove(path)
 
 
+def upgrade_config_current(path):
+    config = LibvirtSandbox.Config.load_from_path(path)
+
+    if isinstance(config, gi.repository.LibvirtSandbox.ConfigServiceGeneric):
+        container = GenericContainer(uri=args.uri, config=config)
+    else:
+        container = SystemdContainer(uri=args.uri, config=config)
+
+    # Create new config file + libvirt persistent XML config
+    container.update_config()
+
+
 def upgrade_config(args):
-    configfile = get_legacy_config_path(args.name)
-    if os.path.exists(configfile):
-        upgrade_config_legacy(configfile)
+    newconfigfile = get_config_path(args.name)
+    oldconfigfile = get_legacy_config_path(args.name)
+    if os.path.exists(oldconfigfile):
+        upgrade_config_legacy(oldconfigfile)
+    elif os.path.exists(newconfigfile):
+        upgrade_config_current(newconfigfile)
+    else:
+        sys.stderr.write("Sandbox '%s' does not exist\n" % args.name)
+        sys.exit(1)
 
 
 def upgrade_filesystem(args):

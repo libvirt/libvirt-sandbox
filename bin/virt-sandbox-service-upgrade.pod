@@ -21,6 +21,10 @@ with the currently installed software version. NB this works in an upgrade
 direction only, it is not possible to install older versions of the software
 and use this command to downgrade the configs.
 
+If you have editted the main sandbox configuration file manually, this
+command can also be used to update the libvirt guest configuration to
+match it.
+
 =head1 OPTIONS
 
 =over 4
