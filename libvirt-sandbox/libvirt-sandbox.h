@@ -25,6 +25,7 @@
 
 /* External includes */
 #include <libvirt-gobject/libvirt-gobject.h>
+#include <locale.h>
 
 /* Local includes */
 #include <libvirt-sandbox/libvirt-sandbox-main.h>
@@ -37,6 +38,8 @@
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-guest-bind.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-ram.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-address.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-network-filterref-parameter.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-network-filterref.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network-route.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-network.h>
 #include <libvirt-sandbox/libvirt-sandbox-config.h>

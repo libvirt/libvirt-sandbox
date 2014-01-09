@@ -47,6 +47,7 @@ struct _GVirSandboxConfigNetworkPrivate
     gchar *mac;
     GList *routes;
     GList *addrs;
+    GVirSandboxConfigNetworkFilterref *filterref;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfigNetwork, gvir_sandbox_config_network, G_TYPE_OBJECT);
@@ -133,6 +134,8 @@ static void gvir_sandbox_config_network_finalize(GObject *object)
     g_list_free(priv->addrs);
     g_list_foreach(priv->routes, (GFunc)g_object_unref, NULL);
     g_list_free(priv->routes);
+    if (priv->filterref)
+        g_object_unref(priv->filterref);
 
     G_OBJECT_CLASS(gvir_sandbox_config_network_parent_class)->finalize(object);
 }
@@ -285,6 +288,45 @@ GList *gvir_sandbox_config_network_get_addresses(GVirSandboxConfigNetwork *confi
     g_list_foreach(priv->addrs, (GFunc)g_object_ref, NULL);
     return g_list_copy(priv->addrs);
 }
+
+/**
+ * gvir_sandbox_config_network_set_filterref:
+ * @config: (transfer none): the sandbox network configuration
+ * @ref: (transfer none): the network filterref
+ *
+ * Set a network filterref for the given network.
+ */
+void gvir_sandbox_config_network_set_filterref(GVirSandboxConfigNetwork *config,
+                                               GVirSandboxConfigNetworkFilterref *filterref)
+{
+    GVirSandboxConfigNetworkPrivate *priv;
+
+    g_return_if_fail(GVIR_SANDBOX_IS_CONFIG_NETWORK(config));
+    g_return_if_fail(GVIR_SANDBOX_IS_CONFIG_NETWORK_FILTERREF(filterref));
+    priv = config->priv;
+    if (priv->filterref)
+        g_object_unref(priv->filterref);
+    priv->filterref = g_object_ref(filterref);
+}
+
+
+/**
+ * gvir_sandbox_config_network_get_filterref:
+ * @config: (transfer none): the sandbox network configuration
+ *
+ * Retrieve the associated filter reference.
+ *
+ * Returns: (transfer none): The associated filter reference.
+ */
+GVirSandboxConfigNetworkFilterref *gvir_sandbox_config_network_get_filterref(GVirSandboxConfigNetwork *config)
+{
+    GVirSandboxConfigNetworkPrivate *priv;
+
+    g_return_val_if_fail(GVIR_SANDBOX_IS_CONFIG_NETWORK(config), NULL);
+    priv = config->priv;
+    return priv->filterref;
+}
+
 
 /**
  * gvir_sandbox_config_network_add_route:

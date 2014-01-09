@@ -78,6 +78,10 @@ void gvir_sandbox_config_network_add_address(GVirSandboxConfigNetwork *config,
                                              GVirSandboxConfigNetworkAddress *addr);
 GList *gvir_sandbox_config_network_get_addresses(GVirSandboxConfigNetwork *config);
 
+void gvir_sandbox_config_network_set_filterref(GVirSandboxConfigNetwork *config,
+                                               GVirSandboxConfigNetworkFilterref *ref);
+GVirSandboxConfigNetworkFilterref *gvir_sandbox_config_network_get_filterref(GVirSandboxConfigNetwork *config);
+
 void gvir_sandbox_config_network_add_route(GVirSandboxConfigNetwork *config,
                                            GVirSandboxConfigNetworkRoute *addr);
 GList *gvir_sandbox_config_network_get_routes(GVirSandboxConfigNetwork *config);

@@ -911,6 +911,8 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
  *  source=private,address=192.168.122.1/24%192.168.122.255,
  *  address=192.168.122.1/24%192.168.122.255,address=2001:212::204:2/64
  *  route=192.168.122.255/24%192.168.1.1
+ *  filter=clean-traffic
+ *  filter.ip=192.168.122.1
  */
 gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
                                               const gchar *network,
@@ -924,8 +926,10 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
     gchar **params = g_strsplit(network, ",", 50);
     gsize j = 0;
     GVirSandboxConfigNetwork *net;
+    GVirSandboxConfigNetworkFilterref *filter;
 
     net = gvir_sandbox_config_network_new();
+    filter = gvir_sandbox_config_network_filterref_new();
     gvir_sandbox_config_network_set_dhcp(net, FALSE);
 
     while (params && params[j]) {
@@ -947,6 +951,40 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
         } else if (g_str_has_prefix(param, "mac=")) {
             gvir_sandbox_config_network_set_mac(net,
                                                 param + strlen("mac="));
+        } else if (g_str_has_prefix(param, "filter.")) {
+            GVirSandboxConfigNetworkFilterrefParameter *filter_param;
+            gchar *tail = g_strdup(param + strlen("filter."));
+            gchar *equ = g_strrstr(tail, "=");
+            gchar *name, *name_up, *value;
+
+            if (equ == NULL) {
+                g_free(tail);
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("No assignment in filter parameter configuration"));
+                g_object_unref(net);
+                goto cleanup;
+            }
+
+            name = g_strndup(tail, equ - tail);
+            value = g_strdup(equ + 1);
+            /* Convert to upcase for convenience. */
+            name_up = g_ascii_strup(name, -1);
+            g_free(name);
+
+            filter_param = gvir_sandbox_config_network_filterref_parameter_new();
+            gvir_sandbox_config_network_filterref_parameter_set_name(filter_param, name_up);
+            gvir_sandbox_config_network_filterref_parameter_set_value(filter_param, value);
+            gvir_sandbox_config_network_filterref_add_parameter(filter, filter_param);
+
+            g_free(tail);
+            g_free(name_up);
+            g_free(value);
+        } else if (g_str_has_prefix(param, "filter=")) {
+            gchar *name = g_strdup(param + strlen("filter="));
+
+            gvir_sandbox_config_network_filterref_set_name(filter, name);
+            gvir_sandbox_config_network_set_filterref(net, filter);
+            g_free(name);
         } else if (g_str_has_prefix(param, "address=")) {
             GVirSandboxConfigNetworkAddress *addr;
             GInetAddress *primaryaddr;
@@ -1090,6 +1128,7 @@ gboolean gvir_sandbox_config_add_network_opts(GVirSandboxConfig *config,
 
     ret = TRUE;
  cleanup:
+    g_object_unref(filter);
     return ret;
 }
 
