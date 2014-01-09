@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-builder-private.h"
 
 /**
  * SECTION: libvirt-sandbox-builder
@@ -444,6 +445,45 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
     GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
 
     return klass->clean_post_stop(builder, config, statedir, error);
+}
+
+
+void gvir_sandbox_builder_set_filterref(GVirSandboxBuilder *builder,
+                                        GVirConfigDomainInterface *iface,
+                                        GVirSandboxConfigNetworkFilterref *filterref)
+{
+    GVirConfigDomainInterfaceFilterref *glib_fref;
+
+    GList *param_iter, *parameters;
+    const gchar *fref_name = gvir_sandbox_config_network_filterref_get_name(filterref);
+
+    glib_fref = gvir_config_domain_interface_filterref_new();
+    gvir_config_domain_interface_filterref_set_name(glib_fref, fref_name);
+    param_iter = parameters = gvir_sandbox_config_network_filterref_get_parameters(filterref);
+    while (param_iter) {
+        const gchar *name;
+        const gchar *value;
+        GVirSandboxConfigNetworkFilterrefParameter *param = GVIR_SANDBOX_CONFIG_NETWORK_FILTERREF_PARAMETER(param_iter->data);
+        GVirConfigDomainInterfaceFilterrefParameter *glib_param;
+
+        name = gvir_sandbox_config_network_filterref_parameter_get_name(param);
+        value = gvir_sandbox_config_network_filterref_parameter_get_value(param);
+
+        glib_param = gvir_config_domain_interface_filterref_parameter_new();
+        gvir_config_domain_interface_filterref_parameter_set_name(glib_param, name);
+        gvir_config_domain_interface_filterref_parameter_set_value(glib_param, value);
+
+        gvir_config_domain_interface_filterref_add_parameter(glib_fref, glib_param);
+        g_object_unref(glib_param);
+
+        param_iter = param_iter->next;
+    }
+
+    g_list_foreach(parameters, (GFunc)g_object_unref, NULL);
+    g_list_free(parameters);
+
+    gvir_config_domain_interface_set_filterref(iface, glib_fref);
+    g_object_unref(glib_fref);
 }
 
 /*

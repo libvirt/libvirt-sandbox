@@ -105,6 +105,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-builder-initrd.c \
 			libvirt-sandbox-builder-machine.c \
 			libvirt-sandbox-builder-container.c \
+			libvirt-sandbox-builder-private.h \
 			libvirt-sandbox-console.c \
 			libvirt-sandbox-console-raw.c \
 			libvirt-sandbox-console-rpc.c \

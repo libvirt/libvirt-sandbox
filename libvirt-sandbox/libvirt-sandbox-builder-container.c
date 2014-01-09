@@ -26,6 +26,7 @@
 #include <glib/gi18n.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-builder-private.h"
 
 /**
  * SECTION: libvirt-sandbox-builder-container
@@ -325,7 +326,6 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
         const gchar *source, *mac;
         GVirSandboxConfigNetwork *network = GVIR_SANDBOX_CONFIG_NETWORK(tmp->data);
         GVirSandboxConfigNetworkFilterref *filterref;
-        GVirConfigDomainInterfaceFilterref *glib_fref;
 
         iface = gvir_config_domain_interface_network_new();
         source = gvir_sandbox_config_network_get_source(network);
@@ -344,35 +344,9 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 
         filterref = gvir_sandbox_config_network_get_filterref(network);
         if (filterref) {
-            GList *param_iter, *parameters;
-            const gchar *fref_name = gvir_sandbox_config_network_filterref_get_name(filterref);
-            glib_fref = gvir_config_domain_interface_filterref_new();
-            gvir_config_domain_interface_filterref_set_name(glib_fref, fref_name);
-            param_iter = parameters = gvir_sandbox_config_network_filterref_get_parameters(filterref);
-            while (param_iter) {
-                const gchar *name;
-                const gchar *value;
-                GVirSandboxConfigNetworkFilterrefParameter *param = GVIR_SANDBOX_CONFIG_NETWORK_FILTERREF_PARAMETER(param_iter->data);
-                GVirConfigDomainInterfaceFilterrefParameter *glib_param;
-
-                name = gvir_sandbox_config_network_filterref_parameter_get_name(param);
-                value = gvir_sandbox_config_network_filterref_parameter_get_value(param);
-
-                glib_param = gvir_config_domain_interface_filterref_parameter_new();
-                gvir_config_domain_interface_filterref_parameter_set_name(glib_param, name);
-                gvir_config_domain_interface_filterref_parameter_set_value(glib_param, value);
-
-                gvir_config_domain_interface_filterref_add_parameter(glib_fref, glib_param);
-                g_object_unref(glib_param);
-
-                param_iter = param_iter->next;
-            }
-
-            g_list_foreach(parameters, (GFunc)g_object_unref, NULL);
-            g_list_free(parameters);
-
-            gvir_config_domain_interface_set_filterref(GVIR_CONFIG_DOMAIN_INTERFACE(iface), glib_fref);
-            g_object_unref(glib_fref);
+            gvir_sandbox_builder_set_filterref(builder,
+                                               GVIR_CONFIG_DOMAIN_INTERFACE(iface),
+                                               filterref);
         }
 
         g_object_unref(iface);
