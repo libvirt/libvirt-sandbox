@@ -242,43 +242,35 @@ libvirt-sandbox-protocol.h: $(srcdir)/$(PROTOCOL_GENERATOR) $(SANDBOX_PROTOCOL_F
 	$(AM_V_GEN)$(PERL) -w $(srcdir)/$(PROTOCOL_GENERATOR) $(RPCGEN) -h $(SANDBOX_PROTOCOL_FILES:%=$(srcdir)/%) $@
 
 
-if WITH_INTROSPECTION
+-include $(INTROSPECTION_MAKEFILE)
+INTROSPECTION_GIRS =
 
-LibvirtSandbox-1.0.gir: libvirt-sandbox-1.0.la $(G_IR_SCANNER) Makefile.am
-	$(AM_V_GEN)PKG_CONFIG_PATH=$(top_builddir) $(G_IR_SCANNER) \
-                --quiet \
-                --warn-all \
-                --namespace LibvirtSandbox \
-                --nsversion 1.0 \
-                --include LibvirtGObject-1.0 \
-                --identifier-prefix=GVirSandbox \
-                --symbol-prefix=gvir_sandbox \
-                --library=$(builddir)/libvirt-sandbox-1.0.la \
-                --output $@ \
-                -I$(top_srcdir) \
-                -I$(top_builddir) \
-                --verbose \
-                --pkg=libvirt-gobject-1.0 \
-                --c-include="libvirt-sandbox/libvirt-sandbox.h" \
-                --pkg-export=libvirt-sandbox-1.0 \
-                $(srcdir)/libvirt-sandbox.h \
-                $(SANDBOX_SOURCE_FILES:%=$(srcdir)/%) \
-                $(SANDBOX_HEADER_FILES:%=$(srcdir)/%) \
-		$(SANDBOX_GENERATED_ENUM_FILES:%=%) \
-		$(NULL)
+if HAVE_INTROSPECTION
+LibvirtSandbox-1.0.gir: libvirt-sandbox-1.0.la
+LibvirtSandbox_1_0_gir_INCLUDES = LibvirtGObject-1.0
+LibvirtSandbox_1_0_gir_PACKAGES = libvirt-gobject-1.0
+LibvirtSandbox_1_0_gir_EXPORT_PACKAGES = libvirt-sandbox-1.0
+LibvirtSandbox_1_0_gir_LIBS = libvirt-sandbox-1.0.la
+LibvirtSandbox_1_0_gir_FILES = \
+	$(srcdir)/libvirt-sandbox.h \
+	$(SANDBOX_SOURCE_FILES:%=$(srcdir)/%) \
+	$(SANDBOX_HEADER_FILES:%=$(srcdir)/%) \
+	$(SANDBOX_GENERATED_ENUM_FILES:%=%) \
+	$(NULL)
+LibvirtSandbox_1_0_gir_CFLAGS = $(libvirt_sandbox_1_0_la_CFLAGS)
+LibvirtSandbox_1_0_gir_SCANNERFLAGS = \
+	--warn-all \
+	--identifier-prefix=GVirSandbox \
+	--symbol-prefix=gvir_sandbox \
+	--c-include="libvirt-sandbox/libvirt-sandbox.h" \
+	$(NULL)
+INTROSPECTION_GIRS += LibvirtSandbox-1.0.gir
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = LibvirtSandbox-1.0.gir
 
-typelibsdir = $(libdir)/girepository-1.0
-typelibs_DATA = LibvirtSandbox-1.0.typelib
+typelibdir = $(libdir)/girepository-1.0
+typelib_DATA = LibvirtSandbox-1.0.typelib
 
-%.typelib: %.gir
-	$(AM_V_GEN)$(G_IR_COMPILER) \
-                --includedir=$(builddir) \
-                --includedir=$(girdir) \
-                -o $@ $<
-
-CLEANFILES += $(gir_DATA) $(typelibs_DATA)
-
-endif # WITH_INTROSPECTION
+CLEANFILES += $(gir_DATA) $(typelib_DATA)
+endif # HAVE_INTROSPECTION
