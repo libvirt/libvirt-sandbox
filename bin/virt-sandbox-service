@@ -1071,7 +1071,7 @@ class CheckUnit(argparse.Action):
             src = "/etc/systemd/system/" + unit
             if os.path.exists(src):
                 return src
-            src = "/lib/systemd/system/" + unit
+            src = "/usr/lib/systemd/system/" + unit
             if os.path.exists(src):
                 return src
             return None
