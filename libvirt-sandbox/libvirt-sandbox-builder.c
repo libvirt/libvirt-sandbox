@@ -322,12 +322,10 @@ static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *build
     return TRUE;
 }
 
-
-static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder G_GNUC_UNUSED,
-                                                        GVirSandboxConfig *config G_GNUC_UNUSED,
-                                                        const gchar *statedir G_GNUC_UNUSED,
-                                                        GVirConfigDomain *domain,
-                                                        GError **error G_GNUC_UNUSED)
+static gboolean gvir_sandbox_builder_construct_security_selinux (GVirSandboxBuilder *builder,
+                                                                 GVirSandboxConfig *config,
+                                                                 GVirConfigDomain *domain,
+                                                                 GError **error)
 {
     GVirConfigDomainSeclabel *sec = gvir_config_domain_seclabel_new();
     const char *label = gvir_sandbox_config_get_security_label(config);
@@ -356,6 +354,46 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
 
     gvir_config_domain_set_seclabel(domain, sec);
     g_object_unref(sec);
+
+    return TRUE;
+}
+
+static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder,
+                                                        GVirSandboxConfig *config,
+                                                        const gchar *statedir G_GNUC_UNUSED,
+                                                        GVirConfigDomain *domain,
+                                                        GError **error)
+{
+    GVirConnection *connection = gvir_sandbox_builder_get_connection(builder);
+    GVirConfigCapabilities *configCapabilities;
+    GVirConfigCapabilitiesHost *hostCapabilities;
+    GList *secmodels, *iter;
+    gboolean supportsSelinux = FALSE;
+
+    /* What security models are available on the host? */
+    if (!(configCapabilities = gvir_connection_get_capabilities(connection, error))) {
+        g_object_unref(connection);
+        return FALSE;
+    }
+
+    hostCapabilities = gvir_config_capabilities_get_host(configCapabilities);
+
+    secmodels = gvir_config_capabilities_host_get_secmodels(hostCapabilities);
+    for (iter = secmodels; iter != NULL; iter = iter->next) {
+        if (g_str_equal(gvir_config_capabilities_host_secmodel_get_model(
+                GVIR_CONFIG_CAPABILITIES_HOST_SECMODEL(iter->data)), "selinux"))
+            supportsSelinux = TRUE;
+        g_object_unref(iter->data);
+    }
+
+    g_list_free(secmodels);
+    g_object_unref(hostCapabilities);
+    g_object_unref(configCapabilities);
+    g_object_unref(connection);
+
+    if (supportsSelinux)
+        return gvir_sandbox_builder_construct_security_selinux(builder, config,
+                                                               domain, error);
 
     return TRUE;
 }
