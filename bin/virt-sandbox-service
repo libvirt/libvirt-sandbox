@@ -314,10 +314,32 @@ class Container:
         context = self.context()
         context.undefine()
 
+    def get_security_model(self):
+        # XXX selinux is the default for the while, needs to be configurable someday
+        model = "selinux"
+        supported = False
+
+        # Make sure we have a connection
+        self.connect()
+
+        # Loop over the security models from the host capabilities
+        configCaps = self.conn.get_capabilities()
+        hostCaps = configCaps.get_host()
+        secmodels = hostCaps.get_secmodels()
+        for secmodel in secmodels:
+            if secmodel.get_model() == model:
+                supported = True
+                break
+
+        if not supported:
+            model = None
+        return model
+
 
     def create(self):
         self.connect()
-        if self.config.get_security_dynamic() and not self.use_image:
+        if self.get_security_model() is not None and \
+           self.config.get_security_dynamic() and not self.use_image:
             raise ValueError([_("Dynamic security label only supported for image based containers")])
         if self.uri != "lxc:///":
             self.config.set_shell(True)
