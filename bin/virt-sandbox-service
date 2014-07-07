@@ -414,7 +414,7 @@ def is_template_unit(unit):
 class SystemdContainer(Container):
     IGNORE_DIRS        = [ "/var/run/", "/etc/logrotate.d/", "/etc/pam.d" ]
     DEFAULT_DIRS       = [ "/etc", "/var" ]
-    PROFILE_FILES      = [ ".bashrc", ".bash_profile" ]
+    PROFILE_FILES      = [ ".bashrc", ".bash_profile", ".profile" ]
     MACHINE_ID         = "/etc/machine-id"
     HOSTNAME           = "/etc/hostname"
     SYSVINIT_PATH      = "/etc/rc.d"
@@ -422,7 +422,7 @@ class SystemdContainer(Container):
     MULTI_USER_WANTS_PATH = "/usr/lib/systemd/system/multi-user.target.wants"
     SYSINIT_WANTS_PATH = "/usr/lib/systemd/system/sysinit.target.wants"
     SOCKET_WANTS_PATH  = "/usr/lib/systemd/system/sockets.target.wants"
-    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", SYSVINIT_PATH ]
+    MAKE_SYSTEM_DIRS   = [ "/var/lib/dhclient", "/var/lib/dbus", "/var/log", "/var/spool", "/var/cache", "/var/tmp", "/var/lib/nfs/rpc_pipefs", SYSVINIT_PATH, "/lib/lsb" ]
     BIND_SYSTEM_DIRS   = [ "/var", "/home", "/root", "/etc/systemd/system", "/etc/rc.d", "/usr/lib/systemd/system/basic.target.wants", "/usr/lib/systemd/system/local-fs.target.wants", ANACONDA_WANTS_PATH, MULTI_USER_WANTS_PATH, SYSINIT_WANTS_PATH, SOCKET_WANTS_PATH ]
     BIND_SYSTEM_FILES  = [ MACHINE_ID, "/etc/fstab", HOSTNAME ]
     LOCAL_LINK_FILES   = { SYSINIT_WANTS_PATH : [ "systemd-tmpfiles-setup.service" ] , SOCKET_WANTS_PATH : [ "dbus.socket", "systemd-journald.socket", "systemd-shutdownd.socket", "systemd-initctl.socket" ] }
@@ -722,8 +722,15 @@ PrivateNetwork=false
         destpath = self.dest + self.SYSVINIT_PATH
         for i in range(7):
             os.mkdir(destpath+("/rc%s.d" % i))
-        os.mkdir(destpath+"/init.d")
-        shutil.copy(self.SYSVINIT_PATH + "/init.d/functions" , destpath + "/init.d")
+
+        # Copy both /etc/rc.d/init.d/functions and /lib/lsb/init-functions, even
+        # though the latter is the one recommended
+        if os.path.exists(self.SYSVINIT_PATH + "/init.d/functions"):
+            os.mkdir(destpath+"/init.d")
+            shutil.copy(self.SYSVINIT_PATH + "/init.d/functions" , destpath + "/init.d")
+
+        if os.path.exists("/lib/lsb/init-functions"):
+            shutil.copy("/lib/lsb/init-functions" , self.dest + "/lib/lsb/")
 
         self.gen_machine_id()
         self.gen_hostname()
@@ -759,7 +766,8 @@ PrivateNetwork=false
 
         for p in self.PROFILE_FILES:
             profile = "/etc/skel/" + p
-            shutil.copy(profile, self.dest + "/root/")
+            if os.path.exists(profile):
+                shutil.copy(profile, self.dest + "/root/")
 
         self.fix_protection()
 
