@@ -111,7 +111,7 @@ start_shell(void)
 
 static gboolean start_dhcp(const gchar *devname, GError **error)
 {
-    const gchar *argv[] = { "/sbin/dhclient", "--no-pid", devname, NULL };
+    const gchar *argv[] = { "/sbin/dhclient", "-v", "--no-pid", devname, NULL };
     gboolean ret;
     sigset_t newset;
     sigset_t oldset;
