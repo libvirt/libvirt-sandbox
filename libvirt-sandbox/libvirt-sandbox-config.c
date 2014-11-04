@@ -2139,7 +2139,7 @@ gvir_sandbox_config_load_from_keyfile(GKeyFile *file,
     gchar *str = NULL;
     GType type;
 
-    /** XXX hack */
+    /* XXX hack */
     GVIR_SANDBOX_TYPE_CONFIG_INTERACTIVE;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE;
     GVIR_SANDBOX_TYPE_CONFIG_SERVICE_SYSTEMD;
