@@ -358,6 +358,31 @@ static gboolean gvir_sandbox_builder_construct_security_selinux (GVirSandboxBuil
     return TRUE;
 }
 
+static gboolean gvir_sandbox_builder_construct_security_apparmor(GVirSandboxBuilder *builder,
+                                                                 GVirSandboxConfig *config,
+                                                                 GVirConfigDomain *domain,
+                                                                 GError **error)
+{
+    GVirConfigDomainSeclabel *sec = gvir_config_domain_seclabel_new();
+    const char *label = gvir_sandbox_config_get_security_label(config);
+
+    gvir_config_domain_seclabel_set_model(sec, "apparmor");
+    if (gvir_sandbox_config_get_security_dynamic(config)) {
+        gvir_config_domain_seclabel_set_type(sec,
+                                             GVIR_CONFIG_DOMAIN_SECLABEL_DYNAMIC);
+    } else {
+        gvir_config_domain_seclabel_set_type(sec,
+                                             GVIR_CONFIG_DOMAIN_SECLABEL_STATIC);
+        if (label)
+            gvir_config_domain_seclabel_set_label(sec, label);
+    }
+
+    gvir_config_domain_set_seclabel(domain, sec);
+    g_object_unref(sec);
+
+    return TRUE;
+}
+
 static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *builder,
                                                         GVirSandboxConfig *config,
                                                         const gchar *statedir G_GNUC_UNUSED,
@@ -369,6 +394,7 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
     GVirConfigCapabilitiesHost *hostCapabilities;
     GList *secmodels, *iter;
     gboolean supportsSelinux = FALSE;
+    gboolean supportsAppArmor = FALSE;
 
     /* What security models are available on the host? */
     if (!(configCapabilities = gvir_connection_get_capabilities(connection, error))) {
@@ -383,6 +409,9 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
         if (g_str_equal(gvir_config_capabilities_host_secmodel_get_model(
                 GVIR_CONFIG_CAPABILITIES_HOST_SECMODEL(iter->data)), "selinux"))
             supportsSelinux = TRUE;
+        if (g_str_equal(gvir_config_capabilities_host_secmodel_get_model(
+                GVIR_CONFIG_CAPABILITIES_HOST_SECMODEL(iter->data)), "apparmor"))
+            supportsAppArmor = TRUE;
         g_object_unref(iter->data);
     }
 
@@ -394,6 +423,9 @@ static gboolean gvir_sandbox_builder_construct_security(GVirSandboxBuilder *buil
     if (supportsSelinux)
         return gvir_sandbox_builder_construct_security_selinux(builder, config,
                                                                domain, error);
+    else if (supportsAppArmor)
+        return gvir_sandbox_builder_construct_security_apparmor(builder, config,
+                                                                domain, error);
 
     return TRUE;
 }

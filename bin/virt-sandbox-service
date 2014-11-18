@@ -315,24 +315,25 @@ class Container:
         context.undefine()
 
     def get_security_model(self):
-        # XXX selinux is the default for the while, needs to be configurable someday
-        model = "selinux"
-        supported = False
+        model = None
 
         # Make sure we have a connection
         self.connect()
 
         # Loop over the security models from the host capabilities
+        # The first in "selinux" and "apparmor" will be the returned model
+        # Those two models can't coexist on a machine
         configCaps = self.conn.get_capabilities()
         hostCaps = configCaps.get_host()
         secmodels = hostCaps.get_secmodels()
         for secmodel in secmodels:
-            if secmodel.get_model() == model:
-                supported = True
+            if secmodel.get_model() == "selinux":
+                model = "selinux"
+                break
+            elif secmodel.get_model() == "apparmor":
+                model = "apparmor"
                 break
 
-        if not supported:
-            model = None
         return model
 
 
