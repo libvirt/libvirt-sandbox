@@ -658,7 +658,7 @@ WantedBy=multi-user.target
         self.config.add_mount(mount)
 
         for d in self.BIND_SYSTEM_DIRS:
-            if os.path.exists(d):
+            if d != "/var" and os.path.exists(d):
                 source = "%s%s" % ( self.dest, d)
                 self.add_bind_mount(source, d)
 
@@ -677,6 +677,10 @@ WantedBy=multi-user.target
             if not found:
                 source = "%s%s" % ( self.dest, d)
                 self.add_bind_mount(source, d)
+
+        # /var contains the mounted image if there is an image: should be the
+        # last thing to mount
+        self.add_bind_mount("%s/var" % self.dest, "/var")
         self.add_mounts()
 
     def get_expanded_unit_template(self, unit):
