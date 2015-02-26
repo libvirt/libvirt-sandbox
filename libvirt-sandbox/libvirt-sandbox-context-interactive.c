@@ -24,6 +24,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <glib/gi18n.h>
+
 #include "libvirt-sandbox/libvirt-sandbox.h"
 
 /**
@@ -60,6 +62,13 @@ enum {
 
 //static gint signals[LAST_SIGNAL];
 
+#define GVIR_SANDBOX_CONTEXT_INTERACTIVE_ERROR gvir_sandbox_context_interactive_error_quark()
+
+static GQuark
+gvir_sandbox_context_interactive_error_quark(void)
+{
+    return g_quark_from_static_string("gvir-sandbox-context-interactive");
+}
 
 static void gvir_sandbox_context_interactive_get_property(GObject *object,
                                                           guint prop_id,
@@ -198,6 +207,7 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
     gchar *emptydir;
     gchar *configfile;
     gboolean ret = FALSE;
+    const gchar *uri;
 
     if (!GVIR_SANDBOX_CONTEXT_CLASS(gvir_sandbox_context_interactive_parent_class)->start(ctxt, error))
         return FALSE;
@@ -212,6 +222,23 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
     configdir = g_build_filename(statedir, "config", NULL);
     configfile = g_build_filename(configdir, "sandbox.cfg", NULL);
     emptydir = g_build_filename(configdir, "empty", NULL);
+
+    uri = gvir_connection_get_uri(connection);
+
+    if (geteuid() == 0) {
+        if (!g_str_equal(uri, "lxc:///") &&
+            !g_str_equal(uri, "qemu:///system")) {
+            g_set_error(error, GVIR_SANDBOX_CONTEXT_INTERACTIVE_ERROR, 0,
+                        _("Only 'lxc:///' or 'qemu:///system' URIs supported when running as root"));
+            goto cleanup;
+        }
+    } else {
+        if (!g_str_equal(uri, "qemu:///session")) {
+            g_set_error(error, GVIR_SANDBOX_CONTEXT_INTERACTIVE_ERROR, 0,
+                        _("Only 'qemu:///session' URIs supported when running as non-root"));
+            goto cleanup;
+        }
+    }
 
     if (!(builder = gvir_sandbox_builder_for_connection(connection,
                                                         error)))
