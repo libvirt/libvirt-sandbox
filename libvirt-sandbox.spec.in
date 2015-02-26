@@ -27,6 +27,8 @@ BuildRequires: /usr/bin/pod2man
 BuildRequires: intltool
 BuildRequires: libselinux-devel
 BuildRequires: glib2-devel >= 2.32.0
+BuildRequires: xz-devel >= 5.0.0, xz-static
+BuildRequires: zlib-devel >= 1.2.0, zlib-static
 Requires: rpm-python
 # For virsh lxc-enter-namespace command
 Requires: libvirt-client >= %{libvirt_version}

@@ -139,6 +139,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			-DLOCALEDIR="\"$(datadir)/locale"\" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
+			-I$(top_builddir) \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
@@ -172,6 +173,7 @@ libvirt_sandbox_init_common_CFLAGS = \
 			-DLOCALEDIR="\"$(datadir)/locale"\" \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
+			-I$(top_builddir) \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
@@ -196,6 +198,7 @@ libvirt_sandbox_init_lxc_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-I$(top_srcdir) \
+			-I$(top_builddir) \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
@@ -217,11 +220,15 @@ libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
 libvirt_sandbox_init_qemu_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			$(ZLIB_CFLAGS) \
+			$(LZMA_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_qemu_LDFLAGS = \
 			-all-static \
 			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
+			$(ZLIB_LIBS) \
+			$(LZMA_LIBS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 

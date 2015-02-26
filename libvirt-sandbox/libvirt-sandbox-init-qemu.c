@@ -42,6 +42,8 @@
 #include <fcntl.h>
 #include <sys/reboot.h>
 #include <termios.h>
+#include <lzma.h>
+#include <zlib.h>
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
@@ -481,15 +483,150 @@ static char *readall(const char *filename, size_t *len)
     return data;
 }
 
+
+static int
+has_suffix(const char *filename, const char *ext)
+{
+    char *offset = strstr(filename, ext);
+    return  (offset &&
+             offset[strlen(ext)] == '\0');
+}
+
+static char *
+load_module_file_lzma(const char *filename, size_t *len)
+{
+    lzma_stream st = LZMA_STREAM_INIT;
+    char *xzdata;
+    size_t xzlen;
+    char *data;
+    lzma_ret ret;
+
+    *len = 0;
+
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, filename);
+
+    if ((ret = lzma_stream_decoder(&st, UINT64_MAX,
+                                   LZMA_CONCATENATED)) != LZMA_OK) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s: lzma init failure: %d\n",
+                __func__, filename, ret);
+        exit_poweroff();
+    }
+    xzdata = readall(filename, &xzlen);
+
+    st.next_in = (unsigned char *)xzdata;
+    st.avail_in = xzlen;
+
+    *len = 32 * 1024;
+    if (!(data = malloc(*len))) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, strerror(errno));
+        exit_poweroff();
+    }
+
+    st.next_out = (unsigned char *)data;
+    st.avail_out = *len;
+
+    do {
+        ret = lzma_code(&st, LZMA_FINISH);
+        if (st.avail_out == 0) {
+            size_t used = *len;
+            *len += (32 * 1024);
+            if (!(data = realloc(data, *len))) {
+                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, strerror(errno));
+                exit_poweroff();
+            }
+            st.next_out = (unsigned char *)data + used;
+            st.avail_out = *len - used;
+        }
+        if (ret != LZMA_OK && ret != LZMA_STREAM_END) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s: lzma decode failure: %d\n",
+                    __func__, filename, ret);
+            exit_poweroff();
+        }
+    } while (ret != LZMA_STREAM_END);
+    lzma_end(&st);
+    free(xzdata);
+    return data;
+}
+
+static char *
+load_module_file_zlib(const char *filename, size_t *len)
+{
+    gzFile fp;
+    char *data;
+    unsigned int avail;
+    size_t total;
+    int got;
+
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, filename);
+
+    if (!(fp = gzopen(filename, "rb"))) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s: gzopen failure\n",
+                __func__, filename);
+        exit_poweroff();
+    }
+
+    *len = 32 * 1024;
+    if (!(data = malloc(*len))) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, strerror(errno));
+        exit_poweroff();
+    }
+
+    avail = *len;
+    total = 0;
+
+    do {
+        got = gzread(fp, data + total, avail);
+
+        if (got < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s: gzread failure\n",
+                __func__, filename);
+            exit_poweroff();
+        }
+
+        total += got;
+        if (total >= *len) {
+            *len += (32 * 1024);
+            if (!(data = realloc(data, *len))) {
+                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, strerror(errno));
+                exit_poweroff();
+            }
+            avail = *len - total;
+        }
+    } while (got > 0);
+
+    gzclose(fp);
+    return data;
+}
+
+static char *
+load_module_file_raw(const char *filename, size_t *len)
+{
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, filename);
+    return readall(filename, len);
+}
+
+static char *
+load_module_file(const char *filename, size_t *len)
+{
+    if (has_suffix(filename, ".ko.xz"))
+        return load_module_file_lzma(filename, len);
+    else if (has_suffix(filename, ".ko.gz"))
+        return load_module_file_zlib(filename, len);
+    else
+        return load_module_file_raw(filename, len);
+}
+
+
 static void
 insmod(const char *filename)
 {
     char *data;
     size_t len;
-    if (debug)
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s\n", __func__, filename);
 
-    data = readall(filename, &len);
+    data = load_module_file(filename, &len);
 
     if (init_module(data, (unsigned long)len, "") < 0) {
         const char *msg;

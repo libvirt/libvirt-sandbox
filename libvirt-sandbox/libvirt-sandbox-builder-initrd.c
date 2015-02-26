@@ -232,7 +232,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
         if (strstr(thisname, ".ko")) {
             GList *tmp = modnames;
             while (tmp) {
-                if (g_str_equal(thisname, tmp->data)) {
+                if (g_str_has_prefix(thisname, tmp->data)) {
                     modfiles = g_list_append(modfiles, child);
                     child = NULL;
                 }
@@ -293,7 +293,7 @@ static GList *gvir_sandbox_builder_initrd_find_files(GList *modnames,
         if (strstr(de->d_name, ".ko")) {
             GList *tmp = modnames;
             while (tmp) {
-                if (g_str_equal(de->d_name, tmp->data)) {
+                if (g_str_has_prefix(de->d_name, tmp->data)) {
                     modfiles = g_list_append(modfiles, child);
                     child = NULL;
                 }
@@ -366,7 +366,6 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
     GFile *modlist = NULL;
     gchar *modlistpath = NULL;
     GOutputStream *modlistos = NULL;
-    GError *e = NULL;
 
     if (!gvir_sandbox_builder_initrd_copy_file(
                                                gvir_sandbox_config_initrd_get_init(config),
@@ -374,11 +373,9 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
         return FALSE;
 
     modnames = gvir_sandbox_config_initrd_get_modules(config);
-    modfiles = gvir_sandbox_builder_initrd_find_modules(modnames, config, &e);
-    if (e) {
-        g_propagate_error(error, e);
+    modfiles = gvir_sandbox_builder_initrd_find_modules(modnames, config, error);
+    if (*error)
         goto cleanup;
-    }
 
     tmp = modfiles;
     while (tmp) {
@@ -404,14 +401,22 @@ static gboolean gvir_sandbox_builder_initrd_populate_tmpdir(const gchar *tmpdir,
 
     tmp = modnames;
     while (tmp) {
-        if (!g_output_stream_write_all(modlistos,
-                                       tmp->data, strlen(tmp->data),
-                                       NULL, NULL, error))
-            goto cleanup;
-        if (!g_output_stream_write_all(modlistos,
-                                       "\n", 1,
-                                       NULL, NULL, error))
-            goto cleanup;
+        GList *files = modfiles;
+        while (files) {
+            const gchar *basename = g_file_get_basename(files->data);
+            if (g_str_has_prefix(basename, tmp->data)) {
+                if (!g_output_stream_write_all(modlistos,
+                                               basename, strlen(basename),
+                                               NULL, NULL, error))
+                    goto cleanup;
+                if (!g_output_stream_write_all(modlistos,
+                                               "\n", 1,
+                                               NULL, NULL, error))
+                    goto cleanup;
+                break;
+            }
+            files = files->next;
+        }
         tmp = tmp->next;
     }
 
