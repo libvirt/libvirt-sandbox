@@ -497,6 +497,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 {
     GVirConfigDomainFilesys *fs;
     GVirConfigDomainDisk *disk;
+    GVirConfigDomainDiskDriver *diskDriver;
     GVirConfigDomainInterface *iface;
     GVirConfigDomainMemballoon *ball;
     GVirConfigDomainConsole *con;
@@ -560,6 +561,8 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
             GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
+            GVirSandboxConfigMountHostImage *mimage = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(mconfig);
+            GVirConfigDomainDiskFormat format;
             gchar *target = g_strdup_printf("vd%c", (char)('a' + nHostImage++));
 
             disk = gvir_config_domain_disk_new();
@@ -568,8 +571,14 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
                                                gvir_sandbox_config_mount_file_get_source(mfile));
             gvir_config_domain_disk_set_target_dev(disk, target);
 
+            diskDriver = gvir_config_domain_disk_driver_new();
+            format = gvir_sandbox_config_mount_host_image_get_format(mimage);
+            gvir_config_domain_disk_driver_set_format(diskDriver, format);
+            gvir_config_domain_disk_set_driver(disk, diskDriver);
+
             gvir_config_domain_add_device(domain,
                                           GVIR_CONFIG_DOMAIN_DEVICE(disk));
+            g_object_unref(diskDriver);
             g_object_unref(disk);
             g_free(target);
         }

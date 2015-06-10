@@ -1266,6 +1266,7 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
  *
  * - host-bind:/tmp=/var/lib/sandbox/demo/tmp
  * - host-image:/=/var/lib/sandbox/demo.img
+ * - host-image:/=/var/lib/sandbox/demo.qcow2,format=qcow2
  * - guest-bind:/home=/tmp/home
  * - ram:/tmp=500M
  */
@@ -1327,6 +1328,33 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
         }
         mnt = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_ram_new(target,
                                                                           size));
+    } else if (type == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE) {
+        const gchar *formatStr = NULL;
+        gint format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
+
+        if ((tmp = strchr(source, ',')) != NULL) {
+            GEnumClass *enum_class = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT);
+            GEnumValue *enum_value = NULL;
+
+            *tmp = '\0';
+            formatStr = tmp + 1;
+
+            if ((strncmp(formatStr, "format=", 7) == 0) &&
+                !(enum_value = g_enum_get_value_by_nick(enum_class, formatStr + 7))) {
+                g_type_class_unref(enum_class);
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("Unknown disk image format: '%s'"), formatStr + 7);
+                return FALSE;
+            }
+            g_type_class_unref(enum_class);
+            format = enum_value->value;
+        }
+
+        mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
+                                                     "target", target,
+                                                     "source", source,
+                                                     "format", format,
+                                                     NULL));
     } else {
         mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
                                                      "target", target,
@@ -1615,6 +1643,7 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
     gchar *target = NULL;
     gchar *source = NULL;
     gchar *type = NULL;
+    gchar *formatStr = NULL;
     guint j;
     GError *e = NULL;
     GType mountType;
@@ -1664,10 +1693,33 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
             goto error;
         }
 
-        config = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(mountType,
-                                                        "target", target,
-                                                        "source", source,
-                                                        NULL));
+        if (mountType == GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE) {
+            GEnumClass *enum_class = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT);
+            GEnumValue *enum_value;
+
+            if ((formatStr = g_key_file_get_string(file, key, "format", NULL)) == NULL) {
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            "%s", _("Missing image format in config file"));
+                goto error;
+            }
+
+            if (!(enum_value = g_enum_get_value_by_nick(enum_class, formatStr))) {
+                g_type_class_unref(enum_class);
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("Unknown image format %s in config file"), formatStr);
+                goto error;
+            }
+            g_type_class_unref(enum_class);
+
+            config = GVIR_SANDBOX_CONFIG_MOUNT(gvir_sandbox_config_mount_host_image_new(source,
+                                                                                        target,
+                                                                                        enum_value->value));
+        } else {
+            config = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(mountType,
+                                                            "target", target,
+                                                            "source", source,
+                                                            NULL));
+        }
     }
 
     for (j = 0 ; j < 1024 ; j++) {
@@ -1964,6 +2016,14 @@ static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config
         g_key_file_set_string(file, key, "usage", tmp);
         g_free(tmp);
     } else {
+        if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(config)) {
+            GVirSandboxConfigMountHostImage *mimage = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(config);
+            GVirConfigDomainDiskFormat format = gvir_sandbox_config_mount_host_image_get_format(mimage);
+            GEnumClass *klass = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT);
+            GEnumValue *value = g_enum_get_value(klass, format);
+            g_type_class_unref(klass);
+            g_key_file_set_string(file, key, "format", value->value_nick);
+        }
         g_key_file_set_string(file, key, "source",
                               gvir_sandbox_config_mount_file_get_source(
                                                                         GVIR_SANDBOX_CONFIG_MOUNT_FILE(config)));

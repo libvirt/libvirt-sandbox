@@ -273,6 +273,9 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
             g_object_unref(fs);
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
             GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
+            GVirSandboxConfigMountHostImage *mimage = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(mconfig);
+            GVirConfigDomainDiskFormat format;
+            GVirConfigDomainFilesysDriverType type = GVIR_CONFIG_DOMAIN_FILESYS_DRIVER_LOOP;
 
             fs = gvir_config_domain_filesys_new();
             gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_FILE);
@@ -281,6 +284,13 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
                                                   gvir_sandbox_config_mount_file_get_source(mfile));
             gvir_config_domain_filesys_set_target(fs,
                                                   gvir_sandbox_config_mount_get_target(mconfig));
+
+            format = gvir_sandbox_config_mount_host_image_get_format(mimage);
+            if (format != GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW)
+                type = GVIR_CONFIG_DOMAIN_FILESYS_DRIVER_NBD;
+
+            gvir_config_domain_filesys_set_driver_type(fs, type);
+            gvir_config_domain_filesys_set_driver_format(fs, format);
 
             gvir_config_domain_add_device(domain,
                                           GVIR_CONFIG_DOMAIN_DEVICE(fs));

@@ -45,21 +45,90 @@
 
 struct _GVirSandboxConfigMountHostImagePrivate
 {
-    gboolean unused;
+    GVirConfigDomainDiskFormat format;
 };
 
 G_DEFINE_TYPE(GVirSandboxConfigMountHostImage, gvir_sandbox_config_mount_host_image, GVIR_SANDBOX_TYPE_CONFIG_MOUNT_FILE);
 
+enum {
+    PROP_0,
+    PROP_FORMAT,
+};
+
+enum {
+    LAST_SIGNAL
+};
+
+//static gint signals[LAST_SIGNAL];
+
+
+static void gvir_sandbox_config_mount_host_image_get_property(GObject *object,
+                                                              guint prop_id,
+                                                              GValue *value,
+                                                              GParamSpec *pspec)
+{
+    GVirSandboxConfigMountHostImage *config = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(object);
+    GVirSandboxConfigMountHostImagePrivate *priv = config->priv;
+
+    switch (prop_id) {
+    case PROP_FORMAT:
+        g_value_set_enum(value, priv->format);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
+
+static void gvir_sandbox_config_mount_host_image_set_property(GObject *object,
+                                                              guint prop_id,
+                                                              const GValue *value,
+                                                              GParamSpec *pspec)
+{
+    GVirSandboxConfigMountHostImage *config = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(object);
+    GVirSandboxConfigMountHostImagePrivate *priv = config->priv;
+
+    switch (prop_id) {
+    case PROP_FORMAT:
+        priv->format = g_value_get_enum(value);
+        break;
+    default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
 
 static void gvir_sandbox_config_mount_host_image_class_init(GVirSandboxConfigMountHostImageClass *klass)
 {
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+    object_class->get_property = gvir_sandbox_config_mount_host_image_get_property;
+    object_class->set_property = gvir_sandbox_config_mount_host_image_set_property;
+
+    g_object_class_install_property(object_class,
+                                    PROP_FORMAT,
+                                    g_param_spec_enum("format",
+                                                      "Disk format",
+                                                      "The disk format",
+                                                      GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT,
+                                                      GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW,
+                                                      G_PARAM_READABLE |
+                                                      G_PARAM_WRITABLE |
+                                                      G_PARAM_CONSTRUCT_ONLY |
+                                                      G_PARAM_STATIC_NAME |
+                                                      G_PARAM_STATIC_NICK |
+                                                      G_PARAM_STATIC_BLURB));
+
     g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountHostImagePrivate));
 }
 
 
 static void gvir_sandbox_config_mount_host_image_init(GVirSandboxConfigMountHostImage *config)
 {
-    config->priv = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE_GET_PRIVATE(config);
+    GVirSandboxConfigMountHostImagePrivate *priv = config->priv;
+    priv = config->priv = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE_GET_PRIVATE(config);
+
+    priv->format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
 }
 
 
@@ -72,12 +141,28 @@ static void gvir_sandbox_config_mount_host_image_init(GVirSandboxConfigMountHost
  * Returns: (transfer full): a new sandbox mount object
  */
 GVirSandboxConfigMountHostImage *gvir_sandbox_config_mount_host_image_new(const gchar *source,
-                                                                          const gchar *targetdir)
+                                                                          const gchar *targetdir,
+                                                                          GVirConfigDomainDiskFormat format)
 {
     return GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE,
                                                              "source", source,
                                                              "target", targetdir,
+                                                             "format", format,
                                                              NULL));
+}
+
+/**
+ * gvir_sandbox_config_mount_host_image_get_format:
+ * @config: (transfer none): the sandbox mount config
+ *
+ * Retrieves the image format of the host-image filesystem.
+ *
+ * Returns: (transfer none): the imave format
+ */
+GVirConfigDomainDiskFormat gvir_sandbox_config_mount_host_image_get_format(GVirSandboxConfigMountHostImage *config)
+{
+    GVirSandboxConfigMountHostImagePrivate *priv = config->priv;
+    return priv->format;
 }
 
 /*

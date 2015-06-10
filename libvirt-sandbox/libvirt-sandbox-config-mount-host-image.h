@@ -59,7 +59,10 @@ struct _GVirSandboxConfigMountHostImageClass
 GType gvir_sandbox_config_mount_host_image_get_type(void);
 
 GVirSandboxConfigMountHostImage *gvir_sandbox_config_mount_host_image_new(const gchar *source,
-                                                                          const gchar *targetdir);
+                                                                          const gchar *targetdir,
+                                                                          GVirConfigDomainDiskFormat format);
+
+GVirConfigDomainDiskFormat gvir_sandbox_config_mount_host_image_get_format(GVirSandboxConfigMountHostImage *config);
 
 G_END_DECLS
 

@@ -209,3 +209,8 @@ LIBVIRT_SANDBOX_0.2.1 {
     local:
         *;
 };
+
+LIBVIRT_SANDBOX_0.5.2 {
+   global:
+	gvir_sandbox_config_mount_guest_bind_get_format;
+} LIBVIRT_SANDBOX_0.2.1;
