@@ -217,8 +217,8 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
                                                         error)))
         goto cleanup;
 
-    g_mkdir_with_parents(statedir, 0700);
-    g_mkdir_with_parents(configdir, 0700);
+    g_mkdir_with_parents(statedir, 0755);
+    g_mkdir_with_parents(configdir, 0755);
 
     unlink(configfile);
     if (!gvir_sandbox_config_save_to_path(config, configfile, error))

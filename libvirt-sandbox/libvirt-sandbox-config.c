@@ -2258,7 +2258,7 @@ gboolean gvir_sandbox_config_save_to_path(GVirSandboxConfig *config,
     if (!(data = g_key_file_to_data(file, &len, error)))
         goto cleanup;
 
-    if (!(os = G_OUTPUT_STREAM(g_file_create(f, G_FILE_CREATE_PRIVATE, NULL, error))))
+    if (!(os = G_OUTPUT_STREAM(g_file_create(f, G_FILE_CREATE_NONE, NULL, error))))
         goto cleanup;
 
     if (!g_output_stream_write_all(os, data, len, NULL, NULL, error))
