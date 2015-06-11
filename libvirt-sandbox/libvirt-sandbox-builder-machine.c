@@ -304,7 +304,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
             options = g_strdup("trans=virtio,version=9p2000.u");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
             source = g_strdup_printf("/dev/vd%c", (char)('a' + nHostImage++));
-            fstype = "ext3";
+            fstype = "ext4";
             options = g_strdup("");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_GUEST_BIND(mconfig)) {
             GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
