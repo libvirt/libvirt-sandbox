@@ -125,8 +125,7 @@ static gchar *gvir_sandbox_builder_container_cmdline(GVirSandboxConfig *config G
     gchar *tmp;
 
     /* Now kernel args */
-    if (getenv("LIBVIRT_SANDBOX_DEBUG") &&
-        g_str_equal(getenv("LIBVIRT_SANDBOX_DEBUG"), "2"))
+    if (getenv("LIBVIRT_SANDBOX_INIT_DEBUG"))
         g_string_append(str, "debug");
 
     if ((tmp = getenv("LIBVIRT_SANDBOX_STRACE"))) {
