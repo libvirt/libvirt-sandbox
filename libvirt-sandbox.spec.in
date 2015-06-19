@@ -20,7 +20,7 @@ License: LGPLv2+
 URL: http://libvirt.org/
 Source0: ftp://libvirt.org/libvirt/sandbox/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: libvirt-gobject-devel >= 0.1.7
+BuildRequires: libvirt-gobject-devel >= 0.2.1
 BuildRequires: gobject-introspection-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
