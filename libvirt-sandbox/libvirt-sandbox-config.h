@@ -131,6 +131,7 @@ gboolean gvir_sandbox_config_add_disk_strv(GVirSandboxConfig *config,
 gboolean gvir_sandbox_config_add_disk_opts(GVirSandboxConfig *config,
                                            const char *disk,
                                            GError **error);
+gboolean gvir_sandbox_config_has_disks(GVirSandboxConfig *config);
 
 void gvir_sandbox_config_add_mount(GVirSandboxConfig *config,
                                    GVirSandboxConfigMount *mnt);

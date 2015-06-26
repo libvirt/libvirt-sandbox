@@ -1305,6 +1305,13 @@ gboolean gvir_sandbox_config_add_disk_opts(GVirSandboxConfig *config,
 }
 
 
+gboolean gvir_sandbox_config_has_disks(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->disks != NULL;
+}
+
+
 /**
  * gvir_sandbox_config_add_mount:
  * @config: (transfer none): the sandbox config

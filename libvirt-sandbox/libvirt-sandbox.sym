@@ -217,4 +217,5 @@ LIBVIRT_SANDBOX_0.5.2 {
 	gvir_sandbox_config_add_disk_strv;
 	gvir_sandbox_config_add_disk_opts;
 	gvir_sandbox_config_disk_get_type;
+    gvir_sandbox_config_has_disks;
 } LIBVIRT_SANDBOX_0.2.1;
