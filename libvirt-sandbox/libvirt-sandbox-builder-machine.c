@@ -174,7 +174,8 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     if (gvir_sandbox_config_has_networks(config))
         gvir_sandbox_config_initrd_add_module(initrd, "virtio_net.ko");
     if (gvir_sandbox_config_has_mounts_with_type(config,
-                                                 GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE))
+                                                 GVIR_SANDBOX_TYPE_CONFIG_MOUNT_HOST_IMAGE) ||
+        gvir_sandbox_config_has_disks(config))
         gvir_sandbox_config_initrd_add_module(initrd, "virtio_blk.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "virtio_console.ko");
 #if 0
@@ -502,9 +503,9 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     GVirConfigDomainConsole *con;
     GVirConfigDomainSerial *ser;
     GVirConfigDomainChardevSourcePty *src;
-    GList *tmp = NULL, *mounts = NULL, *networks = NULL;
+    GList *tmp = NULL, *mounts = NULL, *networks = NULL, *disks = NULL;
     size_t nHostBind = 0;
-    size_t nHostImage = 0;
+    size_t nVirtioDev = 0;
     gchar *configdir = g_strdup_printf("%s/config", statedir);
     gboolean ret = FALSE;
 
@@ -537,6 +538,35 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
     g_object_unref(fs);
 
 
+    tmp = disks = gvir_sandbox_config_get_disks(config);
+    while (tmp) {
+        GVirSandboxConfigDisk *dconfig = GVIR_SANDBOX_CONFIG_DISK(tmp->data);
+
+        if (GVIR_SANDBOX_IS_CONFIG_DISK(dconfig)) {
+            gchar *device = g_strdup_printf("vd%c", (char)('a' + nVirtioDev++));
+
+            disk = gvir_config_domain_disk_new();
+            diskDriver = gvir_config_domain_disk_driver_new();
+            gvir_config_domain_disk_set_type(disk,
+                                             gvir_sandbox_config_disk_get_disk_type(dconfig));
+            gvir_config_domain_disk_driver_set_format(diskDriver,
+                                                      gvir_sandbox_config_disk_get_format(dconfig));
+            gvir_config_domain_disk_set_source(disk, gvir_sandbox_config_disk_get_source(dconfig));
+            gvir_config_domain_disk_set_target_bus(disk,
+                                                   GVIR_CONFIG_DOMAIN_DISK_BUS_VIRTIO);
+            gvir_config_domain_disk_set_target_dev(disk,
+                                                   device);
+            gvir_config_domain_disk_set_driver(disk, diskDriver);
+            gvir_config_domain_add_device(domain, GVIR_CONFIG_DOMAIN_DEVICE(disk));
+            g_object_unref(disk);
+            g_free(device);
+        }
+        tmp = tmp->next;
+    }
+
+    g_list_foreach(disks, (GFunc)g_object_unref, NULL);
+    g_list_free(disks);
+
     tmp = mounts = gvir_sandbox_config_get_mounts(config);
     while (tmp) {
         GVirSandboxConfigMount *mconfig = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
@@ -562,7 +592,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
             GVirSandboxConfigMountFile *mfile = GVIR_SANDBOX_CONFIG_MOUNT_FILE(mconfig);
             GVirSandboxConfigMountHostImage *mimage = GVIR_SANDBOX_CONFIG_MOUNT_HOST_IMAGE(mconfig);
             GVirConfigDomainDiskFormat format;
-            gchar *target = g_strdup_printf("vd%c", (char)('a' + nHostImage++));
+            gchar *target = g_strdup_printf("vd%c", (char)('a' + nVirtioDev++));
 
             disk = gvir_config_domain_disk_new();
             gvir_config_domain_disk_set_type(disk, GVIR_CONFIG_DOMAIN_DISK_FILE);
