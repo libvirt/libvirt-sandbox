@@ -437,6 +437,13 @@ static gboolean gvir_sandbox_builder_container_construct_devices(GVirSandboxBuil
 }
 
 
+static const gchar *gvir_sandbox_builder_container_get_disk_prefix(GVirSandboxBuilder *builder,
+                                                                   GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                                   GVirSandboxConfigDisk *disk G_GNUC_UNUSED)
+{
+    return "sd";
+}
+
 static void gvir_sandbox_builder_container_class_init(GVirSandboxBuilderContainerClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -450,6 +457,7 @@ static void gvir_sandbox_builder_container_class_init(GVirSandboxBuilderContaine
     builder_class->construct_os = gvir_sandbox_builder_container_construct_os;
     builder_class->construct_features = gvir_sandbox_builder_container_construct_features;
     builder_class->construct_devices = gvir_sandbox_builder_container_construct_devices;
+    builder_class->get_disk_prefix = gvir_sandbox_builder_container_get_disk_prefix;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxBuilderContainerPrivate));
 }

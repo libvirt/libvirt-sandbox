@@ -312,11 +312,12 @@ static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *buil
     return TRUE;
 }
 
-static gboolean gvir_sandbox_builder_construct_disk_cfg(GVirSandboxConfig *config,
+static gboolean gvir_sandbox_builder_construct_disk_cfg(GVirSandboxBuilder *builder,
+                                                        GVirSandboxConfig *config,
                                                         const gchar *statedir,
                                                         GError **error)
 {
-
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
     guint nVirtioDev = 0;
     gchar *dskfile = g_strdup_printf("%s/config/disks.cfg", statedir);
     GFile *file = g_file_new_for_path(dskfile);
@@ -337,7 +338,9 @@ static gboolean gvir_sandbox_builder_construct_disk_cfg(GVirSandboxConfig *confi
     tmp = disks;
     while (tmp) {
         GVirSandboxConfigDisk *mconfig = GVIR_SANDBOX_CONFIG_DISK(tmp->data);
-        gchar *device = g_strdup_printf("/dev/vd%c", (char)('a' + (nVirtioDev)++));
+        const gchar *prefix = klass->get_disk_prefix(builder, config, mconfig);
+        gchar *device = g_strdup_printf("/dev/%s%c", prefix,
+                                        (char)('a' + (nVirtioDev)++));
         gchar *line;
 
         tag = gvir_sandbox_config_disk_get_tag(mconfig);
@@ -380,7 +383,7 @@ static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *build
                                                        GVirConfigDomain *domain,
                                                        GError **error)
 {
-    return gvir_sandbox_builder_construct_disk_cfg(config,statedir,error);
+    return gvir_sandbox_builder_construct_disk_cfg(builder, config, statedir,error);
 }
 
 static gboolean gvir_sandbox_builder_construct_security_selinux (GVirSandboxBuilder *builder,

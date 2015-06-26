@@ -94,6 +94,9 @@ struct _GVirSandboxBuilderClass
                                 GVirSandboxConfig *config,
                                 const gchar *statedir,
                                 GError **error);
+    const gchar *(*get_disk_prefix)(GVirSandboxBuilder *builder,
+                                    GVirSandboxConfig *config,
+                                    GVirSandboxConfigDisk *disk);
 
     gpointer padding[LIBVIRT_SANDBOX_CLASS_PADDING];
 };

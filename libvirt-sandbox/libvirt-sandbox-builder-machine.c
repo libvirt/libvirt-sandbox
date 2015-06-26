@@ -755,6 +755,14 @@ static gboolean gvir_sandbox_builder_machine_clean_post_stop(GVirSandboxBuilder 
 }
 
 
+static const gchar *gvir_sandbox_builder_machine_get_disk_prefix(GVirSandboxBuilder *builder,
+                                                                 GVirSandboxConfig *config G_GNUC_UNUSED,
+                                                                 GVirSandboxConfigDisk *disk G_GNUC_UNUSED)
+{
+    return "vd";
+}
+
+
 static void gvir_sandbox_builder_machine_class_init(GVirSandboxBuilderMachineClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -771,6 +779,7 @@ static void gvir_sandbox_builder_machine_class_init(GVirSandboxBuilderMachineCla
     builder_class->construct_devices = gvir_sandbox_builder_machine_construct_devices;
     builder_class->clean_post_start = gvir_sandbox_builder_machine_clean_post_start;
     builder_class->clean_post_stop = gvir_sandbox_builder_machine_clean_post_stop;
+    builder_class->get_disk_prefix = gvir_sandbox_builder_machine_get_disk_prefix;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxBuilderMachinePrivate));
 }
