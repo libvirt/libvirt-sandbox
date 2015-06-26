@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
     GMainLoop *loop = NULL;
     GError *error = NULL;
     gchar *name = NULL;
+    gchar **disks = NULL;
     gchar **mounts = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
@@ -92,6 +93,8 @@ int main(int argc, char **argv) {
           N_("name of the sandbox"), "NAME" },
         { "root", 'r', 0, G_OPTION_ARG_STRING, &root,
           N_("root directory of the sandbox"), "DIR" },
+        { "disk", ' ', 0, G_OPTION_ARG_STRING_ARRAY, &disks,
+          N_("add a disk in the guest"), "TYPE:TAGNAME=SOURCE,format=FORMAT" },
         { "mount", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
           N_("mount a filesystem in the guest"), "TYPE:TARGET=SOURCE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
@@ -180,6 +183,13 @@ int main(int argc, char **argv) {
         gvir_sandbox_config_set_userid(cfg, 0);
         gvir_sandbox_config_set_groupid(cfg, 0);
         gvir_sandbox_config_set_username(cfg, "root");
+    }
+
+    if (disks &&
+        !gvir_sandbox_config_add_disk_strv(cfg, disks, &error)) {
+        g_printerr(_("Unable to parse disks: %s\n"),
+                   error && error->message ? error->message : _("Unknown failure"));
+        goto cleanup;
     }
 
     if (mounts &&
@@ -318,6 +328,33 @@ inheriting the host's root filesystem.
 
 NB. C<DIR> must contain a matching install of the libvirt-sandbox
 package. This restriction may be lifted in a future version.
+
+=item B<--disk TYPE:TAGNAME=SOURCE,format=FORMAT>
+
+Sets up a disk inside the sandbox by using B<SOURCE> with a symlink named as B<TAGNAME>
+and type B<TYPE> and format B<FORMAT>. Example: file:cache=/var/lib/sandbox/demo/tmp.qcow2,format=qcow2
+Format is an optional parameter.
+
+=over 4
+
+=item B<TYPE>
+
+Type parameter can be set to "file".
+
+=item B<TAGNAME>
+
+TAGNAME will be created under /dev/disk/by-tag/TAGNAME. It will be linked to the device under /dev
+
+=item B<SOURCE>
+
+Source parameter needs to point a file which must be a one of the valid domain disk formats supported by qemu.
+
+=item B<FORMAT>
+
+Format parameter must be set to the same disk format as the file passed on source parameter.
+This parameter is optional and the format can be guessed from the image extension
+
+=back
 
 =item B<-m TYPE:DST=SRC>, B<--mount TYPE:DST=SRC>
 
