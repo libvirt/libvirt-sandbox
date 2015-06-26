@@ -60,6 +60,54 @@ static void sig_child(int sig ATTR_UNUSED)
         abort();
 }
 
+static gboolean setup_disk_tags(void) {
+    FILE *fp;
+    gboolean ret = FALSE;
+    static char line[1024];
+    if (debug)
+        fprintf(stderr, "libvirt-sandbox-init-common: %s: populate /dev/disk/by-tag/\n",
+                __func__);
+    fp = fopen(SANDBOXCONFIGDIR "/disks.cfg", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot open " SANDBOXCONFIGDIR "/disks.cfg: %s\n",
+                __func__, strerror(errno));
+
+        goto cleanup;
+    }
+    if (g_mkdir_with_parents("/dev/disk/by-tag",0755) < 0) {
+       fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot create the directory: %s\n",
+               __func__, strerror(errno));
+
+       goto cleanup;
+    }
+    while (fgets(line, sizeof line, fp)) {
+        char *tag = line;
+        char *device = strchr(tag, '\t');
+        gchar *path = NULL;
+        *device = '\0';
+        device++;
+        char *tmp = strchr(device, '\n');
+        *tmp = '\0';
+        path = g_strdup_printf("/dev/disk/by-tag/%s", tag);
+
+        if (debug)
+            fprintf(stderr, "libvirt-sandbox-init-common: %s: %s -> %s\n",
+                    __func__, path, device);
+
+        if (symlink(device, path) < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-common: %s: cannot create symlink %s -> %s: %s\n",
+                    __func__, path, device, strerror(errno));
+            g_free(path);
+            goto cleanup;
+        }
+
+        g_free(path);
+    }
+    ret = TRUE;
+ cleanup:
+    fclose(fp);
+    return ret;
+}
 
 static int
 start_shell(void)
@@ -257,8 +305,6 @@ static gboolean setup_network_device(GVirSandboxConfigNetwork *config,
     g_list_free(routes);
     return ret;
 }
-
-
 
 static gboolean setup_network(GVirSandboxConfig *config, GError **error)
 {
@@ -1213,6 +1259,9 @@ int main(int argc, char **argv) {
 
     if (gvir_sandbox_config_get_shell(config) &&
         start_shell() < 0)
+        exit(EXIT_FAILURE);
+
+    if (!setup_disk_tags())
         exit(EXIT_FAILURE);
 
     if (!setup_network(config, &error))
