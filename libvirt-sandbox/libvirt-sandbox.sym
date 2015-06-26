@@ -1,4 +1,4 @@
-LIBVIRT_SANDBOX_0.2.1 {
+LIBVIRT_SANDBOX_0.6.0 {
    global:
 	gvir_sandbox_init;
 	gvir_sandbox_init_check;
@@ -20,6 +20,12 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_config_interactive_set_command;
 	gvir_sandbox_config_interactive_set_tty;
 
+	gvir_sandbox_config_add_disk;
+	gvir_sandbox_config_add_disk_strv;
+	gvir_sandbox_config_add_disk_opts;
+	gvir_sandbox_config_disk_get_type;
+	gvir_sandbox_config_has_disks;
+
 	gvir_sandbox_config_mount_add_include;
 	gvir_sandbox_config_mount_get_includes;
 	gvir_sandbox_config_mount_get_target;
@@ -35,6 +41,7 @@ LIBVIRT_SANDBOX_0.2.1 {
 	gvir_sandbox_config_mount_host_image_get_type;
 	gvir_sandbox_config_mount_host_image_new;
 
+	gvir_sandbox_config_mount_guest_bind_get_format;
 	gvir_sandbox_config_mount_guest_bind_get_type;
 	gvir_sandbox_config_mount_guest_bind_new;
 
@@ -209,13 +216,3 @@ LIBVIRT_SANDBOX_0.2.1 {
     local:
         *;
 };
-
-LIBVIRT_SANDBOX_0.5.2 {
-   global:
-	gvir_sandbox_config_mount_guest_bind_get_format;
-	gvir_sandbox_config_add_disk;
-	gvir_sandbox_config_add_disk_strv;
-	gvir_sandbox_config_add_disk_opts;
-	gvir_sandbox_config_disk_get_type;
-    gvir_sandbox_config_has_disks;
-} LIBVIRT_SANDBOX_0.2.1;
