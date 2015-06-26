@@ -55,7 +55,6 @@ static int has_command_arg(const char *name,
 
 static int debug = 0;
 static char line[1024];
-static char line2[1024];
 
 static void exit_poweroff(void) __attribute__((noreturn));
 
@@ -175,50 +174,6 @@ mount_9pfs(const char *src, const char *dst, int mode, int readonly)
     }
 }
 
-static int virtioblk_major = 0;
-static void
-create_virtioblk_device(const char *dev)
-{
-    int minor;
-
-    if (virtioblk_major == 0) {
-        FILE *fp = fopen("/proc/devices", "r");
-        if (!fp) {
-            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read /proc/devices: %s\n",
-                    __func__, strerror(errno));
-            exit_poweroff();
-        }
-        while (fgets(line2, sizeof line2, fp)) {
-            if (strstr(line2, "virtblk")) {
-                char *end;
-                long l = strtol(line2, &end, 10);
-                if (line2 == end) {
-                    fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot extract device major from '%s'\n",
-                            __func__, line2);
-                    fclose(fp);
-                    exit_poweroff();
-                }
-                virtioblk_major = l;
-                break;
-            }
-        }
-        fclose(fp);
-
-        if (virtioblk_major == 0) {
-            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot find virtioblk device major in /proc/devices\n",
-                    __func__);
-            exit_poweroff();
-        }
-    }
-
-    minor = (dev[strlen(dev)-1] - 'a') * 16;
-
-    if (mknod(dev, S_IFBLK |0700, makedev(virtioblk_major, minor)) < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make dev '%s' '%llu': %s\n",
-                __func__, dev, makedev(virtioblk_major, minor), strerror(errno));
-        exit_poweroff();
-    }
-}
 
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
@@ -285,59 +240,14 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     }
 
     /* Main special filesystems */
-    mount_other("/dev", "tmpfs", 0755);
+    mount_other("/dev", "devtmpfs", 0755);
     mount_other_opts("/dev/pts", "devpts", "gid=5,mode=620,ptmxmode=000", 0755);
     mount_other("/sys", "sysfs", 0755);
     mount_other("/proc", "proc", 0755);
     //mount_other("/selinux", "selinuxfs", 0755);
     mount_other("/dev/shm", "tmpfs", 01777);
 
-    if (mkdir("/dev/input", 0777) < 0) {
-        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make directory /dev/input: %s\n",
-                __func__, strerror(errno));
-        exit_poweroff();
-    }
-
-#define MKNOD(file, mode, dev)                                          \
-    do {                                                                \
-        if (mknod(file, mode, dev) < 0) {                               \
-            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot make dev %s %llu: %s\n", \
-                    __func__, file, (unsigned long long)dev, strerror(errno)); \
-            exit_poweroff();                                            \
-        }                                                               \
-    } while (0)
-
-    umask(0000);
-    MKNOD("/dev/null", S_IFCHR |0666, makedev(1, 3));
-    MKNOD("/dev/zero", S_IFCHR |0666, makedev(1, 5));
-    MKNOD("/dev/full", S_IFCHR |0666, makedev(1, 7));
-    MKNOD("/dev/random", S_IFCHR |0666, makedev(1, 8));
-    MKNOD("/dev/urandom", S_IFCHR |0666, makedev(1, 9));
-    MKNOD("/dev/console", S_IFCHR |0700, makedev(5, 1));
-    MKNOD("/dev/tty", S_IFCHR |0700, makedev(5, 0));
-    MKNOD("/dev/tty0", S_IFCHR |0700, makedev(4, 0));
-    MKNOD("/dev/tty1", S_IFCHR |0700, makedev(4, 1));
-    MKNOD("/dev/tty2", S_IFCHR |0700, makedev(4, 2));
-    MKNOD("/dev/ttyS0", S_IFCHR |0700, makedev(4, 64));
-    MKNOD("/dev/ttyS1", S_IFCHR |0700, makedev(4, 65));
-    MKNOD("/dev/ttyS2", S_IFCHR |0700, makedev(4, 66));
-    MKNOD("/dev/ttyS3", S_IFCHR |0700, makedev(4, 67));
-    MKNOD("/dev/hvc0", S_IFCHR |0700, makedev(229, 0));
-    MKNOD("/dev/hvc1", S_IFCHR |0700, makedev(229, 1));
-    MKNOD("/dev/hvc2", S_IFCHR |0700, makedev(229, 2));
-    MKNOD("/dev/fb", S_IFCHR |0700, makedev(29, 0));
-    MKNOD("/dev/fb0", S_IFCHR |0700, makedev(29, 0));
-    MKNOD("/dev/mem", S_IFCHR |0600, makedev(1, 1));
-    MKNOD("/dev/rtc", S_IFCHR |0700, makedev(254, 0));
-    MKNOD("/dev/rtc0", S_IFCHR |0700, makedev(254, 0));
-    MKNOD("/dev/ptmx", S_IFCHR |0777, makedev(5, 2));
-    MKNOD("/dev/input/event0", S_IFCHR |0700, makedev(13, 64));
-    MKNOD("/dev/input/event1", S_IFCHR |0700, makedev(13, 65));
-    MKNOD("/dev/input/event2", S_IFCHR |0700, makedev(13, 66));
-    MKNOD("/dev/input/mice", S_IFCHR |0700, makedev(13, 63));
-    MKNOD("/dev/input/mouse0", S_IFCHR |0700, makedev(13, 32));
     umask(0022);
-
     mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
 
     if (debug)
@@ -368,8 +278,6 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
             fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%s, %s)\n",
                     __func__, source, target, type, opts);
 
-        if (strncmp(source, "/dev/vd", 7) == 0)
-            create_virtioblk_device(source);
 
         if (strcmp(type, "") == 0) {
             struct stat st;
