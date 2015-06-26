@@ -213,4 +213,8 @@ LIBVIRT_SANDBOX_0.2.1 {
 LIBVIRT_SANDBOX_0.5.2 {
    global:
 	gvir_sandbox_config_mount_guest_bind_get_format;
+	gvir_sandbox_config_add_disk;
+	gvir_sandbox_config_add_disk_strv;
+	gvir_sandbox_config_add_disk_opts;
+	gvir_sandbox_config_disk_get_type;
 } LIBVIRT_SANDBOX_0.2.1;

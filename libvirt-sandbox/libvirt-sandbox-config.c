@@ -27,6 +27,7 @@
 #include <glib/gi18n.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-util.h"
 #include <errno.h>
 #include <selinux/selinux.h>
 
@@ -62,6 +63,7 @@ struct _GVirSandboxConfigPrivate
 
     GList *networks;
     GList *mounts;
+    GList *disks;
 
     gchar *secLabel;
     gboolean secDynamic;
@@ -273,6 +275,9 @@ static void gvir_sandbox_config_finalize(GObject *object)
 
     g_list_foreach(priv->networks, (GFunc)g_object_unref, NULL);
     g_list_free(priv->networks);
+
+    g_list_foreach(priv->disks, (GFunc)g_object_unref, NULL);
+    g_list_free(priv->disks);
 
 
     g_free(priv->name);
@@ -1141,6 +1146,166 @@ gboolean gvir_sandbox_config_has_networks(GVirSandboxConfig *config)
 
 
 /**
+ * gvir_sandbox_config_add_disk:
+ * @config: (transfer none): the sandbox config
+ * @dsk: (transfer none): the disk configuration
+ *
+ * Adds a new custom disk to the sandbox
+ *
+ */
+void gvir_sandbox_config_add_disk(GVirSandboxConfig *config,
+                                   GVirSandboxConfigDisk *dsk)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+
+    g_object_ref(dsk);
+
+    priv->disks = g_list_append(priv->disks, dsk);
+}
+
+
+/**
+ * gvir_sandbox_config_get_disks:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the list of custom disks in the sandbox
+ *
+ * Returns: (transfer full) (element-type GVirSandboxConfigMount): the list of disks
+ */
+GList *gvir_sandbox_config_get_disks(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    g_list_foreach(priv->disks, (GFunc)g_object_ref, NULL);
+    return g_list_copy(priv->disks);
+}
+
+
+/**
+ * gvir_sandbox_config_add_disk_strv:
+ * @config: (transfer none): the sandbox config
+ * @disks: (transfer none)(array zero-terminated=1): the list of disks
+ *
+ * Parses @disks whose elements are in the format TYPE:TAG=SOURCE,format=FORMAT
+ * creating #GVirSandboxConfigMount instances for each element. For
+ * example
+ *
+ * - file:cache=/var/lib/sandbox/demo/tmp.qcow2,format=qcow2
+ */
+gboolean gvir_sandbox_config_add_disk_strv(GVirSandboxConfig *config,
+                                           gchar **disks,
+                                           GError **error)
+{
+    gsize i = 0;
+    while (disks && disks[i]) {
+        if (!gvir_sandbox_config_add_disk_opts(config,
+                                               disks[i],
+                                               error))
+            return FALSE;
+        i++;
+    }
+    return TRUE;
+}
+
+
+/**
+ * gvir_sandbox_config_add_disk_opts:
+ * @config: (transfer none): the sandbox config
+ * @disk: (transfer none): the disk config
+ *
+ * Parses @disk in the format TYPE:TAG=SOURCE,format=FORMAT
+ * creating #GVirSandboxConfigDisk instances for each element. For
+ * example
+ *
+ * - file:cache=/var/lib/sandbox/demo/tmp.qcow2,format=qcow2
+ */
+
+gboolean gvir_sandbox_config_add_disk_opts(GVirSandboxConfig *config,
+                                           const char *opt,
+                                           GError **error)
+{
+    gchar *typeStr = NULL;
+    gchar *formatStr = NULL;
+    gchar *tag = NULL;
+    gchar *source = NULL;
+    GVirSandboxConfigDisk *diskConfig;
+    gchar *tmp;
+    gint type;
+    gint format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
+    GEnumClass *enum_class = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_TYPE);
+    GEnumValue *enum_value;
+
+    if (!(typeStr = g_strdup(opt)))
+        return FALSE;
+
+    tmp = strchr(typeStr, ':');
+
+    if (!tmp) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("No disk type prefix on %s"), opt);
+        return FALSE;
+    }
+
+    *tmp = '\0';
+    tag = tmp + 1;
+    if (!(enum_value = g_enum_get_value_by_nick(enum_class, typeStr))) {
+        g_type_class_unref(enum_class);
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Unknown disk type prefix on %s"), opt);
+        return FALSE;
+    }
+    g_type_class_unref(enum_class);
+    type = enum_value->value;
+
+    if (type != GVIR_CONFIG_DOMAIN_DISK_FILE) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Unimplemented disk type prefix on %s"), opt);
+        return FALSE;
+    }
+
+    if (!(tmp = strchr(tag, '='))) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Missing disk source string on %s"), opt);
+        return FALSE;
+    }
+
+    *tmp = '\0';
+    source = tmp + 1;
+
+    if ((tmp = strchr(source, ',')) != NULL) {
+        *tmp = '\0';
+        formatStr = tmp + 1;
+
+        if ((strncmp(formatStr, "format=", 7) != 0) ||
+                (format = gvir_sandbox_util_disk_format_from_str(formatStr + 7, error)) < 0){
+                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                            _("Unknown disk image format: '%s'"), formatStr + 7);
+                return FALSE;
+        }
+    }
+    else {
+        if ((format = gvir_sandbox_util_guess_image_format(source, error)) < 0) {
+           format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
+        }
+    }
+
+
+    diskConfig = GVIR_SANDBOX_CONFIG_DISK(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_DISK,
+                                                "type", type,
+                                                "tag", tag,
+                                                "source", source,
+                                                "format", format,
+                                                NULL));
+
+    gvir_sandbox_config_add_disk(config, diskConfig);
+
+    g_object_unref(diskConfig);
+    g_free(typeStr);
+
+    return TRUE;
+}
+
+
+/**
  * gvir_sandbox_config_add_mount:
  * @config: (transfer none): the sandbox config
  * @mnt: (transfer none): the mount configuration
@@ -1757,6 +1922,85 @@ static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *f
 }
 
 
+static GVirSandboxConfigDisk *gvir_sandbox_config_load_config_disk(GKeyFile *file,
+                                                                   guint i,
+                                                                   GError **error)
+{
+    GVirSandboxConfigDisk *config = NULL;
+    gchar *key = NULL;
+    gchar *tag = NULL;
+    gchar *source = NULL;
+    gchar *typeStr = NULL;
+    gchar *formatStr = NULL;
+    gint type, format;
+    GError *e = NULL;
+    GEnumClass *enum_class = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_TYPE);
+    GEnumValue *enum_value;
+
+    key = g_strdup_printf("disk.%u", i);
+    if ((tag = g_key_file_get_string(file, key, "tag", &e)) == NULL) {
+        if (e->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND) {
+            g_error_free(e);
+            return NULL;
+        }
+        g_error_free(e);
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", _("Missing disk tag in config file"));
+        goto cleanup;
+    }
+    if ((source = g_key_file_get_string(file, key, "source", NULL)) == NULL) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", _("Missing disk source in config file"));
+        goto cleanup;
+    }
+    if ((typeStr = g_key_file_get_string(file, key, "type", NULL)) == NULL) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", _("Missing disk type in config file"));
+        goto cleanup;
+    }
+
+    if (!(enum_value = g_enum_get_value_by_nick(enum_class, typeStr))) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Unknown disk type %s in config file"), typeStr);
+        goto error;
+    }
+    type = enum_value->value;
+
+    if ((formatStr = g_key_file_get_string(file, key, "format", NULL)) == NULL) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    "%s", _("Missing disk format in config file"));
+        goto cleanup;
+    }
+
+    if ((format = gvir_sandbox_util_disk_format_from_str(formatStr, error)) < 0) {
+        g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                    _("Unknown disk format %s in config file"), formatStr);
+        goto error;
+    }
+
+    config = GVIR_SANDBOX_CONFIG_DISK(g_object_new(GVIR_SANDBOX_TYPE_CONFIG_DISK,
+                                                   "type", type,
+                                                   "tag", tag,
+                                                   "source", source,
+                                                   "format", format,
+                                                   NULL));
+
+ cleanup:
+    g_type_class_unref(enum_class);
+    g_free(tag);
+    g_free(source);
+    g_free(typeStr);
+    g_free(formatStr);
+    g_free(key);
+    return config;
+
+ error:
+    g_object_unref(config);
+    config = NULL;
+    goto cleanup;
+}
+
+
 static GVirSandboxConfigNetwork *gvir_sandbox_config_load_config_network(GKeyFile *file,
                                                                          guint i,
                                                                          GError **error)
@@ -1973,6 +2217,16 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     }
 
 
+    for (i = 0 ; i < 1024 ; i++) {
+        GVirSandboxConfigDisk *disk;
+        if (!(disk = gvir_sandbox_config_load_config_disk(file, i, error)) &&
+            *error)
+            goto cleanup;
+        if (disk)
+            priv->disks = g_list_append(priv->disks, disk);
+    }
+
+
     g_free(priv->secLabel);
     if ((str = g_key_file_get_string(file, "security", "label", NULL)) != NULL)
         priv->secLabel = str;
@@ -1992,6 +2246,35 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
     return ret;
 }
 
+
+static void gvir_sandbox_config_save_config_disk(GVirSandboxConfigDisk *config,
+                                                 GKeyFile *file,
+                                                 guint i)
+{
+    gchar *key;
+    GVirConfigDomainDiskType type = gvir_sandbox_config_disk_get_disk_type(config);
+    GVirConfigDomainDiskFormat format = gvir_sandbox_config_disk_get_format(config);
+    GEnumClass *klass = NULL;
+    GEnumValue *value = NULL;
+
+    key = g_strdup_printf("disk.%u", i);
+
+    klass = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_TYPE);
+    value = g_enum_get_value(klass, type);
+    g_type_class_unref(klass);
+    g_key_file_set_string(file, key, "type", value->value_nick);
+
+    g_key_file_set_string(file, key, "source",
+                          gvir_sandbox_config_disk_get_source(config));
+    g_key_file_set_string(file, key, "tag",
+                          gvir_sandbox_config_disk_get_tag(config));
+
+    klass = g_type_class_ref(GVIR_CONFIG_TYPE_DOMAIN_DISK_FORMAT);
+    value = g_enum_get_value(klass, format);
+    g_type_class_unref(klass);
+    g_key_file_set_string(file, key, "format", value->value_nick);
+    g_free(key);
+}
 
 static void gvir_sandbox_config_save_config_mount(GVirSandboxConfigMount *config,
                                                   GKeyFile *file,
@@ -2169,6 +2452,16 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
                                               file,
                                               i);
 
+        tmp = tmp->next;
+        i++;
+    }
+
+    i = 0;
+    tmp = priv->disks;
+    while (tmp) {
+        gvir_sandbox_config_save_config_disk(tmp->data,
+                                             file,
+                                             i);
         tmp = tmp->next;
         i++;
     }

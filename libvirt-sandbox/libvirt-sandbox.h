@@ -31,6 +31,7 @@
 #include <libvirt-sandbox/libvirt-sandbox-main.h>
 #include <libvirt-sandbox/libvirt-sandbox-util.h>
 #include <libvirt-sandbox/libvirt-sandbox-enum-types.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-disk.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-file.h>
 #include <libvirt-sandbox/libvirt-sandbox-config-mount-host-bind.h>

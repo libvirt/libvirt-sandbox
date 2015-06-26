@@ -55,6 +55,7 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-main.h \
 			libvirt-sandbox-util.h \
 			libvirt-sandbox-config.h \
+			libvirt-sandbox-config-disk.h \
 			libvirt-sandbox-config-network.h \
 			libvirt-sandbox-config-network-address.h \
 			libvirt-sandbox-config-network-filterref-parameter.h \
@@ -86,6 +87,7 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-main.c \
 			libvirt-sandbox-util.c \
 			libvirt-sandbox-config.c \
+			libvirt-sandbox-config-disk.c \
 			libvirt-sandbox-config-network.c \
 			libvirt-sandbox-config-network-address.c \
 			libvirt-sandbox-config-network-filterref.c \
