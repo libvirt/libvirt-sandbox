@@ -282,9 +282,10 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
                                             error);
     gboolean ret = FALSE;
     GList *mounts = gvir_sandbox_config_get_mounts(config);
+    GList *disks = gvir_sandbox_config_get_disks(config);
     GList *tmp = NULL;
     size_t nHostBind = 0;
-    size_t nHostImage = 0;
+    guint nVirtioDev = g_list_length(disks);
 
     if (!fos)
         goto cleanup;
@@ -303,7 +304,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
             fstype = "9p";
             options = g_strdup("trans=virtio,version=9p2000.u");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_HOST_IMAGE(mconfig)) {
-            source = g_strdup_printf("/dev/vd%c", (char)('a' + nHostImage++));
+            source = g_strdup_printf("/dev/vd%c", (char)('a' + nVirtioDev++));
             fstype = "ext4";
             options = g_strdup("");
         } else if (GVIR_SANDBOX_IS_CONFIG_MOUNT_GUEST_BIND(mconfig)) {
@@ -350,6 +351,7 @@ static gboolean gvir_sandbox_builder_machine_write_mount_cfg(GVirSandboxConfig *
  cleanup:
     g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
     g_list_free(mounts);
+    g_list_free(disks);
     if (fos)
         g_object_unref(fos);
     if (!ret)

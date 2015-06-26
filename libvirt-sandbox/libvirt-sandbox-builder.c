@@ -312,14 +312,75 @@ static gboolean gvir_sandbox_builder_construct_features(GVirSandboxBuilder *buil
     return TRUE;
 }
 
-
-static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder G_GNUC_UNUSED,
-                                                       GVirSandboxConfig *config G_GNUC_UNUSED,
-                                                       const gchar *statedir G_GNUC_UNUSED,
-                                                       GVirConfigDomain *domain G_GNUC_UNUSED,
-                                                       GError **error G_GNUC_UNUSED)
+static gboolean gvir_sandbox_builder_construct_disk_cfg(GVirSandboxConfig *config,
+                                                        const gchar *statedir,
+                                                        GError **error)
 {
-    return TRUE;
+
+    guint nVirtioDev = 0;
+    gchar *dskfile = g_strdup_printf("%s/config/disks.cfg", statedir);
+    GFile *file = g_file_new_for_path(dskfile);
+    GFileOutputStream *fos = g_file_replace(file,
+                                            NULL,
+                                            FALSE,
+                                            G_FILE_CREATE_REPLACE_DESTINATION,
+                                            NULL,
+                                            error);
+    gboolean ret = FALSE;
+    GList *disks = gvir_sandbox_config_get_disks(config);
+    GList *tmp = NULL;
+    const gchar *tag;
+
+    if (!fos)
+        goto cleanup;
+
+    tmp = disks;
+    while (tmp) {
+        GVirSandboxConfigDisk *mconfig = GVIR_SANDBOX_CONFIG_DISK(tmp->data);
+        gchar *device = g_strdup_printf("/dev/vd%c", (char)('a' + (nVirtioDev)++));
+        gchar *line;
+
+        tag = gvir_sandbox_config_disk_get_tag(mconfig);
+
+        line = g_strdup_printf("%s\t%s\n",
+                               tag, device);
+        g_free(device);
+
+        if (!g_output_stream_write_all(G_OUTPUT_STREAM(fos),
+                                       line, strlen(line),
+                                       NULL, NULL, error)) {
+            g_free(line);
+            goto cleanup;
+        }
+        g_free(line);
+
+        tmp = tmp->next;
+    }
+
+    if (!g_output_stream_close(G_OUTPUT_STREAM(fos), NULL, error))
+        goto cleanup;
+
+    ret = TRUE;
+ cleanup:
+    g_list_foreach(disks, (GFunc)g_object_unref, NULL);
+    g_list_free(disks);
+    if (fos)
+        g_object_unref(fos);
+    if (!ret)
+        g_file_delete(file, NULL, NULL);
+    g_object_unref(file);
+    g_free(dskfile);
+    return ret;
+
+}
+
+static gboolean gvir_sandbox_builder_construct_devices(GVirSandboxBuilder *builder,
+                                                       GVirSandboxConfig *config,
+                                                       const gchar *statedir,
+                                                       GVirConfigDomain *domain,
+                                                       GError **error)
+{
+    return gvir_sandbox_builder_construct_disk_cfg(config,statedir,error);
 }
 
 static gboolean gvir_sandbox_builder_construct_security_selinux (GVirSandboxBuilder *builder,
