@@ -84,6 +84,7 @@ SANDBOX_HEADER_FILES = \
 			$(NULL)
 SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-main.c \
+			libvirt-sandbox-util.c \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-network.c \
 			libvirt-sandbox-config-network-address.c \
