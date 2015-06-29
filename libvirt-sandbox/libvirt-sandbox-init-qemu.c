@@ -52,6 +52,7 @@
 #define ATTR_UNUSED __attribute__((__unused__))
 
 #define STREQ(x,y) (strcmp(x,y) == 0)
+#define STRNEQ(x,y) (strcmp(x,y) != 0)
 
 static void print_uptime (void);
 static void insmod (const char *filename);
@@ -216,6 +217,79 @@ mount_entry(const char *source,
     }
 }
 
+static void
+mount_root(const char *path)
+{
+    int foundRoot = 0;
+
+    /* Loop over mounts.cfg to see if we have a candidate for / */
+    mount_mkdir(SANDBOXCONFIGDIR, 0755);
+    mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
+
+    FILE *fp = fopen(SANDBOXCONFIGDIR "/mounts.cfg", "r");
+    while (fgets(line, sizeof line, fp) && !foundRoot) {
+        char *source = line;
+        char *target = strchr(source, '\t');
+        *target = '\0';
+        target++;
+        char *type = strchr(target, '\t');
+        *type = '\0';
+        type++;
+        char *opts = strchr(type, '\t');
+        *opts = '\0';
+        opts++;
+        char *tmp = strchr(opts, '\n');
+        *tmp = '\0';
+
+        if (STREQ(target, "/")) {
+            int needsDev = strncmp(source, "/dev/", 5) == 0;
+
+            if (debug)
+                fprintf(stderr, "libvirt-sandbox-init-qemu: found root from %s\n",
+                        source);
+
+            /* In this case, we need to have a /dev before the chroot */
+            if (needsDev) {
+                mount_other("/proc", "proc", 0755);
+                mount_other("/dev", "devtmpfs", 0755);
+            }
+
+            mount_entry(source, path, type, opts);
+
+            if (needsDev) {
+                if (umount("/dev") < 0) {
+                    fprintf(stderr,
+                            "libvirt-sandbox-init-qemu: %s: "
+                            "cannot unmount temporary /dev: %s\n",
+                            __func__, strerror(errno));
+                    exit_poweroff();
+                }
+                if (umount("/proc") < 0) {
+                    fprintf(stderr,
+                            "libvirt-sandbox-init-qemu: %s: "
+                            "cannot unmount temporary /proc: %s\n",
+                            __func__, strerror(errno));
+                    exit_poweroff();
+                }
+            }
+            foundRoot = 1;
+        }
+    }
+    fclose(fp);
+
+    if (umount(SANDBOXCONFIGDIR) < 0) {
+        fprintf(stderr,
+                "libvirt-sandbox-init-qemu: %s: "
+                "cannot unmount temporary %s: %s\n",
+                __func__, SANDBOXCONFIGDIR, strerror(errno));
+        exit_poweroff();
+    }
+
+    /* If we couldn't get a / in the mounts, then use the host one */
+    if (!foundRoot)
+        mount_9pfs("sandbox:root", path, 0755, 1);
+}
+
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
@@ -259,7 +333,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-qemu: mounting new root on /tmproot\n");
 
-    mount_9pfs("sandbox:root", "/tmproot", 0755, 1);
+    mount_root("/tmproot");
 
     /* Note that pivot_root won't work.  See the note in
      * Documentation/filesystems/ramfs-rootfs-initramfs.txt
@@ -318,7 +392,8 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
             fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%s, %s)\n",
                     __func__, source, target, type, opts);
 
-        mount_entry(source, target, type, opts);
+        if (STRNEQ(target, "/"))
+            mount_entry(source, target, type, opts);
     }
     fclose(fp);
 
