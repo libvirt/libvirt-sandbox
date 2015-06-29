@@ -51,6 +51,8 @@
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
+#define STREQ(x,y) (strcmp(x,y) == 0)
+
 static void print_uptime (void);
 static void insmod (const char *filename);
 static void set_debug(void);
@@ -283,7 +285,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
                     __func__, source, target, type, opts);
 
 
-        if (strcmp(type, "") == 0) {
+        if (STREQ(type, "")) {
             struct stat st;
             type = NULL;
             flags |= MS_BIND;
@@ -297,7 +299,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
             else
                 mount_mkfile(target, 644);
         } else {
-            if (strcmp(type, "tmpfs") == 0)
+            if (STREQ(type, "tmpfs"))
                 flags |= MS_NOSUID | MS_NODEV;
 
             mount_mkdir(target, 0755);
