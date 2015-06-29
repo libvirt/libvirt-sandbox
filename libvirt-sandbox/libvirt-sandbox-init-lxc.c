@@ -28,8 +28,6 @@
 
 #include <config.h>
 
-#include <glib.h>
-
 #include <stdio.h>
 #include <sys/wait.h>
 #include <termios.h>
@@ -38,6 +36,8 @@
 #include <string.h>
 #include <errno.h>
 
+#define STRNEQ(x,y) (strcmp(x,y) != 0)
+
 static void set_debug(void);
 static int has_command_arg(const char *name,
                            char **val);
@@ -45,7 +45,7 @@ static int has_command_arg(const char *name,
 static int debug = 0;
 
 int
-main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
+main(int argc, char **argv)
 {
     const char *args[50];
     int narg = 0;
@@ -69,7 +69,7 @@ main(int argc G_GNUC_UNUSED, char **argv G_GNUC_UNUSED)
         args[narg++] = "/tmp/sandbox.log";
         args[narg++] = "-f";
         args[narg++] = "-ff";
-        if (strace && !g_str_equal(strace, "1")) {
+        if (strace && STRNEQ(strace, "1")) {
             args[narg++] = "-e";
             args[narg++] = strace;
         }

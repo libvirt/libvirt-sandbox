@@ -202,21 +202,12 @@ libvirt_sandbox_init_lxc_CFLAGS = \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-I$(top_srcdir) \
 			-I$(top_builddir) \
-			$(GIO_UNIX_CFLAGS) \
-			$(LIBVIRT_GLIB_CFLAGS) \
-			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_lxc_LDFLAGS = \
-			libvirt-sandbox-1.0.la \
+			-all-static \
 			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
-			$(GIO_UNIX_LIBS) \
-			$(LIBVIRT_GLIB_LIBS) \
-			$(LIBVIRT_GOBJECT_LIBS) \
 			$(WARN_CFLAGS) \
-			$(NULL)
-libvirt_sandbox_init_lxc_LDADD = \
-			libvirt-sandbox-1.0.la \
 			$(NULL)
 
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
