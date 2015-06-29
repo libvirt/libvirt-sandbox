@@ -42,7 +42,9 @@
 #include <fcntl.h>
 #include <sys/reboot.h>
 #include <termios.h>
+#if WITH_LZMA
 #include <lzma.h>
+#endif /* WITH_LZMA */
 #include <zlib.h>
 
 #define ATTR_UNUSED __attribute__((__unused__))
@@ -400,6 +402,7 @@ has_suffix(const char *filename, const char *ext)
              offset[strlen(ext)] == '\0');
 }
 
+#if WITH_LZMA
 static char *
 load_module_file_lzma(const char *filename, size_t *len)
 {
@@ -456,6 +459,15 @@ load_module_file_lzma(const char *filename, size_t *len)
     free(xzdata);
     return data;
 }
+#else
+static char *
+load_module_file_lzma(const char *filename, size_t *len)
+{
+    fprintf(stderr, "libvirt-sandbox-init-qemu: %s: "
+            "lzma support disabled, can't read module %s\n", __func__, filename);
+    exit_poweroff();
+}
+#endif /* WITH_LZMA */
 
 static char *
 load_module_file_zlib(const char *filename, size_t *len)

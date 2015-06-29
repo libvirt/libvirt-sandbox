@@ -81,7 +81,15 @@ PKG_CHECK_MODULES(LIBVIRT_GLIB, libvirt-glib-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GOBJECT, libvirt-gobject-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GCONFIG, libvirt-gconfig-1.0 >= $LIBVIRT_GCONFIG_REQUIRED)
 PKG_CHECK_MODULES(ZLIB, zlib >= $ZLIB_REQUIRED)
-PKG_CHECK_MODULES(LZMA, liblzma >= $LZMA_REQUIRED)
+AC_ARG_WITH([lzma],
+  [AS_HELP_STRING([--with-lzma],
+    [add LZMA support @<:@default=yes@:>@])])
+m4_divert_text([DEFAULTS], [with_lzma=yes])
+
+if test "$with_lzma" = "yes" ; then
+    PKG_CHECK_MODULES(LZMA, liblzma >= $LZMA_REQUIRED)
+    AC_DEFINE([WITH_LZMA], [1], [Whether LZMA support was enabled])
+fi
 
 LIBVIRT_SANDBOX_CAPNG
 LIBVIRT_SANDBOX_GETTEXT
@@ -118,6 +126,11 @@ AC_MSG_NOTICE([])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([ Libraries:])
 AC_MSG_NOTICE([])
+if test "$with_lzma" != "no" ; then
+AC_MSG_NOTICE([            LZMA: $LZMA_CFLAGS $LZMA_LIBS])
+else
+AC_MSG_NOTICE([            LZMA: no])
+fi
 AC_MSG_NOTICE([         GOBJECT: $GOBJECT_CFLAGS $GOBJECT_LIBS])
 AC_MSG_NOTICE([ LIBVIRT_GOBJECT: $LIBVIRT_GOBJECT_CFLAGS $LIBVIRT_GOBJECT_LIBS])
 AC_MSG_NOTICE([])
