@@ -77,9 +77,15 @@ main(int argc, char **argv)
         args[narg++] = "1000";
     }
 
-    args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
+    args[narg++] = SANDBOXCONFIGDIR "/.libs/libvirt-sandbox-init-common";
     if (debug)
         args[narg++] = "-d";
+
+    if (setenv("LD_LIBRARY_PATH", SANDBOXCONFIGDIR "/.libs", 1) != 0) {
+        fprintf(stderr, "libvirt-sandbox-init-lxc: %s: cannot set LD_LIBRARY_PATH: %s\n",
+                __func__, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     if (debug)
         fprintf(stderr, "Running interactive\n");

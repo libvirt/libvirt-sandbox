@@ -1256,6 +1256,7 @@ int main(int argc, char **argv) {
     }
 
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
+    unsetenv("LD_LIBRARY_PATH");
 
     if (gvir_sandbox_config_get_shell(config) &&
         start_shell() < 0)

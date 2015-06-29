@@ -338,9 +338,16 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         args[narg++] = "1000";
     }
 
-    args[narg++] = LIBEXECDIR "/libvirt-sandbox-init-common";
+    args[narg++] = SANDBOXCONFIGDIR "/.libs/libvirt-sandbox-init-common";
     if (debug)
         args[narg++] = "-d";
+
+    if (setenv("LD_LIBRARY_PATH", SANDBOXCONFIGDIR "/.libs", 1) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot set LD_LIBRARY_PATH: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
+
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-qemu: Running common init %s\n", args[0]);

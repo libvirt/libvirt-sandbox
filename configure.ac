@@ -111,6 +111,13 @@ LIBVIRT_SANDBOX_SELINUX
 
 LIBVIRT_SANDBOX_STATIC_LIBC
 
+dnl search for LDD path
+AC_PATH_PROG([LDD_PATH], [ldd])
+if test -z "$LDD_PATH"; then
+    AC_MSG_ERROR([Failed to find ldd.])
+fi
+AC_DEFINE_UNQUOTED([LDD_PATH], "$LDD_PATH", [path to ldd binary])
+
 GOBJECT_INTROSPECTION_CHECK([$GOBJECT_INTROSPECTION_REQUIRED])
 
 dnl Should be in m4/virt-gettext.m4 but intltoolize is too

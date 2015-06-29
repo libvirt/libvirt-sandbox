@@ -107,6 +107,8 @@ static gboolean gvir_sandbox_builder_clean_post_stop_default(GVirSandboxBuilder 
                                                              GVirSandboxConfig *config,
                                                              const gchar *statedir,
                                                              GError **error);
+static GList *gvir_sandbox_builder_get_files_to_copy(GVirSandboxBuilder *builder,
+                                                     GVirSandboxConfig *config);
 
 static void gvir_sandbox_builder_get_property(GObject *object,
                                               guint prop_id,
@@ -176,6 +178,7 @@ static void gvir_sandbox_builder_class_init(GVirSandboxBuilderClass *klass)
     klass->construct_security = gvir_sandbox_builder_construct_security;
     klass->clean_post_start = gvir_sandbox_builder_clean_post_start_default;
     klass->clean_post_stop = gvir_sandbox_builder_clean_post_stop_default;
+    klass->get_files_to_copy = gvir_sandbox_builder_get_files_to_copy;
 
     g_object_class_install_property(object_class,
                                     PROP_CONNECTION,
@@ -247,6 +250,108 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
 }
 
 
+static gboolean gvir_sandbox_builder_copy_file(const char *path,
+                                               const char *libsdir,
+                                               GError **error)
+{
+    gchar *name = g_path_get_basename(path);
+    gchar *target = g_build_filename(libsdir, name, NULL);
+    GFile *srcFile = g_file_new_for_path(path);
+    GFile *tgtFile = g_file_new_for_path(target);
+    gboolean result = FALSE;
+
+
+    if (!g_file_query_exists(tgtFile, NULL) &&
+        !g_file_copy(srcFile, tgtFile, 0, NULL, NULL, NULL, error))
+        goto cleanup;
+
+    result = TRUE;
+
+ cleanup:
+    g_object_unref(tgtFile);
+    g_object_unref(srcFile);
+    g_free(target);
+    g_free(name);
+
+    return result;
+}
+
+static gboolean gvir_sandbox_builder_copy_program(const char *program,
+                                                  const char *dest,
+                                                  GError **error)
+{
+    gchar *out = NULL;
+    gchar *line, *tmp;
+    const gchar *argv[] = {LDD_PATH, program, NULL};
+    gboolean result = FALSE;
+
+    if (!gvir_sandbox_builder_copy_file(program, dest, error))
+        goto cleanup;
+
+
+    /* Get all the dependencies to be hard linked */
+    if (!g_spawn_sync(NULL, (gchar **)argv, NULL, 0,
+                      NULL, NULL, &out, NULL, NULL, error))
+        goto cleanup;
+
+    /* Loop over the output lines to get the path to the libraries to copy */
+    line = out;
+    while ((tmp = strchr(line, '\n'))) {
+        gchar *start, *end;
+        *tmp = '\0';
+
+        /* Search the line for the library path */
+        start = strstr(line, " => ");
+        end = strstr(line, " (");
+
+        if (start && end) {
+            start = start + 4;
+            *end = '\0';
+
+            if (!gvir_sandbox_builder_copy_file(start, dest, error))
+                goto cleanup;
+        }
+
+        line = tmp + 1;
+    }
+    result = TRUE;
+
+ cleanup:
+    g_free(out);
+
+    return result;
+}
+
+static gboolean gvir_sandbox_builder_copy_init(GVirSandboxBuilder *builder,
+                                               GVirSandboxConfig *config,
+                                               const gchar *statedir,
+                                               GError **error)
+{
+    gchar *libsdir;
+    GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+    GList *tocopy = NULL, *tmp = NULL;
+    gboolean result = FALSE;
+
+    libsdir = g_build_filename(statedir, "config", ".libs", NULL);
+    g_mkdir_with_parents(libsdir, 0755);
+
+    tmp = tocopy = klass->get_files_to_copy(builder, config);
+    while (tmp) {
+        if (!gvir_sandbox_builder_copy_program(tmp->data, libsdir, error))
+            goto cleanup;
+
+        tmp = tmp->next;
+    }
+    result = TRUE;
+
+ cleanup:
+    g_free(libsdir);
+    g_list_free_full(tocopy, g_free);
+
+    return result;
+}
+
+
 static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builder,
                                                       GVirSandboxConfig *config,
                                                       const gchar *statedir,
@@ -254,6 +359,9 @@ static gboolean gvir_sandbox_builder_construct_domain(GVirSandboxBuilder *builde
                                                       GError **error)
 {
     GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+
+    if (!gvir_sandbox_builder_copy_init(builder, config, statedir, error))
+        return FALSE;
 
     if (!(klass->construct_basic(builder, config, statedir, domain, error)))
         return FALSE;
@@ -511,6 +619,15 @@ static gboolean gvir_sandbox_builder_clean_post_stop_default(GVirSandboxBuilder 
     return TRUE;
 }
 
+static GList *gvir_sandbox_builder_get_files_to_copy(GVirSandboxBuilder *builder,
+                                                     GVirSandboxConfig *config G_GNUC_UNUSED)
+{
+    GList *tocopy = NULL;
+    gchar *file = g_strdup_printf("%s/libvirt-sandbox-init-common", LIBEXECDIR);
+    return g_list_append(tocopy, file);
+}
+
+
 /**
  * gvir_sandbox_builder_construct:
  * @builder: (transfer none): the sandbox builder
@@ -577,8 +694,48 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
                                               GError **error)
 {
     GVirSandboxBuilderClass *klass = GVIR_SANDBOX_BUILDER_GET_CLASS(builder);
+    gchar *libsdir = g_build_filename(statedir, "config", ".libs", NULL);
+    GFile *libsFile = g_file_new_for_path(libsdir);
+    GFileEnumerator *enumerator = NULL;
+    GFileInfo *info = NULL;
+    GFile *child = NULL;
+    gboolean ret = TRUE;
 
-    return klass->clean_post_stop(builder, config, statedir, error);
+    ret = klass->clean_post_stop(builder, config, statedir, error);
+
+    if (!(enumerator = g_file_enumerate_children(libsFile, "*", G_FILE_QUERY_INFO_NONE,
+                                                 NULL, error)) &&
+        (*error)->code != G_IO_ERROR_NOT_FOUND) {
+        ret = FALSE;
+        goto cleanup;
+    }
+
+    while ((info = g_file_enumerator_next_file(enumerator, NULL, error))) {
+        child = g_file_enumerator_get_child(enumerator, info);
+        if (!g_file_delete(child, NULL, error))
+            ret = FALSE;
+        g_object_unref(child);
+        child = NULL;
+        g_object_unref(info);
+        info = NULL;
+    }
+
+    if (!g_file_enumerator_close(enumerator, NULL, error))
+        ret = FALSE;
+
+    if (!g_file_delete(libsFile, NULL, error) &&
+        (*error)->code != G_IO_ERROR_NOT_FOUND)
+        ret = FALSE;
+
+ cleanup:
+    if (child)
+        g_object_unref(child);
+    if (info)
+        g_object_unref(info);
+    g_object_unref(enumerator);
+    g_object_unref(libsFile);
+    g_free(libsdir);
+    return ret;
 }
 
 

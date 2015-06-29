@@ -184,7 +184,7 @@ static gboolean gvir_sandbox_builder_container_construct_os(GVirSandboxBuilder *
     gvir_config_domain_os_set_arch(os,
                                    gvir_sandbox_config_get_arch(config));
     gvir_config_domain_os_set_init(os,
-                                   LIBEXECDIR "/libvirt-sandbox-init-lxc");
+                                   SANDBOXCONFIGDIR "/.libs/libvirt-sandbox-init-lxc");
     gvir_config_domain_os_set_cmdline(os, cmdline);
     gvir_config_domain_set_os(domain, os);
 
@@ -444,6 +444,18 @@ static const gchar *gvir_sandbox_builder_container_get_disk_prefix(GVirSandboxBu
     return "sd";
 }
 
+
+static GList *gvir_sandbox_builder_container_get_files_to_copy(GVirSandboxBuilder *builder,
+                                                               GVirSandboxConfig *config G_GNUC_UNUSED)
+{
+    GList * tocopy = GVIR_SANDBOX_BUILDER_CLASS(gvir_sandbox_builder_container_parent_class)->
+                     get_files_to_copy(builder, config);
+    gchar *file = g_strdup_printf("%s/libvirt-sandbox-init-lxc", LIBEXECDIR);
+
+    return g_list_append(tocopy, file);
+}
+
+
 static void gvir_sandbox_builder_container_class_init(GVirSandboxBuilderContainerClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -458,6 +470,7 @@ static void gvir_sandbox_builder_container_class_init(GVirSandboxBuilderContaine
     builder_class->construct_features = gvir_sandbox_builder_container_construct_features;
     builder_class->construct_devices = gvir_sandbox_builder_container_construct_devices;
     builder_class->get_disk_prefix = gvir_sandbox_builder_container_get_disk_prefix;
+    builder_class->get_files_to_copy = gvir_sandbox_builder_container_get_files_to_copy;
 
     g_type_class_add_private(klass, sizeof(GVirSandboxBuilderContainerPrivate));
 }
