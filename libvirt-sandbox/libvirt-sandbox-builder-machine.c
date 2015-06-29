@@ -515,17 +515,19 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
         construct_devices(builder, config, statedir, domain, error))
         goto cleanup;
 
-    fs = gvir_config_domain_filesys_new();
-    gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
-    gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_SQUASH);
-    gvir_config_domain_filesys_set_source(fs,
-                                          gvir_sandbox_config_get_root(config));
-    gvir_config_domain_filesys_set_target(fs, "sandbox:root");
-    gvir_config_domain_filesys_set_readonly(fs, TRUE);
+    if (!gvir_sandbox_config_has_root_mount(config)) {
+        fs = gvir_config_domain_filesys_new();
+        gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
+        gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_SQUASH);
+        gvir_config_domain_filesys_set_source(fs,
+                                              gvir_sandbox_config_get_root(config));
+        gvir_config_domain_filesys_set_target(fs, "sandbox:root");
+        gvir_config_domain_filesys_set_readonly(fs, TRUE);
 
-    gvir_config_domain_add_device(domain,
-                                  GVIR_CONFIG_DOMAIN_DEVICE(fs));
-    g_object_unref(fs);
+        gvir_config_domain_add_device(domain,
+                                      GVIR_CONFIG_DOMAIN_DEVICE(fs));
+        g_object_unref(fs);
+    }
 
 
     fs = gvir_config_domain_filesys_new();
