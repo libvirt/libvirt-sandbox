@@ -181,6 +181,41 @@ mount_9pfs(const char *src, const char *dst, int mode, int readonly)
 }
 
 
+static void
+mount_entry(const char *source,
+            const char *target,
+            const char *type,
+            const char * opts)
+{
+    int flags = 0;
+
+    if (STREQ(type, "")) {
+        struct stat st;
+        type = NULL;
+        flags |= MS_BIND;
+        if (stat(source, &st) < 0) {
+            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read mount source %s: %s\n",
+                    __func__, source, strerror(errno));
+            exit_poweroff();
+        }
+        if (S_ISDIR(st.st_mode))
+            mount_mkdir(target, 755);
+        else
+            mount_mkfile(target, 644);
+    } else {
+        if (STREQ(type, "tmpfs"))
+            flags |= MS_NOSUID | MS_NODEV;
+
+        mount_mkdir(target, 0755);
+    }
+
+    if (mount(source, target, type, flags, opts) < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (%s, %s): %s\n",
+                __func__, source, target, type, opts, strerror(errno));
+        exit_poweroff();
+    }
+}
+
 int
 main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 {
@@ -278,38 +313,12 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         opts++;
         char *tmp = strchr(opts, '\n');
         *tmp = '\0';
-        int flags = 0;
 
         if (debug)
             fprintf(stderr, "libvirt-sandbox-init-qemu: %s: %s -> %s (%s, %s)\n",
                     __func__, source, target, type, opts);
 
-
-        if (STREQ(type, "")) {
-            struct stat st;
-            type = NULL;
-            flags |= MS_BIND;
-            if (stat(source, &st) < 0) {
-                fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot read mount source %s: %s\n",
-                        __func__, source, strerror(errno));
-                exit_poweroff();
-            }
-            if (S_ISDIR(st.st_mode))
-                mount_mkdir(target, 755);
-            else
-                mount_mkfile(target, 644);
-        } else {
-            if (STREQ(type, "tmpfs"))
-                flags |= MS_NOSUID | MS_NODEV;
-
-            mount_mkdir(target, 0755);
-        }
-
-        if (mount(source, target, type, flags, opts) < 0) {
-            fprintf(stderr, "libvirt-sandbox-init-qemu: %s: cannot mount %s on %s (%s, %s): %s\n",
-                    __func__, source, target, type, opts, strerror(errno));
-            exit_poweroff();
-        }
+        mount_entry(source, target, type, opts);
     }
     fclose(fp);
 
