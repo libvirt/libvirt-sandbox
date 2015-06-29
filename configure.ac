@@ -80,7 +80,17 @@ PKG_CHECK_MODULES(LIBVIRT, libvirt >= $LIBVIRT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GLIB, libvirt-glib-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GOBJECT, libvirt-gobject-1.0 >= $LIBVIRT_GOBJECT_REQUIRED)
 PKG_CHECK_MODULES(LIBVIRT_GCONFIG, libvirt-gconfig-1.0 >= $LIBVIRT_GCONFIG_REQUIRED)
-PKG_CHECK_MODULES(ZLIB, zlib >= $ZLIB_REQUIRED)
+
+AC_ARG_WITH([zlib],
+  [AS_HELP_STRING([--with-zlib],
+    [add ZLIB support @<:@default=yes@:>@])])
+m4_divert_text([DEFAULTS], [with_zlib=yes])
+
+if test "$with_zlib" = "yes" ; then
+    PKG_CHECK_MODULES(ZLIB, zlib >= $ZLIB_REQUIRED)
+    AC_DEFINE([WITH_ZLIB], [1], [Whether ZLIB support was enabled])
+fi
+
 AC_ARG_WITH([lzma],
   [AS_HELP_STRING([--with-lzma],
     [add LZMA support @<:@default=yes@:>@])])
@@ -130,6 +140,11 @@ if test "$with_lzma" != "no" ; then
 AC_MSG_NOTICE([            LZMA: $LZMA_CFLAGS $LZMA_LIBS])
 else
 AC_MSG_NOTICE([            LZMA: no])
+fi
+if test "$with_zlib" != "no" ; then
+AC_MSG_NOTICE([            ZLIB: $ZLIB_CFLAGS $ZLIB_LIBS])
+else
+AC_MSG_NOTICE([            ZLIB: no])
 fi
 AC_MSG_NOTICE([         GOBJECT: $GOBJECT_CFLAGS $GOBJECT_LIBS])
 AC_MSG_NOTICE([ LIBVIRT_GOBJECT: $LIBVIRT_GOBJECT_CFLAGS $LIBVIRT_GOBJECT_LIBS])

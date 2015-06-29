@@ -45,7 +45,9 @@
 #if WITH_LZMA
 #include <lzma.h>
 #endif /* WITH_LZMA */
+#if WITH_ZLIB
 #include <zlib.h>
+#endif /* WITH_ZLIB */
 
 #define ATTR_UNUSED __attribute__((__unused__))
 
@@ -469,6 +471,7 @@ load_module_file_lzma(const char *filename, size_t *len)
 }
 #endif /* WITH_LZMA */
 
+#if WITH_ZLIB
 static char *
 load_module_file_zlib(const char *filename, size_t *len)
 {
@@ -519,6 +522,15 @@ load_module_file_zlib(const char *filename, size_t *len)
     gzclose(fp);
     return data;
 }
+#else
+static char *
+load_module_file_zlib(const char *filename, size_t *len)
+{
+    fprintf(stderr, "libvirt-sandbox-init-qemu: %s: "
+            "zlib support disabled, can't read module %s\n", __func__, filename);
+    exit_poweroff();
+}
+#endif /* WITH_ZLIB */
 
 static char *
 load_module_file_raw(const char *filename, size_t *len)
