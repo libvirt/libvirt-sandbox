@@ -22,7 +22,7 @@
 
 #include <config.h>
 
-#include <libvirt-sandbox/libvirt-sandbox.h>
+#include <libvirt-sandbox/libvirt-sandbox-config-all.h>
 #include <glib/gi18n.h>
 
 #include <stdio.h>
@@ -1224,9 +1224,6 @@ int main(int argc, char **argv) {
         g_printerr(_("%s: must be launched as root\n"), argv[0]);
         exit(EXIT_FAILURE);
     }
-
-    if (!gvir_sandbox_init_check(&argc, &argv, &error))
-        exit(EXIT_FAILURE);
 
     g_set_application_name(_("Libvirt Sandbox Init Common"));
 

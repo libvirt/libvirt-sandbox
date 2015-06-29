@@ -50,10 +50,7 @@ SANDBOX_RPC_FILES = \
 			libvirt-sandbox-rpcpacket.h \
 			$(NULL)
 
-SANDBOX_HEADER_FILES = \
-			libvirt-sandbox.h \
-			libvirt-sandbox-main.h \
-			libvirt-sandbox-util.h \
+SANDBOX_CONFIG_HEADER_FILES = \
 			libvirt-sandbox-config.h \
 			libvirt-sandbox-config-disk.h \
 			libvirt-sandbox-config-network.h \
@@ -72,6 +69,12 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-config-service.h \
 			libvirt-sandbox-config-service-systemd.h \
 			libvirt-sandbox-config-service-generic.h \
+			$(NULL)
+
+SANDBOX_HEADER_FILES = \
+			libvirt-sandbox.h \
+			libvirt-sandbox-main.h \
+			libvirt-sandbox-util.h \
 			libvirt-sandbox-builder.h \
 			libvirt-sandbox-builder-initrd.h \
 			libvirt-sandbox-builder-machine.h \
@@ -82,9 +85,10 @@ SANDBOX_HEADER_FILES = \
 			libvirt-sandbox-context.h \
 			libvirt-sandbox-context-interactive.h \
 			libvirt-sandbox-context-service.h \
+			$(SANDBOX_CONFIG_HEADER_FILES) \
 			$(NULL)
-SANDBOX_SOURCE_FILES = \
-			libvirt-sandbox-main.c \
+
+SANDBOX_CONFIG_SOURCE_FILES = \
 			libvirt-sandbox-util.c \
 			libvirt-sandbox-config.c \
 			libvirt-sandbox-config-disk.c \
@@ -104,6 +108,10 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-config-service.c \
 			libvirt-sandbox-config-service-systemd.c \
 			libvirt-sandbox-config-service-generic.c \
+			$(NULL)
+
+SANDBOX_SOURCE_FILES = \
+			libvirt-sandbox-main.c \
 			libvirt-sandbox-builder.c \
 			libvirt-sandbox-builder-initrd.c \
 			libvirt-sandbox-builder-machine.c \
@@ -115,6 +123,8 @@ SANDBOX_SOURCE_FILES = \
 			libvirt-sandbox-context.c \
 			libvirt-sandbox-context-interactive.c \
 			libvirt-sandbox-context-service.c \
+			libvirt-sandbox-config-all.h \
+			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
@@ -169,31 +179,33 @@ libvirt_sandbox_1_0_la_LDFLAGS = \
 libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c \
 			$(SANDBOX_GENERATED_RPC_FILES) \
 			$(SANDBOX_RPC_FILES) \
+			$(SANDBOX_CONFIG_HEADER_FILES) \
+			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 libvirt_sandbox_init_common_CFLAGS = \
 			-DLIBEXECDIR="\"$(libexecdir)\"" \
 			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
 			-DLOCALEDIR="\"$(datadir)/locale"\" \
+			-DLIBVIRT_SANDBOX_BUILD \
 			$(COVERAGE_CFLAGS) \
 			-I$(top_srcdir) \
 			-I$(top_builddir) \
+			$(LIBVIRT_GCONFIG_CFLAGS) \
 			$(GIO_UNIX_CFLAGS) \
-			$(LIBVIRT_GLIB_CFLAGS) \
-			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(CAPNG_CFLAGS) \
+			$(SELINUX_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDFLAGS = \
 			-lutil \
 			$(COVERAGE_CFLAGS:-f%=-Wc,f%) \
 			$(GIO_UNIX_LIBS) \
-			$(LIBVIRT_GLIB_LIBS) \
-			$(LIBVIRT_GOBJECT_LIBS) \
+			$(LIBVIRT_GCONFIG_LIBS) \
 			$(CAPNG_LIBS) \
+			$(SELINUX_LIBS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDADD = \
-			libvirt-sandbox-1.0.la \
 			$(NULL)
 
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c

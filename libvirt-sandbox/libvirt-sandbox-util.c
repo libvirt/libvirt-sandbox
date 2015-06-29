@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <glib/gi18n.h>
 
-#include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-config-all.h"
 
 #define GVIR_SANDBOX_UTIL_ERROR gvir_sandbox_util_error_quark()
 

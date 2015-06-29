@@ -24,7 +24,7 @@
 #include <config.h>
 #include <string.h>
 
-#include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-config-all.h"
 
 /**
  * SECTION: libvirt-sandbox-config-network-filterref

@@ -26,7 +26,7 @@
 
 #include <glib/gi18n.h>
 
-#include "libvirt-sandbox/libvirt-sandbox.h"
+#include "libvirt-sandbox/libvirt-sandbox-config-all.h"
 #include "libvirt-sandbox/libvirt-sandbox-util.h"
 #include <errno.h>
 #include <selinux/selinux.h>
