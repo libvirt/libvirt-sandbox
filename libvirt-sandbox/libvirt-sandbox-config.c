@@ -1561,6 +1561,27 @@ gboolean gvir_sandbox_config_has_mounts_with_type(GVirSandboxConfig *config,
 }
 
 
+gboolean gvir_sandbox_config_has_root_mount(GVirSandboxConfig *config)
+{
+    GList *tmp = NULL, *mounts = NULL;
+    gboolean hasRoot = FALSE;
+
+    tmp = mounts = gvir_sandbox_config_get_mounts(config);
+    while (tmp && !hasRoot) {
+        const gchar *target;
+        GVirSandboxConfigMount *mount = GVIR_SANDBOX_CONFIG_MOUNT(tmp->data);
+        target = gvir_sandbox_config_mount_get_target(mount);
+        if (g_str_equal(target, "/"))
+            hasRoot = TRUE;
+        tmp = tmp->next;
+    }
+    g_list_foreach(mounts, (GFunc)g_object_unref, NULL);
+    g_list_free(mounts);
+
+    return hasRoot;
+}
+
+
 
 
 /**

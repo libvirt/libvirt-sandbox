@@ -124,6 +124,7 @@ LIBVIRT_SANDBOX_0.6.0 {
 	gvir_sandbox_config_has_networks;
 	gvir_sandbox_config_has_mounts;
 	gvir_sandbox_config_has_mounts_with_type;
+	gvir_sandbox_config_has_root_mount;
 	gvir_sandbox_config_load_from_data;
 	gvir_sandbox_config_load_from_path;
 	gvir_sandbox_config_save_to_data;

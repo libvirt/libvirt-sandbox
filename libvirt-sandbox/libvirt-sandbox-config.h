@@ -150,6 +150,7 @@ gboolean gvir_sandbox_config_add_mount_strv(GVirSandboxConfig *config,
 gboolean gvir_sandbox_config_has_mounts(GVirSandboxConfig *config);
 gboolean gvir_sandbox_config_has_mounts_with_type(GVirSandboxConfig *config,
                                                   GType type);
+gboolean gvir_sandbox_config_has_root_mount(GVirSandboxConfig *config);
 
 gboolean gvir_sandbox_config_add_host_include_strv(GVirSandboxConfig *config,
                                                    gchar **includes,
