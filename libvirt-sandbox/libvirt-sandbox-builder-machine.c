@@ -582,7 +582,7 @@ static gboolean gvir_sandbox_builder_machine_construct_devices(GVirSandboxBuilde
 
             fs = gvir_config_domain_filesys_new();
             gvir_config_domain_filesys_set_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_MOUNT);
-            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_MAPPED);
+            gvir_config_domain_filesys_set_access_type(fs, GVIR_CONFIG_DOMAIN_FILESYS_ACCESS_PASSTHROUGH);
             gvir_config_domain_filesys_set_source(fs,
                                                   gvir_sandbox_config_mount_file_get_source(mfile));
             gvir_config_domain_filesys_set_target(fs, target);
