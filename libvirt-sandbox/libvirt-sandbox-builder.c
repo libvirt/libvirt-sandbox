@@ -252,10 +252,11 @@ GVirConnection *gvir_sandbox_builder_get_connection(GVirSandboxBuilder *builder)
 
 static gboolean gvir_sandbox_builder_copy_file(const char *path,
                                                const char *libsdir,
+                                               const char *newname,
                                                GError **error)
 {
     gchar *name = g_path_get_basename(path);
-    gchar *target = g_build_filename(libsdir, name, NULL);
+    gchar *target = g_build_filename(libsdir, newname ? newname : name, NULL);
     GFile *srcFile = g_file_new_for_path(path);
     GFile *tgtFile = g_file_new_for_path(target);
     gboolean result = FALSE;
@@ -285,7 +286,7 @@ static gboolean gvir_sandbox_builder_copy_program(const char *program,
     const gchar *argv[] = {LDD_PATH, program, NULL};
     gboolean result = FALSE;
 
-    if (!gvir_sandbox_builder_copy_file(program, dest, error))
+    if (!gvir_sandbox_builder_copy_file(program, dest, NULL, error))
         goto cleanup;
 
 
@@ -301,14 +302,31 @@ static gboolean gvir_sandbox_builder_copy_program(const char *program,
         *tmp = '\0';
 
         /* Search the line for the library path */
-        start = strstr(line, " => ");
+        start = strstr(line, "/");
         end = strstr(line, " (");
 
         if (start && end) {
-            start = start + 4;
+            const gchar *newname = NULL;
             *end = '\0';
 
-            if (!gvir_sandbox_builder_copy_file(start, dest, error))
+            /* There are countless different naming schemes for
+             * the ld-linux.so library across architectures. Pretty
+             * much the only thing in common is they start with
+             * the two letters 'ld'. The LDD program prints it
+             * out differently too - it doesn't include " => "
+             * as this library is special - its actually a static
+             * linked executable not a library.
+             *
+             * To make life easier for libvirt-sandbox-init-{qemu,lxc}
+             * we just call the file 'ld.so' when we copy it into our
+             * scratch dir, no matter what it was called on the host.
+             */
+            if (!strstr(line, " => ") &&
+                strstr(start, "/ld")) {
+                newname = "ld.so";
+            }
+
+            if (!gvir_sandbox_builder_copy_file(start, dest, newname, error))
                 goto cleanup;
         }
 

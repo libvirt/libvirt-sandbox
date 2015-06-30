@@ -422,6 +422,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         args[narg++] = "1000";
     }
 
+    args[narg++] = SANDBOXCONFIGDIR "/.libs/ld.so";
     args[narg++] = SANDBOXCONFIGDIR "/.libs/libvirt-sandbox-init-common";
     if (debug)
         args[narg++] = "-d";
