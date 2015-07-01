@@ -40,7 +40,7 @@ gint gvir_sandbox_util_guess_image_format(const gchar *path,
 {
     gchar *tmp;
 
-    if ((tmp = strchr(path, '.')) == NULL) {
+    if ((tmp = g_strrstr(path, ".")) == NULL) {
         g_set_error(error, GVIR_SANDBOX_UTIL_ERROR, 0,
                     _("Cannot identify file extension in '%s'"), path);
         return -1;
