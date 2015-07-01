@@ -22,6 +22,7 @@
 
 #include <config.h>
 #include <string.h>
+#include <errno.h>
 
 #include "libvirt-sandbox/libvirt-sandbox.h"
 #include "libvirt-sandbox/libvirt-sandbox-builder-private.h"
@@ -717,9 +718,14 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
     GFileEnumerator *enumerator = NULL;
     GFileInfo *info = NULL;
     GFile *child = NULL;
+    gchar *dskfile = g_build_filename(statedir, "config", "disks.cfg", NULL);
     gboolean ret = TRUE;
 
     ret = klass->clean_post_stop(builder, config, statedir, error);
+
+    if (unlink(dskfile) < 0 &&
+        errno != ENOENT)
+        ret = FALSE;
 
     if (!(enumerator = g_file_enumerate_children(libsFile, "*", G_FILE_QUERY_INFO_NONE,
                                                  NULL, error)) &&
