@@ -1,6 +1,57 @@
       libvirt Sandbox News
       ====================
 
+0.6.0 - "Dashti Margo" - 2015-07-01
+-----------------------------------
+
+ - API/ABI in-compatible change, soname increased
+ - Prevent use of virt-sandbox-service as non-root upfront
+ - Fix misc memory leaks
+ - Block SIGHUP from the dhclient binary to prevent
+   accidental death if the controlling terminal is
+   closed & reopened
+ - Add support for re-creating libvirt XML from sandbox
+   config to facilitate upgrades
+ - Switch to standard gobject introspection autoconf macros
+ - Add ability to set filters on network interfaces
+ - Search /usr/lib instead of /lib for systemd unit
+   files, as the former is the canonical location even
+   when / and /usr are merged
+ - Only set SELinux labels on hosts that support SELinux
+ - Explicitly link to selinux, instead of relying on
+   indirect linkage
+ - Update compiler warning flags
+ - Fix misc docs comments
+ - Don't assume use of SELinux in virt-sandbox-service
+ - Fix path checks for SUSUE in virt-sandbox-service
+ - Add support for AppArmour profiles
+ - Mount /var after other FS to ensure host image is
+   available
+ - Ensure state/config dirs can be accessed when QEMU
+   is running non-root for qemu:///system
+ - Fix mounting of host images in QEMU sandboxes
+ - Mount images as ext4 instead of ext3
+ - Allow use of non-raw disk images as filesystem
+   mounts
+ - Check if required static libs are available at configure
+   time to prevent silent fallback to shared linking
+ - Require libvirt-glib >= 0.2.1
+ - Add support for loading lzma and gzip compressed kmods
+ - Check for support libvirt URIs when starting guests
+   to ensure clear error message upfront
+ - Add LIBVIRT_SANDBOX_INIT_DEBUG env variable to allow
+   debugging of kernel boot messages and sandbox init
+   process setup
+ - Add support for exposing block devices to sandboxes
+   with a predictable name under /dev/disk/by-tag/TAGNAME
+ - Use devtmpfs instead of tmpfs for auto-populating
+   /dev in QEMU sandboxes
+ - Allow setup of sandbox with custom root filesystem
+   instead of inheriting from host's root.
+ - Allow execution of apps from non-matched ld-linux.so
+   / libc.so, eg executing F19 binaries on F22 host
+ - Use passthrough mode for all QEMU filesystems
+
 0.5.1 - "Cholistan" - 2013-11-18
 --------------------------------
 
