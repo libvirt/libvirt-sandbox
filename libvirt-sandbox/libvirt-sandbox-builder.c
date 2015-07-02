@@ -755,6 +755,7 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
     g_object_unref(enumerator);
     g_object_unref(libsFile);
     g_free(libsdir);
+    g_free(dskfile);
     return ret;
 }
 
