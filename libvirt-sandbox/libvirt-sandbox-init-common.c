@@ -44,6 +44,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <grp.h>
+#include <mntent.h>
+#include <sys/reboot.h>
 
 #include "libvirt-sandbox-rpcpacket.h"
 
@@ -52,6 +54,8 @@ static gboolean verbose = FALSE;
 static int sigwrite;
 
 #define ATTR_UNUSED __attribute__((__unused__))
+static void sync_data(void);
+static void umount_fs(void);
 
 static void sig_child(int sig ATTR_UNUSED)
 {
@@ -606,6 +610,14 @@ static GVirSandboxRPCPacket *gvir_sandbox_encode_exit(int status,
     pkt->header.type = GVIR_SANDBOX_PROTOCOL_TYPE_MESSAGE;
     pkt->header.serial = serial;
 
+    /* The host may destroy the guest any time after receiving
+     * the exit code messages. So although the main() has code
+     * to sync + unmount we can't rely on that running. So we
+     * opportunistically sync + unmount here too.
+     */
+    sync_data();
+    umount_fs();
+
     if (!gvir_sandbox_rpcpacket_encode_header(pkt, error))
         goto error;
     if (!gvir_sandbox_rpcpacket_encode_payload_msg(pkt,
@@ -621,7 +633,151 @@ static GVirSandboxRPCPacket *gvir_sandbox_encode_exit(int status,
     return NULL;
 }
 
+/* Copied & adapted from libguestfs daemon/sync.c under LGPLv2+ */
+static void sync_data(void)
+{
+  DIR *dir;
+  struct dirent *d;
+  char *dev_path;
+  int fd;
 
+  if (debug)
+      fprintf(stderr, "Syncing data\n");
+  sync();
+
+  /* On Linux, sync(2) doesn't perform a barrier, so qemu (which may
+   * have a writeback cache, even with cache=none) will still have
+   * some unwritten data.  Force the data out of any qemu caches, by
+   * calling fsync on all block devices.  Note we still need the
+   * call to sync above in order to schedule the writes.
+   * Thanks to: Avi Kivity, Kevin Wolf.
+   */
+
+  if (!(dir = opendir("/dev"))) {
+      fprintf(stderr, "opendir: /dev failed %s\n", strerror(errno));
+      return;
+  }
+
+  for (;;) {
+      errno = 0;
+      d = readdir(dir);
+      if (!d)
+          break;
+
+      if (!(g_str_has_prefix(d->d_name, "sd") ||
+            g_str_has_prefix(d->d_name, "hd") ||
+            g_str_has_prefix(d->d_name, "ubd") ||
+            g_str_has_prefix(d->d_name, "vd") ||
+            g_str_has_prefix(d->d_name, "sr"))) {
+          continue;
+      }
+
+      dev_path = g_strdup_printf("/dev/%s", d->d_name);
+
+      if (debug)
+          fprintf(stderr, "Syncing fd %s\n", dev_path);
+      if ((fd = open(dev_path, O_RDONLY)) < 0) {
+          fprintf(stderr, "cannot open %s: %s\n", dev_path,
+                  strerror(errno));
+          g_free(dev_path);
+          continue;
+      }
+
+      /* fsync the device. */
+      if (debug) {
+          fprintf(stderr, "fsync %s\n", dev_path);
+      }
+
+      if (fsync(fd) < 0) {
+          fprintf(stderr, "failed to fsync %s: %s\n",
+                  dev_path, strerror(errno));
+      }
+      if (close(fd) < 0) {
+          fprintf(stderr, "failed to close %s: %s\n",
+                  dev_path, strerror(errno));
+      }
+      g_free(dev_path);
+  }
+
+  /* Check readdir didn't fail */
+  if (errno != 0) {
+      fprintf(stderr, "Failed to read /dev: %s\n",
+              strerror(errno));
+  }
+
+  /* Close the directory handle */
+  if (closedir(dir) < 0) {
+      fprintf(stderr, "Failed to block /dev: %s\n",
+              strerror(errno));
+  }
+
+  if (debug)
+      fprintf(stderr, "Syncing complete\n");
+}
+
+
+static int
+compare_longest_first (gconstpointer vp1, gconstpointer vp2)
+{
+    int n1 = strlen(vp1);
+    int n2 = strlen(vp2);
+    return n2 - n1;
+}
+
+
+/* Copied & adapted from libguestfs daemon/sync.c under LGPLv2+ */
+static void umount_fs(void)
+{
+    FILE *fp;
+    struct mntent *m;
+    GList *mounts = NULL, *tmp;
+
+    if (debug)
+        fprintf(stderr, "Unmounting all filesystems\n");
+    if (!(fp = setmntent ("/proc/mounts", "r"))) {
+        fprintf(stderr, "Failed to open /proc/mounts: %s\n",
+                strerror(errno));
+        return;
+    }
+
+    while ((m = getmntent (fp)) != NULL) {
+        if (debug)
+            fprintf(stderr, "Got fsname=%s dir=%s type=%s opts=%s freq=%d passno=%d\n",
+                    m->mnt_fsname, m->mnt_dir, m->mnt_type, m->mnt_opts,
+                    m->mnt_freq, m->mnt_passno);
+
+        mounts = g_list_append(mounts, g_strdup(m->mnt_dir));
+    }
+
+    endmntent(fp);
+
+    mounts = g_list_sort(mounts, compare_longest_first);
+
+    /* Unmount them. */
+    tmp = mounts;
+    while (tmp) {
+        char *dir = tmp->data;
+
+        if (debug)
+            fprintf(stderr, "Unmounting %s\n", dir);
+        if (umount(dir) < 0) {
+            /* We expect some failures, so don't pollute
+             * logs with them uneccessarily
+             */
+            if (debug || errno != EBUSY)
+                fprintf(stderr, "cannot unmount %s: %s\n",
+                        dir, strerror(errno));
+            /* ignore failure */
+        }
+        g_free(dir);
+
+        tmp = tmp->next;
+    }
+
+    g_list_free(mounts);
+    if (debug)
+        fprintf(stderr, "Unmounting complete\n");
+}
 
 
 static gssize read_data(int fd, char *buf, size_t len)
@@ -1212,6 +1368,7 @@ static void libvirt_sandbox_version(void)
 
 int main(int argc, char **argv) {
     gchar *configfile = NULL;
+    gboolean poweroff = FALSE;
     GError *error = NULL;
     GOptionContext *context;
     GOptionEntry options[] = {
@@ -1223,6 +1380,8 @@ int main(int argc, char **argv) {
           N_("display debugging information"), NULL },
         { "config", 'c', 0, G_OPTION_ARG_STRING, &configfile,
           N_("config file path"), "URI"},
+        { "poweroff", 'p', 0, G_OPTION_ARG_NONE, &poweroff,
+          N_("clean power off when exiting"), NULL},
         { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
     };
     const char *help_msg = N_("Run '" PACKAGE " --help' to see a full list of available command line options");
@@ -1298,6 +1457,13 @@ int main(int argc, char **argv) {
     if (error)
         g_error_free(error);
 
+    sync_data();
+
+    if (poweroff) {
+        umount_fs();
+        reboot(RB_POWER_OFF);
+        /* Should not be reached, but if it is, kernel will panic anyway */
+    }
     return ret;
 
  error:

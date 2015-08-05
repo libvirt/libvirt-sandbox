@@ -430,6 +430,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     args[narg++] = SANDBOXCONFIGDIR "/.libs/ld.so";
     args[narg++] = SANDBOXCONFIGDIR "/.libs/libvirt-sandbox-init-common";
+    args[narg++] = "--poweroff";
     if (debug)
         args[narg++] = "-d";
 
