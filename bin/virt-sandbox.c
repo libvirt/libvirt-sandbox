@@ -34,6 +34,22 @@ static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
     return FALSE;
 }
 
+static gboolean do_delayed_close(gpointer opaque)
+{
+    GMainLoop *loop = opaque;
+    g_main_loop_quit(loop);
+    return FALSE;
+}
+
+static gboolean do_pending_close(GVirSandboxConsole *con G_GNUC_UNUSED,
+                                 gboolean error G_GNUC_UNUSED,
+                                 gpointer opaque)
+{
+    GMainLoop *loop = opaque;
+    g_timeout_add(2000, do_delayed_close, loop);
+    return FALSE;
+}
+
 static gboolean do_exited(GVirSandboxConsole *con G_GNUC_UNUSED,
                           int status,
                           gpointer opaque)
@@ -256,7 +272,12 @@ int main(int argc, char **argv) {
                    error && error->message ? error->message : _("Unknown failure"));
         goto cleanup;
     }
-    g_signal_connect(con, "closed", (GCallback)do_close, loop);
+    /* We don't close right away - we want to ensure we read any
+     * final debug info from the log console. We should get an
+     * EOF on that console which will trigger the real close,
+     * but we schedule a timer just in case.
+     */
+    g_signal_connect(con, "closed", (GCallback)do_pending_close, loop);
     g_signal_connect(con, "exited", (GCallback)do_exited, &ret);
 
     if (!(gvir_sandbox_console_attach_stdio(con, &error))) {
