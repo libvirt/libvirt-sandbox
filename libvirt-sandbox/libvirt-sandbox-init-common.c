@@ -398,28 +398,41 @@ static int change_user(const gchar *user,
     return 0;
 }
 
-static gboolean run_command(gboolean interactive, gchar **argv,
+static gboolean run_command(GVirSandboxConfig *config,
                             pid_t *child,
                             int *appin, int *appout, int *apperr)
 {
+    GVirSandboxConfigInteractive *iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
     int pid;
     int master = -1;
     int slave = -1;
     int pipein[2] = { -1, -1};
     int pipeout[2] = { -1, -1};
     int pipeerr[2] = { -1, -1};
+    gchar **appargv = gvir_sandbox_config_get_command(config);
+    gboolean wanttty = gvir_sandbox_config_interactive_get_tty(iconfig);
 
     if (debug)
         fprintf(stderr, "libvirt-sandbox-init-common: running command %s %d\n",
-                argv[0], interactive);
+                appargv[0], wanttty);
 
     *appin = *appout = -1;
 
-    if (interactive) {
+    if (wanttty) {
         if (openpty(&master, &slave, NULL, NULL, NULL) < 0) {
             fprintf(stderr, "Cannot setup slave for child: %s\n",
                     strerror(errno));
             goto error;
+        }
+
+        if (!g_str_equal(gvir_sandbox_config_get_username(config), "root")) {
+            if (fchown(slave,
+                       gvir_sandbox_config_get_userid(config),
+                       gvir_sandbox_config_get_groupid(config)) < 0) {
+                fprintf(stderr, "Cannot make PTY available to user: %s\n",
+                        strerror(errno));
+                goto error;
+            }
         }
 
         *appin = master;
@@ -444,7 +457,13 @@ static gboolean run_command(gboolean interactive, gchar **argv,
     }
 
     if (pid == 0) {
-        if (interactive) {
+        if (change_user(gvir_sandbox_config_get_username(config),
+                        gvir_sandbox_config_get_userid(config),
+                        gvir_sandbox_config_get_groupid(config),
+                        gvir_sandbox_config_get_homedir(config)) < 0)
+            exit(EXIT_FAILURE);
+
+        if (wanttty) {
             close(master);
             close(STDIN_FILENO);
             close(STDOUT_FILENO);
@@ -477,24 +496,25 @@ static gboolean run_command(gboolean interactive, gchar **argv,
                 abort();
         }
 
-        execv(argv[0], argv);
-        fprintf(stderr, "Cannot execute '%s': %s\n", argv[0], strerror(errno));
+        execv(appargv[0], appargv);
+        fprintf(stderr, "Cannot execute '%s': %s\n", appargv[0], strerror(errno));
         exit(EXIT_FAILURE);
     }
 
-    if (interactive)
+    if (wanttty) {
         close(slave);
-    else {
+    } else {
         close(pipein[0]);
         close(pipeout[1]);
         close(pipeerr[1]);
     }
 
     *child = pid;
+    g_strfreev(appargv);
     return TRUE;
 
  error:
-    if (interactive) {
+    if (wanttty) {
         if (master != -1)
             close(master);
         if (slave != -1)
@@ -514,6 +534,7 @@ static gboolean run_command(gboolean interactive, gchar **argv,
             close(pipeerr[1]);
     }
     *appin = *appout = *apperr = -1;
+    g_strfreev(appargv);
     return FALSE;
 }
 
@@ -647,8 +668,7 @@ typedef enum {
     GVIR_SANDBOX_CONSOLE_STATE_RUNNING,
 } GVirSandboxConsoleState;
 
-static gboolean eventloop(gboolean interactive,
-                          gchar **appargv,
+static gboolean eventloop(GVirSandboxConfig *config,
                           int sigread,
                           int host)
 {
@@ -833,8 +853,7 @@ static gboolean eventloop(gboolean interactive,
                                     if (rx->buffer[0] == GVIR_SANDBOX_PROTOCOL_HANDSHAKE_SYNC) {
                                         if (debug)
                                             fprintf(stderr, "Running command\n");
-                                        if (!run_command(interactive,
-                                                         appargv,
+                                        if (!run_command(config,
                                                          &child,
                                                          &appin,
                                                          &appout,
@@ -1105,13 +1124,11 @@ static gboolean eventloop(gboolean interactive,
 static int
 run_interactive(GVirSandboxConfig *config)
 {
-    GVirSandboxConfigInteractive *iconfig = GVIR_SANDBOX_CONFIG_INTERACTIVE(config);
     int sigpipe[2] = { -1, -1 };
     int host = -1;
     int ret = -1;
     struct termios  rawattr;
     const char *devname;
-    gchar **command = NULL;
 
     if (pipe(sigpipe) < 0) {
         g_printerr(_("libvirt-sandbox-init-common: unable to create signal pipe: %s"),
@@ -1146,17 +1163,7 @@ run_interactive(GVirSandboxConfig *config)
     cfmakeraw(&rawattr);
     tcsetattr(host, TCSAFLUSH, &rawattr);
 
-
-
-    if (change_user(gvir_sandbox_config_get_username(config),
-                    gvir_sandbox_config_get_userid(config),
-                    gvir_sandbox_config_get_groupid(config),
-                    gvir_sandbox_config_get_homedir(config)) < 0)
-        goto cleanup;
-
-    command = gvir_sandbox_config_get_command(config);
-    if (!eventloop(gvir_sandbox_config_interactive_get_tty(iconfig),
-                   command,
+    if (!eventloop(config,
                    sigpipe[0],
                    host))
         goto cleanup;
@@ -1164,7 +1171,6 @@ run_interactive(GVirSandboxConfig *config)
     ret = 0;
 
  cleanup:
-    g_strfreev(command);
     signal(SIGCHLD, SIG_DFL);
 
     if (sigpipe[0] != -1)
