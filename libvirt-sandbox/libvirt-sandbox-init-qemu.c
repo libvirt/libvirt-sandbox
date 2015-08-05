@@ -420,7 +420,7 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
         args[narg++] = "/tmp/sandbox.log";
         args[narg++] = "-f";
         args[narg++] = "-ff";
-        if (strace) {
+        if (strace && STRNEQ(strace, "1")) {
             args[narg++] = "-e";
             args[narg++] = strace;
         }

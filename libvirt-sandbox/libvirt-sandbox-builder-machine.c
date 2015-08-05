@@ -248,11 +248,8 @@ static gchar *gvir_sandbox_builder_machine_cmdline(GVirSandboxConfig *config G_G
         g_string_append(str, " quiet loglevel=0");
 
     if ((tmp = getenv("LIBVIRT_SANDBOX_STRACE"))) {
-        g_string_append(str, " strace");
-        if (!g_str_equal(tmp, "1")) {
-            g_string_append(str, "=");
-            g_string_append(str, tmp);
-        }
+        g_string_append(str, " strace=");
+        g_string_append(str, tmp);
     }
 
     /* These make boot a little bit faster */
