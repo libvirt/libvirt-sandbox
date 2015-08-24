@@ -356,6 +356,12 @@ main(int argc ATTR_UNUSED, char **argv ATTR_UNUSED)
 
     /* Main special filesystems */
     mount_other("/dev", "devtmpfs", 0755);
+    if (symlink("/proc/self/fd", "/dev/fd") < 0) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: failed to create /dev/fd symlink: %s\n",
+                __func__, strerror(errno));
+        exit_poweroff();
+    }
+
     mount_other_opts("/dev/pts", "devpts", "gid=5,mode=620,ptmxmode=000", 0755);
     mount_other("/sys", "sysfs", 0755);
     mount_other("/proc", "proc", 0755);
