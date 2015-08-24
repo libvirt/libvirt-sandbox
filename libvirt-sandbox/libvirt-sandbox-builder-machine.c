@@ -181,6 +181,8 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
 #if 0
     gvir_sandbox_config_initrd_add_module(initrd, "virtio_balloon.ko");
 #endif
+    /* For dhclient to work */
+    gvir_sandbox_config_initrd_add_module(initrd, "af_packet.ko");
 
     if (!gvir_sandbox_builder_initrd_construct(builder, initrd, targetfile, error))
         goto cleanup;
