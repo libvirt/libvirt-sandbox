@@ -361,6 +361,18 @@ class DockerSource(Source):
         configfile = templatedir + "/" + toplayer + "/template.json"
         return configfile, diskfile
 
+    def get_disk(self,templatename, templatedir, imagedir, sandboxname):
+        configfile, diskfile = self._get_template_data(templatename, templatedir)
+        tempfile = imagedir + "/" + sandboxname + ".qcow2"
+        if not os.path.exists(imagedir):
+            os.makedirs(imagedir)
+        cmd = ["qemu-img","create","-q","-f","qcow2"]
+        cmd.append("-o")
+        cmd.append("backing_fmt=qcow2,backing_file=%s" % diskfile)
+        cmd.append(tempfile)
+        subprocess.call(cmd)
+        return tempfile
+
     def get_command(self, templatename, templatedir, userargs):
         configfile, diskfile = self._get_template_data(templatename, templatedir)
         configParser = DockerConfParser(configfile)

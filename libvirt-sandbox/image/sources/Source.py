@@ -83,3 +83,15 @@ class Source():
         is specified, then this should override the default args in
         the image"""
         pass
+
+    @abstractmethod
+    def get_disk(self,templatename, templatedir, imagedir, sandboxname):
+        """
+        :param templatename: name of the template image to download
+        :param templatedir: local directory path in which to find template
+        :param imagedir: local directory in which to storage disk image
+
+        Creates an instance private disk image, backed by the content
+        of a template.
+        """
+        pass
