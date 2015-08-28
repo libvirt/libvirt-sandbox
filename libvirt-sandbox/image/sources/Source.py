@@ -61,3 +61,13 @@ class Source():
         inside a sandbox using the requested libvirt connection URI.
         """
         pass
+
+    @abstractmethod
+    def delete_template(self, templatename, templatedir):
+        """
+        :param templatename: name of the template image to delete
+        :param templatedir: local directory path from which to delete template
+
+        Delete all local files associated with the template
+        """
+        pass

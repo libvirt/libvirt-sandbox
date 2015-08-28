@@ -294,5 +294,55 @@ class DockerSource(Source):
         cmd = cmd + params
         subprocess.call(cmd)
 
+    def delete_template(self, templatename, templatedir):
+        imageusage = {}
+        imageparent = {}
+        imagenames = {}
+        imagedirs = os.listdir(templatedir)
+        for imagetagid in imagedirs:
+            indexfile = templatedir + "/" + imagetagid + "/index.json"
+            if os.path.exists(indexfile):
+                with open(indexfile,"r") as f:
+                    index = json.load(f)
+                imagenames[index["name"]] = imagetagid
+            jsonfile = templatedir + "/" + imagetagid + "/template.json"
+            if os.path.exists(jsonfile):
+                with open(jsonfile,"r") as f:
+                    template = json.load(f)
+
+                parent = template.get("parent",None)
+                if parent:
+                    if parent not in imageusage:
+                        imageusage[parent] = []
+                    imageusage[parent].append(imagetagid)
+                    imageparent[imagetagid] = parent
+
+
+        if not templatename in imagenames:
+            raise ValueError(["Image %s does not exist locally" %templatename])
+
+        imagetagid = imagenames[templatename]
+        while imagetagid != None:
+            debug("Remove %s\n" % imagetagid)
+            parent = imageparent.get(imagetagid,None)
+
+            indexfile = templatedir + "/" + imagetagid + "/index.json"
+            if os.path.exists(indexfile):
+               os.remove(indexfile)
+            jsonfile = templatedir + "/" + imagetagid + "/template.json"
+            if os.path.exists(jsonfile):
+                os.remove(jsonfile)
+            datafile = templatedir + "/" + imagetagid + "/template.tar.gz"
+            if os.path.exists(datafile):
+                os.remove(datafile)
+            imagedir = templatedir + "/" + imagetagid
+            shutil.rmtree(imagedir)
+
+            if parent:
+                if len(imageusage[parent]) != 1:
+                    debug("Parent %s is shared\n" % parent)
+                    parent = None
+            imagetagid = parent
+
 def debug(msg):
     sys.stderr.write(msg)
