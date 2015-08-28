@@ -205,5 +205,94 @@ class DockerSource(Source):
             debug("FAIL %s\n" % str(e))
             raise
 
+    def create_template(self, templatename, templatedir, connect=None, format=None):
+        if format is None:
+            format = self.default_disk_format
+        self._check_disk_format(format)
+        imagelist = self._get_image_list(templatename,templatedir)
+        imagelist.reverse()
+
+        parentImage = None
+        for imagetagid in imagelist:
+            templateImage = templatedir + "/" + imagetagid + "/template." + format
+            cmd = ["qemu-img","create","-f","qcow2"]
+            if parentImage is not None:
+                cmd.append("-o")
+                cmd.append("backing_fmt=qcow2,backing_file=%s" % parentImage)
+            cmd.append(templateImage)
+            if parentImage is None:
+                cmd.append("10G")
+            subprocess.call(cmd)
+
+            if parentImage is None:
+                self._format_disk(templateImage,format,connect)
+
+            self._extract_tarballs(templatedir + "/" + imagetagid + "/template.",format,connect)
+            parentImage = templateImage
+
+
+    def _check_disk_format(self,format):
+        supportedFormats = ['qcow2']
+        if not format in supportedFormats:
+            raise ValueError(["Unsupported image format %s" % format])
+
+    def _get_image_list(self,templatename,destdir):
+        imageparent = {}
+        imagenames = {}
+        imagedirs = os.listdir(destdir)
+        for imagetagid in imagedirs:
+            indexfile = destdir + "/" + imagetagid + "/index.json"
+            if os.path.exists(indexfile):
+                with open(indexfile,"r") as f:
+                    index = json.load(f)
+                imagenames[index["name"]] = imagetagid
+            jsonfile = destdir + "/" + imagetagid + "/template.json"
+            if os.path.exists(jsonfile):
+                with open(jsonfile,"r") as f:
+                    template = json.load(f)
+                parent = template.get("parent",None)
+                if parent:
+                    imageparent[imagetagid] = parent
+        if not templatename in imagenames:
+            raise ValueError(["Image %s does not exist locally" %templatename])
+        imagetagid = imagenames[templatename]
+        imagelist = []
+        while imagetagid != None:
+            imagelist.append(imagetagid)
+            parent = imageparent.get(imagetagid,None)
+            imagetagid = parent
+        return imagelist
+
+    def _format_disk(self,disk,format,connect):
+        cmd = ['virt-sandbox']
+        if connect is not None:
+            cmd.append("-c")
+            cmd.append(connect)
+        cmd.append("-p")
+        params = ['--disk=file:disk_image=%s,format=%s' %(disk,format),
+                  '/sbin/mkfs.ext3',
+                  '/dev/disk/by-tag/disk_image']
+        cmd = cmd + params
+        subprocess.call(cmd)
+
+    def _extract_tarballs(self,directory,format,connect):
+        tarfile = directory + "tar.gz"
+        diskfile = directory + "qcow2"
+        cmd = ['virt-sandbox']
+        if connect is not None:
+            cmd.append("-c")
+            cmd.append(connect)
+        cmd.append("-p")
+        params = ['-m',
+                  'host-image:/mnt=%s,format=%s' %(diskfile,format),
+                  '--',
+                  '/bin/tar',
+                  'zxf',
+                  '%s' %tarfile,
+                  '-C',
+                  '/mnt']
+        cmd = cmd + params
+        subprocess.call(cmd)
+
 def debug(msg):
     sys.stderr.write(msg)

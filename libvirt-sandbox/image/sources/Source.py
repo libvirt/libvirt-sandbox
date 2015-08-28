@@ -46,3 +46,18 @@ class Source():
         filesystem
         """
         pass
+
+    @abstractmethod
+    def create_template(self, templatename, templatedir,
+                        connect=None, format=None):
+        """
+        :param templatename: name of the template image to create
+        :param templatedir: local directory path in which to store the template
+        :param connect: libvirt connection URI
+        :param format: disk image format
+
+        Create a set of local disk images populated with the content
+        of a template. The images creation process will be isolated
+        inside a sandbox using the requested libvirt connection URI.
+        """
+        pass

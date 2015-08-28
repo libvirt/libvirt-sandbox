@@ -118,59 +118,6 @@ def delete_template(name, destdir):
                 parent = None
         imagetagid = parent
 
-
-def get_image_list(name, destdir):
-    imageparent = {}
-    imagenames = {}
-    imagedirs = os.listdir(destdir)
-    for imagetagid in imagedirs:
-        indexfile = destdir + "/" + imagetagid + "/index.json"
-        if os.path.exists(indexfile):
-            with open(indexfile, "r") as f:
-                index = json.load(f)
-            imagenames[index["name"]] = imagetagid
-        jsonfile = destdir + "/" + imagetagid + "/template.json"
-        if os.path.exists(jsonfile):
-            with open(jsonfile, "r") as f:
-                template = json.load(f)
-
-            parent = template.get("parent", None)
-            if parent:
-                imageparent[imagetagid] = parent
-
-    if not name in imagenames:
-        raise ValueError(["Image %s does not exist locally" % name])
-
-    imagetagid = imagenames[name]
-    imagelist = []
-    while imagetagid != None:
-        imagelist.append(imagetagid)
-        parent = imageparent.get(imagetagid, None)
-        imagetagid = parent
-
-    return imagelist
-
-def create_template(name, imagepath, format, destdir):
-    if not format in ["qcow2"]:
-        raise ValueError(["Unsupported image format %s" % format])
-
-    imagelist = get_image_list(name, destdir)
-    imagelist.reverse()
-
-    parentImage = None
-    for imagetagid in imagelist:
-        templateImage = destdir + "/" + imagetagid + "/template." + format
-        cmd = ["qemu-img", "create", "-f", "qcow2"]
-        if parentImage is not None:
-            cmd.append("-o")
-            cmd.append("backing_fmt=qcow2,backing_file=%s" % parentImage)
-        cmd.append(templateImage)
-        if parentImage is None:
-            cmd.append("10G")
-        debug("Run %s\n" % " ".join(cmd))
-        subprocess.call(cmd)
-        parentImage = templateImage
-
 def download(args):
     try:
         dynamic_source_loader(args.source).download_template(templatename=args.template,
@@ -188,8 +135,13 @@ def delete(args):
     delete_template(args.template, default_template_dir)
 
 def create(args):
-    info("Creating %s from %s in format %s\n" % (args.imagepath, args.template, args.format))
-    create_template(args.template, args.imagepath, args.format, default_template_dir)
+    try:
+        dynamic_source_loader(args.source).create_template(templatename=args.template,
+                                                           templatedir=args.template_dir,
+                                                           connect=args.connect,
+                                                           format=args.format)
+    except Exception,e:
+        print "Create Error %s" % str(e)
 
 def requires_template(parser):
     parser.add_argument("template",
@@ -199,6 +151,10 @@ def requires_source(parser):
     parser.add_argument("-s","--source",
                         default="docker",
                         help=_("name of the template"))
+
+def requires_connect(parser):
+    parser.add_argument("-c","--connect",
+                        help=_("Connect string for libvirt"))
 
 def requires_auth_conn(parser):
     parser.add_argument("-r","--registry",
@@ -233,10 +189,12 @@ def gen_create_args(subparser):
     parser = subparser.add_parser("create",
                                    help=_("Create image from template data"))
     requires_template(parser)
-    parser.add_argument("imagepath",
-                        help=_("path for image"))
-    parser.add_argument("format",
-                        help=_("format"))
+    requires_source(parser)
+    requires_connect(parser)
+    requires_template_dir(parser)
+    parser.add_argument("-f","--format",
+                        default="qcow2",
+                        help=_("format format for image"))
     parser.set_defaults(func=create)
 
 def main():
