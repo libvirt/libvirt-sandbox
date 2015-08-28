@@ -29,6 +29,16 @@ import os
 import subprocess
 import shutil
 
+class DockerConfParser():
+
+    def __init__(self,jsonfile):
+        with open(jsonfile) as json_file:
+            self.json_data = json.load(json_file)
+    def getCommand(self):
+        return self.json_data['config']['Cmd']
+    def getEntrypoint(self):
+        return self.json_data['config']['Entrypoint']
+
 class DockerSource(Source):
 
     www_auth_username = None
@@ -343,6 +353,27 @@ class DockerSource(Source):
                     debug("Parent %s is shared\n" % parent)
                     parent = None
             imagetagid = parent
+
+    def _get_template_data(self, templatename, templatedir):
+        imageList = self._get_image_list(templatename, templatedir)
+        toplayer = imageList[0]
+        diskfile = templatedir + "/" + toplayer + "/template.qcow2"
+        configfile = templatedir + "/" + toplayer + "/template.json"
+        return configfile, diskfile
+
+    def get_command(self, templatename, templatedir, userargs):
+        configfile, diskfile = self._get_template_data(templatename, templatedir)
+        configParser = DockerConfParser(configfile)
+        cmd = configParser.getCommand()
+        entrypoint = configParser.getEntrypoint()
+        if entrypoint is None:
+            entrypoint = []
+        if cmd is None:
+            cmd = []
+        if userargs is not None and len(userargs) > 0:
+            return entrypoint + userargs
+        else:
+            return entrypoint + cmd
 
 def debug(msg):
     sys.stderr.write(msg)

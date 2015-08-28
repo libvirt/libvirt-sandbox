@@ -71,3 +71,15 @@ class Source():
         Delete all local files associated with the template
         """
         pass
+
+    @abstractmethod
+    def get_command(self, templatename, templatedir, userargs):
+        """
+        :param templatename: name of the template image to query
+        :param templatedir: local directory path in which templates are stored
+        :param userargs: user specified arguments to run
+
+        Get the command line to invoke in the container. If userargs
+        is specified, then this should override the default args in
+        the image"""
+        pass
