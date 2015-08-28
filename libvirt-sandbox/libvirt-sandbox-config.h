@@ -122,6 +122,19 @@ gboolean gvir_sandbox_config_add_network_strv(GVirSandboxConfig *config,
                                               GError **error);
 gboolean gvir_sandbox_config_has_networks(GVirSandboxConfig *config);
 
+void gvir_sandbox_config_add_env(GVirSandboxConfig *config,
+                                 gchar *key,
+                                 gchar *value);
+GHashTable *gvir_sandbox_config_get_envs(GVirSandboxConfig *config);
+gboolean gvir_sandbox_config_add_env_strv(GVirSandboxConfig *config,
+                                           gchar **envs,
+                                           GError **error);
+gboolean gvir_sandbox_config_add_env_opts(GVirSandboxConfig *config,
+                                           const char *env,
+                                           GError **error);
+gboolean gvir_sandbox_config_has_envs(GVirSandboxConfig *config);
+
+
 void gvir_sandbox_config_add_disk(GVirSandboxConfig *config,
                                   GVirSandboxConfigDisk *dsk);
 GList *gvir_sandbox_config_get_disks(GVirSandboxConfig *config);

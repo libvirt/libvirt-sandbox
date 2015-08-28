@@ -217,3 +217,12 @@ LIBVIRT_SANDBOX_0.6.0 {
     local:
         *;
 };
+
+LIBVIRT_SANDBOX_0.6.1 {
+    global:
+	gvir_sandbox_config_add_env;
+	gvir_sandbox_config_add_env_strv;
+	gvir_sandbox_config_add_env_opts;
+	gvir_sandbox_config_env_get_type;
+	gvir_sandbox_config_has_envs;
+} LIBVIRT_SANDBOX_0.6.0;
