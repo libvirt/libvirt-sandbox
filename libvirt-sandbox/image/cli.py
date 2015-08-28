@@ -123,6 +123,12 @@ def run(args):
             cmd.append("-c")
             cmd.append(args.connect)
         params = ['-m','host-image:/=%s,format=%s' %(diskfile,format)]
+
+        networkArgs = args.network
+        if networkArgs is not None:
+            params.append('-N')
+            params.append(networkArgs)
+
         cmd = cmd + params + ['--'] + commandToRun
         subprocess.call(cmd)
         os.unlink(diskfile)
@@ -214,6 +220,8 @@ def gen_run_args(subparser):
     parser.add_argument("args",
                         nargs=argparse.REMAINDER,
                         help=_("command arguments to run"))
+    parser.add_argument("-N","--network",
+                        help=_("Network params for running template"))
     parser.set_defaults(func=run)
 
 def main():
