@@ -31,6 +31,8 @@ import shutil
 import sys
 import urllib2
 import subprocess
+import random
+import string
 
 if os.geteuid() == 0:
     default_template_dir = "/var/lib/libvirt/templates"
@@ -96,6 +98,37 @@ def create(args):
                                                            format=args.format)
     except Exception,e:
         print "Create Error %s" % str(e)
+
+def run(args):
+    try:
+        if args.connect is not None:
+            check_connect(args.connect)
+        source = dynamic_source_loader(args.source)
+        name = args.name
+        if name is None:
+            randomid = ''.join(random.choice(string.lowercase) for i in range(10))
+            name = args.template + ":" + randomid
+
+        diskfile = source.get_disk(templatename=args.template,
+                                   templatedir=args.template_dir,
+                                   imagedir=args.image_dir,
+                                   sandboxname=name)
+
+        format = "qcow2"
+        commandToRun = source.get_command(args.template, args.template_dir, args.args)
+        if len(commandToRun) == 0:
+            commandToRun = ["/bin/sh"]
+        cmd = ['virt-sandbox', '--name', name]
+        if args.connect is not None:
+            cmd.append("-c")
+            cmd.append(args.connect)
+        params = ['-m','host-image:/=%s,format=%s' %(diskfile,format)]
+        cmd = cmd + params + ['--'] + commandToRun
+        subprocess.call(cmd)
+        os.unlink(diskfile)
+
+    except Exception,e:
+        print "Run Error %s" % str(e)
 
 def requires_template(parser):
     parser.add_argument("template",
