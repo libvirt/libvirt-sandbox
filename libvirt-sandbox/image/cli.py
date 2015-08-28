@@ -32,6 +32,16 @@ import sys
 import urllib2
 import subprocess
 
+if os.geteuid() == 0:
+    default_template_dir = "/var/lib/libvirt/templates"
+    default_image_dir = "/var/lib/libvirt/images"
+else:
+    default_template_dir = os.environ['HOME'] + "/.local/share/libvirt/templates"
+    default_image_dir = os.environ['HOME'] + "/.local/share/libvirt/images"
+
+debug = False
+verbose = False
+
 import importlib
 def dynamic_source_loader(name):
     name = name[0].upper() + name[1:]
