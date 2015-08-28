@@ -69,176 +69,6 @@ def debug(msg):
 def info(msg):
     sys.stdout.write(msg)
 
-def get_url(server, path, headers):
-    url = "https://" + server + path
-    debug("  Fetching %s..." % url)
-    req = urllib2.Request(url=url)
-
-    if json:
-        req.add_header("Accept", "application/json")
-
-    for h in headers.keys():
-        req.add_header(h, headers[h])
-
-    return urllib2.urlopen(req)
-
-def get_json(server, path, headers):
-    try:
-        res = get_url(server, path, headers)
-        data = json.loads(res.read())
-        debug("OK\n")
-        return (data, res)
-    except Exception, e:
-        debug("FAIL %s\n" % str(e))
-        raise
-
-def save_data(server, path, headers, dest, checksum=None, datalen=None):
-    try:
-        res = get_url(server, path, headers)
-
-        csum = None
-        if checksum is not None:
-            csum = hashlib.sha256()
-
-        pattern = [".", "o", "O", "o"]
-        patternIndex = 0
-        donelen = 0
-
-        with open(dest, "w") as f:
-            while 1:
-                buf = res.read(1024*64)
-                if not buf:
-                    break
-                if csum is not None:
-                    csum.update(buf)
-                f.write(buf)
-
-                if datalen is not None:
-                    donelen = donelen + len(buf)
-                    debug("\x1b[s%s (%5d Kb of %5d Kb)\x1b8" % (
-                        pattern[patternIndex], (donelen/1024), (datalen/1024)
-                    ))
-                    patternIndex = (patternIndex + 1) % 4
-
-        debug("\x1b[K")
-        if csum is not None:
-            csumstr = "sha256:" + csum.hexdigest()
-            if csumstr != checksum:
-                debug("FAIL checksum '%s' does not match '%s'" % (csumstr, checksum))
-                os.remove(dest)
-                raise IOError("Checksum '%s' for data does not match '%s'" % (csumstr, checksum))
-        debug("OK\n")
-        return res
-    except Exception, e:
-        debug("FAIL %s\n" % str(e))
-        raise
-
-
-def download_template(name, server, destdir):
-    tag = "latest"
-
-    offset = name.find(':')
-    if offset != -1:
-        tag = name[offset + 1:]
-        name = name[0:offset]
-
-    # First we must ask the index server about the image name. THe
-    # index server will return an auth token we can use when talking
-    # to the registry server. We need this token even when anonymous
-    try:
-        (data, res) = get_json(server, "/v1/repositories/" + name + "/images",
-                               {"X-Docker-Token": "true"})
-    except urllib2.HTTPError, e:
-        raise ValueError(["Image '%s' does not exist" % name])
-
-    registryserver = res.info().getheader('X-Docker-Endpoints')
-    token = res.info().getheader('X-Docker-Token')
-    checksums = {}
-    for layer in data:
-        pass
-        # XXX Checksums here don't appear to match the data in
-        # image download later. Find out what these are sums of
-        #checksums[layer["id"]] = layer["checksum"]
-
-    # Now we ask the registry server for the list of tags associated
-    # with the image. Tags usually reflect some kind of version of
-    # the image, but they aren't officially "versions". There is
-    # always a "latest" tag which is the most recent upload
-    #
-    # We must pass in the auth token from the index server. This
-    # token can only be used once, and we're given a cookie back
-    # in return to use for later RPC calls.
-    (data, res) = get_json(registryserver, "/v1/repositories/" + name + "/tags",
-                           { "Authorization": "Token " + token })
-
-    cookie = res.info().getheader('Set-Cookie')
-
-    if not tag in data:
-        raise ValueError(["Tag '%s' does not exist for image '%s'" % (tag, name)])
-    imagetagid = data[tag]
-
-    # Only base images are self-contained, most images reference one
-    # or more parents, in a linear stack. Here we are getting the list
-    # of layers for the image with the tag we used.
-    (data, res) = get_json(registryserver, "/v1/images/" + imagetagid + "/ancestry",
-                           { "Authorization": "Token " + token })
-
-    if data[0] != imagetagid:
-        raise ValueError(["Expected first layer id '%s' to match image id '%s'",
-                          data[0], imagetagid])
-
-    try:
-        createdFiles = []
-        createdDirs = []
-
-        for layerid in data:
-            templatedir = destdir + "/" + layerid
-            if not os.path.exists(templatedir):
-                os.mkdir(templatedir)
-                createdDirs.append(templatedir)
-
-            jsonfile = templatedir + "/template.json"
-            datafile = templatedir + "/template.tar.gz"
-
-            if not os.path.exists(jsonfile) or not os.path.exists(datafile):
-                # The '/json' URL gives us some metadata about the layer
-                res = save_data(registryserver, "/v1/images/" + layerid + "/json",
-                                { "Authorization": "Token " + token }, jsonfile)
-                createdFiles.append(jsonfile)
-                layersize = int(res.info().getheader("Content-Length"))
-
-                datacsum = None
-                if layerid in checksums:
-                    datacsum = checksums[layerid]
-
-                # and the '/layer' URL is the actual payload, provided
-                # as a tar.gz archive
-                save_data(registryserver, "/v1/images/" + layerid + "/layer",
-                          { "Authorization": "Token " + token }, datafile, datacsum, layersize)
-                createdFiles.append(datafile)
-
-        # Strangely the 'json' data for a layer doesn't include
-        # its actual name, so we save that in a json file of our own
-        index = {
-            "name": name,
-        }
-
-        indexfile = destdir + "/" + imagetagid + "/index.json"
-        with open(indexfile, "w") as f:
-            f.write(json.dumps(index))
-    except Exception, e:
-        for f in createdFiles:
-            try:
-                os.remove(f)
-            except:
-                pass
-        for d in createdDirs:
-            try:
-                os.rmdir(d)
-            except:
-                pass
-
-
 def delete_template(name, destdir):
     imageusage = {}
     imageparent = {}
@@ -342,8 +172,16 @@ def create_template(name, imagepath, format, destdir):
         parentImage = templateImage
 
 def download(args):
-    info("Downloading %s from %s to %s\n" % (args.template, default_index_server, default_template_dir))
-    download_template(args.template, default_index_server, default_template_dir)
+    try:
+        dynamic_source_loader(args.source).download_template(templatename=args.template,
+                                                             templatedir=args.template_dir,
+                                                             registry=args.registry,
+                                                             username=args.username,
+                                                             password=args.password)
+    except IOError,e:
+        print "Source %s cannot be found in given path" %args.source
+    except Exception,e:
+        print "Download Error %s" % str(e)
 
 def delete(args):
     info("Deleting %s from %s\n" % (args.template, default_template_dir))
@@ -357,10 +195,32 @@ def requires_template(parser):
     parser.add_argument("template",
                         help=_("name of the template"))
 
+def requires_source(parser):
+    parser.add_argument("-s","--source",
+                        default="docker",
+                        help=_("name of the template"))
+
+def requires_auth_conn(parser):
+    parser.add_argument("-r","--registry",
+                        help=_("Url of the custom registry"))
+    parser.add_argument("-u","--username",
+                        help=_("Username for the custom registry"))
+    parser.add_argument("-p","--password",
+                        help=_("Password for the custom registry"))
+
+def requires_template_dir(parser):
+    global default_template_dir
+    parser.add_argument("-t","--template-dir",
+                        default=default_template_dir,
+                        help=_("Template directory for saving templates"))
+
 def gen_download_args(subparser):
     parser = subparser.add_parser("download",
                                    help=_("Download template data"))
     requires_template(parser)
+    requires_source(parser)
+    requires_auth_conn(parser)
+    requires_template_dir(parser)
     parser.set_defaults(func=download)
 
 def gen_delete_args(subparser):

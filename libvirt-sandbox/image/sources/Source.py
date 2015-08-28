@@ -31,3 +31,18 @@ class Source():
     __metaclass__ = ABCMeta
     def __init__(self):
         pass
+
+    @abstractmethod
+    def download_template(self, templatename, templatedir,
+                          registry=None, username=None, password=None):
+        """
+        :param templatename: name of the template image to download
+        :param templatedir: local directory path in which to store the template
+        :param registry: optional hostname of image registry server
+        :param username: optional username to authenticate against registry server
+        :param password: optional password to authenticate against registry server
+
+        Download a template from the registry, storing it in the local
+        filesystem
+        """
+        pass
