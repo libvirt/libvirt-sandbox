@@ -95,3 +95,13 @@ class Source():
         of a template.
         """
         pass
+
+    @abstractmethod
+    def get_env(self,templatename, templatedir):
+        """
+        :param templatename: name of the template image to download
+        :param templatedir: local directory path in which to find template
+
+        Get the dict of environment variables to set
+        """
+        pass

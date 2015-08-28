@@ -129,6 +129,19 @@ def run(args):
             params.append('-N')
             params.append(networkArgs)
 
+        allEnvs = source.get_env(args.template, args.template_dir)
+        envArgs = args.env
+        if envArgs is not None:
+            allEnvs = allEnvs + envArgs
+        for env in allEnvs:
+            envsplit = env.split("=")
+            envlen = len(envsplit)
+            if envlen == 2:
+                params.append("--env")
+                params.append(env)
+            else:
+                pass
+
         cmd = cmd + params + ['--'] + commandToRun
         subprocess.call(cmd)
         os.unlink(diskfile)
@@ -222,6 +235,9 @@ def gen_run_args(subparser):
                         help=_("command arguments to run"))
     parser.add_argument("-N","--network",
                         help=_("Network params for running template"))
+    parser.add_argument("-e","--env",action="append",
+                        help=_("Environment params for running template"))
+
     parser.set_defaults(func=run)
 
 def main():

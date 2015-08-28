@@ -38,6 +38,12 @@ class DockerConfParser():
         return self.json_data['config']['Cmd']
     def getEntrypoint(self):
         return self.json_data['config']['Entrypoint']
+    def getEnvs(self):
+        lst = self.json_data['config']['Env']
+        if lst is not None and isinstance(lst,list):
+          return lst
+        else:
+          return []
 
 class DockerSource(Source):
 
@@ -386,6 +392,11 @@ class DockerSource(Source):
             return entrypoint + userargs
         else:
             return entrypoint + cmd
+
+    def get_env(self, templatename, templatedir):
+        configfile, diskfile = self._get_template_data(templatename, templatedir)
+        configParser = DockerConfParser(configfile)
+        return configParser.getEnvs()
 
 def debug(msg):
     sys.stderr.write(msg)
