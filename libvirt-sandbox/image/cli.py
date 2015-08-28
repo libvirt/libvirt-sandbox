@@ -1,5 +1,5 @@
 #!/usr/bin/python -Es
-#
+# -*- coding: utf-8 -*-
 # Authors: Daniel P. Berrange <berrange@redhat.com>
 #          Eren Yagdiran <erenyagdiran@gmail.com>
 #
@@ -32,11 +32,14 @@ import sys
 import urllib2
 import subprocess
 
-default_index_server = "index.docker.io"
-default_template_dir = "/var/lib/libvirt/templates"
-
-debug = True
-verbose = True
+import importlib
+def dynamic_source_loader(name):
+    name = name[0].upper() + name[1:]
+    modname = "libvirt_sandbox.image.sources." + name + "Source"
+    mod = importlib.import_module(modname)
+    classname = name + "Source"
+    classimpl = getattr(mod, classname)
+    return classimpl()
 
 gettext.bindtextdomain("libvirt-sandbox", "/usr/share/locale")
 gettext.textdomain("libvirt-sandbox")

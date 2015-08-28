@@ -1,4 +1,6 @@
 
+SUBDIRS = sources
+
 pythonsandboxdir = $(pythondir)/libvirt_sandbox
 pythonsandbox_DATA = __init__.py
 

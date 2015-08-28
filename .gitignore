@@ -42,6 +42,7 @@ libvirt-sandbox/LibvirtSandbox-1.0.typelib
 *.lo
 *.la
 *.o
+*.pyc
 *~
 libvirt-sandbox/libvirt-sandbox-init-lxc
 libvirt-sandbox/libvirt-sandbox-init-common
