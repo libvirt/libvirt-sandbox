@@ -348,6 +348,21 @@ static gboolean setup_network(GVirSandboxConfig *config, GError **error)
 }
 
 
+static gboolean setup_custom_env(GVirSandboxConfig *config, GError **error)
+{
+    gboolean ret = FALSE;
+    GHashTableIter iter;
+    gpointer key, value;
+    g_hash_table_iter_init (&iter, gvir_sandbox_config_get_envs(config));
+    while (g_hash_table_iter_next (&iter, &key, &value)){
+        if(setenv(key,value,1)!=0)
+            goto cleanup;
+    }
+    ret = TRUE;
+  cleanup:
+    return ret;
+}
+
 static int change_user(const gchar *user,
                        uid_t uid,
                        gid_t gid,
@@ -1435,6 +1450,9 @@ int main(int argc, char **argv) {
 
     if (!setup_disk_tags())
         exit(EXIT_FAILURE);
+
+    if (!setup_custom_env(config, &error))
+        goto error;
 
     if (!setup_network(config, &error))
         goto error;
