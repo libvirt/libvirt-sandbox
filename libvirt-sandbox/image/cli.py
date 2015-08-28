@@ -101,6 +101,10 @@ def requires_template(parser):
     parser.add_argument("template",
                         help=_("name of the template"))
 
+def requires_name(parser):
+    parser.add_argument("-n","--name",
+                        help=_("Name of the running sandbox"))
+
 def requires_source(parser):
     parser.add_argument("-s","--source",
                         default="docker",
@@ -123,6 +127,12 @@ def requires_template_dir(parser):
     parser.add_argument("-t","--template-dir",
                         default=default_template_dir,
                         help=_("Template directory for saving templates"))
+
+def requires_image_dir(parser):
+    global default_image_dir
+    parser.add_argument("-I","--image-dir",
+                        default=default_image_dir,
+                        help=_("Image directory for saving images"))
 
 def gen_download_args(subparser):
     parser = subparser.add_parser("download",
@@ -153,6 +163,20 @@ def gen_create_args(subparser):
                         help=_("format format for image"))
     parser.set_defaults(func=create)
 
+def gen_run_args(subparser):
+    parser = subparser.add_parser("run",
+                                  help=_("Run an already built image"))
+    requires_name(parser)
+    requires_template(parser)
+    requires_source(parser)
+    requires_connect(parser)
+    requires_template_dir(parser)
+    requires_image_dir(parser)
+    parser.add_argument("args",
+                        nargs=argparse.REMAINDER,
+                        help=_("command arguments to run"))
+    parser.set_defaults(func=run)
+
 def main():
     parser = argparse.ArgumentParser(description='Sandbox Container Image Tool')
 
@@ -160,6 +184,7 @@ def main():
     gen_download_args(subparser)
     gen_delete_args(subparser)
     gen_create_args(subparser)
+    gen_run_args(subparser)
 
     try:
         args = parser.parse_args()
