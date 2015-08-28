@@ -1,8 +1,10 @@
 #!/usr/bin/python -Es
 #
 # Authors: Daniel P. Berrange <berrange@redhat.com>
+#          Eren Yagdiran <erenyagdiran@gmail.com>
 #
 # Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2015 Universitat Politècnica de Catalunya.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -166,7 +168,7 @@ def download_template(name, server, destdir):
     # or more parents, in a linear stack. Here we are getting the list
     # of layers for the image with the tag we used.
     (data, res) = get_json(registryserver, "/v1/images/" + imagetagid + "/ancestry",
-                           { "Cookie": cookie })
+                           { "Authorization": "Token " + token })
 
     if data[0] != imagetagid:
         raise ValueError(["Expected first layer id '%s' to match image id '%s'",
@@ -188,9 +190,9 @@ def download_template(name, server, destdir):
             if not os.path.exists(jsonfile) or not os.path.exists(datafile):
                 # The '/json' URL gives us some metadata about the layer
                 res = save_data(registryserver, "/v1/images/" + layerid + "/json",
-                                { "Cookie": cookie }, jsonfile)
+                                { "Authorization": "Token " + token }, jsonfile)
                 createdFiles.append(jsonfile)
-                layersize = int(res.info().getheader("x-docker-size"))
+                layersize = int(res.info().getheader("Content-Length"))
 
                 datacsum = None
                 if layerid in checksums:
@@ -199,7 +201,7 @@ def download_template(name, server, destdir):
                 # and the '/layer' URL is the actual payload, provided
                 # as a tar.gz archive
                 save_data(registryserver, "/v1/images/" + layerid + "/layer",
-                          { "Cookie": cookie }, datafile, datacsum, layersize)
+                          { "Authorization": "Token " + token }, datafile, datacsum, layersize)
                 createdFiles.append(datafile)
 
         # Strangely the 'json' data for a layer doesn't include
