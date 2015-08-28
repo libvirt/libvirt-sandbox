@@ -105,6 +105,12 @@ def requires_name(parser):
     parser.add_argument("-n","--name",
                         help=_("Name of the running sandbox"))
 
+def check_connect(connectstr):
+    supportedDrivers = ['lxc:///','qemu:///session','qemu:///system']
+    if not connectstr in supportedDrivers:
+        raise ValueError("URI '%s' is not supported by virt-sandbox-image" % connectstr)
+    return True
+
 def requires_source(parser):
     parser.add_argument("-s","--source",
                         default="docker",
