@@ -80,6 +80,7 @@ int main(int argc, char **argv) {
     GError *error = NULL;
     gchar *name = NULL;
     gchar **disks = NULL;
+    gchar **envs = NULL;
     gchar **mounts = NULL;
     gchar **includes = NULL;
     gchar *includefile = NULL;
@@ -111,6 +112,8 @@ int main(int argc, char **argv) {
           N_("root directory of the sandbox"), "DIR" },
         { "disk", ' ', 0, G_OPTION_ARG_STRING_ARRAY, &disks,
           N_("add a disk in the guest"), "TYPE:TAGNAME=SOURCE,format=FORMAT" },
+        { "env", 'e', 0, G_OPTION_ARG_STRING_ARRAY, &envs,
+          N_("add a environment variable for the sandbox"), "KEY=VALUE" },
         { "mount", 'm', 0, G_OPTION_ARG_STRING_ARRAY, &mounts,
           N_("mount a filesystem in the guest"), "TYPE:TARGET=SOURCE" },
         { "include", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &includes,
@@ -199,6 +202,13 @@ int main(int argc, char **argv) {
         gvir_sandbox_config_set_userid(cfg, 0);
         gvir_sandbox_config_set_groupid(cfg, 0);
         gvir_sandbox_config_set_username(cfg, "root");
+    }
+
+    if (envs &&
+        !gvir_sandbox_config_add_env_strv(cfg, envs, &error)) {
+        g_printerr(_("Unable to parse custom environment variables: %s\n"),
+                   error && error->message ? error->message : _("Unknown failure"));
+        goto cleanup;
     }
 
     if (disks &&
@@ -349,6 +359,10 @@ inheriting the host's root filesystem.
 
 NB. C<DIR> must contain a matching install of the libvirt-sandbox
 package. This restriction may be lifted in a future version.
+
+=item B<--env key=value>
+
+Sets up a custom environment variable on a running sandbox.
 
 =item B<--disk TYPE:TAGNAME=SOURCE,format=FORMAT>
 
