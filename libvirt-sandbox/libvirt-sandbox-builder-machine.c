@@ -184,6 +184,13 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
     /* For dhclient to work */
     gvir_sandbox_config_initrd_add_module(initrd, "af_packet.ko");
 
+    /* In case ext4 is built as a module, include it and its deps
+     * for the root mount */
+    gvir_sandbox_config_initrd_add_module(initrd, "mbcache.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "jbd2.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "crc16.ko");
+    gvir_sandbox_config_initrd_add_module(initrd, "ext4.ko");
+
     if (!gvir_sandbox_builder_initrd_construct(builder, initrd, targetfile, error))
         goto cleanup;
 
