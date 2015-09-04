@@ -327,37 +327,37 @@ def create_template(name, imagepath, format, destdir):
         parentImage = templateImage
 
 def download(args):
-    info("Downloading %s from %s to %s\n" % (args.name, default_index_server, default_template_dir))
-    download_template(args.name, default_index_server, default_template_dir)
+    info("Downloading %s from %s to %s\n" % (args.template, default_index_server, default_template_dir))
+    download_template(args.template, default_index_server, default_template_dir)
 
 def delete(args):
-    info("Deleting %s from %s\n" % (args.name, default_template_dir))
-    delete_template(args.name, default_template_dir)
+    info("Deleting %s from %s\n" % (args.template, default_template_dir))
+    delete_template(args.template, default_template_dir)
 
 def create(args):
-    info("Creating %s from %s in format %s\n" % (args.imagepath, args.name, args.format))
-    create_template(args.name, args.imagepath, args.format, default_template_dir)
+    info("Creating %s from %s in format %s\n" % (args.imagepath, args.template, args.format))
+    create_template(args.template, args.imagepath, args.format, default_template_dir)
 
-def requires_name(parser):
-    parser.add_argument("name",
+def requires_template(parser):
+    parser.add_argument("template",
                         help=_("name of the template"))
 
 def gen_download_args(subparser):
     parser = subparser.add_parser("download",
                                    help=_("Download template data"))
-    requires_name(parser)
+    requires_template(parser)
     parser.set_defaults(func=download)
 
 def gen_delete_args(subparser):
     parser = subparser.add_parser("delete",
                                    help=_("Delete template data"))
-    requires_name(parser)
+    requires_template(parser)
     parser.set_defaults(func=delete)
 
 def gen_create_args(subparser):
     parser = subparser.add_parser("create",
                                    help=_("Create image from template data"))
-    requires_name(parser)
+    requires_template(parser)
     parser.add_argument("imagepath",
                         help=_("path for image"))
     parser.add_argument("format",
