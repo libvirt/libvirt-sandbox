@@ -735,8 +735,9 @@ static void umount_fs(void)
     if (debug)
         fprintf(stderr, "Unmounting all filesystems\n");
     if (!(fp = setmntent ("/proc/mounts", "r"))) {
-        fprintf(stderr, "Failed to open /proc/mounts: %s\n",
-                strerror(errno));
+        if (debug)
+            fprintf(stderr, "Failed to open /proc/mounts: %s\n",
+                    strerror(errno));
         return;
     }
 
@@ -764,7 +765,7 @@ static void umount_fs(void)
             /* We expect some failures, so don't pollute
              * logs with them uneccessarily
              */
-            if (debug || errno != EBUSY)
+            if (debug)
                 fprintf(stderr, "cannot unmount %s: %s\n",
                         dir, strerror(errno));
             /* ignore failure */
