@@ -98,7 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/libvirt-sandbox/services
 %{_bindir}/virt-sandbox
 %{_bindir}/virt-sandbox-service
+%{_bindir}/virt-sandbox-image
 %{_libexecdir}/virt-sandbox-service-util
+%{python_sitelib}/libvirt_sandbox
 %{_mandir}/man1/virt-sandbox.1*
 %{_mandir}/man1/virt-sandbox-service.1*
 %{_mandir}/man1/virt-sandbox-service-*.1*

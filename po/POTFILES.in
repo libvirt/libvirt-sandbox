@@ -11,3 +11,4 @@ libvirt-sandbox/libvirt-sandbox-context-interactive.c
 libvirt-sandbox/libvirt-sandbox-init-common.c
 libvirt-sandbox/libvirt-sandbox-rpcpacket.c
 libvirt-sandbox/libvirt-sandbox-util.c
+libvirt-sandbox/image/cli.py

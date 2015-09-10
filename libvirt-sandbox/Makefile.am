@@ -2,7 +2,7 @@
 EXTRA_DIST = libvirt-sandbox.sym
 CLEANFILES =
 
-SUBDIRS = tests
+SUBDIRS = tests image
 
 rundir = $(localstatedir)/run
 

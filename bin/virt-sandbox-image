@@ -1,0 +1,8 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from libvirt_sandbox.image import cli
+import sys
+
+if __name__ == '__main__':
+   sys.exit(cli.main())
