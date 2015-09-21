@@ -261,7 +261,7 @@ class DockerSource(Source):
             subprocess.call(cmd)
 
             if parentImage is None:
-                self._format_disk(templateImage,format,connect)
+                self.format_disk(templateImage,format,connect)
 
             self._extract_tarballs(templatedir + "/" + imagetagid + "/template.",format,connect)
             parentImage = templateImage
@@ -298,18 +298,6 @@ class DockerSource(Source):
             parent = imageparent.get(imagetagid,None)
             imagetagid = parent
         return imagelist
-
-    def _format_disk(self,disk,format,connect):
-        cmd = ['virt-sandbox']
-        if connect is not None:
-            cmd.append("-c")
-            cmd.append(connect)
-        cmd.append("-p")
-        params = ['--disk=file:disk_image=%s,format=%s' %(disk,format),
-                  '/sbin/mkfs.ext3',
-                  '/dev/disk/by-tag/disk_image']
-        cmd = cmd + params
-        subprocess.call(cmd)
 
     def _extract_tarballs(self,directory,format,connect):
         tarfile = directory + "tar.gz"

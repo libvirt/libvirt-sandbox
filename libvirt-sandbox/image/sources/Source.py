@@ -21,6 +21,7 @@
 # Author: Eren Yagdiran <erenyagdiran@gmail.com>
 
 from abc import ABCMeta, abstractmethod
+import subprocess
 
 class Source():
     '''The Source class defines the base interface for
@@ -114,3 +115,18 @@ class Source():
         cleanup.
         """
         pass
+
+
+    # Utility functions to share between the sources.
+
+    def format_disk(self,disk,format,connect):
+        cmd = ['virt-sandbox']
+        if connect is not None:
+            cmd.append("-c")
+            cmd.append(connect)
+        cmd.append("-p")
+        params = ['--disk=file:disk_image=%s,format=%s' %(disk,format),
+                  '/sbin/mkfs.ext3',
+                  '/dev/disk/by-tag/disk_image']
+        cmd = cmd + params
+        subprocess.call(cmd)
