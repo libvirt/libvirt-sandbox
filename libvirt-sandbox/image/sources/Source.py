@@ -102,3 +102,15 @@ class Source():
         Get the dict of environment variables to set
         """
         pass
+
+    def post_run(self, template, templatedir, imagename):
+        """
+        :param template: libvirt_sandbox.template.Template object
+        :param templatedir: local directory path in which to find template
+        :param imagename: name of the image that just stopped running
+
+        Hook called after the image has been stopped. By default is doesn't
+        do anything, subclasses can override this to do some additional
+        cleanup.
+        """
+        pass

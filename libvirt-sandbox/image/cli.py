@@ -142,6 +142,7 @@ def run(args):
         cmd = cmd + params + ['--'] + commandToRun
         subprocess.call(cmd)
         os.unlink(diskfile)
+        source.post_run(tmpl, args.template_dir, name)
 
     except Exception,e:
         print "Run Error %s" % str(e)
