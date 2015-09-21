@@ -75,10 +75,14 @@ class DockerSource(Source):
         checksums = {}
         for layer in data:
             pass
+
+        headers = {}
+        if token is not None:
+            headers["Authorization"] = "Token " + token
         (data, res) = self._get_json(template,
                                      registryendpoint,
                                      "/v1/repositories" + template.path + "/tags",
-                                     { "Authorization": "Token " + token })
+                                     headers)
 
         cookie = res.info().getheader('Set-Cookie')
 
@@ -90,7 +94,7 @@ class DockerSource(Source):
         (data, res) = self._get_json(template,
                                      registryendpoint,
                                      "/v1/images/" + imagetagid + "/ancestry",
-                                     { "Authorization": "Token "+ token })
+                                     headers)
 
         if data[0] != imagetagid:
             raise ValueError(["Expected first layer id '%s' to match image id '%s'",
@@ -113,7 +117,7 @@ class DockerSource(Source):
                     res = self._save_data(template,
                                           registryendpoint,
                                           "/v1/images/" + layerid + "/json",
-                                          { "Authorization": "Token " + token },
+                                          headers,
                                           jsonfile)
                     createdFiles.append(jsonfile)
 
@@ -126,7 +130,7 @@ class DockerSource(Source):
                     self._save_data(template,
                                     registryendpoint,
                                     "/v1/images/" + layerid + "/layer",
-                                    { "Authorization": "Token "+token },
+                                    headers,
                                     datafile, datacsum, layersize)
                     createdFiles.append(datafile)
 
