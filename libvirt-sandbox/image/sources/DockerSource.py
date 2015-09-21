@@ -59,6 +59,22 @@ class DockerSource(Source):
         if  (major == 2 and sys.hexversion < py2_7_9_hexversion) or (major == 3 and sys.hexversion < py3_4_3_hexversion):
             sys.stderr.write(SSL_WARNING)
 
+    def _was_downloaded(self, template, templatedir):
+        try:
+            self._get_image_list(template, templatedir)
+            return True
+        except Exception:
+            return False
+
+
+    def has_template(self, template, templatedir):
+        try:
+            configfile, diskfile = self._get_template_data(template, templatedir)
+            return os.path.exists(diskfile)
+        except Exception:
+            return False
+
+
     def download_template(self, template, templatedir):
         self._check_cert_validate()
 
@@ -243,6 +259,9 @@ class DockerSource(Source):
 
     def create_template(self, template, templatedir, connect=None):
         self.download_template(template, templatedir)
+
+        if not self._was_downloaded(template, templatedir):
+            self.download_template(template, templatedir)
 
         imagelist = self._get_image_list(template, templatedir)
         imagelist.reverse()

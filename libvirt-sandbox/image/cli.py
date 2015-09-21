@@ -84,6 +84,10 @@ def run(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
 
+    # Create the template image if needed
+    if not source.has_template(tmpl, args.template_dir):
+        create(args)
+
     name = args.name
     if name is None:
         randomid = ''.join(random.choice(string.lowercase) for i in range(10))

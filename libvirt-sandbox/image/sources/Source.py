@@ -34,6 +34,17 @@ class Source():
     def __init__(self):
         pass
 
+
+    @abstractmethod
+    def has_template(self, template, templatedir):
+        """
+        :param template: libvirt_sandbox.template.Template object
+        :param templatedir: local directory path in which to store the template
+
+        Check if a template has already been created.
+        """
+        pass
+
     @abstractmethod
     def create_template(self, template, templatedir,
                         connect=None):
