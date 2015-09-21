@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2015 Universitat Politècnica de Catalunya.
+# Copyright (C) 2015 Red Hat, Inc.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -33,14 +34,10 @@ class Source():
         pass
 
     @abstractmethod
-    def download_template(self, templatename, templatedir,
-                          registry=None, username=None, password=None):
+    def download_template(self, template, templatedir):
         """
-        :param templatename: name of the template image to download
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which to store the template
-        :param registry: optional hostname of image registry server
-        :param username: optional username to authenticate against registry server
-        :param password: optional password to authenticate against registry server
 
         Download a template from the registry, storing it in the local
         filesystem
@@ -48,10 +45,10 @@ class Source():
         pass
 
     @abstractmethod
-    def create_template(self, templatename, templatedir,
+    def create_template(self, template, templatedir,
                         connect=None, format=None):
         """
-        :param templatename: name of the template image to create
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which to store the template
         :param connect: libvirt connection URI
         :param format: disk image format
@@ -63,9 +60,9 @@ class Source():
         pass
 
     @abstractmethod
-    def delete_template(self, templatename, templatedir):
+    def delete_template(self, template, templatedir):
         """
-        :param templatename: name of the template image to delete
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path from which to delete template
 
         Delete all local files associated with the template
@@ -73,9 +70,9 @@ class Source():
         pass
 
     @abstractmethod
-    def get_command(self, templatename, templatedir, userargs):
+    def get_command(self, template, templatedir, userargs):
         """
-        :param templatename: name of the template image to query
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which templates are stored
         :param userargs: user specified arguments to run
 
@@ -85,9 +82,9 @@ class Source():
         pass
 
     @abstractmethod
-    def get_disk(self,templatename, templatedir, imagedir, sandboxname):
+    def get_disk(self, template, templatedir, imagedir, sandboxname):
         """
-        :param templatename: name of the template image to download
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which to find template
         :param imagedir: local directory in which to storage disk image
 
@@ -97,9 +94,9 @@ class Source():
         pass
 
     @abstractmethod
-    def get_env(self,templatename, templatedir):
+    def get_env(self, template, templatedir):
         """
-        :param templatename: name of the template image to download
+        :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which to find template
 
         Get the dict of environment variables to set

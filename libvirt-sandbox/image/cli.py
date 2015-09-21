@@ -3,7 +3,7 @@
 # Authors: Daniel P. Berrange <berrange@redhat.com>
 #          Eren Yagdiran <erenyagdiran@gmail.com>
 #
-# Copyright (C) 2013 Red Hat, Inc.
+# Copyright (C) 2013-2015 Red Hat, Inc.
 # Copyright (C) 2015 Universitat Politècnica de Catalunya.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,8 @@ import subprocess
 import random
 import string
 
+from libvirt_sandbox.image import template
+
 if os.geteuid() == 0:
     default_template_dir = "/var/lib/libvirt/templates"
     default_image_dir = "/var/lib/libvirt/images"
@@ -43,15 +45,6 @@ else:
 
 debug = False
 verbose = False
-
-import importlib
-def dynamic_source_loader(name):
-    name = name[0].upper() + name[1:]
-    modname = "libvirt_sandbox.image.sources." + name + "Source"
-    mod = importlib.import_module(modname)
-    classname = name + "Source"
-    classimpl = getattr(mod, classname)
-    return classimpl()
 
 gettext.bindtextdomain("libvirt-sandbox", "/usr/share/locale")
 gettext.textdomain("libvirt-sandbox")
@@ -73,29 +66,30 @@ def info(msg):
 
 def download(args):
     try:
-        dynamic_source_loader(args.source).download_template(templatename=args.template,
-                                                             templatedir=args.template_dir,
-                                                             registry=args.registry,
-                                                             username=args.username,
-                                                             password=args.password)
-    except IOError,e:
-        print "Source %s cannot be found in given path" %args.source
+        tmpl = template.Template.from_uri(args.template)
+        source = tmpl.get_source_impl()
+        source.download_template(template=tmpl,
+                                 templatedir=args.template_dir)
     except Exception,e:
         print "Download Error %s" % str(e)
 
 def delete(args):
     try:
-        dynamic_source_loader(args.source).delete_template(templatename=args.template,
-                                                           templatedir=args.template_dir)
+        tmpl = template.Template.from_uri(args.template)
+        source = tmpl.get_source_impl()
+        source.delete_template(template=tmpl,
+                               templatedir=args.template_dir)
     except Exception,e:
         print "Delete Error %s", str(e)
 
 def create(args):
     try:
-        dynamic_source_loader(args.source).create_template(templatename=args.template,
-                                                           templatedir=args.template_dir,
-                                                           connect=args.connect,
-                                                           format=args.format)
+        tmpl = template.Template.from_uri(args.template)
+        source = tmpl.get_source_impl()
+        source.create_template(template=tmpl,
+                               templatedir=args.template_dir,
+                               connect=args.connect,
+                               format=args.format)
     except Exception,e:
         print "Create Error %s" % str(e)
 
@@ -103,19 +97,22 @@ def run(args):
     try:
         if args.connect is not None:
             check_connect(args.connect)
-        source = dynamic_source_loader(args.source)
+
+        tmpl = template.Template.from_uri(args.template)
+        source = tmpl.get_source_impl()
+
         name = args.name
         if name is None:
             randomid = ''.join(random.choice(string.lowercase) for i in range(10))
-            name = args.template + ":" + randomid
+            name = tmpl.path[1:] + ":" + randomid
 
-        diskfile = source.get_disk(templatename=args.template,
+        diskfile = source.get_disk(template=tmpl,
                                    templatedir=args.template_dir,
                                    imagedir=args.image_dir,
                                    sandboxname=name)
 
         format = "qcow2"
-        commandToRun = source.get_command(args.template, args.template_dir, args.args)
+        commandToRun = source.get_command(tmpl, args.template_dir, args.args)
         if len(commandToRun) == 0:
             commandToRun = ["/bin/sh"]
         cmd = ['virt-sandbox', '--name', name]
@@ -129,7 +126,7 @@ def run(args):
             params.append('-N')
             params.append(networkArgs)
 
-        allEnvs = source.get_env(args.template, args.template_dir)
+        allEnvs = source.get_env(tmpl, args.template_dir)
         envArgs = args.env
         if envArgs is not None:
             allEnvs = allEnvs + envArgs
@@ -151,7 +148,7 @@ def run(args):
 
 def requires_template(parser):
     parser.add_argument("template",
-                        help=_("name of the template"))
+                        help=_("URI of the template"))
 
 def requires_name(parser):
     parser.add_argument("-n","--name",
@@ -163,22 +160,9 @@ def check_connect(connectstr):
         raise ValueError("URI '%s' is not supported by virt-sandbox-image" % connectstr)
     return True
 
-def requires_source(parser):
-    parser.add_argument("-s","--source",
-                        default="docker",
-                        help=_("name of the template"))
-
 def requires_connect(parser):
     parser.add_argument("-c","--connect",
                         help=_("Connect string for libvirt"))
-
-def requires_auth_conn(parser):
-    parser.add_argument("-r","--registry",
-                        help=_("Url of the custom registry"))
-    parser.add_argument("-u","--username",
-                        help=_("Username for the custom registry"))
-    parser.add_argument("-p","--password",
-                        help=_("Password for the custom registry"))
 
 def requires_template_dir(parser):
     global default_template_dir
@@ -192,28 +176,38 @@ def requires_image_dir(parser):
                         default=default_image_dir,
                         help=_("Image directory for saving images"))
 
+def gen_command_parser(subparser, name, helptext):
+    parser = subparser.add_parser(
+        name, help=helptext,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+
+Example supported URI formats:
+
+  docker:///ubuntu?tag=15.04
+  docker://username:password@index.docker.io/private/image
+  docker://registry.access.redhat.com/rhel6
+""")
+    return parser
+
 def gen_download_args(subparser):
-    parser = subparser.add_parser("download",
-                                   help=_("Download template data"))
+    parser = gen_command_parser(subparser, "download",
+                                _("Download template data"))
     requires_template(parser)
-    requires_source(parser)
-    requires_auth_conn(parser)
     requires_template_dir(parser)
     parser.set_defaults(func=download)
 
 def gen_delete_args(subparser):
-    parser = subparser.add_parser("delete",
-                                   help=_("Delete template data"))
+    parser = gen_command_parser(subparser, "delete",
+                                _("Delete template data"))
     requires_template(parser)
-    requires_source(parser)
     requires_template_dir(parser)
     parser.set_defaults(func=delete)
 
 def gen_create_args(subparser):
-    parser = subparser.add_parser("create",
-                                   help=_("Create image from template data"))
+    parser = gen_command_parser(subparser, "create",
+                                _("Create image from template data"))
     requires_template(parser)
-    requires_source(parser)
     requires_connect(parser)
     requires_template_dir(parser)
     parser.add_argument("-f","--format",
@@ -222,11 +216,10 @@ def gen_create_args(subparser):
     parser.set_defaults(func=create)
 
 def gen_run_args(subparser):
-    parser = subparser.add_parser("run",
-                                  help=_("Run an already built image"))
+    parser = gen_command_parser(subparser, "run",
+                                _("Run an already built image"))
     requires_name(parser)
     requires_template(parser)
-    requires_source(parser)
     requires_connect(parser)
     requires_template_dir(parser)
     requires_image_dir(parser)
@@ -241,7 +234,7 @@ def gen_run_args(subparser):
     parser.set_defaults(func=run)
 
 def main():
-    parser = argparse.ArgumentParser(description='Sandbox Container Image Tool')
+    parser = argparse.ArgumentParser(description="Sandbox Container Image Tool")
 
     subparser = parser.add_subparsers(help=_("commands"))
     gen_download_args(subparser)
