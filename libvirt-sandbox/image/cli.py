@@ -80,7 +80,7 @@ def delete(args):
         source.delete_template(template=tmpl,
                                templatedir=args.template_dir)
     except Exception,e:
-        print "Delete Error %s", str(e)
+        print "Delete Error %s" % str(e)
 
 def create(args):
     try:
