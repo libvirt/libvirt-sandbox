@@ -243,7 +243,7 @@ class DockerSource(Source):
 
     def create_template(self, template, templatedir, connect=None, format=None):
         if format is None:
-            format = self.default_disk_format
+            format = "qcow2"
         self._check_disk_format(format)
         imagelist = self._get_image_list(template, templatedir)
         imagelist.reverse()
