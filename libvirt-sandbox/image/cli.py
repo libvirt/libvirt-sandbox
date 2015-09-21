@@ -171,6 +171,7 @@ Example supported URI formats:
   docker:///ubuntu?tag=15.04
   docker://username:password@index.docker.io/private/image
   docker://registry.access.redhat.com/rhel6
+  virt-builder:///fedora-20
 """)
     return parser
 

@@ -36,6 +36,7 @@ Requires: systemd >= 198
 Requires: pygobject3-base
 Requires: libselinux-python
 Requires: %{name}-libs = %{version}-%{release}
+Requires: %{_bindir}/virt-builder
 
 %package libs
 Group: Development/Libraries

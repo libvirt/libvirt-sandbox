@@ -43,6 +43,8 @@ class Template(object):
         docker:///ubuntu
 
         docker+https://index.docker.io/ubuntu?tag=latest
+
+        virt-builder:///fedora-20
         """
 
         self.source = source
