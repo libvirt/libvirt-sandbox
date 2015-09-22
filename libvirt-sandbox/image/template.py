@@ -21,6 +21,7 @@
 
 import urlparse
 import importlib
+import re
 
 class Template(object):
 
@@ -56,10 +57,13 @@ class Template(object):
             self.params = {}
 
     def get_source_impl(self):
+        p = re.compile("\W")
+        sourcename = "".join([i.capitalize() for i in p.split(self.source)])
+
         mod = importlib.import_module(
             "libvirt_sandbox.image.sources." +
-            self.source.capitalize() + "Source")
-        classname = self.source.capitalize() + "Source"
+            sourcename + "Source")
+        classname = sourcename + "Source"
         classimpl = getattr(mod, classname)
         return classimpl()
 
