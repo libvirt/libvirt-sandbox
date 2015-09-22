@@ -65,87 +65,74 @@ def info(msg):
     sys.stdout.write(msg)
 
 def download(args):
-    try:
-        tmpl = template.Template.from_uri(args.template)
-        source = tmpl.get_source_impl()
-        source.download_template(template=tmpl,
-                                 templatedir=args.template_dir)
-    except Exception,e:
-        print "Download Error %s" % str(e)
+    tmpl = template.Template.from_uri(args.template)
+    source = tmpl.get_source_impl()
+    source.download_template(template=tmpl,
+                             templatedir=args.template_dir)
 
 def delete(args):
-    try:
-        tmpl = template.Template.from_uri(args.template)
-        source = tmpl.get_source_impl()
-        source.delete_template(template=tmpl,
-                               templatedir=args.template_dir)
-    except Exception,e:
-        print "Delete Error %s" % str(e)
+    tmpl = template.Template.from_uri(args.template)
+    source = tmpl.get_source_impl()
+    source.delete_template(template=tmpl,
+                           templatedir=args.template_dir)
 
 def create(args):
-    try:
-        tmpl = template.Template.from_uri(args.template)
-        source = tmpl.get_source_impl()
-        source.create_template(template=tmpl,
-                               templatedir=args.template_dir,
-                               connect=args.connect,
-                               format=args.format)
-    except Exception,e:
-        print "Create Error %s" % str(e)
+    tmpl = template.Template.from_uri(args.template)
+    source = tmpl.get_source_impl()
+    source.create_template(template=tmpl,
+                           templatedir=args.template_dir,
+                           connect=args.connect,
+                           format=args.format)
 
 def run(args):
-    try:
-        if args.connect is not None:
-            check_connect(args.connect)
+    if args.connect is not None:
+        check_connect(args.connect)
 
-        tmpl = template.Template.from_uri(args.template)
-        source = tmpl.get_source_impl()
+    tmpl = template.Template.from_uri(args.template)
+    source = tmpl.get_source_impl()
 
-        name = args.name
-        if name is None:
-            randomid = ''.join(random.choice(string.lowercase) for i in range(10))
-            name = tmpl.path[1:] + ":" + randomid
+    name = args.name
+    if name is None:
+        randomid = ''.join(random.choice(string.lowercase) for i in range(10))
+        name = tmpl.path[1:] + ":" + randomid
 
-        diskfile = source.get_disk(template=tmpl,
-                                   templatedir=args.template_dir,
-                                   imagedir=args.image_dir,
-                                   sandboxname=name)
+    diskfile = source.get_disk(template=tmpl,
+                               templatedir=args.template_dir,
+                               imagedir=args.image_dir,
+                               sandboxname=name)
 
-        format = "qcow2"
-        commandToRun = source.get_command(tmpl, args.template_dir, args.args)
-        if len(commandToRun) == 0:
-            commandToRun = ["/bin/sh"]
-        cmd = ['virt-sandbox', '--name', name]
-        if args.connect is not None:
-            cmd.append("-c")
-            cmd.append(args.connect)
-        params = ['-m','host-image:/=%s,format=%s' %(diskfile,format)]
+    format = "qcow2"
+    commandToRun = source.get_command(tmpl, args.template_dir, args.args)
+    if len(commandToRun) == 0:
+        commandToRun = ["/bin/sh"]
+    cmd = ['virt-sandbox', '--name', name]
+    if args.connect is not None:
+        cmd.append("-c")
+        cmd.append(args.connect)
+    params = ['-m','host-image:/=%s,format=%s' %(diskfile,format)]
 
-        networkArgs = args.network
-        if networkArgs is not None:
-            params.append('-N')
-            params.append(networkArgs)
+    networkArgs = args.network
+    if networkArgs is not None:
+        params.append('-N')
+        params.append(networkArgs)
 
-        allEnvs = source.get_env(tmpl, args.template_dir)
-        envArgs = args.env
-        if envArgs is not None:
-            allEnvs = allEnvs + envArgs
-        for env in allEnvs:
-            envsplit = env.split("=")
-            envlen = len(envsplit)
-            if envlen == 2:
-                params.append("--env")
-                params.append(env)
-            else:
-                pass
+    allEnvs = source.get_env(tmpl, args.template_dir)
+    envArgs = args.env
+    if envArgs is not None:
+        allEnvs = allEnvs + envArgs
+    for env in allEnvs:
+        envsplit = env.split("=")
+        envlen = len(envsplit)
+        if envlen == 2:
+            params.append("--env")
+            params.append(env)
+        else:
+            pass
 
-        cmd = cmd + params + ['--'] + commandToRun
-        subprocess.call(cmd)
-        os.unlink(diskfile)
-        source.post_run(tmpl, args.template_dir, name)
-
-    except Exception,e:
-        print "Run Error %s" % str(e)
+    cmd = cmd + params + ['--'] + commandToRun
+    subprocess.call(cmd)
+    os.unlink(diskfile)
+    source.post_run(tmpl, args.template_dir, name)
 
 def requires_template(parser):
     parser.add_argument("template",
@@ -262,4 +249,7 @@ def main():
     except OSError, e:
         sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
         sys.stderr.flush()
+        sys.exit(1)
+    except Exception, e:
+        print e.message
         sys.exit(1)
