@@ -109,7 +109,8 @@ static gboolean setup_disk_tags(void) {
     }
     ret = TRUE;
  cleanup:
-    fclose(fp);
+    if (fp)
+        fclose(fp);
     return ret;
 }
 
