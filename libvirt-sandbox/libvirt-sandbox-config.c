@@ -1611,15 +1611,16 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
             *tmp = '\0';
             formatStr = tmp + 1;
 
-            if ((strncmp(formatStr, "format=", 7) == 0) &&
-                !(enum_value = g_enum_get_value_by_nick(enum_class, formatStr + 7))) {
+            if ((strncmp(formatStr, "format=", 7) == 0)) {
+                if (!(enum_value = g_enum_get_value_by_nick(enum_class, formatStr + 7))) {
+                    g_type_class_unref(enum_class);
+                    g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
+                                _("Unknown disk image format: '%s'"), formatStr + 7);
+                    return FALSE;
+                }
                 g_type_class_unref(enum_class);
-                g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
-                            _("Unknown disk image format: '%s'"), formatStr + 7);
-                return FALSE;
+                format = enum_value->value;
             }
-            g_type_class_unref(enum_class);
-            format = enum_value->value;
         }
 
         mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
