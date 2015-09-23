@@ -217,6 +217,8 @@ mount_entry(const char *source,
     }
 }
 
+#define MOUNTS_CONFIG_FILE SANDBOXCONFIGDIR "/mounts.cfg"
+
 static void
 mount_root(const char *path)
 {
@@ -226,7 +228,14 @@ mount_root(const char *path)
     mount_mkdir(SANDBOXCONFIGDIR, 0755);
     mount_9pfs("sandbox:config", SANDBOXCONFIGDIR, 0755, 1);
 
-    FILE *fp = fopen(SANDBOXCONFIGDIR "/mounts.cfg", "r");
+    FILE *fp = fopen(MOUNTS_CONFIG_FILE, "r");
+
+    if (!fp) {
+        fprintf(stderr, "libvirt-sandbox-init-qemu: %s: can't open %s: %s",
+                __func__, MOUNTS_CONFIG_FILE, strerror(errno));
+        exit_poweroff();
+    }
+
     while (fgets(line, sizeof line, fp) && !foundRoot) {
         char *source = line;
         char *target = strchr(source, '\t');
