@@ -57,15 +57,21 @@ class Template(object):
             self.params = {}
 
     def get_source_impl(self):
-        p = re.compile("\W")
-        sourcename = "".join([i.capitalize() for i in p.split(self.source)])
+        if self.source == "":
+            raise Exception("Missing scheme in image URI")
 
-        mod = importlib.import_module(
-            "libvirt_sandbox.image.sources." +
-            sourcename + "Source")
-        classname = sourcename + "Source"
-        classimpl = getattr(mod, classname)
-        return classimpl()
+        try:
+            p = re.compile("\W")
+            sourcename = "".join([i.capitalize() for i in p.split(self.source)])
+
+            mod = importlib.import_module(
+                "libvirt_sandbox.image.sources." +
+                sourcename + "Source")
+            classname = sourcename + "Source"
+            classimpl = getattr(mod, classname)
+            return classimpl()
+        except Exception:
+            raise Exception("Invalid source: '%s'" % self.source)
 
     def __repr__(self):
         if self.protocol is not None:
