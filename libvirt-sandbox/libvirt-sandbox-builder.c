@@ -752,10 +752,6 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
         ret = FALSE;
 
  cleanup:
-    if (child)
-        g_object_unref(child);
-    if (info)
-        g_object_unref(info);
     g_object_unref(enumerator);
     g_object_unref(libsFile);
     g_free(libsdir);
