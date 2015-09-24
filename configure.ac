@@ -86,6 +86,8 @@ AC_ARG_WITH([zlib],
     [add ZLIB support @<:@default=yes@:>@])])
 m4_divert_text([DEFAULTS], [with_zlib=yes])
 
+orig_pkg_config="$PKG_CONFIG"
+PKG_CONFIG="$PKG_CONFIG --static"
 if test "$with_zlib" = "yes" ; then
     PKG_CHECK_MODULES(ZLIB, zlib >= $ZLIB_REQUIRED)
     AC_DEFINE([WITH_ZLIB], [1], [Whether ZLIB support was enabled])
@@ -100,6 +102,7 @@ if test "$with_lzma" = "yes" ; then
     PKG_CHECK_MODULES(LZMA, liblzma >= $LZMA_REQUIRED)
     AC_DEFINE([WITH_LZMA], [1], [Whether LZMA support was enabled])
 fi
+PKG_CONFIG="$orig_pkg_config"
 
 LIBVIRT_SANDBOX_CAPNG
 LIBVIRT_SANDBOX_GETTEXT
