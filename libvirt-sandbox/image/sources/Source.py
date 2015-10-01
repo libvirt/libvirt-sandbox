@@ -35,17 +35,6 @@ class Source():
         pass
 
     @abstractmethod
-    def download_template(self, template, templatedir):
-        """
-        :param template: libvirt_sandbox.template.Template object
-        :param templatedir: local directory path in which to store the template
-
-        Download a template from the registry, storing it in the local
-        filesystem
-        """
-        pass
-
-    @abstractmethod
     def create_template(self, template, templatedir,
                         connect=None, format=None):
         """

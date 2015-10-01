@@ -64,12 +64,6 @@ def debug(msg):
 def info(msg):
     sys.stdout.write(msg)
 
-def download(args):
-    tmpl = template.Template.from_uri(args.template)
-    source = tmpl.get_source_impl()
-    source.download_template(template=tmpl,
-                             templatedir=args.template_dir)
-
 def delete(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
@@ -178,13 +172,6 @@ Example supported URI formats:
 """)
     return parser
 
-def gen_download_args(subparser):
-    parser = gen_command_parser(subparser, "download",
-                                _("Download template data"))
-    requires_template(parser)
-    requires_template_dir(parser)
-    parser.set_defaults(func=download)
-
 def gen_delete_args(subparser):
     parser = gen_command_parser(subparser, "delete",
                                 _("Delete template data"))
@@ -225,7 +212,6 @@ def main():
     parser = argparse.ArgumentParser(description="Sandbox Container Image Tool")
 
     subparser = parser.add_subparsers(help=_("commands"))
-    gen_download_args(subparser)
     gen_delete_args(subparser)
     gen_create_args(subparser)
     gen_run_args(subparser)

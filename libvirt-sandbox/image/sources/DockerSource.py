@@ -245,6 +245,9 @@ class DockerSource(Source):
         if format is None:
             format = "qcow2"
         self._check_disk_format(format)
+
+        self.download_template(template, templatedir)
+
         imagelist = self._get_image_list(template, templatedir)
         imagelist.reverse()
 
