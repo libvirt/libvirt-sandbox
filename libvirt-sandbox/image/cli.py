@@ -75,8 +75,7 @@ def create(args):
     source = tmpl.get_source_impl()
     source.create_template(template=tmpl,
                            templatedir=args.template_dir,
-                           connect=args.connect,
-                           format=args.format)
+                           connect=args.connect)
 
 def run(args):
     if args.connect is not None:
@@ -95,7 +94,6 @@ def run(args):
                                imagedir=args.image_dir,
                                sandboxname=name)
 
-    format = "qcow2"
     commandToRun = source.get_command(tmpl, args.template_dir, args.args)
     if len(commandToRun) == 0:
         commandToRun = ["/bin/sh"]
@@ -103,7 +101,7 @@ def run(args):
     if args.connect is not None:
         cmd.append("-c")
         cmd.append(args.connect)
-    params = ['-m','host-image:/=%s,format=%s' %(diskfile,format)]
+    params = ['-m','host-image:/=%s,format=qcow2' % diskfile]
 
     networkArgs = args.network
     if networkArgs is not None:
@@ -185,9 +183,6 @@ def gen_create_args(subparser):
     requires_template(parser)
     requires_connect(parser)
     requires_template_dir(parser)
-    parser.add_argument("-f","--format",
-                        default="qcow2",
-                        help=_("format format for image"))
     parser.set_defaults(func=create)
 
 def gen_run_args(subparser):

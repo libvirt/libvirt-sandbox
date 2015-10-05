@@ -241,11 +241,7 @@ class DockerSource(Source):
             debug("FAIL %s\n" % str(e))
             raise
 
-    def create_template(self, template, templatedir, connect=None, format=None):
-        if format is None:
-            format = "qcow2"
-        self._check_disk_format(format)
-
+    def create_template(self, template, templatedir, connect=None):
         self.download_template(template, templatedir)
 
         imagelist = self._get_image_list(template, templatedir)
@@ -253,7 +249,7 @@ class DockerSource(Source):
 
         parentImage = None
         for imagetagid in imagelist:
-            templateImage = templatedir + "/" + imagetagid + "/template." + format
+            templateImage = templatedir + "/" + imagetagid + "/template.qcow2"
             cmd = ["qemu-img","create","-f","qcow2"]
             if parentImage is not None:
                 cmd.append("-o")
@@ -264,20 +260,14 @@ class DockerSource(Source):
             subprocess.call(cmd)
 
             if parentImage is None:
-                self.format_disk(templateImage,format,connect)
+                self.format_disk(templateImage, "qcow2", connect)
 
             path = templatedir + "/" + imagetagid + "/template."
             self.extract_tarball(path + "qcow2",
-                                 format,
+                                 "qcow2",
                                  path + "tar.gz",
                                  connect)
             parentImage = templateImage
-
-
-    def _check_disk_format(self,format):
-        supportedFormats = ['qcow2']
-        if not format in supportedFormats:
-            raise ValueError(["Unsupported image format %s" % format])
 
     def _get_image_list(self, template, destdir):
         imageparent = {}

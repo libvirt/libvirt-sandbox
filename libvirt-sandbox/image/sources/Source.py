@@ -36,12 +36,11 @@ class Source():
 
     @abstractmethod
     def create_template(self, template, templatedir,
-                        connect=None, format=None):
+                        connect=None):
         """
         :param template: libvirt_sandbox.template.Template object
         :param templatedir: local directory path in which to store the template
         :param connect: libvirt connection URI
-        :param format: disk image format
 
         Create a set of local disk images populated with the content
         of a template. The images creation process will be isolated
