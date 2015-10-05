@@ -119,3 +119,23 @@ class Source():
                   '/dev/disk/by-tag/disk_image']
         cmd = cmd + params
         subprocess.call(cmd)
+
+    def extract_tarball(self, diskfile, format, tarfile, connect):
+        cmd = ['virt-sandbox']
+        if connect is not None:
+            cmd.append("-c")
+            cmd.append(connect)
+        cmd.append("-p")
+        compression = ""
+        if tarfile.endswith(".gz"):
+            compression = "z"
+        params = ['-m',
+                  'host-image:/mnt=%s,format=%s' % (diskfile, format),
+                  '--',
+                  '/bin/tar',
+                  'xf%s' % compression,
+                  '%s' % tarfile,
+                  '-C',
+                  '/mnt']
+        cmd = cmd + params
+        subprocess.call(cmd)

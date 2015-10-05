@@ -266,7 +266,11 @@ class DockerSource(Source):
             if parentImage is None:
                 self.format_disk(templateImage,format,connect)
 
-            self._extract_tarballs(templatedir + "/" + imagetagid + "/template.",format,connect)
+            path = templatedir + "/" + imagetagid + "/template."
+            self.extract_tarball(path + "qcow2",
+                                 format,
+                                 path + "tar.gz",
+                                 connect)
             parentImage = templateImage
 
 
@@ -301,25 +305,6 @@ class DockerSource(Source):
             parent = imageparent.get(imagetagid,None)
             imagetagid = parent
         return imagelist
-
-    def _extract_tarballs(self,directory,format,connect):
-        tarfile = directory + "tar.gz"
-        diskfile = directory + "qcow2"
-        cmd = ['virt-sandbox']
-        if connect is not None:
-            cmd.append("-c")
-            cmd.append(connect)
-        cmd.append("-p")
-        params = ['-m',
-                  'host-image:/mnt=%s,format=%s' %(diskfile,format),
-                  '--',
-                  '/bin/tar',
-                  'zxf',
-                  '%s' %tarfile,
-                  '-C',
-                  '/mnt']
-        cmd = cmd + params
-        subprocess.call(cmd)
 
     def delete_template(self, template, templatedir):
         imageusage = {}
