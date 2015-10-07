@@ -64,17 +64,21 @@ def debug(msg):
 def info(msg):
     sys.stdout.write(msg)
 
+def get_template_dir(args):
+    tmpl = template.Template.from_uri(args.template)
+    return "%s/%s" % (args.template_dir, tmpl.source)
+
 def delete(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
     source.delete_template(template=tmpl,
-                           templatedir=args.template_dir)
+                           templatedir=get_template_dir(args))
 
 def create(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
     source.create_template(template=tmpl,
-                           templatedir=args.template_dir,
+                           templatedir=get_template_dir(args),
                            connect=args.connect)
 
 def run(args):
@@ -83,9 +87,10 @@ def run(args):
 
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
+    template_dir = get_template_dir(args)
 
     # Create the template image if needed
-    if not source.has_template(tmpl, args.template_dir):
+    if not source.has_template(tmpl, template_dir):
         create(args)
 
     name = args.name
@@ -94,11 +99,11 @@ def run(args):
         name = tmpl.path[1:] + ":" + randomid
 
     diskfile = source.get_disk(template=tmpl,
-                               templatedir=args.template_dir,
+                               templatedir=template_dir,
                                imagedir=args.image_dir,
                                sandboxname=name)
 
-    commandToRun = source.get_command(tmpl, args.template_dir, args.args)
+    commandToRun = source.get_command(tmpl, template_dir, args.args)
     if len(commandToRun) == 0:
         commandToRun = ["/bin/sh"]
     cmd = ['virt-sandbox', '--name', name]
@@ -112,7 +117,7 @@ def run(args):
         params.append('-N')
         params.append(networkArgs)
 
-    allEnvs = source.get_env(tmpl, args.template_dir)
+    allEnvs = source.get_env(tmpl, template_dir)
     envArgs = args.env
     if envArgs is not None:
         allEnvs = allEnvs + envArgs
@@ -128,7 +133,7 @@ def run(args):
     cmd = cmd + params + ['--'] + commandToRun
     subprocess.call(cmd)
     os.unlink(diskfile)
-    source.post_run(tmpl, args.template_dir, name)
+    source.post_run(tmpl, template_dir, name)
 
 def requires_template(parser):
     parser.add_argument("template",
