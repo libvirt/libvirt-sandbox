@@ -1621,6 +1621,8 @@ gboolean gvir_sandbox_config_add_mount_opts(GVirSandboxConfig *config,
                 g_type_class_unref(enum_class);
                 format = enum_value->value;
             }
+        } else if ((format = gvir_sandbox_util_guess_image_format(source, error)) < 0) {
+            format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
         }
 
         mnt = GVIR_SANDBOX_CONFIG_MOUNT(g_object_new(type,
