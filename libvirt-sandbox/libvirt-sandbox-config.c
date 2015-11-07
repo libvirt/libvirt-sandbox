@@ -1381,11 +1381,8 @@ gboolean gvir_sandbox_config_add_disk_opts(GVirSandboxConfig *config,
                             _("Unknown disk image format: '%s'"), formatStr + 7);
                 return FALSE;
         }
-    }
-    else {
-        if ((format = gvir_sandbox_util_guess_image_format(source, error)) < 0) {
-           format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
-        }
+    } else if ((format = gvir_sandbox_util_guess_image_format(source, error)) < 0) {
+        format = GVIR_CONFIG_DOMAIN_DISK_FORMAT_RAW;
     }
 
 
