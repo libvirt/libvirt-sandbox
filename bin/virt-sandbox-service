@@ -19,7 +19,10 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
+import gi
+gi.require_version('LibvirtGObject', '1.0')
 from gi.repository import LibvirtGObject
+gi.require_version('LibvirtSandbox', '1.0')
 from gi.repository import LibvirtSandbox
 from gi.repository import GLib
 import gi
