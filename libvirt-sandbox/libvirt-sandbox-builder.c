@@ -727,32 +727,35 @@ gboolean gvir_sandbox_builder_clean_post_stop(GVirSandboxBuilder *builder,
         errno != ENOENT)
         ret = FALSE;
 
-    if (!(enumerator = g_file_enumerate_children(libsFile, "*", G_FILE_QUERY_INFO_NONE,
-                                                 NULL, error)) &&
-        (*error)->code != G_IO_ERROR_NOT_FOUND) {
-        ret = FALSE;
-        goto cleanup;
-    }
+    if ((enumerator = g_file_enumerate_children(libsFile, "*", G_FILE_QUERY_INFO_NONE,
+                                               NULL, error))) {
+        while ((info = g_file_enumerator_next_file(enumerator, NULL, error))) {
+            child = g_file_enumerator_get_child(enumerator, info);
+            if (!g_file_delete(child, NULL, error))
+                ret = FALSE;
+            g_object_unref(child);
+            child = NULL;
+            g_object_unref(info);
+            info = NULL;
+        }
 
-    while ((info = g_file_enumerator_next_file(enumerator, NULL, error))) {
-        child = g_file_enumerator_get_child(enumerator, info);
-        if (!g_file_delete(child, NULL, error))
+        if (!g_file_enumerator_close(enumerator, NULL, error))
             ret = FALSE;
-        g_object_unref(child);
-        child = NULL;
-        g_object_unref(info);
-        info = NULL;
+    } else {
+        if ((*error)->code != G_IO_ERROR_NOT_FOUND) {
+            ret = FALSE;
+            goto cleanup;
+        }
+        g_clear_error(error);
     }
-
-    if (!g_file_enumerator_close(enumerator, NULL, error))
-        ret = FALSE;
 
     if (!g_file_delete(libsFile, NULL, error) &&
         (*error)->code != G_IO_ERROR_NOT_FOUND)
         ret = FALSE;
 
  cleanup:
-    g_object_unref(enumerator);
+    if (enumerator)
+        g_object_unref(enumerator);
     g_object_unref(libsFile);
     g_free(libsdir);
     g_free(dskfile);
