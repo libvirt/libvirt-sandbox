@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     int ret = EXIT_FAILURE;
     const gchar *mounts[] = {
         "host-bind:/var/run/hell=/tmp/home",
-        "host-image:/etc=/tmp/home",
+        "host-image:/etc=/tmp/home/img.qcow2",
         "host-image:/etc=/tmp/home,format=qcow2",
         "host-bind:/tmp=",
         NULL
