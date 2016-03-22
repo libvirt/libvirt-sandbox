@@ -24,6 +24,8 @@
 
 #include <libvirt-sandbox/libvirt-sandbox.h>
 #include <glib/gi18n.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 static gboolean do_close(GVirSandboxConsole *con G_GNUC_UNUSED,
                          gboolean error G_GNUC_UNUSED,
@@ -92,6 +94,7 @@ int main(int argc, char **argv) {
     gchar *kernver = NULL;
     gchar *kernpath = NULL;
     gchar *kmodpath = NULL;
+    gchar *switchto = NULL;
     gboolean verbose = FALSE;
     gboolean debug = FALSE;
     gboolean shell = FALSE;
@@ -126,6 +129,8 @@ int main(int argc, char **argv) {
           N_("security properties"), "PATH", },
         { "privileged", 'p', 0, G_OPTION_ARG_NONE, &privileged,
           N_("run the command privileged"), NULL },
+        { "switchto", 'S', 0, G_OPTION_ARG_STRING, &switchto,
+          N_("swith to the given user"), "USER" },
         { "shell", 'l', 0, G_OPTION_ARG_NONE, &shell,
           N_("start a shell"), NULL, },
         { "kernver", 0, 0, G_OPTION_ARG_STRING, &kernver,
@@ -139,6 +144,7 @@ int main(int argc, char **argv) {
         { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL, NULL }
     };
     const char *help_msg = N_("Run 'virt-sandbox --help' to see a full list of available command line options");
+    struct passwd *pw;
 
     setlocale(LC_ALL, "");
     bindtextdomain(PACKAGE, LOCALEDIR);
@@ -198,10 +204,25 @@ int main(int argc, char **argv) {
     if (kmodpath)
         gvir_sandbox_config_set_kmodpath(cfg, kmodpath);
 
+    if (privileged && switchto) {
+        g_printerr(_("'switchto' and 'privileged' are incompatible options\n"));
+        goto cleanup;
+    }
+
     if (privileged) {
         gvir_sandbox_config_set_userid(cfg, 0);
         gvir_sandbox_config_set_groupid(cfg, 0);
         gvir_sandbox_config_set_username(cfg, "root");
+    } else if (switchto) {
+        pw = getpwnam(switchto);
+        if (!pw) {
+            g_printerr(_("Failed to resolve user %s\n"), switchto);
+            goto cleanup;
+        }
+        gvir_sandbox_config_set_userid(cfg, pw->pw_uid);
+        gvir_sandbox_config_set_groupid(cfg, pw->pw_gid);
+        gvir_sandbox_config_set_username(cfg, pw->pw_name);
+        gvir_sandbox_config_set_homedir(cfg, pw->pw_dir);
     }
 
     if (envs &&
@@ -540,6 +561,11 @@ to this path to locate the modules.
 
 Retain root privileges inside the sandbox, rather than dropping privileges
 to match the current user identity.
+
+=item B<-S USER>, B<--switchto=USER>
+
+Swith to the given user inside the sandbox and setup $HOME
+accordingly.
 
 =item B<-l>, B<--shell>
 
