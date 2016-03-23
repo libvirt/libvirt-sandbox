@@ -31,6 +31,7 @@ po/stamp-it
 po/libvirt-sandbox.pot
 po/*.gmo
 stamp-h1
+build-aux/test-driver
 INSTALL
 libvirt-sandbox-1.0.pc
 libvirt-sandbox.spec
