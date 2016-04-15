@@ -345,7 +345,9 @@ virt-sandbox - Run cmd under a virtual machine sandbox
 
 =head1 SYNOPSIS
 
-virt-sandbox [OPTIONS...] COMMAND [CMDARG1 [CMDARG2 [...]]]
+virt-sandbox [OPTIONS...] COMMAND
+
+virt-sandbox [OPTIONS...] -- COMMAND [CMDARG1 [CMDARG2 [...]]]
 
 =head1 DESCRIPTION
 
