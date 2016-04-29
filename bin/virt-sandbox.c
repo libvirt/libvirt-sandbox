@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         { "privileged", 'p', 0, G_OPTION_ARG_NONE, &privileged,
           N_("run the command privileged"), NULL },
         { "switchto", 'S', 0, G_OPTION_ARG_STRING, &switchto,
-          N_("swith to the given user"), "USER" },
+          N_("switch to the given user"), "USER" },
         { "shell", 'l', 0, G_OPTION_ARG_NONE, &shell,
           N_("start a shell"), NULL, },
         { "kernver", 0, 0, G_OPTION_ARG_STRING, &kernver,
@@ -566,7 +566,7 @@ to match the current user identity.
 
 =item B<-S USER>, B<--switchto=USER>
 
-Swith to the given user inside the sandbox and setup $HOME
+Switch to the given user inside the sandbox and setup $HOME
 accordingly.
 
 =item B<-l>, B<--shell>
