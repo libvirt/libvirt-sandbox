@@ -6,6 +6,5 @@ includedir=@includedir@
 Name: libvirt-sandbox
 Version: @VERSION@
 Description: libvirt sandbox library
-Requires: sandbox-2.0
 Libs: -L${libdir} -lvirt-sandbox-1.0 @LIBVIRT_GOBJECT_LIBS@
 Cflags: -I${includedir}/libvirt-sandbox-1.0 @LIBVIRT_GOBJECT_CFLAGS@
