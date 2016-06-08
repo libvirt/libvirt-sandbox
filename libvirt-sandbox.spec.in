@@ -10,6 +10,9 @@
 
 %define libvirt_version 1.0.2
 
+# Hardended build breaks autoconf's detection
+# of -static flag
+%undefine _hardened_build
 
 Name: @PACKAGE@
 Version: @VERSION@
