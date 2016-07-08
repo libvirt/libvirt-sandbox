@@ -229,13 +229,15 @@ static gboolean gvir_sandbox_context_interactive_start(GVirSandboxContext *ctxt,
         if (!g_str_equal(uri, "lxc:///") &&
             !g_str_equal(uri, "qemu:///system")) {
             g_set_error(error, GVIR_SANDBOX_CONTEXT_INTERACTIVE_ERROR, 0,
-                        _("Only 'lxc:///' or 'qemu:///system' URIs supported when running as root"));
+                        _("URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"),
+                        uri);
             goto cleanup;
         }
     } else {
         if (!g_str_equal(uri, "qemu:///session")) {
             g_set_error(error, GVIR_SANDBOX_CONTEXT_INTERACTIVE_ERROR, 0,
-                        _("Only 'qemu:///session' URIs supported when running as non-root"));
+                        _("URI '%s' unsupported as non-root, try 'qemu:///session'"),
+                        uri);
             goto cleanup;
         }
     }
