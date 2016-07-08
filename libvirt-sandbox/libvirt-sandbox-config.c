@@ -699,7 +699,7 @@ const gchar *gvir_sandbox_config_get_kmodpath(GVirSandboxConfig *config)
 /**
  * gvir_sandbox_config_set_shell:
  * @config: (transfer none): the sandbox config
- * @shell: (transfer none): true if the container should have a shell
+ * @shell: true if the container should have a shell
  *
  * Set whether the container console should have a interactive shell.
  */
@@ -716,7 +716,7 @@ void gvir_sandbox_config_set_shell(GVirSandboxConfig *config, gboolean shell)
  *
  * Retrieves the sandbox shell flag
  *
- * Returns: (transfer none): the shell flag
+ * Returns: the shell flag
  */
 gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config)
 {
@@ -728,7 +728,7 @@ gboolean gvir_sandbox_config_get_shell(GVirSandboxConfig *config)
 /**
  * gvir_sandbox_config_set_userid:
  * @config: (transfer none): the sandbox config
- * @uid: (transfer none): the sandbox user ID
+ * @uid: the sandbox user ID
  *
  * Set the user ID to invoke the sandbox application under.
  * Defaults to the user ID of the current program.
@@ -746,7 +746,7 @@ void gvir_sandbox_config_set_userid(GVirSandboxConfig *config, guint uid)
  *
  * Get the user ID to invoke the sandbox application under.
  *
- * Returns: (transfer none): the user ID
+ * Returns: the user ID
  */
 guint gvir_sandbox_config_get_userid(GVirSandboxConfig *config)
 {
@@ -758,7 +758,7 @@ guint gvir_sandbox_config_get_userid(GVirSandboxConfig *config)
 /**
  * gvir_sandbox_config_set_groupid:
  * @config: (transfer none): the sandbox config
- * @gid: (transfer none): the sandbox group ID
+ * @gid: the sandbox group ID
  *
  * Set the group ID to invoke the sandbox application under.
  * Defaults to the group ID of the current program.
@@ -776,7 +776,7 @@ void gvir_sandbox_config_set_groupid(GVirSandboxConfig *config, guint gid)
  *
  * Get the group ID to invoke the sandbox application under.
  *
- * Returns: (transfer none): the group ID
+ * Returns: the group ID
  */
 guint gvir_sandbox_config_get_groupid(GVirSandboxConfig *config)
 {
@@ -1849,7 +1849,7 @@ const gchar *gvir_sandbox_config_get_security_label(GVirSandboxConfig *config)
 /**
  * gvir_sandbox_config_set_security_dynamic:
  * @config: (transfer none): the sandbox config
- * @dynamic: (transfer none): the security mode
+ * @dynamic: the security mode
  *
  * Set the SELinux security dynamic for the sandbox. The default
  * dynamic is "svirt_sandbox_t"
@@ -1866,7 +1866,7 @@ void gvir_sandbox_config_set_security_dynamic(GVirSandboxConfig *config, gboolea
  *
  * Retrieve the sandbox security mode
  *
- * Returns: (transfer none): the security mode
+ * Returns: the security mode
  */
 gboolean gvir_sandbox_config_get_security_dynamic(GVirSandboxConfig *config)
 {

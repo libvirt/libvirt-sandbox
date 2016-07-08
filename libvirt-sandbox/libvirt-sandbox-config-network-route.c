@@ -234,7 +234,7 @@ void gvir_sandbox_config_network_route_set_prefix(GVirSandboxConfigNetworkRoute 
  *
  * Retrieves the prefix length of the route
  *
- * Returns: (transfer none): the prefix length
+ * Returns: the prefix length
  */
 guint gvir_sandbox_config_network_route_get_prefix(GVirSandboxConfigNetworkRoute *config)
 {

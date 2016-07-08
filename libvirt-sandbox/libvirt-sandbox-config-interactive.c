@@ -246,7 +246,7 @@ GVirSandboxConfigInteractive *gvir_sandbox_config_interactive_new(const gchar *n
 /**
  * gvir_sandbox_config_interactive_set_tty:
  * @config: (transfer none): the sandbox config
- * @tty: (transfer none): true if the container should have a tty
+ * @tty: true if the container should have a tty
  *
  * Set whether the container console should have a interactive tty.
  */
@@ -263,7 +263,7 @@ void gvir_sandbox_config_interactive_set_tty(GVirSandboxConfigInteractive *confi
  *
  * Retrieves the sandbox tty flag
  *
- * Returns: (transfer none): the tty flag
+ * Returns: the tty flag
  */
 gboolean gvir_sandbox_config_interactive_get_tty(GVirSandboxConfigInteractive *config)
 {
