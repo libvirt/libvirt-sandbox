@@ -24,6 +24,7 @@ import os.path
 import subprocess
 
 from . import base
+from libvirt_sandbox.image.template import Template
 
 
 class VirtBuilderSource(base.Source):
@@ -65,6 +66,23 @@ class VirtBuilderSource(base.Source):
             os.unlink(imagepath_original)
             os.unlink(tarfile)
 
+    def list_templates(self, templatedir):
+        files = []
+        imagefiles = os.listdir(templatedir)
+        for filename in imagefiles:
+            if not filename.endswith(".qcow2"):
+                continue
+            files.append(filename[0:-6])
+
+        return [
+            Template(source="virt-builder",
+                     protocol=None,
+                     hostname=None,
+                     port=None,
+                     username=None,
+                     password=None,
+                     path="/%s" % filename,
+                     params={}) for filename in files]
 
     def delete_template(self, template, templatedir):
         os.unlink("%s/%s.qcow2" % (templatedir, self._get_template_name(template)))

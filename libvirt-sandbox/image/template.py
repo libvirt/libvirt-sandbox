@@ -58,22 +58,27 @@ class Template(object):
         if self.params is None:
             self.params = {}
 
-    def get_source_impl(self):
-        if self.source == "":
-            raise Exception("Missing scheme in image URI")
-
+    @classmethod
+    def _get_source_impl(klass, source):
         try:
             p = re.compile("\W")
-            sourcemod = "".join(p.split(self.source))
-            sourcename = "".join([i.capitalize() for i in p.split(self.source)])
+            sourcemod = "".join(p.split(source))
+            sourcename = "".join([i.capitalize() for i in p.split(source)])
 
             mod = importlib.import_module(
                 "libvirt_sandbox.image.sources." + sourcemod)
             classname = sourcename + "Source"
             classimpl = getattr(mod, classname)
             return classimpl()
-        except Exception:
-            raise Exception("Invalid source: '%s'" % self.source)
+        except Exception as e:
+            print e
+            raise Exception("Invalid source: '%s'" % source)
+
+    def get_source_impl(self):
+        if self.source == "":
+            raise Exception("Missing scheme in image URI")
+
+        return self._get_source_impl(self.source)
 
     def __repr__(self):
         if self.protocol is not None:
@@ -96,7 +101,8 @@ class Template(object):
             netloc = None
 
         query = "&".join([key + "=" + self.params[key] for key in self.params.keys()])
-        return urlparse.urlunparse((scheme, netloc, self.path, None, query, None))
+        ret = urlparse.urlunparse((scheme, netloc, self.path, None, query, None))
+        return ret
 
     @classmethod
     def from_uri(klass, uri):
@@ -119,3 +125,9 @@ class Template(object):
                      o.hostname, o.port,
                      o.username, o.password,
                      o.path, query)
+
+    @classmethod
+    def get_all(klass, source, templatedir):
+        impl = klass._get_source_impl(source)
+
+        return impl.list_templates(templatedir)

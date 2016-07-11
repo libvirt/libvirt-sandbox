@@ -32,6 +32,7 @@ import urlparse
 import hashlib
 from abc import ABCMeta, abstractmethod
 import copy
+from libvirt_sandbox.image.template import Template
 
 from . import base
 
@@ -355,6 +356,27 @@ class DockerSource(base.Source):
         except Exception:
             return False
 
+    def list_templates(self, templatedir):
+        indexes = []
+        imagedirs = os.listdir(templatedir)
+        for imagetagid in imagedirs:
+            indexfile = templatedir + "/" + imagetagid + "/index.json"
+            if os.path.exists(indexfile):
+                with open(indexfile,"r") as f:
+                    index = json.load(f)
+                    indexes.append(index)
+
+        return [
+            Template(source="docker",
+                     protocol=None,
+                     hostname=None,
+                     port=None,
+                     username=None,
+                     password=None,
+                     path="/%s/%s" % (index.get("repo", "library"), index["name"]),
+                     params={
+                         "tag": index.get("tag", "latest"),
+                     }) for index in indexes]
 
     def has_template(self, template, templatedir):
         try:

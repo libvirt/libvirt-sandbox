@@ -135,6 +135,18 @@ def run(args):
     os.unlink(diskfile)
     source.post_run(tmpl, template_dir, name)
 
+def list_cached(args):
+    tmpls = []
+    if args.source is not None:
+        tmpls.extend(template.Template.get_all(args.source,
+                                               "%s/%s" % (args.template_dir, args.source)))
+    else:
+        for source in ["docker", "virt-builder"]:
+            tmpls.extend(template.Template.get_all(source,
+                                                   "%s/%s" % (args.template_dir, source)))
+    for tmpl in tmpls:
+        print tmpl
+
 def requires_template(parser):
     parser.add_argument("template",
                         help=_("URI of the template"))
@@ -221,6 +233,17 @@ def gen_run_args(subparser):
 
     parser.set_defaults(func=run)
 
+def gen_list_args(subparser):
+    parser = gen_command_parser(subparser, "list",
+                                _("List locally cached images"))
+    requires_debug(parser)
+    requires_template_dir(parser)
+
+    parser.add_argument("-s","--source",
+                        help=_("Name of the template source"))
+
+    parser.set_defaults(func=list_cached)
+
 def main():
     parser = argparse.ArgumentParser(description="Sandbox Container Image Tool")
 
@@ -228,6 +251,7 @@ def main():
     gen_delete_args(subparser)
     gen_create_args(subparser)
     gen_run_args(subparser)
+    gen_list_args(subparser)
 
     args = parser.parse_args()
     if args.debug:
