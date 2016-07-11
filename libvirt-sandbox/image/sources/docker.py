@@ -288,17 +288,17 @@ class DockerSource(base.Source):
                                  connect)
             parentImage = templateImage
 
-    def _get_image_list(self, template, destdir):
+    def _get_image_list(self, template, templatedir):
         imageparent = {}
         imagenames = {}
-        imagedirs = os.listdir(destdir)
+        imagedirs = os.listdir(templatedir)
         for imagetagid in imagedirs:
-            indexfile = destdir + "/" + imagetagid + "/index.json"
+            indexfile = templatedir + "/" + imagetagid + "/index.json"
             if os.path.exists(indexfile):
                 with open(indexfile,"r") as f:
                     index = json.load(f)
                 imagenames[index["name"]] = imagetagid
-            jsonfile = destdir + "/" + imagetagid + "/template.json"
+            jsonfile = templatedir + "/" + imagetagid + "/template.json"
             if os.path.exists(jsonfile):
                 with open(jsonfile,"r") as f:
                     data = json.load(f)
