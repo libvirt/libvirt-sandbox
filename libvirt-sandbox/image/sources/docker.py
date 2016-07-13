@@ -21,7 +21,6 @@
 # Author: Eren Yagdiran <erenyagdiran@gmail.com>
 #
 
-from Source import Source
 import urllib2
 import sys
 import json
@@ -31,6 +30,7 @@ import subprocess
 import shutil
 import urlparse
 
+from . import base
 
 class DockerConfParser():
 
@@ -48,7 +48,7 @@ class DockerConfParser():
         else:
           return []
 
-class DockerSource(Source):
+class DockerSource(base.Source):
 
     def _check_cert_validate(self):
         major = sys.version_info.major

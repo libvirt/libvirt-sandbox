@@ -19,12 +19,14 @@
 # Author: Cedric Bosdonnat <cbosdonnat@suse.com>
 #
 
-from Source import Source
 import os
 import os.path
 import subprocess
 
-class VirtBuilderSource(Source):
+from . import base
+
+
+class VirtBuilderSource(base.Source):
 
     def _get_template_name(self, template):
         # We shouldn't have '/' in the names, but let's make sure

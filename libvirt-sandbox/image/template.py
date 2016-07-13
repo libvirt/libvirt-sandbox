@@ -64,11 +64,11 @@ class Template(object):
 
         try:
             p = re.compile("\W")
+            sourcemod = "".join(p.split(self.source))
             sourcename = "".join([i.capitalize() for i in p.split(self.source)])
 
             mod = importlib.import_module(
-                "libvirt_sandbox.image.sources." +
-                sourcename + "Source")
+                "libvirt_sandbox.image.sources." + sourcemod)
             classname = sourcename + "Source"
             classimpl = getattr(mod, classname)
             return classimpl()
