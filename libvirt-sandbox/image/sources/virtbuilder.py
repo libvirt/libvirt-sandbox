@@ -45,7 +45,7 @@ class VirtBuilderSource(base.Source):
         templatename = self._get_template_name(template)
         imagepath_original = "%s/%s-original.qcow2" % (templatedir, templatename)
         imagepath = "%s/%s.qcow2" % (templatedir, templatename)
-        cmd = ["virt-builder", templatename,
+        cmd = ["virt-builder", templatename, "--no-network",
                "-o", imagepath_original, "--format", "qcow2"]
         subprocess.check_call(cmd)
 
