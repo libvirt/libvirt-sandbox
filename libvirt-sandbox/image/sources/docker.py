@@ -89,9 +89,6 @@ class DockerSource(base.Source):
 
         registryendpoint = res.info().getheader('X-Docker-Endpoints')
         token = res.info().getheader('X-Docker-Token')
-        checksums = {}
-        for layer in data:
-            pass
 
         headers = {}
         if token is not None:
@@ -100,8 +97,6 @@ class DockerSource(base.Source):
                                      registryendpoint,
                                      "/v1/repositories" + template.path + "/tags",
                                      headers)
-
-        cookie = res.info().getheader('Set-Cookie')
 
         tag = template.params.get("tag", "latest")
         if not tag in data:
@@ -138,15 +133,11 @@ class DockerSource(base.Source):
                                           jsonfile)
                     createdFiles.append(jsonfile)
 
-                    datacsum = None
-                    if layerid in checksums:
-                        datacsum = checksums[layerid]
-
                     self._save_data(template,
                                     registryendpoint,
                                     "/v1/images/" + layerid + "/layer",
                                     headers,
-                                    datafile, datacsum)
+                                    datafile)
                     createdFiles.append(datafile)
 
             index = {
