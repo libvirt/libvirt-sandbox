@@ -138,8 +138,6 @@ class DockerSource(base.Source):
                                           jsonfile)
                     createdFiles.append(jsonfile)
 
-                    layersize = int(res.info().getheader("Content-Length"))
-
                     datacsum = None
                     if layerid in checksums:
                         datacsum = checksums[layerid]
@@ -148,7 +146,7 @@ class DockerSource(base.Source):
                                     registryendpoint,
                                     "/v1/images/" + layerid + "/layer",
                                     headers,
-                                    datafile, datacsum, layersize)
+                                    datafile, datacsum)
                     createdFiles.append(datafile)
 
             index = {
@@ -173,9 +171,13 @@ class DockerSource(base.Source):
                     pass
 
     def _save_data(self, template, server, path, headers,
-                   dest, checksum=None, datalen=None):
+                   dest, checksum=None):
         try:
             res = self._get_url(template, server, path, headers)
+
+            datalen = res.info().getheader("Content-Length")
+            if datalen is not None:
+                datalen = int(datalen)
 
             csum = None
             if checksum is not None:
