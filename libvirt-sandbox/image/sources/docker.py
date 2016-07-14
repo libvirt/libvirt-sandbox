@@ -31,6 +31,7 @@ import shutil
 import urlparse
 import hashlib
 from abc import ABCMeta, abstractmethod
+import copy
 
 from . import base
 
@@ -152,133 +153,75 @@ class DockerAuthToken(DockerAuth):
         return False
 
 
-class DockerSource(base.Source):
+class DockerRegistry():
 
-    def __init__(self):
+    def __init__(self, uri_base):
+
+        self.uri_base = list(urlparse.urlparse(uri_base))
         self.auth_handler = DockerAuthNop()
 
     def set_auth_handler(self, auth_handler):
         self.auth_handler = auth_handler
 
-    def _check_cert_validate(self):
-        major = sys.version_info.major
-        SSL_WARNING = "SSL certificates couldn't be validated by default. You need to have 2.7.9/3.4.3 or higher"
-        SSL_WARNING +="\nSee https://bugs.python.org/issue22417\n"
-        py2_7_9_hexversion = 34015728
-        py3_4_3_hexversion = 50594800
-        if  (major == 2 and sys.hexversion < py2_7_9_hexversion) or (major == 3 and sys.hexversion < py3_4_3_hexversion):
-            sys.stderr.write(SSL_WARNING)
+    def set_server(self, server):
+        self.uri_base[1] = server
 
-    def _was_downloaded(self, image, templatedir):
-        try:
-            self._get_image_list(image, templatedir)
-            return True
-        except Exception:
-            return False
+    @classmethod
+    def from_template(cls, template):
+        protocol = template.protocol
+        hostname = template.hostname
+        port = template.port
 
+        if protocol is None:
+            protocol = "https"
+        if hostname is None:
+            hostname = "index.docker.io"
 
-    def has_template(self, template, templatedir):
-        try:
-            image = DockerImage.from_template(template)
-            configfile, diskfile = self._get_template_data(image, templatedir)
-            return os.path.exists(diskfile)
-        except Exception:
-            return False
-
-
-    def download_template(self, image, template, templatedir):
-        self._check_cert_validate()
-
-        basicauth = DockerAuthBasic(template.username, template.password)
-        self.set_auth_handler(basicauth)
-        try:
-            (data, res) = self._get_json(template,
-                                         None,
-                                         "/v1/repositories/%s/%s/images" % (
-                                             image.repo, image.name,
-                                         ))
-        except urllib2.HTTPError, e:
-            raise ValueError(["Image '%s' does not exist" % template])
-
-        registryendpoint = res.info().getheader('X-Docker-Endpoints')
-
-        if basicauth.token is not None:
-            self.set_auth_handler(DockerAuthToken(basicauth.token))
+        if port is None:
+            server = hostname
         else:
-            self.set_auth_handler(DockerAuthNop())
+            server = "%s:%s" % (hostname, port)
 
-        (data, res) = self._get_json(template,
-                                     registryendpoint,
-                                     "/v1/repositories/%s/%s/tags" %(
-                                         image.repo, image.name
-                                     ))
+        url = urlparse.urlunparse((protocol, server, "", None, None, None))
 
-        if image.tag not in data:
-            raise ValueError(["Tag '%s' does not exist for image '%s'" %
-                              (image.tag, template)])
-        imagetagid = data[image.tag]
+        return cls(url)
 
-        (data, res) = self._get_json(template,
-                                     registryendpoint,
-                                     "/v1/images/" + imagetagid + "/ancestry")
+    def get_url(self, path, headers=None):
+        url_bits = copy.copy(self.uri_base)
+        url_bits[2] = path
+        url = urlparse.urlunparse(url_bits)
+        debug("Fetching %s..." % url)
 
-        if data[0] != imagetagid:
-            raise ValueError(["Expected first layer id '%s' to match image id '%s'",
-                          data[0], imagetagid])
+        req = urllib2.Request(url=url)
+
+        if headers is not None:
+            for h in headers.keys():
+                req.add_header(h, headers[h])
+
+        self.auth_handler.prepare_req(req)
 
         try:
-            createdFiles = []
-            createdDirs = []
+            res = urllib2.urlopen(req)
+            self.auth_handler.process_res(res)
+            return res
+        except urllib2.HTTPError as e:
+            if e.code == 401:
+                retry = self.auth_handler.process_err(e)
+                if retry:
+                    debug("Re-Fetching %s..." % url)
+                    self.auth_handler.prepare_req(req)
+                    res = urllib2.urlopen(req)
+                    self.auth_handler.process_res(res)
+                    return res
+                else:
+                    debug("Not re-fetching")
+                    raise
+            else:
+                raise
 
-            for layerid in data:
-                layerdir = templatedir + "/" + layerid
-                if not os.path.exists(layerdir):
-                    os.makedirs(layerdir)
-                    createdDirs.append(layerdir)
-
-                jsonfile = layerdir + "/template.json"
-                datafile = layerdir + "/template.tar.gz"
-
-                if not os.path.exists(jsonfile) or not os.path.exists(datafile):
-                    res = self._save_data(template,
-                                          registryendpoint,
-                                          "/v1/images/" + layerid + "/json",
-                                          jsonfile)
-                    createdFiles.append(jsonfile)
-
-                    self._save_data(template,
-                                    registryendpoint,
-                                    "/v1/images/" + layerid + "/layer",
-                                    datafile)
-                    createdFiles.append(datafile)
-
-            index = {
-                "repo": image.repo,
-                "name": image.name,
-                "tag": image.tag,
-            }
-
-            indexfile = templatedir + "/" + imagetagid + "/index.json"
-            print("Index file " + indexfile)
-            with open(indexfile, "w") as f:
-                 f.write(json.dumps(index))
-        except Exception as e:
-            traceback.print_exc()
-            for f in createdFiles:
-                try:
-                    os.remove(f)
-                except:
-                    pass
-            for d in createdDirs:
-                try:
-                    shutil.rmtree(d)
-                except:
-                    pass
-
-    def _save_data(self, template, server, path,
-                   dest, checksum=None):
+    def save_data(self, path, dest, checksum=None):
         try:
-            res = self._get_url(template, server, path)
+            res = self.get_url(path)
 
             datalen = res.info().getheader("Content-Length")
             if datalen is not None:
@@ -321,61 +264,126 @@ class DockerSource(base.Source):
             debug("FAIL %s\n" % str(e))
             raise
 
-    def _get_url(self, template, server, path, headers=None):
-        if template.protocol is None:
-            protocol = "https"
-        else:
-            protocol = template.protocol
-
-        if server is None:
-            if template.hostname is None:
-                server = "index.docker.io"
-            else:
-                if template.port is not None:
-                    server = "%s:%d" % (template.hostname, template.port)
-                else:
-                    server = template.hostname
-
-        url = urlparse.urlunparse((protocol, server, path, None, None, None))
-        debug("Fetching %s..." % url)
-
-        req = urllib2.Request(url=url)
-        if headers is not None:
-            for h in headers.keys():
-                req.add_header(h, headers[h])
-
-        self.auth_handler.prepare_req(req)
-
-        try:
-            res = urllib2.urlopen(req)
-            self.auth_handler.process_res(res)
-            return res
-        except urllib2.HTTPError as e:
-            if e.code == 401:
-                retry = self.auth_handler.process_err(e)
-                if retry:
-                    debug("Re-Fetching %s..." % url)
-                    self.auth_handler.prepare_req(req)
-                    res = urllib2.urlopen(req)
-                    self.auth_handler.process_res(res)
-                    return res
-                else:
-                    debug("Not re-fetching")
-                    raise
-            else:
-                raise
-
-    def _get_json(self, template, server, path):
+    def get_json(self, path):
         try:
             headers = {}
-            headers["Accept"] = "application/json")
-            res = self._get_url(template, server, path, headers)
+            headers["Accept"] = "application/json"
+            res = self.get_url(path, headers)
             data = json.loads(res.read())
             debug("OK\n")
             return (data, res)
         except Exception, e:
             debug("FAIL %s\n" % str(e))
             raise
+
+
+class DockerSource(base.Source):
+
+    def _check_cert_validate(self):
+        major = sys.version_info.major
+        SSL_WARNING = "SSL certificates couldn't be validated by default. You need to have 2.7.9/3.4.3 or higher"
+        SSL_WARNING +="\nSee https://bugs.python.org/issue22417\n"
+        py2_7_9_hexversion = 34015728
+        py3_4_3_hexversion = 50594800
+        if  (major == 2 and sys.hexversion < py2_7_9_hexversion) or (major == 3 and sys.hexversion < py3_4_3_hexversion):
+            sys.stderr.write(SSL_WARNING)
+
+    def _was_downloaded(self, image, templatedir):
+        try:
+            self._get_image_list(image, templatedir)
+            return True
+        except Exception:
+            return False
+
+
+    def has_template(self, template, templatedir):
+        try:
+            image = DockerImage.from_template(template)
+            configfile, diskfile = self._get_template_data(image, templatedir)
+            return os.path.exists(diskfile)
+        except Exception:
+            return False
+
+
+    def download_template(self, image, template, templatedir):
+        self._check_cert_validate()
+
+        registry = DockerRegistry.from_template(template)
+        basicauth = DockerAuthBasic(template.username, template.password)
+        registry.set_auth_handler(basicauth)
+        try:
+            (data, res) = registry.get_json("/v1/repositories/%s/%s/images" % (
+                                                image.repo, image.name,
+                                            ))
+        except urllib2.HTTPError, e:
+            raise ValueError(["Image '%s' does not exist" % template])
+
+        registryendpoint = res.info().getheader('X-Docker-Endpoints')
+
+        if basicauth.token is not None:
+            registry.set_auth_handler(DockerAuthToken(basicauth.token))
+        else:
+            registry.set_auth_handler(DockerAuthNop())
+
+        (data, res) = registry.get_json("/v1/repositories/%s/%s/tags" %(
+                                            image.repo, image.name
+                                        ))
+
+        if image.tag not in data:
+            raise ValueError(["Tag '%s' does not exist for image '%s'" %
+                              (image.tag, template)])
+        imagetagid = data[image.tag]
+
+        (data, res) = registry.get_json("/v1/images/" + imagetagid + "/ancestry")
+
+        if data[0] != imagetagid:
+            raise ValueError(["Expected first layer id '%s' to match image id '%s'",
+                          data[0], imagetagid])
+
+        try:
+            createdFiles = []
+            createdDirs = []
+
+            for layerid in data:
+                layerdir = templatedir + "/" + layerid
+                if not os.path.exists(layerdir):
+                    os.makedirs(layerdir)
+                    createdDirs.append(layerdir)
+
+                jsonfile = layerdir + "/template.json"
+                datafile = layerdir + "/template.tar.gz"
+
+                if not os.path.exists(jsonfile) or not os.path.exists(datafile):
+                    res = registry.save_data("/v1/images/" + layerid + "/json",
+                                             jsonfile)
+                    createdFiles.append(jsonfile)
+
+                    registry.save_data("/v1/images/" + layerid + "/layer",
+                                       datafile)
+                    createdFiles.append(datafile)
+
+            index = {
+                "repo": image.repo,
+                "name": image.name,
+                "tag": image.tag,
+            }
+
+            indexfile = templatedir + "/" + imagetagid + "/index.json"
+            print("Index file " + indexfile)
+            with open(indexfile, "w") as f:
+                 f.write(json.dumps(index))
+        except Exception as e:
+            traceback.print_exc()
+            for f in createdFiles:
+                try:
+                    os.remove(f)
+                except:
+                    pass
+            for d in createdDirs:
+                try:
+                    shutil.rmtree(d)
+                except:
+                    pass
 
     def create_template(self, template, templatedir, connect=None):
         image = DockerImage.from_template(template)
