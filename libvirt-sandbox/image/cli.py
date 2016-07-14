@@ -143,6 +143,11 @@ def requires_name(parser):
     parser.add_argument("-n","--name",
                         help=_("Name of the running sandbox"))
 
+def requires_debug(parser):
+    parser.add_argument("-d","--debug",
+                        default=False, action="store_true",
+                        help=_("Run in debug mode"))
+
 def check_connect(connectstr):
     supportedDrivers = ['lxc:///','qemu:///session','qemu:///system']
     if not connectstr in supportedDrivers:
@@ -183,6 +188,7 @@ Example supported URI formats:
 def gen_delete_args(subparser):
     parser = gen_command_parser(subparser, "delete",
                                 _("Delete template data"))
+    requires_debug(parser)
     requires_template(parser)
     requires_template_dir(parser)
     parser.set_defaults(func=delete)
@@ -190,6 +196,7 @@ def gen_delete_args(subparser):
 def gen_create_args(subparser):
     parser = gen_command_parser(subparser, "create",
                                 _("Create image from template data"))
+    requires_debug(parser)
     requires_template(parser)
     requires_connect(parser)
     requires_template_dir(parser)
@@ -198,6 +205,7 @@ def gen_create_args(subparser):
 def gen_run_args(subparser):
     parser = gen_command_parser(subparser, "run",
                                 _("Run an already built image"))
+    requires_debug(parser)
     requires_name(parser)
     requires_template(parser)
     requires_connect(parser)
@@ -221,26 +229,30 @@ def main():
     gen_create_args(subparser)
     gen_run_args(subparser)
 
-    try:
-        args = parser.parse_args()
+    args = parser.parse_args()
+    if args.debug:
         args.func(args)
         sys.exit(0)
-    except KeyboardInterrupt, e:
-        sys.exit(0)
-    except ValueError, e:
-        for line in e:
-            for l in line:
-                sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
-        sys.stderr.flush()
-        sys.exit(1)
-    except IOError, e:
-        sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.reason))
-        sys.stderr.flush()
-        sys.exit(1)
-    except OSError, e:
-        sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
-        sys.stderr.flush()
-        sys.exit(1)
-    except Exception, e:
-        print e.message
-        sys.exit(1)
+    else:
+        try:
+            args.func(args)
+            sys.exit(0)
+        except KeyboardInterrupt, e:
+            sys.exit(0)
+        except ValueError, e:
+            for line in e:
+                for l in line:
+                    sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
+            sys.stderr.flush()
+            sys.exit(1)
+        except IOError, e:
+            sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.reason))
+            sys.stderr.flush()
+            sys.exit(1)
+        except OSError, e:
+            sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
+            sys.stderr.flush()
+            sys.exit(1)
+        except Exception, e:
+            print e.message
+            sys.exit(1)
