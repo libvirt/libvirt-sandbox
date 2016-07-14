@@ -49,6 +49,39 @@ class DockerConfParser():
         else:
           return []
 
+class DockerImage():
+
+    def __init__(self, repo, name, tag=None):
+
+        self.repo = repo
+        self.name = name
+        self.tag = tag
+
+        if self.tag is None:
+            self.tag = "latest"
+
+        if self.repo is None:
+            self.repo = "library"
+
+    def __repr__(self):
+        return "%s/%s,tag=%s" % (self.repo, self.name, self.tag)
+
+    @classmethod
+    def from_template(cls, template):
+        bits = template.path[1:].split("/")
+        if len(bits) == 1:
+            return cls(repo=None,
+                       name=bits[0],
+                       tag=template.params.get("tag"))
+        elif len(bits) == 2:
+            return cls(repo=bits[0],
+                       name=bits[1],
+                       tag=template.params.get("tag"))
+        else:
+            raise Exception("Expected image name, or repo & image name for path, not '%s'",
+                            template.path)
+
+
 class DockerSource(base.Source):
 
     def _check_cert_validate(self):
@@ -60,9 +93,9 @@ class DockerSource(base.Source):
         if  (major == 2 and sys.hexversion < py2_7_9_hexversion) or (major == 3 and sys.hexversion < py3_4_3_hexversion):
             sys.stderr.write(SSL_WARNING)
 
-    def _was_downloaded(self, template, templatedir):
+    def _was_downloaded(self, image, templatedir):
         try:
-            self._get_image_list(template, templatedir)
+            self._get_image_list(image, templatedir)
             return True
         except Exception:
             return False
@@ -70,19 +103,22 @@ class DockerSource(base.Source):
 
     def has_template(self, template, templatedir):
         try:
-            configfile, diskfile = self._get_template_data(template, templatedir)
+            image = DockerImage.from_template(template)
+            configfile, diskfile = self._get_template_data(image, templatedir)
             return os.path.exists(diskfile)
         except Exception:
             return False
 
 
-    def download_template(self, template, templatedir):
+    def download_template(self, image, template, templatedir):
         self._check_cert_validate()
 
         try:
             (data, res) = self._get_json(template,
                                          None,
-                                         "/v1/repositories" + template.path + "/images",
+                                         "/v1/repositories/%s/%s/images" % (
+                                             image.repo, image.name,
+                                         ),
                                          {"X-Docker-Token": "true"})
         except urllib2.HTTPError, e:
             raise ValueError(["Image '%s' does not exist" % template])
@@ -95,13 +131,15 @@ class DockerSource(base.Source):
             headers["Authorization"] = "Token " + token
         (data, res) = self._get_json(template,
                                      registryendpoint,
-                                     "/v1/repositories" + template.path + "/tags",
+                                     "/v1/repositories/%s/%s/tags" %(
+                                         image.repo, image.name
+                                     ),
                                      headers)
 
-        tag = template.params.get("tag", "latest")
-        if not tag in data:
-            raise ValueError(["Tag '%s' does not exist for image '%s'" % (tag, template)])
-        imagetagid = data[tag]
+        if image.tag not in data:
+            raise ValueError(["Tag '%s' does not exist for image '%s'" %
+                              (image.tag, template)])
+        imagetagid = data[image.tag]
 
         (data, res) = self._get_json(template,
                                      registryendpoint,
@@ -141,7 +179,9 @@ class DockerSource(base.Source):
                     createdFiles.append(datafile)
 
             index = {
-                "name": template.path,
+                "repo": image.repo,
+                "name": image.name,
+                "tag": image.tag,
             }
 
             indexfile = templatedir + "/" + imagetagid + "/index.json"
@@ -252,10 +292,12 @@ class DockerSource(base.Source):
             raise
 
     def create_template(self, template, templatedir, connect=None):
-        if not self._was_downloaded(template, templatedir):
-            self.download_template(template, templatedir)
+        image = DockerImage.from_template(template)
 
-        imagelist = self._get_image_list(template, templatedir)
+        if not self._was_downloaded(image, templatedir):
+            self.download_template(image, template, templatedir)
+
+        imagelist = self._get_image_list(image, templatedir)
         imagelist.reverse()
 
         parentImage = None
@@ -280,7 +322,7 @@ class DockerSource(base.Source):
                                  connect)
             parentImage = templateImage
 
-    def _get_image_list(self, template, templatedir):
+    def _get_image_list(self, image, templatedir):
         imageparent = {}
         imagenames = {}
         imagedirs = os.listdir(templatedir)
@@ -289,7 +331,10 @@ class DockerSource(base.Source):
             if os.path.exists(indexfile):
                 with open(indexfile,"r") as f:
                     index = json.load(f)
-                imagenames[index["name"]] = imagetagid
+                thisimage = DockerImage(index.get("repo"),
+                                        index["name"],
+                                        index.get("tag"))
+                imagenames[str(thisimage)] = imagetagid
             jsonfile = templatedir + "/" + imagetagid + "/template.json"
             if os.path.exists(jsonfile):
                 with open(jsonfile,"r") as f:
@@ -297,9 +342,9 @@ class DockerSource(base.Source):
                 parent = data.get("parent",None)
                 if parent:
                     imageparent[imagetagid] = parent
-        if not template.path in imagenames:
-            raise ValueError(["Image %s does not exist locally" % template.path])
-        imagetagid = imagenames[template.path]
+        if str(image) not in imagenames:
+            raise ValueError(["Image %s does not exist locally" % image])
+        imagetagid = imagenames[str(image)]
         imagelist = []
         while imagetagid != None:
             imagelist.append(imagetagid)
@@ -308,6 +353,8 @@ class DockerSource(base.Source):
         return imagelist
 
     def delete_template(self, template, templatedir):
+        image = DockerImage.from_template(template)
+
         imageusage = {}
         imageparent = {}
         imagenames = {}
@@ -317,7 +364,10 @@ class DockerSource(base.Source):
             if os.path.exists(indexfile):
                 with open(indexfile,"r") as f:
                     index = json.load(f)
-                imagenames[index["name"]] = imagetagid
+                thisimage = DockerImage(index.get("repo"),
+                                        index["name"],
+                                        index.get("tag"))
+                imagenames[str(thisimage)] = imagetagid
             jsonfile = templatedir + "/" + imagetagid + "/template.json"
             if os.path.exists(jsonfile):
                 with open(jsonfile,"r") as f:
@@ -331,10 +381,9 @@ class DockerSource(base.Source):
                     imageparent[imagetagid] = parent
 
 
-        if not template.path in imagenames:
-            raise ValueError(["Image %s does not exist locally" % template.path])
-
-        imagetagid = imagenames[template.path]
+        if str(image) not in imagenames:
+            raise ValueError(["Image %s does not exist locally" % image])
+        imagetagid = imagenames[str(image)]
         while imagetagid != None:
             debug("Remove %s\n" % imagetagid)
             parent = imageparent.get(imagetagid,None)
@@ -357,15 +406,16 @@ class DockerSource(base.Source):
                     parent = None
             imagetagid = parent
 
-    def _get_template_data(self, template, templatedir):
-        imageList = self._get_image_list(template, templatedir)
+    def _get_template_data(self, image, templatedir):
+        imageList = self._get_image_list(image, templatedir)
         toplayer = imageList[0]
         diskfile = templatedir + "/" + toplayer + "/template.qcow2"
         configfile = templatedir + "/" + toplayer + "/template.json"
         return configfile, diskfile
 
     def get_disk(self, template, templatedir, imagedir, sandboxname):
-        configfile, diskfile = self._get_template_data(template, templatedir)
+        image = DockerImage.from_template(template)
+        configfile, diskfile = self._get_template_data(image, templatedir)
         tempfile = imagedir + "/" + sandboxname + ".qcow2"
         if not os.path.exists(imagedir):
             os.makedirs(imagedir)
@@ -377,7 +427,8 @@ class DockerSource(base.Source):
         return tempfile
 
     def get_command(self, template, templatedir, userargs):
-        configfile, diskfile = self._get_template_data(template, templatedir)
+        image = DockerImage.from_template(template)
+        configfile, diskfile = self._get_template_data(image, templatedir)
         configParser = DockerConfParser(configfile)
         cmd = configParser.getCommand()
         entrypoint = configParser.getEntrypoint()
@@ -391,7 +442,8 @@ class DockerSource(base.Source):
             return entrypoint + cmd
 
     def get_env(self, template, templatedir):
-        configfile, diskfile = self._get_template_data(template, templatedir)
+        image = DockerImage.from_template(template)
+        configfile, diskfile = self._get_template_data(image, templatedir)
         configParser = DockerConfParser(configfile)
         return configParser.getEnvs()
 
