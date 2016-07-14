@@ -258,8 +258,6 @@ class DockerSource(base.Source):
             raise
 
     def create_template(self, template, templatedir, connect=None):
-        self.download_template(template, templatedir)
-
         if not self._was_downloaded(template, templatedir):
             self.download_template(template, templatedir)
 
