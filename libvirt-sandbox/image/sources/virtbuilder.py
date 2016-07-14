@@ -47,16 +47,16 @@ class VirtBuilderSource(base.Source):
         imagepath = "%s/%s.qcow2" % (templatedir, templatename)
         cmd = ["virt-builder", templatename,
                "-o", imagepath_original, "--format", "qcow2"]
-        subprocess.call(cmd)
+        subprocess.check_call(cmd)
 
         try:
             # We need to convert this image into a single partition one.
             tarfile = "%s/%s.tar" % (templatedir, templatename)
             cmd = ["virt-tar-out", "-a", imagepath_original, "/", tarfile]
-            subprocess.call(cmd)
+            subprocess.check_call(cmd)
 
             cmd = ["qemu-img", "create", "-q", "-f", "qcow2", imagepath, "10G"]
-            subprocess.call(cmd)
+            subprocess.check_call(cmd)
 
             self.format_disk(imagepath, "qcow2", connect)
             self.extract_tarball(imagepath, "qcow2", tarfile, connect)
@@ -81,7 +81,7 @@ class VirtBuilderSource(base.Source):
                "-f", "qcow2",
                "-o", "backing_fmt=qcow2,backing_file=%s" % diskfile,
                tempfile]
-        subprocess.call(cmd)
+        subprocess.check_call(cmd)
         return tempfile
 
     def get_env(self,template, templatedir):
