@@ -304,8 +304,26 @@ class DockerSource(base.Source):
         except Exception:
             return False
 
-
     def download_template(self, image, template, templatedir):
+        try:
+            createdFiles = []
+            createdDirs = []
+
+            self._download_template_impl(image, template, templatedir, createdFiles, createdDirs)
+        except Exception as e:
+            for f in createdFiles:
+                try:
+                    os.remove(f)
+                except:
+                    pass
+            for d in createdDirs:
+                try:
+                    shutil.rmtree(d)
+                except:
+                    pass
+            raise
+
+    def _download_template_impl(self, image, template, templatedir, createdFiles, createdDirs):
         self._check_cert_validate()
 
         registry = DockerRegistry.from_template(template)
@@ -340,50 +358,33 @@ class DockerSource(base.Source):
             raise ValueError(["Expected first layer id '%s' to match image id '%s'",
                           data[0], imagetagid])
 
-        try:
-            createdFiles = []
-            createdDirs = []
+        for layerid in data:
+            layerdir = templatedir + "/" + layerid
+            if not os.path.exists(layerdir):
+                os.makedirs(layerdir)
+                createdDirs.append(layerdir)
 
-            for layerid in data:
-                layerdir = templatedir + "/" + layerid
-                if not os.path.exists(layerdir):
-                    os.makedirs(layerdir)
-                    createdDirs.append(layerdir)
+            jsonfile = layerdir + "/template.json"
+            datafile = layerdir + "/template.tar.gz"
 
-                jsonfile = layerdir + "/template.json"
-                datafile = layerdir + "/template.tar.gz"
+            if not os.path.exists(jsonfile) or not os.path.exists(datafile):
+                res = registry.save_data("/v1/images/" + layerid + "/json",
+                                         jsonfile)
+                createdFiles.append(jsonfile)
 
-                if not os.path.exists(jsonfile) or not os.path.exists(datafile):
-                    res = registry.save_data("/v1/images/" + layerid + "/json",
-                                             jsonfile)
-                    createdFiles.append(jsonfile)
+                registry.save_data("/v1/images/" + layerid + "/layer",
+                                   datafile)
+                createdFiles.append(datafile)
 
-                    registry.save_data("/v1/images/" + layerid + "/layer",
-                                       datafile)
-                    createdFiles.append(datafile)
+        index = {
+            "repo": image.repo,
+            "name": image.name,
+            "tag": image.tag,
+        }
 
-            index = {
-                "repo": image.repo,
-                "name": image.name,
-                "tag": image.tag,
-            }
-
-            indexfile = templatedir + "/" + imagetagid + "/index.json"
-            print("Index file " + indexfile)
-            with open(indexfile, "w") as f:
-                 f.write(json.dumps(index))
-        except Exception as e:
-            traceback.print_exc()
-            for f in createdFiles:
-                try:
-                    os.remove(f)
-                except:
-                    pass
-            for d in createdDirs:
-                try:
-                    shutil.rmtree(d)
-                except:
-                    pass
+        indexfile = templatedir + "/" + imagetagid + "/index.json"
+        with open(indexfile, "w") as f:
+            f.write(json.dumps(index))
 
     def create_template(self, template, templatedir, connect=None):
         image = DockerImage.from_template(template)
