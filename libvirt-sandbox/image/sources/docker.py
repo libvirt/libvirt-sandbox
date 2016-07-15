@@ -153,6 +153,55 @@ class DockerAuthToken(DockerAuth):
         return False
 
 
+class DockerAuthBearer(DockerAuth):
+
+    def __init__(self):
+        self.token = None
+
+    def prepare_req(self, req):
+        if self.token is not None:
+            req.add_header("Authorization", "Bearer %s" % self.token)
+
+    def process_res(self, res):
+        pass
+
+    def process_err(self, err):
+        method = err.headers.get("WWW-Authenticate", None)
+        if method is None:
+            return False
+
+        if not method.startswith("Bearer "):
+            return False
+
+        challenge = method[7:]
+
+        bits = challenge.split(",")
+        attrs = {}
+        for bit in bits:
+            subbit = bit.split("=")
+            attrs[subbit[0]] = subbit[1][1:-1]
+
+        url = attrs["realm"]
+        del attrs["realm"]
+        if "error" in attrs:
+            del attrs["error"]
+
+        params = "&".join([
+            "%s=%s" % (attr, attrs[attr])
+            for attr in attrs.keys()
+        ])
+        if params != "":
+            url = url + "?" + params
+
+        req = urllib2.Request(url=url)
+        req.add_header("Accept", "application/json")
+
+        res = urllib2.urlopen(req)
+        data = json.loads(res.read())
+        self.token = data["token"]
+        return True
+
+
 class DockerRegistry():
 
     def __init__(self, uri_base):
