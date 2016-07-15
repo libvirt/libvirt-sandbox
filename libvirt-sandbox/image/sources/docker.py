@@ -212,6 +212,17 @@ class DockerRegistry():
     def set_auth_handler(self, auth_handler):
         self.auth_handler = auth_handler
 
+    def supports_v2(self):
+        try:
+            (data, res) = self.get_json("/v2/")
+            ver = res.info().getheader("Docker-Distribution-Api-Version")
+        except urllib2.HTTPError as e:
+            ver = e.headers.get("Docker-Distribution-Api-Version", None)
+
+        if ver is None:
+            return False
+        return ver.startswith("registry/2")
+
     def set_server(self, server):
         self.uri_base[1] = server
 
@@ -376,6 +387,13 @@ class DockerSource(base.Source):
         self._check_cert_validate()
 
         registry = DockerRegistry.from_template(template)
+        registry.set_auth_handler(DockerAuthBearer())
+        if registry.supports_v2():
+            self._download_template_impl_v2(registry, image, template, templatedir, createdFiles, createdDirs)
+        else:
+            self._download_template_impl_v1(registry, image, template, templatedir, createdFiles, createdDirs)
+
+    def _download_template_impl_v1(self, registry, image, template, templatedir, createdFiles, createdDirs):
         basicauth = DockerAuthBasic(template.username, template.password)
         registry.set_auth_handler(basicauth)
         try:
@@ -434,6 +452,49 @@ class DockerSource(base.Source):
         indexfile = templatedir + "/" + imagetagid + "/index.json"
         with open(indexfile, "w") as f:
             f.write(json.dumps(index))
+
+
+    def _download_template_impl_v2(self, registry, image, template, templatedir, createdFiles, createdDirs):
+        (manifest, res) = registry.get_json( "/v2/%s/%s/manifests/%s" % (
+            image.repo, image.name, image.tag))
+
+        layerChecksums = [
+            layer["blobSum"] for layer in manifest["fsLayers"]
+        ]
+        layers = [
+            json.loads(entry["v1Compatibility"]) for entry in manifest["history"]
+        ]
+
+        for i in range(len(layerChecksums)):
+            layerChecksum = layerChecksums[i]
+            config = layers[i]
+
+            layerdir = templatedir + "/" + config["id"]
+            if not os.path.exists(layerdir):
+                os.makedirs(layerdir)
+                createdDirs.append(layerdir)
+
+            jsonfile = layerdir + "/template.json"
+            datafile = layerdir + "/template.tar.gz"
+
+            with open(jsonfile, "w") as fh:
+                fh.write(json.dumps(config))
+
+            registry.save_data("/v2/%s/%s/blobs/%s" % (
+                                   image.repo, image.name, layerChecksum),
+                               datafile, checksum=layerChecksum)
+
+
+        index = {
+            "repo": image.repo,
+            "name": image.name,
+            "tag": image.tag,
+        }
+
+        indexfile = templatedir + "/" + layers[0]["id"] + "/index.json"
+        with open(indexfile, "w") as f:
+            f.write(json.dumps(index))
+
 
     def create_template(self, template, templatedir, connect=None):
         image = DockerImage.from_template(template)
