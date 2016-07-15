@@ -128,7 +128,7 @@ class Source():
                   '/sbin/mkfs.ext3',
                   '/dev/disk/by-tag/disk_image']
         cmd = cmd + params
-        subprocess.call(cmd)
+        subprocess.check_call(cmd)
 
     def extract_tarball(self, diskfile, format, tarfile, connect):
         cmd = ['virt-sandbox']
@@ -148,4 +148,4 @@ class Source():
                   '-C',
                   '/mnt']
         cmd = cmd + params
-        subprocess.call(cmd)
+        subprocess.check_call(cmd)
