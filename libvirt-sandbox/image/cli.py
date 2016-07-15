@@ -240,9 +240,7 @@ def main():
         except KeyboardInterrupt, e:
             sys.exit(0)
         except ValueError, e:
-            for line in e:
-                for l in line:
-                    sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
+            sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
             sys.exit(1)
         except IOError, e:
