@@ -276,7 +276,7 @@ class DockerSource(base.Source):
             cmd.append(templateImage)
             if parentImage is None:
                 cmd.append("10G")
-            subprocess.call(cmd)
+            subprocess.check_call(cmd)
 
             if parentImage is None:
                 self.format_disk(templateImage, "qcow2", connect)
