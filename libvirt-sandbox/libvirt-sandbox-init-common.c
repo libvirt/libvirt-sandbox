@@ -516,7 +516,7 @@ static gboolean run_command(GVirSandboxConfig *config,
                 abort();
         }
 
-        execv(appargv[0], appargv);
+        execvp(appargv[0], appargv);
         fprintf(stderr, "Cannot execute '%s': %s\n", appargv[0], strerror(errno));
         exit(EXIT_FAILURE);
     }
