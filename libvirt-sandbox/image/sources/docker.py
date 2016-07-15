@@ -266,8 +266,6 @@ class DockerSource(base.Source):
         debug("Fetching %s..." % url)
 
         req = urllib2.Request(url=url)
-        if json:
-            req.add_header("Accept", "application/json")
         for h in headers.keys():
             req.add_header(h, headers[h])
 
@@ -283,6 +281,11 @@ class DockerSource(base.Source):
 
     def _get_json(self, template, server, path, headers):
         try:
+            if headers is None:
+                headers = {}
+            else:
+                headers = copy.copy(headers)
+            headers["Accept"] = "application/json")
             res = self._get_url(template, server, path, headers)
             data = json.loads(res.read())
             debug("OK\n")
