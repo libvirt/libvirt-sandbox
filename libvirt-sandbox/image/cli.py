@@ -68,13 +68,13 @@ def get_template_dir(args):
     tmpl = template.Template.from_uri(args.template)
     return "%s/%s" % (args.template_dir, tmpl.source)
 
-def delete(args):
+def purge(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
     source.delete_template(template=tmpl,
                            templatedir=get_template_dir(args))
 
-def create(args):
+def prepare(args):
     tmpl = template.Template.from_uri(args.template)
     source = tmpl.get_source_impl()
     source.create_template(template=tmpl,
@@ -91,7 +91,7 @@ def run(args):
 
     # Create the template image if needed
     if not source.has_template(tmpl, template_dir):
-        create(args)
+        prepare(args)
 
     name = args.name
     if name is None:
@@ -197,26 +197,26 @@ Example supported URI formats:
 """)
     return parser
 
-def gen_delete_args(subparser):
-    parser = gen_command_parser(subparser, "delete",
-                                _("Delete template data"))
+def gen_purge_args(subparser):
+    parser = gen_command_parser(subparser, "purge",
+                                _("Purge cached template"))
     requires_debug(parser)
     requires_template(parser)
     requires_template_dir(parser)
-    parser.set_defaults(func=delete)
+    parser.set_defaults(func=purge)
 
-def gen_create_args(subparser):
-    parser = gen_command_parser(subparser, "create",
-                                _("Create image from template data"))
+def gen_prepare_args(subparser):
+    parser = gen_command_parser(subparser, "prepare",
+                                _("Prepare local template"))
     requires_debug(parser)
     requires_template(parser)
     requires_connect(parser)
     requires_template_dir(parser)
-    parser.set_defaults(func=create)
+    parser.set_defaults(func=prepare)
 
 def gen_run_args(subparser):
     parser = gen_command_parser(subparser, "run",
-                                _("Run an already built image"))
+                                _("Run an instance of a template"))
     requires_debug(parser)
     requires_name(parser)
     requires_template(parser)
@@ -248,8 +248,8 @@ def main():
     parser = argparse.ArgumentParser(description="Sandbox Container Image Tool")
 
     subparser = parser.add_subparsers(help=_("commands"))
-    gen_delete_args(subparser)
-    gen_create_args(subparser)
+    gen_purge_args(subparser)
+    gen_prepare_args(subparser)
     gen_run_args(subparser)
     gen_list_args(subparser)
 
