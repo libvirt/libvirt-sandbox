@@ -358,7 +358,11 @@ class DockerSource(base.Source):
 
     def list_templates(self, templatedir):
         indexes = []
-        imagedirs = os.listdir(templatedir)
+        try:
+            imagedirs = os.listdir(templatedir)
+        except OSError:
+            return []
+
         for imagetagid in imagedirs:
             indexfile = templatedir + "/" + imagetagid + "/index.json"
             if os.path.exists(indexfile):
@@ -552,7 +556,11 @@ class DockerSource(base.Source):
     def _get_image_list(self, image, templatedir):
         imageparent = {}
         imagenames = {}
-        imagedirs = os.listdir(templatedir)
+        imagedirs = []
+        try:
+            imagedirs = os.listdir(templatedir)
+        except OSError:
+            pass
         for imagetagid in imagedirs:
             indexfile = templatedir + "/" + imagetagid + "/index.json"
             if os.path.exists(indexfile):
@@ -585,7 +593,11 @@ class DockerSource(base.Source):
         imageusage = {}
         imageparent = {}
         imagenames = {}
-        imagedirs = os.listdir(templatedir)
+        imagedirs = []
+        try:
+            imagedirs = os.listdir(templatedir)
+        except OSError:
+            pass
         for imagetagid in imagedirs:
             indexfile = templatedir + "/" + imagetagid + "/index.json"
             if os.path.exists(indexfile):

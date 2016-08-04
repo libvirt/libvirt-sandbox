@@ -68,7 +68,11 @@ class VirtBuilderSource(base.Source):
 
     def list_templates(self, templatedir):
         files = []
-        imagefiles = os.listdir(templatedir)
+        try:
+            imagefiles = os.listdir(templatedir)
+        except OSError:
+            return []
+
         for filename in imagefiles:
             if not filename.endswith(".qcow2"):
                 continue
