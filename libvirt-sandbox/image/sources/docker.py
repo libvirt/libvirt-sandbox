@@ -662,7 +662,7 @@ class DockerSource(base.Source):
         cmd.append("-o")
         cmd.append("backing_fmt=qcow2,backing_file=%s" % diskfile)
         cmd.append(tempfile)
-        subprocess.call(cmd)
+        subprocess.check_call(cmd)
         return tempfile
 
     def get_command(self, template, templatedir, userargs):
