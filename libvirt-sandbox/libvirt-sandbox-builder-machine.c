@@ -186,6 +186,7 @@ static gchar *gvir_sandbox_builder_machine_mkinitrd(GVirSandboxConfig *config,
 
     /* In case ext4 is built as a module, include it and its deps
      * for the root mount */
+    gvir_sandbox_config_initrd_add_module(initrd, "fscrypto.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "mbcache.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "jbd2.ko");
     gvir_sandbox_config_initrd_add_module(initrd, "crc16.ko");
