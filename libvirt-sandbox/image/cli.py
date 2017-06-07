@@ -27,6 +27,7 @@ import hashlib
 import json
 import os
 import os.path
+import re
 import shutil
 import sys
 import urllib2
@@ -81,6 +82,10 @@ def prepare(args):
                            templatedir=get_template_dir(args),
                            connect=args.connect)
 
+def random_domain_name(tmpl):
+    randomid = ''.join(random.choice(string.lowercase) for i in range(10))
+    return re.sub('[^a-z0-9-]', '_', tmpl.path[1:], re.I) + ":" + randomid
+
 def run(args):
     if args.connect is not None:
         check_connect(args.connect)
@@ -95,8 +100,7 @@ def run(args):
 
     name = args.name
     if name is None:
-        randomid = ''.join(random.choice(string.lowercase) for i in range(10))
-        name = tmpl.path[1:] + ":" + randomid
+        name = random_domain_name(tmpl)
 
     diskfile = source.get_disk(template=tmpl,
                                templatedir=template_dir,
