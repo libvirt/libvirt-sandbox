@@ -655,7 +655,7 @@ class DockerSource(base.Source):
     def get_disk(self, template, templatedir, imagedir, sandboxname):
         image = DockerImage.from_template(template)
         configfile, diskfile = self._get_template_data(image, templatedir)
-        tempfile = imagedir + "/" + sandboxname + ".qcow2"
+        tempfile = imagedir + "/" + sandboxname.split('/')[-1] + ".qcow2"
         if not os.path.exists(imagedir):
             os.makedirs(imagedir)
         cmd = ["qemu-img","create","-q","-f","qcow2"]
