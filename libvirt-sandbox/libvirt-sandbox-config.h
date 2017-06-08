@@ -180,6 +180,12 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
                                                const gchar *optstr,
                                                GError**error);
 
+void gvir_sandbox_config_set_debug(GVirSandboxConfig *config, gboolean debug);
+gboolean gvir_sandbox_config_get_debug(GVirSandboxConfig *config);
+
+void gvir_sandbox_config_set_verbose(GVirSandboxConfig *config, gboolean verbose);
+gboolean gvir_sandbox_config_get_verbose(GVirSandboxConfig *config);
+
 gchar **gvir_sandbox_config_get_command(GVirSandboxConfig *config);
 
 G_END_DECLS

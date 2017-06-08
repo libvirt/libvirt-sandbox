@@ -1442,6 +1442,9 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
+    debug = gvir_sandbox_config_get_debug(config);
+    verbose = gvir_sandbox_config_get_verbose(config);
+
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin:/sbin/:/usr/sbin", 1);
     unsetenv("LD_LIBRARY_PATH");
 

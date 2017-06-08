@@ -273,6 +273,9 @@ int main(int argc, char **argv) {
     if (shell)
         gvir_sandbox_config_set_shell(cfg, TRUE);
 
+    gvir_sandbox_config_set_debug(cfg, debug);
+    gvir_sandbox_config_set_verbose(cfg, verbose);
+
     if (isatty(STDIN_FILENO))
         gvir_sandbox_config_interactive_set_tty(icfg, TRUE);
 

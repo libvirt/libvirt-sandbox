@@ -68,6 +68,9 @@ struct _GVirSandboxConfigPrivate
 
     gchar *secLabel;
     gboolean secDynamic;
+
+    gboolean debug;
+    gboolean verbose;
 };
 
 G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
@@ -1926,6 +1929,59 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
     return ret;
 }
 
+/**
+ * gvir_sandbox_config_set_debug:
+ * @config: (transfer none): the sandbox config
+ * @debug: true if the container init should print debugging messages
+ *
+ * Set whether the container init should print debugging messages.
+ */
+void gvir_sandbox_config_set_debug(GVirSandboxConfig *config, gboolean debug)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->debug = debug;
+}
+
+/**
+ * gvir_sandbox_config_get_debug:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox debug flag
+ *
+ * Returns: the debug flag
+ */
+gboolean gvir_sandbox_config_get_debug(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->debug;
+}
+
+/**
+ * gvir_sandbox_config_set_verbose:
+ * @config: (transfer none): the sandbox config
+ * @verbose: true if the container init should be verbose
+ *
+ * Set whether the container init should be verbose.
+ */
+void gvir_sandbox_config_set_verbose(GVirSandboxConfig *config, gboolean verbose)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    priv->verbose = verbose;
+}
+
+/**
+ * gvir_sandbox_config_get_verbose:
+ * @config: (transfer none): the sandbox config
+ *
+ * Retrieves the sandbox verbose flag
+ *
+ * Returns: the verbose flag
+ */
+gboolean gvir_sandbox_config_get_verbose(GVirSandboxConfig *config)
+{
+    GVirSandboxConfigPrivate *priv = config->priv;
+    return priv->verbose;
+}
 
 static GVirSandboxConfigMount *gvir_sandbox_config_load_config_mount(GKeyFile *file,
                                                                      guint i,
@@ -2415,6 +2471,22 @@ static gboolean gvir_sandbox_config_load_config(GVirSandboxConfig *config,
         priv->secDynamic = b;
     }
 
+    b = g_key_file_get_boolean(file, "core", "debug", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->debug = b;
+    }
+
+    b = g_key_file_get_boolean(file, "core", "verbose", &e);
+    if (e) {
+        g_error_free(e);
+        e = NULL;
+    } else {
+        priv->verbose = b;
+    }
+
     ret = TRUE;
  cleanup:
     return ret;
@@ -2677,6 +2749,9 @@ static void gvir_sandbox_config_save_config(GVirSandboxConfig *config,
     if (priv->secLabel)
         g_key_file_set_string(file, "security", "label", priv->secLabel);
     g_key_file_set_boolean(file, "security", "dynamic", priv->secDynamic);
+
+    g_key_file_set_boolean(file, "core", "debug", priv->debug);
+    g_key_file_set_boolean(file, "core", "verbose", priv->verbose);
 }
 
 

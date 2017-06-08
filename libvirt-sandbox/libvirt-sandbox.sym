@@ -120,6 +120,8 @@ LIBVIRT_SANDBOX_0.6.0 {
 	gvir_sandbox_config_get_userid;
 	gvir_sandbox_config_get_username;
 	gvir_sandbox_config_get_uuid;
+	gvir_sandbox_config_get_debug;
+	gvir_sandbox_config_get_verbose;
 	gvir_sandbox_config_find_mount;
 	gvir_sandbox_config_has_networks;
 	gvir_sandbox_config_has_mounts;
@@ -143,6 +145,8 @@ LIBVIRT_SANDBOX_0.6.0 {
 	gvir_sandbox_config_set_security_label;
 	gvir_sandbox_config_set_security_opts;
 	gvir_sandbox_config_set_uuid;
+	gvir_sandbox_config_set_debug;
+	gvir_sandbox_config_set_verbose;
 
 	gvir_sandbox_config_initrd_add_module;
 	gvir_sandbox_config_initrd_get_init;
