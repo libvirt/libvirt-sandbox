@@ -148,8 +148,8 @@ news-check-lines-spec ?= 1,10
 news-check-regexp ?= '^\*.* $(VERSION_REGEXP) \($(today)\)'
 
 # Prevent programs like 'sort' from considering distinct strings to be equal.
-# Doing it here saves us from having to set LC_ALL elsewhere in this file.
-export LC_ALL = C
+# Doing it here saves us from having to set LC_COLLATE elsewhere in this file.
+export LC_COLLATE = C
 
 ## --------------- ##
 ## Sanity checks.  ##
