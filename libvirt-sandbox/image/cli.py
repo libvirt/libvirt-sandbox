@@ -1,4 +1,4 @@
-#!/usr/bin/python -Es
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Authors: Daniel P. Berrange <berrange@redhat.com>
 #          Eren Yagdiran <erenyagdiran@gmail.com>

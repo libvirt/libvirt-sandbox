@@ -1,4 +1,4 @@
-#!/usr/bin/python -Es
+#!/usr/bin/env python3
 #
 # Authors: Dan Walsh <dwalsh@redhat.com>
 #
