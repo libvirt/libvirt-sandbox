@@ -19,7 +19,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
 
-import urlparse
+import urllib.parse
 import importlib
 import re
 
@@ -71,7 +71,7 @@ class Template(object):
             classimpl = getattr(mod, classname)
             return classimpl()
         except Exception as e:
-            print e
+            print (e)
             raise Exception("Invalid source: '%s'" % source)
 
     def get_source_impl(self):
@@ -101,12 +101,12 @@ class Template(object):
             netloc = None
 
         query = "&".join([key + "=" + self.params[key] for key in self.params.keys()])
-        ret = urlparse.urlunparse((scheme, netloc, self.path, None, query, None))
+        ret = urllib.parse.urlunparse((scheme, netloc, self.path, None, query, None))
         return ret
 
     @classmethod
     def from_uri(klass, uri):
-        o = urlparse.urlparse(uri)
+        o = urllib.parse.urlparse(uri)
 
         idx = o.scheme.find("+")
         if idx == -1:

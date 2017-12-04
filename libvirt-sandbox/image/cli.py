@@ -30,7 +30,6 @@ import os.path
 import re
 import shutil
 import sys
-import urllib2
 import subprocess
 import random
 import string
@@ -52,7 +51,6 @@ gettext.textdomain("libvirt-sandbox")
 try:
     gettext.install("libvirt-sandbox",
                     localedir="/usr/share/locale",
-                    unicode=False,
                     codeset = 'utf-8')
 except IOError:
     import __builtin__
@@ -149,7 +147,7 @@ def list_cached(args):
             tmpls.extend(template.Template.get_all(source,
                                                    "%s/%s" % (args.template_dir, source)))
     for tmpl in tmpls:
-        print tmpl
+        print (tmpl)
 
 def requires_template(parser):
     parser.add_argument("template",
@@ -265,20 +263,20 @@ def main():
         try:
             args.func(args)
             sys.exit(0)
-        except KeyboardInterrupt, e:
+        except KeyboardInterrupt as e:
             sys.exit(0)
-        except ValueError, e:
+        except ValueError as e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
             sys.exit(1)
-        except IOError, e:
-            sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.reason))
+        except IOError as e:
+            sys.stderr.write("%s: %s\n" % (sys.argv[0], e.filename))
             sys.stderr.flush()
             sys.exit(1)
-        except OSError, e:
+        except OSError as e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
             sys.exit(1)
-        except Exception, e:
-            print e.message
+        except Exception as e:
+            print (e)
             sys.exit(1)

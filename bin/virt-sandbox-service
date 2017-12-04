@@ -30,7 +30,6 @@ from gi.repository import GLib
 import gi
 import re
 import os, sys, shutil, errno, stat
-import exceptions
 import rpm
 from subprocess import Popen, PIPE, STDOUT
 import gettext
@@ -49,7 +48,6 @@ gettext.textdomain("libvirt-sandbox")
 try:
     gettext.install("libvirt-sandbox",
                     localedir="/usr/share/locale",
-                    unicode=False,
                     codeset = 'utf-8')
 except IOError:
     import __builtin__
@@ -235,7 +233,7 @@ class Container:
             path = "%s%s" % (self.dest, f)
             os.chown(path, s.st_uid, s.st_gid)
             os.chmod(path, s.st_mode)
-        except OSError, e:
+        except OSError as e:
             if not e.errno == errno.ENOENT:
                 raise
 
@@ -253,7 +251,7 @@ class Container:
         try:
             path = "%s%s" % (self.dest, d)
             os.makedirs(path)
-        except OSError, e:
+        except OSError as e:
             if not e.errno == errno.EEXIST:
                 raise
 
@@ -263,7 +261,7 @@ class Container:
             path = "%s%s" % (self.dest, f)
             fd=open(path, "w")
             fd.close()
-        except OSError, e:
+        except OSError as e:
             if not e.errno == errno.EEXIST:
                 raise
 
@@ -404,10 +402,10 @@ class GenericContainer(Container):
     def create(self):
         try:
             self.create_generic()
-        except Exception, e:
+        except Exception as e:
             try:
                 self.delete()
-            except Exception, e2:
+            except Exception as e2:
                 pass
             raise e
 
@@ -581,8 +579,8 @@ WantedBy=multi-user.target
     def get_rpm_for_unit(self, unitfile):
         mi = self.ts.dbMatch(rpm.RPMTAG_BASENAMES, unitfile)
         try:
-            h = mi.next();
-        except exceptions.StopIteration:
+            h = next(mi);
+        except StopIteration:
             return None
         return h['name']
 
@@ -590,8 +588,8 @@ WantedBy=multi-user.target
     def extract_rpm(self, rpm_name):
         mi = self.ts.dbMatch('name', rpm_name)
         try:
-            h = mi.next();
-        except exceptions.StopIteration:
+            h = next(mi);
+        except StopIteration:
             raise ValueError([_("Cannot find package named %s") % rpm_name])
 
         for fentry in h.fiFromHeader():
@@ -602,16 +600,16 @@ WantedBy=multi-user.target
             if os.path.isfile(fname):
                 self.add_file(fname)
 
-        srcrpm = h[rpm.RPMTAG_SOURCERPM]
+        srcrpm = str(h[rpm.RPMTAG_SOURCERPM], encoding='utf-8')
         srcrpmbits = self.split_filename(srcrpm)
 
-        if srcrpmbits[0] == h[rpm.RPMTAG_NAME]:
+        if srcrpmbits[0] == str(h[rpm.RPMTAG_NAME], encoding='utf-8'):
             return
 
         mi = self.ts.dbMatch(rpm.RPMTAG_NAME, srcrpmbits[0])
         try:
-            h = mi.next();
-        except exceptions.StopIteration:
+            h = next(mi);
+        except StopIteration:
             raise ValueError([_("Cannot find base package %s") % srcrpmbits[0]])
 
         for fentry in h.fiFromHeader():
@@ -771,7 +769,7 @@ PrivateNetwork=false
             fd.write("[Unit]\n")
             fd.write("Description=Sandbox multi-user target\n")
             fd.close()
-        except OSError, e:
+        except OSError as e:
             if not e.errno == errno.EEXIST:
                 raise
 
@@ -789,7 +787,7 @@ PrivateNetwork=false
                 jpath = "/var/log/journal/" + uuid
                 if os.path.lexists(jpath):
                     os.remove(jpath)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
             sys.stderr.flush()
 
@@ -825,10 +823,10 @@ PrivateNetwork=false
 
         try:
             self.create_systemd()
-        except Exception, e:
+        except Exception as e:
             try:
                 self.delete()
-            except Exception, e2:
+            except Exception as e2:
                 sys.stderr.write("Cleanup failed: %s\n" % str(e2))
             raise
 
@@ -923,10 +921,10 @@ def connect(args):
         execute(args)
         return
 
-    print """\
+    print ("""\
 Connected to %s.
 Type 'Ctrl + ]' to detach from the console.
-""" % ( args.name )
+""" % ( args.name ))
     os.execl("/usr/libexec/virt-sandbox-service-util",
              "virt-sandbox-service-util",
              "-c", args.uri,
@@ -1014,7 +1012,7 @@ def clone(args):
             newcontainer.set_security(args.security)
         newcontainer.set_security_label()
         newcontainer.save_config()
-    except Exception, e:
+    except Exception as e:
         if newcontainer is not None:
             newcontainer.delete()
         raise
@@ -1296,23 +1294,21 @@ if __name__ == '__main__':
             sys.exit(1)
         args.func(args)
         sys.exit(0)
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         sys.exit(0)
-    except ValueError, e:
-        for line in e:
-            for l in line:
-                sys.stderr.write("%s: %s\n" % (sys.argv[0], l))
-        sys.stderr.flush()
-        sys.exit(1)
-    except IOError, e:
-        sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.strerror))
-        sys.stderr.flush()
-        sys.exit(1)
-    except OSError, e:
+    except ValueError as e:
         sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
         sys.stderr.flush()
         sys.exit(1)
-    except GLib.GError, e:
+    except IOError as e:
+        sys.stderr.write("%s: %s: %s\n" % (sys.argv[0], e.filename, e.strerror))
+        sys.stderr.flush()
+        sys.exit(1)
+    except OSError as e:
+        sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
+        sys.stderr.flush()
+        sys.exit(1)
+    except GLib.GError as e:
         sys.stderr.write("%s: %s\n" % (sys.argv[0], e))
         sys.stderr.flush()
         sys.exit(1)

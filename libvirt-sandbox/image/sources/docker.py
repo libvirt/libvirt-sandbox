@@ -21,14 +21,15 @@
 # Author: Eren Yagdiran <erenyagdiran@gmail.com>
 #
 
-import urllib2
 import sys
 import json
 import traceback
 import os
 import subprocess
 import shutil
-import urlparse
+import urllib.error
+import urllib.parse
+import urllib.request
 import hashlib
 from abc import ABCMeta, abstractmethod
 import copy
@@ -133,7 +134,7 @@ class DockerAuthBasic(DockerAuth):
         req.add_header("X-Docker-Token", "true")
 
     def process_res(self, res):
-        self.token = res.info().getheader('X-Docker-Token')
+        self.token = res.info().get('X-Docker-Token')
 
     def process_err(self, err):
         return False
@@ -194,10 +195,10 @@ class DockerAuthBearer(DockerAuth):
         if params != "":
             url = url + "?" + params
 
-        req = urllib2.Request(url=url)
+        req = urllib.request.Request(url=url)
         req.add_header("Accept", "application/json")
 
-        res = urllib2.urlopen(req)
+        res = urllib.request.urlopen(req)
         data = json.loads(res.read())
         self.token = data["token"]
         return True
@@ -207,7 +208,7 @@ class DockerRegistry():
 
     def __init__(self, uri_base):
 
-        self.uri_base = list(urlparse.urlparse(uri_base))
+        self.uri_base = list(urllib.parse.urlparse(uri_base))
         self.auth_handler = DockerAuthNop()
 
     def set_auth_handler(self, auth_handler):
@@ -216,8 +217,8 @@ class DockerRegistry():
     def supports_v2(self):
         try:
             (data, res) = self.get_json("/v2/")
-            ver = res.info().getheader("Docker-Distribution-Api-Version")
-        except urllib2.HTTPError as e:
+            ver = res.info().get("Docker-Distribution-Api-Version")
+        except urllib.error.HTTPError as e:
             ver = e.headers.get("Docker-Distribution-Api-Version", None)
 
         if ver is None:
@@ -243,17 +244,17 @@ class DockerRegistry():
         else:
             server = "%s:%s" % (hostname, port)
 
-        url = urlparse.urlunparse((protocol, server, "", None, None, None))
+        url = urllib.parse.urlunparse((protocol, server, "", None, None, None))
 
         return cls(url)
 
     def get_url(self, path, headers=None):
         url_bits = copy.copy(self.uri_base)
         url_bits[2] = path
-        url = urlparse.urlunparse(url_bits)
+        url = urllib.parse.urlunparse(url_bits)
         debug("Fetching %s..." % url)
 
-        req = urllib2.Request(url=url)
+        req = urllib.request.Request(url=url)
 
         if headers is not None:
             for h in headers.keys():
@@ -262,16 +263,16 @@ class DockerRegistry():
         self.auth_handler.prepare_req(req)
 
         try:
-            res = urllib2.urlopen(req)
+            res = urllib.request.urlopen(req)
             self.auth_handler.process_res(res)
             return res
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             if e.code == 401:
                 retry = self.auth_handler.process_err(e)
                 if retry:
                     debug("Re-Fetching %s..." % url)
                     self.auth_handler.prepare_req(req)
-                    res = urllib2.urlopen(req)
+                    res = urllib.request.urlopen(req)
                     self.auth_handler.process_res(res)
                     return res
                 else:
@@ -284,7 +285,7 @@ class DockerRegistry():
         try:
             res = self.get_url(path)
 
-            datalen = res.info().getheader("Content-Length")
+            datalen = res.info().get("Content-Length")
             if datalen is not None:
                 datalen = int(datalen)
 
@@ -296,7 +297,7 @@ class DockerRegistry():
             patternIndex = 0
             donelen = 0
 
-            with open(dest, "w") as f:
+            with open(dest, "wb") as f:
                 while 1:
                     buf = res.read(1024*64)
                     if not buf:
@@ -321,7 +322,7 @@ class DockerRegistry():
                     raise IOError("Checksum '%s' for data does not match '%s'" % (csumstr, checksum))
             debug("OK\n")
             return res
-        except Exception, e:
+        except Exception as e:
             debug("FAIL %s\n" % str(e))
             raise
 
@@ -333,7 +334,7 @@ class DockerRegistry():
             data = json.loads(res.read())
             debug("OK\n")
             return (data, res)
-        except Exception, e:
+        except Exception as e:
             debug("FAIL %s\n" % str(e))
             raise
 
@@ -426,10 +427,10 @@ class DockerSource(base.Source):
             (data, res) = registry.get_json("/v1/repositories/%s/%s/images" % (
                                                 image.repo, image.name,
                                             ))
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             raise ValueError(["Image '%s' does not exist" % template])
 
-        registryendpoint = res.info().getheader('X-Docker-Endpoints')
+        registryendpoint = res.info().get('X-Docker-Endpoints')
 
         if basicauth.token is not None:
             registry.set_auth_handler(DockerAuthToken(basicauth.token))
