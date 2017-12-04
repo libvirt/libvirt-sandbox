@@ -20,6 +20,8 @@
 #
 
 import gi
+gi.require_version('LibvirtGConfig', '1.0')
+from gi.repository import LibvirtGConfig
 gi.require_version('LibvirtGObject', '1.0')
 from gi.repository import LibvirtGObject
 gi.require_version('LibvirtSandbox', '1.0')
@@ -223,7 +225,8 @@ class Container:
     def gen_filesystems(self):
         if self.use_image:
             self.image = self.DEFAULT_IMAGE % self.get_name()
-            mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest)
+            mount = LibvirtSandbox.ConfigMountHostImage.new(self.image, self.dest,
+                                                            LibvirtGConfig.DomainDiskFormat.RAW)
             self.config.add_mount(mount)
 
     def fix_stat(self, f):
