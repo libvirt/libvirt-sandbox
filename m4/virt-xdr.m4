@@ -1,7 +1,11 @@
 AC_DEFUN([LIBVIRT_SANDBOX_XDR], [
     old_LIBS="$LIBS"
+    XDR_LIBS=
     AC_SEARCH_LIBS([xdrmem_create], [portablexdr rpc xdr nsl tirpc], [
-      XDR_LIBS="$ac_cv_search_xdrmem_create"
+      if test "$ac_cv_search_xdrmem_create" != "none required"
+      then
+          XDR_LIBS="$ac_cv_search_xdrmem_create"
+      fi
     ],[
       AC_MSG_ERROR([Cannot find a XDR library])
     ])
