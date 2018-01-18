@@ -157,6 +157,7 @@ libvirt_sandbox_1_0_la_CFLAGS = \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(SELINUX_CFLAGS) \
+			$(XDR_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_1_0_la_LIBADD = \
@@ -165,6 +166,7 @@ libvirt_sandbox_1_0_la_LIBADD = \
 			$(LIBVIRT_GOBJECT_LIBS) \
 			$(SELINUX_LIBS) \
 			$(CYGWIN_EXTRA_LIBADD) \
+			$(XDR_LIBS) \
 			$(NULL)
 libvirt_sandbox_1_0_la_DEPENDENCIES = \
                         libvirt-sandbox.sym
@@ -194,6 +196,7 @@ libvirt_sandbox_init_common_CFLAGS = \
 			$(GIO_UNIX_CFLAGS) \
 			$(CAPNG_CFLAGS) \
 			$(SELINUX_CFLAGS) \
+			$(XDR_CFLAGS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDFLAGS = \
@@ -203,6 +206,7 @@ libvirt_sandbox_init_common_LDFLAGS = \
 			$(LIBVIRT_GCONFIG_LIBS) \
 			$(CAPNG_LIBS) \
 			$(SELINUX_LIBS) \
+			$(XDR_LIBS) \
 			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDADD = \
