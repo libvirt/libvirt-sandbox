@@ -71,6 +71,8 @@ AC_DEFUN([LIBVIRT_SANDBOX_COMPILE_WARNINGS],[
     # We can't enable this due to horrible spice_usb_device_get_description
     # signature
     gl_WARN_ADD([-Wno-format-nonliteral])
+    # We do "bad" function casts all the time
+    gl_WARN_ADD([-Wno-cast-function-type])
 
 
 
