@@ -36,12 +36,12 @@ BuildRequires: zlib-devel >= 1.2.0, zlib-static
 BuildRequires: libtirpc-devel
 BuildRequires: rpcgen
 %endif
-Requires: rpm-python
+Requires: python3-rpm
 # For virsh lxc-enter-namespace command
 Requires: libvirt-client >= %{libvirt_version}
 Requires: systemd >= 198
 Requires: pygobject3-base
-Requires: libselinux-python
+Requires: libselinux-python3
 Requires: %{name}-libs = %{version}-%{release}
 Requires: %{_bindir}/virt-builder
 
@@ -108,7 +108,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/virt-sandbox-service
 %{_bindir}/virt-sandbox-image
 %{_libexecdir}/virt-sandbox-service-util
-%{python_sitelib}/libvirt_sandbox
+%{python3_sitelib}/libvirt_sandbox
 %{_mandir}/man1/virt-sandbox.1*
 %{_mandir}/man1/virt-sandbox-service.1*
 %{_mandir}/man1/virt-sandbox-service-*.1*
