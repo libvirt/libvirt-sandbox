@@ -81,7 +81,7 @@ def prepare(args):
                            connect=args.connect)
 
 def random_domain_name(tmpl):
-    randomid = ''.join(random.choice(string.lowercase) for i in range(10))
+    randomid = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
     return re.sub('[^a-z0-9-]', '_', tmpl.path[1:], re.I) + ":" + randomid
 
 def run(args):
