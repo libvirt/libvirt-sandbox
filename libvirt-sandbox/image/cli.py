@@ -202,7 +202,6 @@ Example supported URI formats:
 def gen_purge_args(subparser):
     parser = gen_command_parser(subparser, "purge",
                                 _("Purge cached template"))
-    requires_debug(parser)
     requires_template(parser)
     requires_template_dir(parser)
     parser.set_defaults(func=purge)
@@ -210,7 +209,6 @@ def gen_purge_args(subparser):
 def gen_prepare_args(subparser):
     parser = gen_command_parser(subparser, "prepare",
                                 _("Prepare local template"))
-    requires_debug(parser)
     requires_template(parser)
     requires_connect(parser)
     requires_template_dir(parser)
@@ -219,7 +217,6 @@ def gen_prepare_args(subparser):
 def gen_run_args(subparser):
     parser = gen_command_parser(subparser, "run",
                                 _("Run an instance of a template"))
-    requires_debug(parser)
     requires_name(parser)
     requires_template(parser)
     requires_connect(parser)
@@ -238,7 +235,6 @@ def gen_run_args(subparser):
 def gen_list_args(subparser):
     parser = gen_command_parser(subparser, "list",
                                 _("List locally cached images"))
-    requires_debug(parser)
     requires_template_dir(parser)
 
     parser.add_argument("-s","--source",
@@ -249,7 +245,11 @@ def gen_list_args(subparser):
 def main():
     parser = argparse.ArgumentParser(description="Sandbox Container Image Tool")
 
+    requires_debug(parser)
+
     subparser = parser.add_subparsers(help=_("commands"))
+    subparser.required = True
+    subparser.dest = "command"
     gen_purge_args(subparser)
     gen_prepare_args(subparser)
     gen_run_args(subparser)
