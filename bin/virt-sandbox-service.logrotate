@@ -1,9 +1,0 @@
-#!/bin/sh
-for name in `/usr/bin/virsh -c lxc:/// -q list | awk '{print $2}'`
-do
-    if test -d "/etc/libvirt-sandbox/services/$name"
-    then
-        /usr/bin/virt-sandbox-service -c lxc:/// execute $name -- /etc/cron.daily/logrotate
-    fi
-done
-exit 0

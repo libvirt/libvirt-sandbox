@@ -101,17 +101,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%{_datadir}/bash-completion/completions/virt-sandbox-service
-%config(noreplace) %{_sysconfdir}/cron.daily/virt-sandbox-service.logrotate
-%dir %{_sysconfdir}/libvirt-sandbox/services
 %{_bindir}/virt-sandbox
-%{_bindir}/virt-sandbox-service
 %{_bindir}/virt-sandbox-image
-%{_libexecdir}/virt-sandbox-service-util
 %{python3_sitelib}/libvirt_sandbox
 %{_mandir}/man1/virt-sandbox.1*
-%{_mandir}/man1/virt-sandbox-service.1*
-%{_mandir}/man1/virt-sandbox-service-*.1*
 
 %files libs -f %{name}.lang
 %defattr(-,root,root,-)

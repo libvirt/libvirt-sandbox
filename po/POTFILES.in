@@ -1,5 +1,4 @@
 bin/virt-sandbox.c
-bin/virt-sandbox-service-util.c
 libvirt-sandbox/libvirt-sandbox-builder-initrd.c
 libvirt-sandbox/libvirt-sandbox-builder-machine.c
 libvirt-sandbox/libvirt-sandbox-config.c

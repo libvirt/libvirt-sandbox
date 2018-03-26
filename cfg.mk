@@ -129,6 +129,6 @@ prev_version_file = /dev/null
 
 exclude_file_name_regexp--sc_libvirt_unmarked_diagnostics = ^libvirt-sandbox/tests
 
-exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)|(bin/virt-sandbox-service-util.c)
+exclude_file_name_regexp--sc_bindtextdomain = ^(libvirt-sandbox/tests)|(libvirt-sandbox/libvirt-sandbox-init-*)|(bin/virt-sandbox.c)
 
 exclude_file_name_regexp--sc_preprocessor_indentation = ^*/*.[ch]
