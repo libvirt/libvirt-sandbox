@@ -1,8 +1,6 @@
 
 bin_PROGRAMS = virt-sandbox
 
-bin_SCRIPTS = virt-sandbox-image
-
 EXTRA_DIST = $(bin_SCRIPTS)
 
 man1_MANS = \
