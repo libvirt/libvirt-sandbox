@@ -5,7 +5,6 @@ set -v
 
 # Make things clean.
 test -n "$1" && RESULTS=$1 || RESULTS=results.log
-: ${AUTOBUILD_INSTALL_ROOT=$HOME/builder}
 
 test -f Makefile && make -k distclean || :
 
@@ -13,7 +12,7 @@ rm -rf build
 mkdir build
 cd build
 
-../autogen.sh --prefix=$AUTOBUILD_INSTALL_ROOT \
+../autogen.sh --prefix=$HOME/builder \
     --enable-gtk-doc
 
 make
@@ -31,12 +30,8 @@ test "$st" = 0
 rm -f *.tar.gz
 make dist
 
-if [ -n "$AUTOBUILD_COUNTER" ]; then
-  EXTRA_RELEASE=".auto$AUTOBUILD_COUNTER"
-else
-  NOW=`date +"%s"`
-  EXTRA_RELEASE=".$USER$NOW"
-fi
+NOW=`date +"%s"`
+EXTRA_RELEASE=".$USER$NOW"
 
 if [ -f /usr/bin/rpmbuild ]; then
   rpmbuild --nodeps \
