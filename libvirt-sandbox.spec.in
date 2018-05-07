@@ -16,7 +16,7 @@
 
 Name: @PACKAGE@
 Version: @VERSION@
-Release: 1%{?dist}%{?extra_release}
+Release: 1%{?dist}
 Summary: libvirt application sandbox framework
 Group: Development/Tools
 License: LGPLv2+
