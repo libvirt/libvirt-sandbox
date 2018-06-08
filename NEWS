@@ -1,6 +1,35 @@
       libvirt Sandbox News
       ====================
 
+0.8.0 - "Gobi" - 2018-06-08
+---------------------------
+
+ - Deleted the virt-sandbox-service tool as it is a failed
+   experiment
+ - Require libvirt-glib >= 0.2.2
+ - Add af_packet kmod nedeed by dhcp clients
+ - Add ext4 kmod needed by common filesystems
+ - Add fscrypto kmod needed as a dep of other mods
+ - Show dhcp client output in debug mode
+ - Add /dev/fd symlink for /proc/self/fd
+ - Sync and cleanly unmount filesystems during shutdown
+ - Fix handling of strace debug option
+ - Avoid exiting too early on shutdown so we see all debug
+   messages and cleanly sync/unmount
+ - Allow setting custom env variables
+ - Ensure static versions of zlib and lzma are checked for
+ - Guest host image format from file extension if not given
+ - Allow switching to a specific user ID
+ - Improve docs on command line arg passing
+ - Fix bogus lib listed in pkgconfig file
+ - Fix misc goject introspection annotations
+ - Improve error message for unsupported libvirt URIs
+ - Search in $PATH for user specified binary
+ - Use squash security mode for non-root QEMU sandbox mounts
+ - Search for libtirpc standalone XDR library
+ - Avoid triggering some new compiler warnings
+
+
 0.6.0 - "Dashti Margo" - 2015-07-01
 -----------------------------------
 

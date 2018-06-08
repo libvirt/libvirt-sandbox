@@ -26,7 +26,7 @@ Asia
 
 0.5.1    Cholistan – a desert in Pakistan
 0.6.0    Dashti Margo – a desert in SW Afghanistan
-         Gobi – a desert in Mongolia and China
+0.8.0    Gobi – a desert in Mongolia and China
          Indus Valley Desert – a desert located in Pakistan
          Kara Kum – a large Central Asian desert
          Kharan desert – a desert located in Pakistan
