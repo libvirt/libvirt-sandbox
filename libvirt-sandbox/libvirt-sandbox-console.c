@@ -54,7 +54,7 @@ struct _GVirSandboxConsolePrivate
 };
 
 
-G_DEFINE_ABSTRACT_TYPE(GVirSandboxConsole, gvir_sandbox_console, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GVirSandboxConsole, gvir_sandbox_console, G_TYPE_OBJECT);
 
 enum {
     PROP_0,
@@ -251,8 +251,6 @@ static void gvir_sandbox_console_class_init(GVirSandboxConsoleClass *klass)
                  G_TYPE_NONE,
                  1,
                  G_TYPE_BOOLEAN);
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConsolePrivate));
 }
 
 

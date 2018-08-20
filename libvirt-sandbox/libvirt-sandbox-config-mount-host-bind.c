@@ -48,12 +48,11 @@ struct _GVirSandboxConfigMountHostBindPrivate
     gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigMountHostBind, gvir_sandbox_config_mount_host_bind, GVIR_SANDBOX_TYPE_CONFIG_MOUNT_FILE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigMountHostBind, gvir_sandbox_config_mount_host_bind, GVIR_SANDBOX_TYPE_CONFIG_MOUNT_FILE);
 
 
-static void gvir_sandbox_config_mount_host_bind_class_init(GVirSandboxConfigMountHostBindClass *klass)
+static void gvir_sandbox_config_mount_host_bind_class_init(GVirSandboxConfigMountHostBindClass *klass G_GNUC_UNUSED)
 {
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountHostBindPrivate));
 }
 
 

@@ -47,7 +47,7 @@ struct _GVirSandboxContextServicePrivate
     gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxContextService, gvir_sandbox_context_service, GVIR_SANDBOX_TYPE_CONTEXT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxContextService, gvir_sandbox_context_service, GVIR_SANDBOX_TYPE_CONTEXT);
 
 
 enum {
@@ -356,8 +356,6 @@ static void gvir_sandbox_context_service_class_init(GVirSandboxContextServiceCla
 
     klass->define = gvir_sandbox_context_service_define_default;
     klass->undefine = gvir_sandbox_context_service_undefine_default;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxContextServicePrivate));
 }
 
 

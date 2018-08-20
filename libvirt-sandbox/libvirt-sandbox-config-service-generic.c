@@ -45,7 +45,7 @@ struct _GVirSandboxConfigServiceGenericPrivate
     gchar **command;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigServiceGeneric, gvir_sandbox_config_service_generic, GVIR_SANDBOX_TYPE_CONFIG_SERVICE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigServiceGeneric, gvir_sandbox_config_service_generic, GVIR_SANDBOX_TYPE_CONFIG_SERVICE);
 
 static gchar **gvir_sandbox_config_service_generic_get_command(GVirSandboxConfig *config);
 
@@ -154,8 +154,6 @@ static void gvir_sandbox_config_service_generic_class_init(GVirSandboxConfigServ
     config_class->load_config = gvir_sandbox_config_service_generic_load_config;
     config_class->save_config = gvir_sandbox_config_service_generic_save_config;
     config_class->get_command = gvir_sandbox_config_service_generic_get_command;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigServiceGenericPrivate));
 }
 
 

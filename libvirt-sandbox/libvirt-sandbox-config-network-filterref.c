@@ -47,7 +47,7 @@ struct _GVirSandboxConfigNetworkFilterrefPrivate
     GList *parameters;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigNetworkFilterref, gvir_sandbox_config_network_filterref, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigNetworkFilterref, gvir_sandbox_config_network_filterref, G_TYPE_OBJECT);
 
 
 enum {
@@ -128,8 +128,6 @@ static void gvir_sandbox_config_network_filterref_class_init(GVirSandboxConfigNe
                                                         NULL,
                                                         G_PARAM_READWRITE |
                                                         G_PARAM_STATIC_STRINGS));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigNetworkFilterrefPrivate));
 }
 
 /**

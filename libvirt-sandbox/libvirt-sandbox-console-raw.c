@@ -94,7 +94,7 @@ struct _GVirSandboxConsoleRawPrivate
     GSource *consoleOutputSource;
 };
 
-G_DEFINE_TYPE(GVirSandboxConsoleRaw, gvir_sandbox_console_raw, GVIR_SANDBOX_TYPE_CONSOLE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConsoleRaw, gvir_sandbox_console_raw, GVIR_SANDBOX_TYPE_CONSOLE);
 
 enum {
     LAST_SIGNAL
@@ -133,8 +133,6 @@ static void gvir_sandbox_console_raw_class_init(GVirSandboxConsoleRawClass *klas
     object_class->finalize = gvir_sandbox_console_raw_finalize;
     console_class->attach = gvir_sandbox_console_raw_attach;
     console_class->detach = gvir_sandbox_console_raw_detach;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConsoleRawPrivate));
 }
 
 

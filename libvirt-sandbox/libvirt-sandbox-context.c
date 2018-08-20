@@ -52,7 +52,7 @@ struct _GVirSandboxContextPrivate
     GVirSandboxConfig *config;
 };
 
-G_DEFINE_ABSTRACT_TYPE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GVirSandboxContext, gvir_sandbox_context, G_TYPE_OBJECT);
 
 
 enum {
@@ -208,8 +208,6 @@ static void gvir_sandbox_context_class_init(GVirSandboxContextClass *klass)
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxContextPrivate));
 }
 
 

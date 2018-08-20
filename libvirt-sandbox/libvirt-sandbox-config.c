@@ -73,7 +73,7 @@ struct _GVirSandboxConfigPrivate
     gboolean verbose;
 };
 
-G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GVirSandboxConfig, gvir_sandbox_config, G_TYPE_OBJECT);
 
 
 enum {
@@ -470,8 +470,6 @@ static void gvir_sandbox_config_class_init(GVirSandboxConfigClass *klass)
                                                          G_PARAM_STATIC_NAME |
                                                          G_PARAM_STATIC_NICK |
                                                          G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigPrivate));
 }
 
 

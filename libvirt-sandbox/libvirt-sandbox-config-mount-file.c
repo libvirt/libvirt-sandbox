@@ -48,7 +48,7 @@ struct _GVirSandboxConfigMountFilePrivate
     gchar *source;
 };
 
-G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfigMountFile, gvir_sandbox_config_mount_file, GVIR_SANDBOX_TYPE_CONFIG_MOUNT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GVirSandboxConfigMountFile, gvir_sandbox_config_mount_file, GVIR_SANDBOX_TYPE_CONFIG_MOUNT);
 
 enum {
     PROP_0,
@@ -131,8 +131,6 @@ static void gvir_sandbox_config_mount_file_class_init(GVirSandboxConfigMountFile
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountFilePrivate));
 }
 
 

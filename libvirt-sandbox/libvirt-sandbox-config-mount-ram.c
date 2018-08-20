@@ -48,7 +48,7 @@ struct _GVirSandboxConfigMountRamPrivate
     guint64 usage;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigMountRam, gvir_sandbox_config_mount_ram, GVIR_SANDBOX_TYPE_CONFIG_MOUNT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigMountRam, gvir_sandbox_config_mount_ram, GVIR_SANDBOX_TYPE_CONFIG_MOUNT);
 
 enum {
     PROP_0,
@@ -121,8 +121,6 @@ static void gvir_sandbox_config_mount_ram_class_init(GVirSandboxConfigMountRamCl
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountRamPrivate));
 }
 
 

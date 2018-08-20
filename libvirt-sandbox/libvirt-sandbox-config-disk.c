@@ -47,7 +47,7 @@ struct _GVirSandboxConfigDiskPrivate
     GVirConfigDomainDiskFormat format;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigDisk, gvir_sandbox_config_disk, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigDisk, gvir_sandbox_config_disk, G_TYPE_OBJECT);
 
 
 enum {
@@ -194,8 +194,6 @@ static void gvir_sandbox_config_disk_class_init(GVirSandboxConfigDiskClass *klas
                                                       G_PARAM_STATIC_NAME |
                                                       G_PARAM_STATIC_NICK |
                                                       G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigDiskPrivate));
 }
 
 

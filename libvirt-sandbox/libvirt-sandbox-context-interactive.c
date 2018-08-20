@@ -49,7 +49,7 @@ struct _GVirSandboxContextInteractivePrivate
     gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxContextInteractive, gvir_sandbox_context_interactive, GVIR_SANDBOX_TYPE_CONTEXT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxContextInteractive, gvir_sandbox_context_interactive, GVIR_SANDBOX_TYPE_CONTEXT);
 
 
 enum {
@@ -346,8 +346,6 @@ static void gvir_sandbox_context_interactive_class_init(GVirSandboxContextIntera
 
     context_class->start = gvir_sandbox_context_interactive_start;
     context_class->stop = gvir_sandbox_context_interactive_stop;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxContextInteractivePrivate));
 }
 
 

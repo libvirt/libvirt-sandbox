@@ -51,7 +51,7 @@ struct _GVirSandboxBuilderInitrdPrivate
     gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxBuilderInitrd, gvir_sandbox_builder_initrd, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxBuilderInitrd, gvir_sandbox_builder_initrd, G_TYPE_OBJECT);
 
 
 enum {
@@ -127,8 +127,6 @@ static void gvir_sandbox_builder_initrd_class_init(GVirSandboxBuilderInitrdClass
     object_class->finalize = gvir_sandbox_builder_initrd_finalize;
     object_class->get_property = gvir_sandbox_builder_initrd_get_property;
     object_class->set_property = gvir_sandbox_builder_initrd_set_property;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxBuilderInitrdPrivate));
 }
 
 

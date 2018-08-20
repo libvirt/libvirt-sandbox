@@ -50,7 +50,7 @@ struct _GVirSandboxBuilderMachinePrivate
     gboolean unused;
 };
 
-G_DEFINE_TYPE(GVirSandboxBuilderMachine, gvir_sandbox_builder_machine, GVIR_SANDBOX_TYPE_BUILDER);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxBuilderMachine, gvir_sandbox_builder_machine, GVIR_SANDBOX_TYPE_BUILDER);
 
 
 enum {
@@ -792,8 +792,6 @@ static void gvir_sandbox_builder_machine_class_init(GVirSandboxBuilderMachineCla
     builder_class->clean_post_start = gvir_sandbox_builder_machine_clean_post_start;
     builder_class->clean_post_stop = gvir_sandbox_builder_machine_clean_post_stop;
     builder_class->get_disk_prefix = gvir_sandbox_builder_machine_get_disk_prefix;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxBuilderMachinePrivate));
 }
 
 

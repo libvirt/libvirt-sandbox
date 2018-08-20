@@ -45,7 +45,7 @@ struct _GVirSandboxConfigServicePrivate
     gboolean unused;
 };
 
-G_DEFINE_ABSTRACT_TYPE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GVirSandboxConfigService, gvir_sandbox_config_service, GVIR_SANDBOX_TYPE_CONFIG);
 
 
 enum {
@@ -77,8 +77,6 @@ static void gvir_sandbox_config_service_class_init(GVirSandboxConfigServiceClass
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
     object_class->finalize = gvir_sandbox_config_service_finalize;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigServicePrivate));
 }
 
 

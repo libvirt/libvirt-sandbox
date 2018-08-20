@@ -47,7 +47,7 @@ struct _GVirSandboxConfigNetworkRoutePrivate
     GInetAddress *target;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigNetworkRoute, gvir_sandbox_config_network_route, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigNetworkRoute, gvir_sandbox_config_network_route, G_TYPE_OBJECT);
 
 
 enum {
@@ -180,8 +180,6 @@ static void gvir_sandbox_config_network_route_class_init(GVirSandboxConfigNetwor
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigNetworkRoutePrivate));
 }
 
 

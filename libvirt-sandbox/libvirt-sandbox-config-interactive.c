@@ -47,7 +47,7 @@ struct _GVirSandboxConfigInteractivePrivate
     gchar **command;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigInteractive, gvir_sandbox_config_interactive, GVIR_SANDBOX_TYPE_CONFIG);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigInteractive, gvir_sandbox_config_interactive, GVIR_SANDBOX_TYPE_CONFIG);
 
 static gchar **gvir_sandbox_config_interactive_get_command(GVirSandboxConfig *config);
 
@@ -210,8 +210,6 @@ static void gvir_sandbox_config_interactive_class_init(GVirSandboxConfigInteract
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigInteractivePrivate));
 }
 
 

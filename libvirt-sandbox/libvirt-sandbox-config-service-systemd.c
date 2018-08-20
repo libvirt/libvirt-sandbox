@@ -45,7 +45,7 @@ struct _GVirSandboxConfigServiceSystemdPrivate
     gchar *bootTarget;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigServiceSystemd, gvir_sandbox_config_service_systemd, GVIR_SANDBOX_TYPE_CONFIG_SERVICE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigServiceSystemd, gvir_sandbox_config_service_systemd, GVIR_SANDBOX_TYPE_CONFIG_SERVICE);
 
 static gchar **gvir_sandbox_config_service_systemd_get_command(GVirSandboxConfig *config);
 
@@ -165,8 +165,6 @@ static void gvir_sandbox_config_service_systemd_class_init(GVirSandboxConfigServ
     config_class->load_config = gvir_sandbox_config_service_systemd_load_config;
     config_class->save_config = gvir_sandbox_config_service_systemd_save_config;
     config_class->get_command = gvir_sandbox_config_service_systemd_get_command;
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigServiceSystemdPrivate));
 }
 
 

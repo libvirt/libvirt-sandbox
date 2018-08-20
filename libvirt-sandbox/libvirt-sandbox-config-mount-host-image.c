@@ -48,7 +48,7 @@ struct _GVirSandboxConfigMountHostImagePrivate
     GVirConfigDomainDiskFormat format;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigMountHostImage, gvir_sandbox_config_mount_host_image, GVIR_SANDBOX_TYPE_CONFIG_MOUNT_FILE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigMountHostImage, gvir_sandbox_config_mount_host_image, GVIR_SANDBOX_TYPE_CONFIG_MOUNT_FILE);
 
 enum {
     PROP_0,
@@ -118,8 +118,6 @@ static void gvir_sandbox_config_mount_host_image_class_init(GVirSandboxConfigMou
                                                       G_PARAM_STATIC_NAME |
                                                       G_PARAM_STATIC_NICK |
                                                       G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigMountHostImagePrivate));
 }
 
 

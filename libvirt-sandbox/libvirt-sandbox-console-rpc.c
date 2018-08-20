@@ -153,7 +153,7 @@ struct _GVirSandboxConsoleRpcPrivate
     gsize serial;
 };
 
-G_DEFINE_TYPE(GVirSandboxConsoleRpc, gvir_sandbox_console_rpc, GVIR_SANDBOX_TYPE_CONSOLE);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConsoleRpc, gvir_sandbox_console_rpc, GVIR_SANDBOX_TYPE_CONSOLE);
 
 
 enum {
@@ -291,8 +291,6 @@ static void gvir_sandbox_console_rpc_class_init(GVirSandboxConsoleRpcClass *klas
                  G_TYPE_NONE,
                  1,
                  G_TYPE_INT);
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConsoleRpcPrivate));
 }
 
 

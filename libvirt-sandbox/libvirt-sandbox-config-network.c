@@ -50,7 +50,7 @@ struct _GVirSandboxConfigNetworkPrivate
     GVirSandboxConfigNetworkFilterref *filterref;
 };
 
-G_DEFINE_TYPE(GVirSandboxConfigNetwork, gvir_sandbox_config_network, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE(GVirSandboxConfigNetwork, gvir_sandbox_config_network, G_TYPE_OBJECT);
 
 
 enum {
@@ -183,8 +183,6 @@ static void gvir_sandbox_config_network_class_init(GVirSandboxConfigNetworkClass
                                                         G_PARAM_STATIC_NAME |
                                                         G_PARAM_STATIC_NICK |
                                                         G_PARAM_STATIC_BLURB));
-
-    g_type_class_add_private(klass, sizeof(GVirSandboxConfigNetworkPrivate));
 }
 
 
