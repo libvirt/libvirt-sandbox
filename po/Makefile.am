@@ -20,6 +20,8 @@ POTFILE := $(srcdir)/$(DOMAIN).pot
 POFILES := $(LANGS:%=$(srcdir)/%.po)
 GMOFILES := $(LANGS:%=$(srcdir)/%.gmo)
 
+MAINTAINERCLEANFILES = $(POTFILE) $(POFILES) $(GMOFILES)
+
 EXTRA_DIST = \
 	POTFILES \
 	$(POTFILE) \
@@ -46,26 +48,26 @@ SED_PO_FIXUP_ARGS = \
 	-e "s|Copyright (C) YEAR|Copyright (C) $$(date +'%Y')|" \
 	$(NULL)
 
-
-# Although they're in EXTRA_DIST, we still need to
-# copy these again, because update-gmo will change
-# their content, and dist-hook runs after the
-# things in EXTRA_DIST are copied.
-dist-hook: $(GMOFILES)
-	cp -f $(POTFILE) $(distdir)/
-	cp -f $(POFILES) $(distdir)/
-	cp -f $(GMOFILES) $(distdir)/
-
 update-po: $(POFILES)
 
 update-gmo: $(GMOFILES)
+
+update-mini-po: $(POTFILE)
+	for lang in $(LANGS); do \
+	  echo "Minimizing $$lang content" && \
+	  $(MSGMERGE) --no-location --no-fuzzy-matching --sort-output \
+	    $(srcdir)/$$lang.po $(POTFILE) | \
+	  $(SED) $(SED_PO_FIXUP_ARGS) | \
+	  $(PERL) $(top_srcdir)/build-aux/minimize-po.pl > \
+	    $(srcdir)/$$lang.mini.po ; \
+	done
 
 push-pot: $(POTFILE)
 	zanata push --push-type=source
 
 pull-po: $(POTFILE)
 	zanata pull --create-skeletons
-	$(MAKE) update-po
+	$(MAKE) update-mini-po
 	$(MAKE) update-gmo
 
 $(POTFILE): POTFILES $(POTFILE_DEPS)
@@ -74,8 +76,9 @@ $(POTFILE): POTFILES $(POTFILE_DEPS)
 	$(SED) $(SED_PO_FIXUP_ARGS) < $@-t > $@
 	rm -f $@-t
 
-%.po: $(POTFILE)
-	$(MSGMERGE) --backup=off --no-fuzzy-matching --update $@ $(POTFILE)
+$(srcdir)/%.po: $(srcdir)/%.mini.po $(POTFILE)
+	$(MSGMERGE) --no-fuzzy-matching $< $(POTFILE) | \
+	  $(SED) $(SED_PO_FIXUP_ARGS) > $@
 
 $(srcdir)/%.gmo: $(srcdir)/%.po
 	rm -f $@ $@-t

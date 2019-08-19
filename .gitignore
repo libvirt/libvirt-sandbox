@@ -22,7 +22,9 @@ m4/ltsugar.m4
 m4/ltoptions.m4
 m4/lt~obsolete.m4
 m4/ltversion.m4
-po/libvirt-sandbox.pot
+po/*po
+!po/*.mini.po
+po/*pot
 po/*.gmo
 stamp-h1
 build-aux/test-driver
