@@ -1,0 +1,87 @@
+# Libvirt package strings.
+# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Fabian Affolter <fab@fedoraproject.org>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
+"POT-Creation-Date: 2019-08-19 19:34+0100\n"
+"PO-Revision-Date: 2013-07-09 03:50-0400\n"
+"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"Language-Team: German <trans-de@lists.fedoraproject.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Zanata 3.5.1\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s version %s\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "- Libvirt Sandbox"
+
+msgid "Libvirt Sandbox"
+msgstr "Libvirt Sandbox"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Libvirt Sandbox Init allgemein"
+
+msgid "Run '"
+msgstr "Ausführen '"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "Zugriff auf %s nicht möglich: %s"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "Erzeugen des temporären Verzeichnis %s nicht möglich: %s"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "Lesen der Einträge in %s nicht möglich: %s"
+
+msgid "Unknown failure"
+msgstr "Unbekannter Fehler"
+
+msgid "config file path"
+msgstr "Konfigurationsdatei-Pfad"
+
+msgid "connect to hypervisor"
+msgstr "Mit Hypervisor verbinden"
+
+msgid "display debugging information"
+msgstr "Debug-Information anzeigen"
+
+msgid "display verbose information"
+msgstr "Umfangreichere Information anzeigen"
+
+msgid "display version information"
+msgstr "Version-Information anzeigen"
+
+msgid "file contain list of files to include"
+msgstr "Datei enthält eine Dateiliste zum Einschliessen"
+
+msgid "file to copy into custom dir"
+msgstr "Datei in benutzerdefiniertes Verzeichnis kopieren"
+
+msgid "mount a filesystem in the guest"
+msgstr "Dateisystem in den Gast einbinden"
+
+msgid "name of the sandbox"
+msgstr "Name der Sandbox"
+
+msgid "security properties"
+msgstr "Sicherheits-Einstellungen"
+
+msgid "setup network interface properties"
+msgstr "Netzwerkschnittstellen-Einstellungen einrichten"
+
+msgid "start a shell"
+msgstr "Eine Shell starten"
