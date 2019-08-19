@@ -1,0 +1,311 @@
+# Libvirt package strings.
+# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Jérôme Fenal <jfenal@gmail.com>, 2013
+# KAT.RAT12 <spanish.katerina@gmail.com>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
+"POT-Creation-Date: 2019-08-19 19:34+0100\n"
+"PO-Revision-Date: 2013-07-09 03:50-0400\n"
+"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"Language-Team: French <trans-fr@lists.fedoraproject.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Zanata 3.5.1\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"Utilisation : %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s version %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s : Impossible de charger la configuration %s : %s\n"
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s : doit être exécuté en tant que root\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "- Libvirt Sandbox"
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr ""
+"Impossible d'effectuer une requête DHCP avec des routes ou adresses statiques"
+
+msgid "Cannot set static addresses with DHCP"
+msgstr "Impossible de définir des adresses statiques avec DHCP"
+
+msgid "Cannot set static routes with DHCP"
+msgstr "Impossible de définir des routes statiques avec DHCP"
+
+msgid "Cannot set static routes without addresses"
+msgstr "Impossible de définir des routes statiques sans adresse"
+
+msgid "Console is already attached to a stream"
+msgstr "La console est déjà attachée à un flux"
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "ConsoleRpc n'est pas attaché à un flux"
+
+msgid "Domain is not currently running"
+msgstr "Le domaine n'est pas actuellement actif"
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr "rx obtenu en un état inattendu %d"
+
+msgid "Libvirt Sandbox"
+msgstr "Libvirt Sandbox"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Libvirt Sandbox Init Commun"
+
+msgid "Missing class name in config file"
+msgstr "Nom de classe manquant dans le fichier de configuration"
+
+msgid "Missing mount source in config file"
+msgstr "Source de montage manquant dans le fichier de configuration"
+
+msgid "Missing mount target in config file"
+msgstr "Cible de montage manquant dans le fichier de configuration"
+
+msgid "Missing mount type in config file"
+msgstr "Type de montage manquant dans le fichier de configuration"
+
+msgid "Missing mount usage in config file"
+msgstr "Utilisation de montage manquant dans le fichier de configuration"
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "Aucun préfixe de  montage pour %s"
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "Pas de montage avec  prefixe  sous %s"
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""
+"Données brutes trop longues à envoyer (%zu octets nécessaires, %zu octets "
+"disponibles)"
+
+msgid "Run '"
+msgstr "Exécuter '"
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+"Exécuter « virt-sandbox --help » pour  voir la liste complète des options de "
+"commande disponibles en ligne "
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr ""
+"Le nom de type « %s » dans le fichier de configuration n'a pas le bon parent"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "Impossible d'accéder %s : %s"
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "Impossible de s'attacher à la console du sandbox  : %s\n"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "Impossible de créer un répertoire temporaire %s : %s"
+
+msgid "Unable to decode message header"
+msgstr "Impossible de décoder l'entête du message"
+
+msgid "Unable to decode message length"
+msgstr "Impossible de décoder la longueur du message"
+
+msgid "Unable to decode message payload"
+msgstr "Impossible de décoder le contenu du message"
+
+msgid "Unable to encode message header"
+msgstr "Impossible d'encoder l'entête du message"
+
+msgid "Unable to encode message length"
+msgstr "Impossible d'encoder la longueur du message"
+
+msgid "Unable to encode message payload"
+msgstr "Impossible d'encoder le contenu du message"
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "Impossible d'obtenir la console d''application : %s\n"
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "Impossible d'obtenir la console de journalisation : %s\n"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "Impossible d'ouvrir la connexion : %s\n"
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "Impossible d'analyser l'adresse %s"
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "Impossible d'analyser le fichier inclus : %s\n"
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "Impossible d'analyser les inclusions : %s\n"
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "Impossible d'analyser les montages : %s\n"
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "Impossible d'analyser les réseaux : %s\n"
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "Impossible d'analyser la sécurité : %s\n"
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "Impossible de demander  les attributs du terminal : %s"
+
+msgid "Unable to re-encode message length"
+msgstr "Impossible de réencoder la longueur du message"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "Impossible de lire les entrées dans %s : %s"
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "Impossible de restaurer les attributs du terminal : %s"
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "Impossible de démarrer  le sandbox  : %s\n"
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "Impossible d'actualiser  les attributs du terminal : %s"
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "Proc RPC innatendu %u"
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "État RPC inattendu %u"
+
+msgid "Unknown failure"
+msgstr "Échec inconnu"
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "Type de montage %s inconnu dans le fichier de configuration"
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "Préfixe de type de montage inconnu pour %s"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "Paramètre inconnu %s"
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "Option de sécurité inconnue « %s »"
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "Nom de type « %s » inconnu dans le fichier de configuration"
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "Type de configuration %s non pris en charge"
+
+msgid "config file path"
+msgstr "chemin du fichier de configuration"
+
+msgid "connect to hypervisor"
+msgstr "se connecter à l'hyperviseur"
+
+msgid "display debugging information"
+msgstr "afficher les informations de débogage"
+
+msgid "display verbose information"
+msgstr "afficher les informations verbeuses"
+
+msgid "display version information"
+msgstr "afficher les information de version "
+
+msgid "file contain list of files to include"
+msgstr "fichier qui  contient une liste de fichiers pour  inclure"
+
+msgid "file to copy into custom dir"
+msgstr "fichier pour  copier dans un répertoire personnalisé"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common : %s: impossible d'exécuter %s : %s\n"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common : impossible d'ouvrir %s : %s"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr ""
+"libvirt-sandbox-init-common : impossible de créer le type de signalisation : "
+"%s"
+
+msgid "mount a filesystem in the guest"
+msgstr "monter un système de fichier a l'invité"
+
+msgid "name of the sandbox"
+msgstr "nom du bac à sable"
+
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr "le paquet de %u octets reçu du serveur est trop grand, %d attendus"
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr "le paquet de %u octets reçu du serveur est trop petit, %u attendus"
+
+msgid "run the command privileged"
+msgstr "lancer la commande des privilèges"
+
+msgid "security properties"
+msgstr "propriétés de sécurité"
+
+msgid "setup network interface properties"
+msgstr "configurer les propriétés d'interface du réseau "
+
+msgid "start a shell"
+msgstr "démarrer un interpréteur de commandes"
