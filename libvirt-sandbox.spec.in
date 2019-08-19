@@ -22,7 +22,7 @@ BuildRequires: libvirt-gobject-devel >= 0.2.1
 BuildRequires: gobject-introspection-devel
 BuildRequires: glibc-static
 BuildRequires: /usr/bin/pod2man
-BuildRequires: intltool
+BuildRequires: gettext
 BuildRequires: libselinux-devel
 BuildRequires: glib2-devel >= 2.32.0
 BuildRequires: xz-devel >= 5.0.0, xz-static

@@ -127,9 +127,9 @@ AC_DEFINE_UNQUOTED([LDD_PATH], "$LDD_PATH", [path to ldd binary])
 
 GOBJECT_INTROSPECTION_CHECK([$GOBJECT_INTROSPECTION_REQUIRED])
 
-dnl Should be in m4/virt-gettext.m4 but intltoolize is too
-dnl dumb to find it there
-IT_PROG_INTLTOOL([0.35.0])
+LIBVIRT_SANDBOX_ARG_NLS
+LIBVIRT_SANDBOX_CHECK_NLS
+
 
 # Autoconf 2.61a.99 and earlier don't support linking a file only
 # in VPATH builds.  But since GNUmakefile is for maintainer use
@@ -149,7 +149,7 @@ AC_OUTPUT(Makefile
           examples/Makefile
           docs/Makefile
           docs/libvirt-sandbox/Makefile
-          po/Makefile.in
+          po/Makefile
           libvirt-sandbox.spec
           libvirt-sandbox-1.0.pc)
 

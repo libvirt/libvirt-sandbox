@@ -10,7 +10,7 @@ cd $srcdir
 
 DIE=0
 
-for prog in intltoolize autoreconf automake autoconf libtool
+for prog in autoreconf automake autoconf libtool
 do
     ($prog --version) < /dev/null > /dev/null 2>&1 || {
         echo
@@ -35,7 +35,6 @@ fi
 touch ChangeLog AUTHORS
 
 mkdir -p build-aux
-intltoolize --force
 autoreconf -if
 
 cd $THEDIR
