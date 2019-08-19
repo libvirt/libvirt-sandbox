@@ -1,0 +1,306 @@
+# Libvirt package strings.
+# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
+"POT-Creation-Date: 2019-08-19 19:34+0100\n"
+"PO-Revision-Date: 2013-07-09 03:50-0400\n"
+"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"Language-Team: Japanese <trans-ja@lists.fedoraproject.org>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Zanata 3.5.1\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"使用法: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s バージョン %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s: 設定 %s を読み込めません: %s\n"
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s: root として起動する必要があります\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "- Libvirt サンドボックス"
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr "スタティックルート/アドレスで DHCP をリクエストできません"
+
+msgid "Cannot set static addresses with DHCP"
+msgstr "DHCP を用いてスタティックアドレスを設定できません"
+
+msgid "Cannot set static routes with DHCP"
+msgstr "DHCP を用いてスタティックルートを設定できません"
+
+msgid "Cannot set static routes without addresses"
+msgstr "アドレスを持たずスタティックルートを設定できません"
+
+msgid "Console is already attached to a stream"
+msgstr "コンソールがすでにストリームに接続されています"
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "ConsoleRpc がストリームに接続されていません"
+
+msgid "Domain is not currently running"
+msgstr "ドメインが現在実行中ではありません"
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr "RX が予期しない状態 %d になりました"
+
+msgid "Libvirt Sandbox"
+msgstr "Libvirt サンドボックス"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Libvirt サンドボックス Init Common"
+
+msgid "Missing class name in config file"
+msgstr "クラス名が設定ファイルにありません"
+
+msgid "Missing mount source in config file"
+msgstr "設定ファイルにマウントソースがありません"
+
+msgid "Missing mount target in config file"
+msgstr "設定ファイルにマウントターゲットがありません"
+
+msgid "Missing mount type in config file"
+msgstr "設定ファイルにマウント形式がありません"
+
+msgid "Missing mount usage in config file"
+msgstr "設定ファイルにマウントの使用法がありません"
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "%s にマウント形式のプレフィックスがありません"
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "%s の下にプレフィックスを持つマウントがありません"
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr "送信する生データが長すぎます (%zu バイト必要、%zu バイト利用可能)"
+
+msgid "Run '"
+msgstr "実行 '"
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+"利用可能なコマンドラインオプションの一覧を確認するには 'virt-sandbox --help' "
+"を実行してください"
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr "設定ファイルにある形式名 '%s' が不正な親を持ちます"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "%s にアクセスできません: %s"
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "サンドボックスのコンソールを接続できません: %s\n"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "一時ディレクトリ %s を作成できません: %s"
+
+msgid "Unable to decode message header"
+msgstr "メッセージヘッダーをデコードできません"
+
+msgid "Unable to decode message length"
+msgstr "メッセージ長をデコードできません"
+
+msgid "Unable to decode message payload"
+msgstr "メッセージペイロードをデコードできません"
+
+msgid "Unable to encode message header"
+msgstr "メッセージヘッダーをエンコードできません"
+
+msgid "Unable to encode message length"
+msgstr "メッセージ長をエンコードできません"
+
+msgid "Unable to encode message payload"
+msgstr "メッセージペイロードをエンコードできません"
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "アプリケーションのコンソールを取得できません: %s\n"
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "ログコンソールを取得できません: %s\n"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "接続できません: %s\n"
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "アドレス %s を構文解析できません"
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "include file を構文解析できません: %s\n"
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "includes を構文解析できません: %s\n"
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "mounts を構文解析できません: %s\n"
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "networks を構文解析できません: %s\n"
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "security を構文解析できません: %s\n"
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "terminal 属性を問い合わせできません: %s"
+
+msgid "Unable to re-encode message length"
+msgstr "メッセージ長を再エンコードできません"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "%s にある項目を読み込めません: %s"
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "terminal 属性を復元できません: %s"
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "サンドボックスを開始できません: %s\n"
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "terminal 属性を更新できません: %s"
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "予期しない RPC プロセス %u"
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "予期しない RPC 状態 %u"
+
+msgid "Unknown failure"
+msgstr "不明なエラー"
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "不明なマウント形式 %s が設定ファイルにあります"
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "不明なマウント形式プレフィックスが %s にあります"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "不明なパラメーター %s"
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "未知のセキュリティオプション '%s'"
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "不明な形式名 '%s' が設定ファイルにあります"
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "サポートされない設定形式 %s"
+
+msgid "config file path"
+msgstr "設定ファイルのパス"
+
+msgid "connect to hypervisor"
+msgstr "ハイパーバイザーへの接続"
+
+msgid "display debugging information"
+msgstr "デバッグ情報の表示"
+
+msgid "display verbose information"
+msgstr "詳細情報の表示"
+
+msgid "display version information"
+msgstr "バージョン情報の表示"
+
+msgid "file contain list of files to include"
+msgstr "取り込むファイルの一覧"
+
+msgid "file to copy into custom dir"
+msgstr "カスタムディレクトリにコピーするファイル"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common: %s: %s を実行できません: %s\n"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common: %s を開けません: %s"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr "libvirt-sandbox-init-common: シグナルパイプを作成できません: %s"
+
+msgid "mount a filesystem in the guest"
+msgstr "仮想マシンにあるファイルシステムのマウント"
+
+msgid "name of the sandbox"
+msgstr "サンドボックスの名前"
+
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr ""
+"サーバーから受信したパケット %u バイトが大きすぎます、%d バイトが期待されます"
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr ""
+"サーバーから受信したパケット %u バイトが小さすぎます、%u バイトが期待されます"
+
+msgid "run the command privileged"
+msgstr "特権コマンドの実行"
+
+msgid "security properties"
+msgstr "セキュリティ・プロパティ"
+
+msgid "setup network interface properties"
+msgstr "ネットワークインターフェースのプロパティのセットアップ"
+
+msgid "start a shell"
+msgstr "シェルの開始"
