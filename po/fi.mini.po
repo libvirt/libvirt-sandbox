@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Toni Rantala <trantalafilo@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-04-08 06:10-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2017-03-25 03:18+0000\n"
+"Last-Translator: Toni Rantala <trantalafilo@gmail.com>\n"
 "Language-Team: Finnish (http://www.transifex.com/projects/p/fedora/language/"
 "fi/)\n"
 "Language: fi\n"
@@ -17,4 +18,66 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"Käyttö: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s versio %s\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "- Libvirt-hiekkalaatikko"
+
+msgid "Libvirt Sandbox"
+msgstr "Libvirt-hiekkalaatikko"
+
+msgid "No devices found for domain"
+msgstr "Toimialueelle ei löytynyt laitteita"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "Yhteyttä %s ei voitu avata\n"
+
+msgid "Unknown failure"
+msgstr "Tuntematon virhe"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "Tuntematon parametri %s"
+
+msgid "add a disk in the guest"
+msgstr "lisää vieraalle levy"
+
+msgid "add a environment variable for the sandbox"
+msgstr "lisää hiekkalaatikolle ympäristömuuttuja"
+
+msgid "display version information"
+msgstr "Näytä version tiedot"
+
+msgid "file contain list of files to include"
+msgstr "tiedosto sisältää listan tiedostoista jotka pitää sisällyttää"
+
+msgid "kernel version"
+msgstr "kernel versio"
+
+msgid "name of the sandbox"
+msgstr "hiekkalaatikon nimi"
+
+msgid "root directory of the sandbox"
+msgstr "hiekkalaatikin juurihakemisto"
+
+msgid "start a shell"
+msgstr "avaa komentokehote"

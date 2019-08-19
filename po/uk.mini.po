@@ -4,13 +4,16 @@
 #
 # Translators:
 # Yuri Chornoivan <yurchor@ukr.net>, 2013
+# Yuri Chornoivan <yurchor@ukr.net>, 2015. #zanata
+# Yuri Chornoivan <yurchor@ukr.net>, 2016. #zanata
+# Yuri Chornoivan <yurchor@ukr.net>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-07-09 03:50-0400\n"
-"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"PO-Revision-Date: 2018-03-26 12:43+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
@@ -18,7 +21,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
 
 #, c-format
 msgid ""
@@ -46,8 +49,15 @@ msgstr "%s: не вдалося завантажити налаштування 
 msgid "%s: must be launched as root\n"
 msgstr "%s: слід виконувати від імені користувача root\n"
 
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr "параметри «switchto» і «privileged» є несумісними\n"
+
 msgid "- Libvirt Sandbox"
 msgstr "- Пісочниця Libvirt"
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr "Не вдалося визначити суфікс назви файла у «%s»"
 
 msgid "Cannot request DHCP with static routes/addresses"
 msgstr ""
@@ -73,8 +83,20 @@ msgid "Domain is not currently running"
 msgstr "Зараз домен не запущено"
 
 #, c-format
+msgid "Failed to resolve user %s\n"
+msgstr "Не вдалося визначити користувача %s\n"
+
+#, c-format
 msgid "Got rx in unexpected state %d"
 msgstr "Отримано rx у неочікуваному стані %d"
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr "Образу ядра %s не існує"
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr "Каталогу модулів ядра %s не існує"
 
 msgid "Libvirt Sandbox"
 msgstr "Пісочниця Libvirt"
@@ -85,8 +107,41 @@ msgstr "Загальна ініціалізація пісочниці Libvirt"
 msgid "Missing class name in config file"
 msgstr "У файлі налаштувань не вказано назву класу"
 
+msgid "Missing disk format in config file"
+msgstr "Невідомий формат диска у файлі налаштувань"
+
+msgid "Missing disk source in config file"
+msgstr "Пропущено джерело диска у файлі налаштувань"
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr "Пропущено рядок джерела диска у %s"
+
+msgid "Missing disk tag in config file"
+msgstr "Пропущено теґ диска у файлі налаштувань"
+
+msgid "Missing disk type in config file"
+msgstr "Пропущено тип диска у файлі налаштувань"
+
+msgid "Missing environment key in config file"
+msgstr "Пропущено ключ середовища у файлі налаштувань"
+
+msgid "Missing environment value in config file"
+msgstr "Пропущено значення середовища у файлі налаштувань"
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr "У маршруті %s не вказано шлюзу"
+
+msgid "Missing image format in config file"
+msgstr "Пропущено форма образу у файлі налаштувань"
+
 msgid "Missing mount source in config file"
 msgstr "У файлі налаштувань не вказано джерело монтування"
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr "Не вказано рядка монтування джерела до %s"
 
 msgid "Missing mount target in config file"
 msgstr "У файлі налаштувань не вказано призначення монтування"
@@ -96,6 +151,20 @@ msgstr "У файлі налаштувань не вказано тип монт
 
 msgid "Missing mount usage in config file"
 msgstr "У файлі налаштувань не вказано використання монтування"
+
+msgid "No assignment in filter parameter configuration"
+msgstr "Немає значення у налаштуваннях параметра фільтрування"
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr "Для домену не знайдено пристрою %s"
+
+msgid "No devices found for domain"
+msgstr "Для домену не знайдено пристроїв"
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr "Немає префікса типу диска у %s"
 
 #, c-format
 msgid "No mount type prefix on %s"
@@ -121,10 +190,25 @@ msgstr ""
 "Щоб переглянути список можливих параметрів командного рядка повністю, "
 "віддайте команду «virt-sandbox --help»"
 
+msgid "Sandbox is not currently running"
+msgstr "Зараз пісочницю не запущено"
+
 #, c-format
 msgid "Type name '%s' in config file had wrong parent"
 msgstr ""
 "Тип з назвою «%s» у файлі налаштувань мав помилковий батьківський елемент"
+
+#, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr ""
+"Підримки адреси «%s» для користувачів, відмінних від root, не передбачено, "
+"спробуйте «qemu:///session»"
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
+"Підтримки адреси «%s» для користувача root не передбачено, спробуйте "
+"«lxc:///» або «qemu:///system»"
 
 #, c-format
 msgid "Unable to access %s: %s"
@@ -157,6 +241,10 @@ msgid "Unable to encode message payload"
 msgstr "Не вдалося закодувати вміст повідомлення"
 
 #, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr "Не вдалося отримати конекст SELinux користувача %s"
+
+#, c-format
 msgid "Unable to get app console: %s\n"
 msgstr "Не вдалося отримати консоль програм: %s\n"
 
@@ -164,13 +252,30 @@ msgstr "Не вдалося отримати консоль програм: %s\n
 msgid "Unable to get log console: %s\n"
 msgstr "Не вдалося отримати консоль журналу: %s\n"
 
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+"Консоль неможливо ізолювати, якщо не буде встановлено прапорця "
+"безпосереднього доступу"
+
 #, c-format
 msgid "Unable to open connection: %s\n"
 msgstr "Не вдалося відкрити з’єднання: %s\n"
 
 #, c-format
+msgid "Unable to open console %s"
+msgstr "Не вдалося відкрити консоль %s"
+
+#, c-format
 msgid "Unable to parse address %s"
 msgstr "Не вдалося обробити адресу %s"
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr "Не вдалося обробити нетипові змінні середовища: %s\n"
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr "Не вдалося обробити диски: %s\n"
 
 #, c-format
 msgid "Unable to parse include file: %s\n"
@@ -223,8 +328,36 @@ msgstr "Неочікувана процедура RPC %u"
 msgid "Unexpected rpc status %u"
 msgstr "Неочікуваний стан RPC %u"
 
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr "Нереалізований префікс типу диска у %s"
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr "Невідомий формат диска, %s, у файлі налаштувань"
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr "Невідоме форматування диска «%s»"
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr "Невідоме форматування образу диска: «%s»"
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr "Невідомий тип диска, %s, у файлі налаштувань"
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr "Невідомий префікс типу диска у %s"
+
 msgid "Unknown failure"
 msgstr "Невідома помилка"
+
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr "Невідомий формат образу, %s, у файлі налаштувань"
 
 #, c-format
 msgid "Unknown mount type %s in config file"
@@ -250,6 +383,19 @@ msgstr "Невідома назва типу, «%s» у файлі налашт�
 msgid "Unsupported configuration type %s"
 msgstr "Непідтримуваний тип налаштувань %s"
 
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr "Помилковий формат середовища у %s"
+
+msgid "add a disk in the guest"
+msgstr "додати до гостьової системи диск"
+
+msgid "add a environment variable for the sandbox"
+msgstr "додати змінну середовища до пісочниці"
+
+msgid "clean power off when exiting"
+msgstr "чисте вимикання під час виходу"
+
 msgid "config file path"
 msgstr "шлях до файла налаштувань"
 
@@ -270,6 +416,15 @@ msgstr "файл, що містить список включених файлі
 
 msgid "file to copy into custom dir"
 msgstr "файл, який слід скопіювати до нетипового каталогу"
+
+msgid "kernel binary path"
+msgstr "шлях до виконуваного файла ядра"
+
+msgid "kernel module directory"
+msgstr "каталог модулів ядра"
+
+msgid "kernel version"
+msgstr "версія ядра"
 
 #, c-format
 msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
@@ -297,6 +452,9 @@ msgstr "отриманий від сервера пакет у %u байтів �
 msgid "packet %u bytes received from server too small, want %u"
 msgstr "отриманий від сервера пакет у %u байтів є занадто малим, потрібно %u"
 
+msgid "root directory of the sandbox"
+msgstr "кореневий каталог у пісочниці"
+
 msgid "run the command privileged"
 msgstr "виконати команду з вказаними правами доступу"
 
@@ -308,3 +466,6 @@ msgstr "налаштувати параметри інтерфейсу мере�
 
 msgid "start a shell"
 msgstr "запустити оболонку"
+
+msgid "switch to the given user"
+msgstr "перемкнутися на вказаного користувача"

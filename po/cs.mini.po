@@ -3,13 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Zdenek <chmelarz@gmail.com>, 2017. #zanata
+# Pavel Borecki <pavel.borecki@gmail.com>, 2018. #zanata
+# Pavel Borecki <pavel.borecki@gmail.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-07-09 03:50-0400\n"
-"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"PO-Revision-Date: 2019-04-22 07:13+0000\n"
+"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/fedora/language/"
 "cs/)\n"
 "Language: cs\n"
@@ -17,4 +20,447 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"Použití: %s [VOLBY] PRIKAZ-POPIS_UMISTENI [ARGUMENTY…]\n"
+"\n"
+"%s\n"
+"\n"
+
+# auto translated by TM merge from project: chkconfig, version: master, DocId:
+# chkconfig
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s verze %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s: Nedaří se načíst soubor s nastaveními %s: %s\n"
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s: je třeba spustit jako správce (root)\n"
+
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr "volby „switchto“ a „privileged“ nelze použít zároveň\n"
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr "Nedaří se identifikovat příponu souboru v „%s“"
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr "Není možné vyžadovat DHCP se statickými trasami/adresami"
+
+msgid "Cannot set static addresses with DHCP"
+msgstr "S DHCP není možné nastavovat statické IP adresy"
+
+msgid "Cannot set static routes with DHCP"
+msgstr "S DHCP není možné nastavovat statické trasy"
+
+msgid "Cannot set static routes without addresses"
+msgstr "Není možné nastavovat statické trasy bez adres"
+
+msgid "Console is already attached to a stream"
+msgstr "Konzole už je připojena k proudu"
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "ConsoleRpc není připojeno k proudu"
+
+msgid "Domain is not currently running"
+msgstr "Doména v tuto chvíli není spuštěná"
+
+#, c-format
+msgid "Failed to resolve user %s\n"
+msgstr "Nedaří se přeložit uživatele %s\n"
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr "Obdrženo rx v neočekávaném stavu %d"
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr "Obraz s jádrem %s neexistuje"
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr "Složka modulu do jádra %s neexistuje"
+
+msgid "Libvirt Sandbox"
+msgstr "Libvirt Sandbox"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Společné pro inicializaci libvirt sandbox"
+
+msgid "Missing class name in config file"
+msgstr "V souboru s nastaveními chybí název třídy"
+
+msgid "Missing disk format in config file"
+msgstr "V souboru s nastaveními chybí formát disku"
+
+msgid "Missing disk source in config file"
+msgstr "Chybějící zdroj disku v souboru s nastaveními"
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr "Chybí řetězec zdroje disku na %s"
+
+msgid "Missing disk tag in config file"
+msgstr "V souboru s nastaveními chybí štítek disku"
+
+msgid "Missing disk type in config file"
+msgstr "Chybějící typ disku v souboru s nastaveními"
+
+msgid "Missing environment key in config file"
+msgstr "Chybějící klíč prostředí v souboru s nastaveními"
+
+msgid "Missing environment value in config file"
+msgstr "Chybějící proměnná prostředí v souboru s nastaveními"
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr "V trase %s chybí brána"
+
+msgid "Missing image format in config file"
+msgstr "V souboru s nastaveními chybí formát obrazu"
+
+msgid "Missing mount source in config file"
+msgstr "Chybějící zdroj připojení v souboru s nastaveními"
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr "Chybějící řetězec zdroje připojení na %s"
+
+msgid "Missing mount target in config file"
+msgstr "Chybějící cíl připojení v souboru s nastaveními"
+
+msgid "Missing mount type in config file"
+msgstr "Chybějící typ připojení v souboru s nastaveními"
+
+msgid "Missing mount usage in config file"
+msgstr "Chybějící použití připojení v souboru s nastaveními"
+
+msgid "No assignment in filter parameter configuration"
+msgstr "Žádné přiřazení v nastavení parametru filtru"
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr "Pro doménu nenalezeno žádné zařízení %s"
+
+msgid "No devices found for domain"
+msgstr "Pro doménu nenalezena žádná zařízení"
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr "Žádná předpona typu disku na %s"
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "Žádná předpona typu připojení na %s"
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "Žádné připojení s předponou pod %s"
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""
+"Nezpracovaná data jsou příliš objemná pro odeslání (%zu bajtů potřebných, "
+"%zu bajtů k dispozici)"
+
+msgid "Run '"
+msgstr "Spustit „"
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+"Pro zobrazení úplného seznamu předvoleb pro příkazový řádek, které jsou k "
+"dispozici, spusťte „virt-sandbox --help“"
+
+msgid "Sandbox is not currently running"
+msgstr "Oddělené prostředí v tuto chvíli není spuštěné"
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr ""
+"Název typu „%s“ v souboru s nastaveními má nesprávnou nadřazenou položku"
+
+#, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr "URI „%s“ není podporováno jako ne-root zkuste „qemu:///session“"
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
+"URI „%s“ nepodporováno jako root, zkuste „lxc:///“ nebo „qemu:///system“"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "Nedaří se přistoupit k %s: %s"
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "Nedaří se připojit konzoli odděleného prostředí: %s\n"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "Nedaří se vytvořit dočasnou složku %s: %s"
+
+msgid "Unable to decode message header"
+msgstr "Nedaří se interpretovat záhlaví zprávy"
+
+msgid "Unable to decode message length"
+msgstr "Nedaří se interpretovat délku zprávy"
+
+msgid "Unable to decode message payload"
+msgstr "Nedaří se dekódovat náklad zprávy"
+
+msgid "Unable to encode message header"
+msgstr "Nedaří se enkódovat záhlaví zprávy"
+
+msgid "Unable to encode message length"
+msgstr "Nedaří se enkódovat délku zprávy"
+
+msgid "Unable to encode message payload"
+msgstr "Nedaří se enkódovat náklad zprávy"
+
+#, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr "Nedaří se získat SELinux kontext uživatele: %s"
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "Nedaří se získat konzoli aplikace: %s\n"
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "Nedaří se získat konzoli záznamu událostí: %s\n"
+
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr "Nedaří se izolovat konzoli pokud je nastaven příznak přímého přístupu"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "Nedaří se otevřít spojení: %s\n"
+
+#, c-format
+msgid "Unable to open console %s"
+msgstr "Nedaří se otevřít konzoli %s"
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "Nedaří se zpracovat adresu %s"
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr "Nedaří se zpracovat uživatelsky určené proměnné prostředí: %s\n"
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr "Nedaří se zpracovat disky: %s\n"
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "Nedaří se zpracovat soubor pro zahrnutí: %s\n"
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "Nedaří se zpracovat zahrnutí: %s\n"
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "Nedaří se zpracovat připojení (mount): %s\n"
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "Nedaří se zpracovat sítě: %s\n"
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "Nedaří se zpracovat zabezpečení: %s\n"
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "Nedaří se dotazovat na atributy terminálu: %s"
+
+msgid "Unable to re-encode message length"
+msgstr "Nedaří se znovu enkódovat délku zprávy"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "Nedaří se číst položky v %s: %s"
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "Nedaří se obnovit atributy terminálu: %s"
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "Nedaří se spustit oddělené prostředí: %s\n"
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "Nedaří se aktualizovat atributy terminálu: %s"
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "Neočekávaný rpc proc %u"
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "Neočekávaný rpc stav %u"
+
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr "Neimplementovaná předpona typu disku na %s"
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr "Neznámý formát disku %s v souboru s nastaveními"
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr "Neznámý formát disku „%s“"
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr "Neznámý formát obrazu disku: „%s“"
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr "Neznámý typ disku %s v souboru s nastaveními"
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr "Neznámá předpona typu disku na %s"
+
+msgid "Unknown failure"
+msgstr "Neznámý nezdar"
+
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr "Neznámý formát obrazu %s v souboru s nastaveními"
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "Neznámý typ připojení %s v souboru s nastaveními"
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "Neznámá předpona typu připojení na %s"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "Neznámý parametr %s"
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "Neznámá volba zabezpečení „%s“"
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "Neznámý název typu „%s“ v souboru s nastaveními"
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "Nepodporovaný typ nastavení %s"
+
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr "Chybný formát prostředí na %s"
+
+msgid "add a disk in the guest"
+msgstr "přidat do hosta disk"
+
+msgid "add a environment variable for the sandbox"
+msgstr "přidat do odděleného prostředí proměnnou prostředí"
+
+msgid "clean power off when exiting"
+msgstr "při ukončování korektně vypnout"
+
+msgid "config file path"
+msgstr "popis umístění souboru s nastaveními"
+
+msgid "connect to hypervisor"
+msgstr "připojit k hypervizoru"
+
+msgid "display debugging information"
+msgstr "zobrazit ladící informace"
+
+msgid "display verbose information"
+msgstr "zobrazit podrobnější informace"
+
+msgid "display version information"
+msgstr "zobrazit informace o verzi"
+
+msgid "file contain list of files to include"
+msgstr "soubor obsahuje seznam souborů které zahrnout"
+
+msgid "file to copy into custom dir"
+msgstr "soubor který zkopírovat do uživatelsky určené složky"
+
+msgid "kernel binary path"
+msgstr "popis umístění binárky s jádrem"
+
+msgid "kernel module directory"
+msgstr "složka modulu do jádra"
+
+msgid "kernel version"
+msgstr "verze jádra"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common: %s: nedaří se spustit %s: %s\n"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common: nedaří se otevřít %s: %s"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr "libvirt-sandbox-init-common: nedaří se vytvořit pipe pro signál: %s"
+
+msgid "mount a filesystem in the guest"
+msgstr "připojit v hostovi souborový systém"
+
+msgid "name of the sandbox"
+msgstr "název odděleného prostředí"
+
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr ""
+"počet bajtů %u paketu, obdrženého ze serveru, je příliš vysoký, je zapotřebí "
+"%d"
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr ""
+"počet bajtů %u paketu, obdrženého ze serveru, je příliš nízký, je zapotřebí "
+"%u"
+
+msgid "root directory of the sandbox"
+msgstr "kořenová složka odděleného prostředí"
+
+msgid "run the command privileged"
+msgstr "spustit příkaz s vyššími oprávněními"
+
+msgid "security properties"
+msgstr "vlastnosti zabezpečení"
+
+msgid "setup network interface properties"
+msgstr "nastavit vlastnosti síťového rozhraní"
+
+msgid "start a shell"
+msgstr "spustit shell"
+
+msgid "switch to the given user"
+msgstr "přepnout na daného uživatele"

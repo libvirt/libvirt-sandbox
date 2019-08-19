@@ -3,17 +3,451 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2015. #zanata
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-04-08 06:10-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2018-05-05 04:37+0000\n"
+"Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
 "Language-Team: Catalan <fedora@llistes.softcatala.org>\n"
 "Language: ca\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"Ús: %s [OPCIONS] CAMÍ-ORDRE [ARGUMENTS...]\n"
+"\n"
+"%s\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s versió %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s: no es pot carregar la configuració %s: %s\n"
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s: ha de llançar-se com a root\n"
+
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr "Les opcions «switchto» i «privileged» no són compatibles\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "- sorral del Libvirt"
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr "No es pot identificar l'extensió del fitxer a '%s'"
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr "No es pot sol·licitar DHCP amb adreces/encaminaments estàtics"
+
+msgid "Cannot set static addresses with DHCP"
+msgstr "No es poden establir adreces estàtiques amb DHCP"
+
+msgid "Cannot set static routes with DHCP"
+msgstr "No es poden establir encaminaments estàtics amb DHCP"
+
+msgid "Cannot set static routes without addresses"
+msgstr "No es poden establir encaminaments estàtics sense adreces"
+
+msgid "Console is already attached to a stream"
+msgstr "La consola ja està adjuntada a un flux"
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "ConsoleRpc no està adjuntat a un flux"
+
+msgid "Domain is not currently running"
+msgstr "Actualment el domini no s'està executant"
+
+#, c-format
+msgid "Failed to resolve user %s\n"
+msgstr "No s'ha pogut resoldre l'usuari: %s\n"
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr "Es va obtenir un rx amb un estat inesperat %d"
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr "No existeix la imatge del kernel %s"
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr "No existeix el directori del mòdul del kernel %s"
+
+msgid "Libvirt Sandbox"
+msgstr "Sorral del Libvirt"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Inicialització comuna del sorral del Libvirt"
+
+msgid "Missing class name in config file"
+msgstr "Falta el nom de la classe en el fitxer de configuració"
+
+msgid "Missing disk format in config file"
+msgstr "Falta el format del disc en el fitxer de configuració"
+
+msgid "Missing disk source in config file"
+msgstr "Falta l'origen del disc en el fitxer de configuració"
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr "Falta la cadena de text amb l'origen del disc a %s"
+
+msgid "Missing disk tag in config file"
+msgstr "Falta l'etiqueta del disc en el fitxer de configuració"
+
+msgid "Missing disk type in config file"
+msgstr "Falta el tipus del disc en el fitxer de configuració"
+
+msgid "Missing environment key in config file"
+msgstr "Falta el nom de la variable d'entorn en el fitxer de configuració"
+
+msgid "Missing environment value in config file"
+msgstr "Falta el valor de la variable d'entorn en el fitxer de configuració"
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr "Falta la passarel·la en l'encaminament %s"
+
+msgid "Missing image format in config file"
+msgstr "Falta el format de la imatge en el fitxer de configuració"
+
+msgid "Missing mount source in config file"
+msgstr "Falta l'origen del muntatge en el fitxer de configuració"
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr "Falta la cadena de text amb l'origen del muntatge a %s"
+
+msgid "Missing mount target in config file"
+msgstr "Falta la destinació del muntatge en el fitxer de configuració"
+
+msgid "Missing mount type in config file"
+msgstr "Falta el tipus del muntatge en el fitxer de configuració"
+
+msgid "Missing mount usage in config file"
+msgstr "Falta l'ús del muntatge en el fitxer de configuració"
+
+msgid "No assignment in filter parameter configuration"
+msgstr "Cap assignació en la configuració del paràmetre filter"
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr "No s'ha trobat cap dispositiu %s per al domini"
+
+msgid "No devices found for domain"
+msgstr "No s'han trobat dispositius per al domini"
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr "Sense prefix de tipus de disc a %s"
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "Sense prefix de tipus de muntatge a %s"
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "Sense muntatge amb un prefix sota %s"
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""
+"Les dades en cru són massa grans per ser enviades (es necessiten %zu bytes, "
+"hi ha disponible %zu bytes)"
+
+msgid "Run '"
+msgstr "Executa '"
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+"Executeu 'virt-sandbox --help' per veure un llistat complet de les opcions "
+"disponibles per a la línia d'ordres"
+
+msgid "Sandbox is not currently running"
+msgstr "El sorral no s'està executant actualment"
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr ""
+"El tipus de nom «%s» en el fitxer de configuració tenia un pare incorrecte"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "No es pot accedir %s: %s"
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "No es pot adjuntar a la consola del sorral: %s\n"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "No es pot crear el directori temporal %s: %s"
+
+msgid "Unable to decode message header"
+msgstr "No es pot descodificar la capçalera del missatge"
+
+msgid "Unable to decode message length"
+msgstr "No es pot descodificar la mida del missatge"
+
+msgid "Unable to decode message payload"
+msgstr "No es pot descodificar el cost del missatge"
+
+msgid "Unable to encode message header"
+msgstr "No es pot codificar la capçalera del missatge"
+
+msgid "Unable to encode message length"
+msgstr "No es pot codificar la mida del missatge"
+
+msgid "Unable to encode message payload"
+msgstr "No es pot codificar el cost del missatge"
+
+#, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr "No es pot obtenir el context SELinux de l'usuari: %s"
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "No es pot obtenir l'aplicació de la consola: %s\n"
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "No es pot obtenir el registre de la consola: %s\n"
+
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+"No es pot aïllar la consola a menys que s'estableixi l'indicador d'accés "
+"directe"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "No es pot obrir la connexió: %s\n"
+
+#, c-format
+msgid "Unable to open console %s"
+msgstr "No es pot obrir la consola %s"
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "No es pot analitzar sintàcticament l'adreça %s"
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr ""
+"No es poden analitzar sintàcticament les variables d'entorn personalitzades: "
+"%s\n"
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr ""
+"No es poden analitzar sintàcticament els discs: %s\n"
+"\n"
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "No es pot analitzar sintàcticament el fitxer d'inclusió: %s\n"
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "No es poden analitzar sintàcticament les inclusions: %s\n"
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "No es poden analitzar sintàcticament els muntatges: %s\n"
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "No es poden analitzar sintàcticament les xarxes: %s\n"
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "No es pot analitzar sintàcticament la seguretat: %s\n"
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "No es poden consultar els atributs del terminal: %s"
+
+msgid "Unable to re-encode message length"
+msgstr "No es pot recodificar la mida del missatge"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "No es poden llegir les entrades en %s: %s"
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "No es poden restablir els atributs del terminal: %s"
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "No es pot iniciar el sorral: %s\n"
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "No es poden actualitzar els atributs del terminal: %s"
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "Proc rpc inesperat %u"
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "Estat rpc inesperat %u"
+
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr "Prefix de tipus de disc no implementat a %s"
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr "Format desconegut del disc %s en el fitxer de configuració"
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr "Format desconegut de disc '%s'"
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr "Format desconegut d'imatge de disc: '%s'"
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr "Tipus desconegut del disc %s en el fitxer de configuració"
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr "Prefix de tipus de disc desconegut a %s"
+
+msgid "Unknown failure"
+msgstr "Error desconegut"
+
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr "Format desconegut de la imatge %s en el fitxer de configuració"
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "Tipus desconegut del muntatge %s en el fitxer de configuració"
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "Prefix de tipus de muntatge desconegut a %s"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "Paràmetre desconegut %s"
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "Opció de seguretat desconeguda «%s»"
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "Tipus de nom «%s» desconegut en el fitxer de configuració"
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "Tipus de configuració no suportada %s"
+
+msgid "add a disk in the guest"
+msgstr "afegeix un disc al convidat"
+
+msgid "add a environment variable for the sandbox"
+msgstr "afegeix una variable d'entorn per al sorral"
+
+msgid "config file path"
+msgstr "camí al fitxer de configuració"
+
+msgid "connect to hypervisor"
+msgstr "connecta a l'hipervisor"
+
+msgid "display debugging information"
+msgstr "mostra informació de depuració"
+
+msgid "display verbose information"
+msgstr "mostra informació detallada"
+
+msgid "display version information"
+msgstr "mostra informació de la versió"
+
+msgid "file contain list of files to include"
+msgstr "fitxer que conté el llistat de fitxers a incloure"
+
+msgid "file to copy into custom dir"
+msgstr "fitxer a copiar al directori personalitzat"
+
+msgid "kernel binary path"
+msgstr "camí al binari del kernel"
+
+msgid "kernel module directory"
+msgstr "directori del mòdul del kernel"
+
+msgid "kernel version"
+msgstr "versió del kernel"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common: %s: no es pot executar %s: %s\n"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common: no es pot obrir %s: %s"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr ""
+"libvirt-sandbox-init-common: no es pot crear la canonada del senyal: %s"
+
+msgid "mount a filesystem in the guest"
+msgstr "munta un sistema de fitxers al convidat"
+
+msgid "name of the sandbox"
+msgstr "nom del sorral"
+
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr ""
+"el paquet de %u bytes que es va rebre del servidor és massa gran, voleu %d"
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr ""
+"el paquet de %u bytes que es va rebre del servidor és massa petit, voleu %u"
+
+msgid "root directory of the sandbox"
+msgstr "directori arrel del sorral"
+
+msgid "run the command privileged"
+msgstr "executa la comanda privilegiada"
+
+msgid "security properties"
+msgstr "propietats de la seguretat"
+
+msgid "setup network interface properties"
+msgstr "configura les propietats de la interfície de xarxa"
+
+msgid "start a shell"
+msgstr "inicia un shell"
+
+msgid "switch to the given user"
+msgstr "canvia a l'usuari indicat"

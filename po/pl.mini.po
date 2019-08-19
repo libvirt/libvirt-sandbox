@@ -7,13 +7,17 @@
 # mmarzantowicz <mmarzantowicz@osdf.com.pl>, 2013
 # mmarzantowicz <mmarzantowicz@osdf.com.pl>, 2012
 # Piotr Drąg <piotrdrag@gmail.com>, 2013
+# Piotr Drąg <piotrdrag@gmail.com>, 2015. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2016. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2017. #zanata
+# Piotr Drąg <piotrdrag@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-07-09 03:50-0400\n"
-"Last-Translator: Daniel Berrange <dan-transifex@berrange.com>\n"
+"PO-Revision-Date: 2018-03-26 05:46+0000\n"
+"Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <trans-pl@lists.fedoraproject.org>\n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
@@ -21,8 +25,448 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2);\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
+
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+"\n"
+"Użycie: %s [OPCJE] ŚCIEŻKA-POLECENIA [PARAMETRY…]\n"
+"\n"
+"%s\n"
+"\n"
 
 #, c-format
 msgid "%s version %s\n"
-msgstr "%s wersja %s\n"
+msgstr "%s w wersji %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr "%s: nie można wczytać konfiguracji %s: %s\n"
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr "%s: musi być uruchomione jako root\n"
+
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr "„switchto” i „privileged” są niezgodnymi opcjami\n"
+
+msgid "- Libvirt Sandbox"
+msgstr "— piaskownica biblioteki libvirt"
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr "Nie można zidentyfikować rozszerzenia pliku w „%s”"
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr "Nie można zażądać DHCP ze statycznymi trasami/adresami"
+
+msgid "Cannot set static addresses with DHCP"
+msgstr "Nie można ustawić statycznych adresów z DHCP"
+
+msgid "Cannot set static routes with DHCP"
+msgstr "Nie można ustawić statycznych tras z DHCP"
+
+msgid "Cannot set static routes without addresses"
+msgstr "Nie można ustawić statycznych tras bez adresów"
+
+msgid "Console is already attached to a stream"
+msgstr "Konsola jest już dołączona do potoku"
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr "RPC konsoli nie jest dołączone do potoku"
+
+msgid "Domain is not currently running"
+msgstr "Domena nie jest obecnie uruchomiona"
+
+#, c-format
+msgid "Failed to resolve user %s\n"
+msgstr "Rozwiązanie użytkownika %s się nie powiodło\n"
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr "Otrzymano RX w nieoczekiwanym stanie %d"
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr "Obraz jądra %s nie istnieje"
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr "Katalog modułów jądra %s nie istnieje"
+
+msgid "Libvirt Sandbox"
+msgstr "Piaskownica biblioteki libvirt"
+
+msgid "Libvirt Sandbox Init Common"
+msgstr "Wspólna inicjacja piaskownicy biblioteki libvirt"
+
+msgid "Missing class name in config file"
+msgstr "Brak nazwy klasy w pliku konfiguracji"
+
+msgid "Missing disk format in config file"
+msgstr "Brak formatu dysku w pliku konfiguracji"
+
+msgid "Missing disk source in config file"
+msgstr "Brak dysku źródłowego w pliku konfiguracji"
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr "Brak ciągu źródłowego dysku w %s"
+
+msgid "Missing disk tag in config file"
+msgstr "Brak etykiety dysku w pliku konfiguracji"
+
+msgid "Missing disk type in config file"
+msgstr "Brak typu dysku w pliku konfiguracji"
+
+msgid "Missing environment key in config file"
+msgstr "Brak klucza środowiska w pliku konfiguracji"
+
+msgid "Missing environment value in config file"
+msgstr "Brak wartości środowiska w pliku konfiguracji"
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr "Brak bramy w trasie %s"
+
+msgid "Missing image format in config file"
+msgstr "Brak formatu obrazu w pliku konfiguracji"
+
+msgid "Missing mount source in config file"
+msgstr "Brak źródła punktu montowania w pliku konfiguracji"
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr "Brak ciągu źródłowego punktu montowania w %s"
+
+msgid "Missing mount target in config file"
+msgstr "Brak celu punktu montowania w pliku konfiguracji"
+
+msgid "Missing mount type in config file"
+msgstr "Brak typu punktu montowania w pliku konfiguracji"
+
+msgid "Missing mount usage in config file"
+msgstr "Brak użycia punktu montowania w pliku konfiguracji"
+
+msgid "No assignment in filter parameter configuration"
+msgstr "Brak przydziału w konfiguracji parametrów filtru"
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr "Nie odnaleziono urządzenia %s dla domeny"
+
+msgid "No devices found for domain"
+msgstr "Nie odnaleziono urządzeń dla domeny"
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr "Brak przedrostka typu dysku w %s"
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr "Brak przedrostka typu punktu montowania w %s"
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr "Brak punktu montowania z przedrostkiem pod %s"
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""
+"Surowe dane są za długie, aby je wysłać (wymagane jest %zu B, dostępne jest "
+"%zu B)"
+
+msgid "Run '"
+msgstr "Wykonaj \""
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+"Polecenie „virt-sandbox --help” wyświetla pełną listę dostępnych opcji "
+"wiersza poleceń"
+
+msgid "Sandbox is not currently running"
+msgstr "Piaskownica nie jest obecnie uruchomiona"
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr "Nazwa typu „%s” w pliku konfiguracji ma błędny element nadrzędny"
+
+#, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr ""
+"Adres URI „%s” jest obsługiwany tylko jako root, proszę spróbować „qemu:///"
+"session”"
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
+"Adres URI „%s” jest nieobsługiwany jako root, proszę spróbować „lxc:///” lub "
+"„qemu:///system”"
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr "Nie można uzyskać dostępu do %s: %s"
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr "Nie można dołączyć konsoli piaskownicy: %s\n"
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr "Nie można utworzyć katalogu tymczasowego %s: %s"
+
+msgid "Unable to decode message header"
+msgstr "Nie można dekodować nagłówka komunikatu"
+
+msgid "Unable to decode message length"
+msgstr "Nie można dekodować długości komunikatu"
+
+msgid "Unable to decode message payload"
+msgstr "Nie można dekodować zawartości komunikatu"
+
+msgid "Unable to encode message header"
+msgstr "Nie można zakodować nagłówka komunikatu"
+
+msgid "Unable to encode message length"
+msgstr "Nie można zakodować długości komunikatu"
+
+msgid "Unable to encode message payload"
+msgstr "Nie można zakodować zawartości komunikatu"
+
+#, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr "Nie można uzyskać kontekstu SELinuksa użytkownika: %s"
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr "Nie można uzyskać konsoli aplikacji: %s\n"
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr "Nie można uzyskać konsoli dziennika: %s\n"
+
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+"Nie można odizolować konsoli, jeśli flaga bezpośredniego dostępu nie jest "
+"ustawiona"
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr "Nie można otworzyć połączenia: %s\n"
+
+#, c-format
+msgid "Unable to open console %s"
+msgstr "Nie można otworzyć konsoli %s"
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr "Nie można przetworzyć adresu %s"
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr "Nie można przetworzyć niestandardowych zmiennych środowiskowych: %s\n"
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr "Nie można przetworzyć dysków: %s\n"
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr "Nie można przetworzyć pliku „include”: %s\n"
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr "Nie można przetworzyć „include”: %s\n"
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr "Nie można przetworzyć punktów montowania: %s\n"
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr "Nie można przetworzyć sieci: %s\n"
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr "Nie można przetworzyć zabezpieczeń: %s\n"
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr "Nie można odpytać atrybutów terminala: %s"
+
+msgid "Unable to re-encode message length"
+msgstr "Nie można ponowie zakodować długości komunikatu"
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr "Nie można odczytać wpisów w %s: %s"
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr "Nie można przywrócić atrybutów terminala: %s"
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr "Nie można uruchomić piaskownicy: %s\n"
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr "Nie można zaktualizować atrybutów terminala: %s"
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr "Nieoczekiwany proces RPC %u"
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr "Nieoczekiwany stan RPC %u"
+
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr "Niezaimplementowany przedrostek typu dysku w %s"
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr "Nieznany format dysku %s w pliku konfiguracji"
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr "Nieznany format dysku „%s”"
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr "Nieznany format obrazu dysku: „%s”"
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr "Nieznany typ dysku %s w pliku konfiguracji"
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr "Nieznany przedrostek typu dysku w %s"
+
+msgid "Unknown failure"
+msgstr "Nieznane niepowodzenie"
+
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr "Nieznany format obrazu %s w pliku konfiguracji"
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr "Nieznany typ punktu montowania %s w pliku konfiguracji"
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr "Nieznany przedrostek typu punktu montowania w %s"
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr "Nieznany parametr %s"
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr "Nieznana opcja zabezpieczeń „%s”"
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr "Nieznana nazwa typu „%s” w pliku konfiguracji"
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr "Nieobsługiwany typ konfiguracji %s"
+
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr "Błędny format środowiska w %s"
+
+msgid "add a disk in the guest"
+msgstr "dodaje dysk do gościa"
+
+msgid "add a environment variable for the sandbox"
+msgstr "dodaje zmienną środowiskową do piaskownicy"
+
+msgid "clean power off when exiting"
+msgstr "czyste wyłączenie zasilania podczas kończenia działania"
+
+msgid "config file path"
+msgstr "ścieżka do pliku konfiguracji"
+
+msgid "connect to hypervisor"
+msgstr "łączy z nadzorcą"
+
+msgid "display debugging information"
+msgstr "wyświetla informacje o debugowaniu"
+
+msgid "display verbose information"
+msgstr "wyświetla więcej informacji"
+
+msgid "display version information"
+msgstr "wyświetla informacje o wersji"
+
+msgid "file contain list of files to include"
+msgstr "plik zawierający listę plików do dołączenia"
+
+msgid "file to copy into custom dir"
+msgstr "plik do skopiowania do własnego katalogu"
+
+msgid "kernel binary path"
+msgstr "ścieżka do pliku binarnego jądra"
+
+msgid "kernel module directory"
+msgstr "katalog modułów jądra"
+
+msgid "kernel version"
+msgstr "wersja jądra"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr "libvirt-sandbox-init-common: %s: nie można wykonać %s: %s\n"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr "libvirt-sandbox-init-common: nie można otworzyć %s: %s"
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr "libvirt-sandbox-init-common: nie można utworzyć potoku sygnału: %s"
+
+msgid "mount a filesystem in the guest"
+msgstr "montuje system plików w gościu"
+
+msgid "name of the sandbox"
+msgstr "nazwa piaskownicy"
+
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr "otrzymany z serwera pakiet o %u B jest za duży, wymagane jest %d"
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr "otrzymany z serwera pakiet o %u B jest za mały, wymagane jest %u"
+
+msgid "root directory of the sandbox"
+msgstr "główny katalog piaskownicy"
+
+msgid "run the command privileged"
+msgstr "wykonuje polecenie z uprawnieniami"
+
+msgid "security properties"
+msgstr "właściwości zabezpieczeń"
+
+msgid "setup network interface properties"
+msgstr "właściwości ustawień interfejsu sieciowego"
+
+msgid "start a shell"
+msgstr "uruchamia powłokę"
+
+msgid "switch to the given user"
+msgstr "przełącza na podanego użytkownika"

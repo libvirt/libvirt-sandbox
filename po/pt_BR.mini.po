@@ -3,17 +3,37 @@
 # This file is distributed under the same license as the PACKAGE package.
 #
 # Translators:
+# Marco Aurélio Krause <ouesten@me.com>, 2015. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2013-04-08 06:10-0400\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2015-10-15 10:47+0000\n"
+"Last-Translator: Marco Aurélio Krause <ouesten@me.com>\n"
 "Language-Team: Portuguese (Brazil) <trans-pt_br@lists.fedoraproject.org>\n"
-"Language: pt-BR\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Zanata 3.5.1\n"
+"X-Generator: Zanata 4.6.2\n"
+
+#, c-format
+msgid "%s version %s\n"
+msgstr "%s versão %s\n"
+
+msgid "Unknown failure"
+msgstr "falha desconhecida"
+
+msgid "connect to hypervisor"
+msgstr "conectar ao hipervisor"
+
+msgid "kernel version"
+msgstr "versão do kernel"
+
+msgid "name of the sandbox"
+msgstr "Nome do sandbox"
+
+msgid "security properties"
+msgstr "propriedades de segurança"
