@@ -13,10 +13,10 @@
 # Piotr Drąg <piotrdrag@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
-"POT-Creation-Date: 2019-08-19 19:34+0100\n"
-"PO-Revision-Date: 2018-03-26 05:46+0000\n"
+"POT-Creation-Date: 2019-12-16 16:07+0000\n"
+"PO-Revision-Date: 2018-03-26 05:45+0000\n"
 "Last-Translator: Piotr Drąg <piotrdrag@gmail.com>\n"
 "Language-Team: Polish <trans-pl@lists.fedoraproject.org>\n"
 "Language: pl\n"
