@@ -55,7 +55,7 @@ be reported to the OS vendors' own bug tracker first.
 
 The latest libvirt-sandbox code can be found in GIT at:
 
-   http://libvirt.org/git/?p=libvirt-sandbox.git
+   https://gitlab.com/libvirt/libvirt-sandbox
 
 Licensing
 ---------
