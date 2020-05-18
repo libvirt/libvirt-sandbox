@@ -2,9 +2,7 @@ DOMAIN = $(PACKAGE_NAME)
 COPYRIGHT_HOLDER = The Libvirt authors
 MSGID_BUGS_ADDRESS = https://libvirt.org/bugs.html
 
-LANGS := \
-	ca cs de es fi fr ja pl pt_BR uk
-
+LANGS := $(shell cat $(srcdir)/LINGUAS)
 
 POTFILE_DEPS := $(shell $(SED) 's,^,$(top_srcdir)/,' $(srcdir)/POTFILES)
 POTFILE := $(srcdir)/$(DOMAIN).pot
@@ -14,6 +12,7 @@ GMOFILES := $(LANGS:%=$(srcdir)/%.gmo)
 MAINTAINERCLEANFILES = $(POTFILE) $(POFILES) $(GMOFILES)
 
 EXTRA_DIST = \
+	LINGUAS \
 	POTFILES \
 	$(POTFILE) \
 	$(POFILES) \
