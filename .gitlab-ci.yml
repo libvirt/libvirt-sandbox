@@ -1,6 +1,91 @@
 
 stages:
   - prebuild
+  - containers
+  - builds
+
+.container_job_template: &container_job_definition
+  image: docker:stable
+  stage: containers
+  services:
+    - docker:dind
+  before_script:
+    - export TAG="$CI_REGISTRY_IMAGE/ci-$NAME:latest"
+    - export COMMON_TAG="$CI_REGISTRY/libvirt/libvirt-sandbox/ci-$NAME:latest"
+    - docker info
+    - docker login registry.gitlab.com -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD"
+  script:
+    - docker pull "$TAG" || docker pull "$COMMON_TAG" || true
+    - docker build --cache-from "$TAG" --cache-from "$COMMON_TAG" --tag "$TAG" -f "ci/containers/libvirt-$NAME.Dockerfile" ci
+    - docker push "$TAG"
+  after_script:
+    - docker logout
+
+.script_variables: &script_variables |
+  export MAKEFLAGS="-j$(getconf _NPROCESSORS_ONLN)"
+  export SCRATCH_DIR="/tmp/scratch"
+  export VROOT="$SCRATCH_DIR/vroot"
+  export CCACHE_DIR="$PWD/ccache"
+  export CCACHE_MAXSIZE="500M"
+  export PATH="$CCACHE_WRAPPERSDIR:$VROOT/bin:$PATH"
+  export PKG_CONFIG_PATH="$VROOT/lib/pkgconfig"
+  export XDG_DATA_DIRS="$VROOT/share:/usr/share"
+  export GI_TYPELIB_PATH="$VROOT/lib/girepository-1.0"
+  export LD_LIBRARY_PATH="$VROOT/lib"
+
+.git_native_build_job_template: &git_native_build_job_definition
+  image: $CI_REGISTRY_IMAGE/ci-$NAME:latest
+  stage: builds
+  cache:
+    paths:
+      - ccache/
+    key: "$CI_JOB_NAME"
+  before_script:
+    - *script_variables
+  script:
+    - pushd "$PWD"
+    - mkdir -p "$SCRATCH_DIR"
+    - cd "$SCRATCH_DIR"
+    - git clone --depth 1 https://gitlab.com/libvirt/libvirt.git
+    - git clone --depth 1 https://gitlab.com/libvirt/libvirt-glib.git
+    - mkdir libvirt/build
+    - cd libvirt/build
+    - ../autogen.sh --prefix="$VROOT" --without-libvirtd
+    - $MAKE install
+    - cd ../..
+    - mkdir libvirt-glib/build
+    - cd libvirt-glib/build
+    - ../autogen.sh --prefix="$VROOT"
+    - $MAKE install
+    - popd
+    - mkdir build
+    - cd build
+    - ../autogen.sh --prefix="$VROOT" --enable-gtk-doc
+    - $MAKE
+    - $MAKE check
+    - $MAKE install
+    - $MAKE dist
+    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild --nodeps -ta libvirt-sandbox*.tar.gz ; fi
+
+.dist_native_build_job_template: &dist_native_build_job_definition
+  image: $CI_REGISTRY_IMAGE/ci-$NAME:latest
+  stage: builds
+  cache:
+    paths:
+      - ccache/
+    key: "$CI_JOB_NAME"
+  before_script:
+    - *script_variables
+  script:
+    - mkdir build
+    - cd build
+    - ../autogen.sh --prefix="$VROOT" --enable-gtk-doc
+    - $MAKE
+    - $MAKE check
+    - $MAKE install
+    - $MAKE dist
+    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild -ta libvirt-sandbox*.tar.gz ; fi
+
 
 # Check that all commits are signed-off for the DCO.
 # Skip on "libvirt" namespace, since we only need to run
@@ -14,3 +99,96 @@ check-dco:
   except:
     variables:
       - $CI_PROJECT_NAMESPACE == 'libvirt'
+
+x64-debian-9-container:
+  <<: *container_job_definition
+  variables:
+    NAME: debian-9
+
+x64-debian-10-container:
+  <<: *container_job_definition
+  variables:
+    NAME: debian-10
+
+x64-debian-sid-container:
+  <<: *container_job_definition
+  variables:
+    NAME: debian-sid
+
+x64-fedora-31-container:
+  <<: *container_job_definition
+  variables:
+    NAME: fedora-31
+
+x64-fedora-32-container:
+  <<: *container_job_definition
+  variables:
+    NAME: fedora-32
+
+x64-fedora-rawhide-container:
+  <<: *container_job_definition
+  variables:
+    NAME: fedora-rawhide
+
+x64-opensuse-151-container:
+  <<: *container_job_definition
+  variables:
+    NAME: opensuse-151
+
+x64-ubuntu-1804-container:
+  <<: *container_job_definition
+  variables:
+    NAME: ubuntu-1804
+
+x64-ubuntu-2004-container:
+  <<: *container_job_definition
+  variables:
+    NAME: ubuntu-2004
+
+
+
+x64-debian-9-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: debian-9
+
+x64-debian-10-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: debian-10
+
+x64-debian-sid-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: debian-sid
+
+x64-fedora-31-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: fedora-31
+
+x64-fedora-32-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: fedora-32
+
+x64-fedora-rawhide-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: fedora-rawhide
+
+x64-opensuse-151-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: opensuse-151
+    RPM: skip
+
+x64-ubuntu-1804-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: ubuntu-1804
+
+x64-ubuntu-2004-git-build:
+  <<: *git_native_build_job_definition
+  variables:
+    NAME: ubuntu-2004
