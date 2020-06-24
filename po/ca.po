@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
-"POT-Creation-Date: 2019-12-16 16:07+0000\n"
+"POT-Creation-Date: 2020-05-18 13:45+0100\n"
 "PO-Revision-Date: 2018-05-05 04:37+0000\n"
 "Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
 "Language-Team: Catalan <fedora@llistes.softcatala.org>\n"
@@ -193,6 +193,14 @@ msgstr ""
 "El tipus de nom «%s» en el fitxer de configuració tenia un pare incorrecte"
 
 #, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr ""
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
+
+#, c-format
 msgid "Unable to access %s: %s"
 msgstr "No es pot accedir %s: %s"
 
@@ -369,11 +377,18 @@ msgstr "Tipus de nom «%s» desconegut en el fitxer de configuració"
 msgid "Unsupported configuration type %s"
 msgstr "Tipus de configuració no suportada %s"
 
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr ""
+
 msgid "add a disk in the guest"
 msgstr "afegeix un disc al convidat"
 
 msgid "add a environment variable for the sandbox"
 msgstr "afegeix una variable d'entorn per al sorral"
+
+msgid "clean power off when exiting"
+msgstr ""
 
 msgid "config file path"
 msgstr "camí al fitxer de configuració"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
-"POT-Creation-Date: 2019-12-16 16:07+0000\n"
+"POT-Creation-Date: 2020-05-18 13:45+0100\n"
 "PO-Revision-Date: 2015-10-15 10:47+0000\n"
 "Last-Translator: Marco Aurélio Krause <ouesten@me.com>\n"
 "Language-Team: Portuguese (Brazil) <trans-pt_br@lists.fedoraproject.org>\n"
@@ -20,20 +20,430 @@ msgstr ""
 "X-Generator: Zanata 4.6.2\n"
 
 #, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] COMMAND-PATH [ARGS...]\n"
+"\n"
+"%s\n"
+"\n"
+msgstr ""
+
+#, c-format
 msgid "%s version %s\n"
 msgstr "%s versão %s\n"
+
+#, c-format
+msgid "%s: Unable to load config %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "%s: must be launched as root\n"
+msgstr ""
+
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr ""
+
+msgid "- Libvirt Sandbox"
+msgstr ""
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr ""
+
+msgid "Cannot request DHCP with static routes/addresses"
+msgstr ""
+
+msgid "Cannot set static addresses with DHCP"
+msgstr ""
+
+msgid "Cannot set static routes with DHCP"
+msgstr ""
+
+msgid "Cannot set static routes without addresses"
+msgstr ""
+
+msgid "Console is already attached to a stream"
+msgstr ""
+
+msgid "ConsoleRpc is not attached to a stream"
+msgstr ""
+
+msgid "Domain is not currently running"
+msgstr ""
+
+#, c-format
+msgid "Failed to resolve user %s\n"
+msgstr ""
+
+#, c-format
+msgid "Got rx in unexpected state %d"
+msgstr ""
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr ""
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr ""
+
+msgid "Libvirt Sandbox"
+msgstr ""
+
+msgid "Libvirt Sandbox Init Common"
+msgstr ""
+
+msgid "Missing class name in config file"
+msgstr ""
+
+msgid "Missing disk format in config file"
+msgstr ""
+
+msgid "Missing disk source in config file"
+msgstr ""
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr ""
+
+msgid "Missing disk tag in config file"
+msgstr ""
+
+msgid "Missing disk type in config file"
+msgstr ""
+
+msgid "Missing environment key in config file"
+msgstr ""
+
+msgid "Missing environment value in config file"
+msgstr ""
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr ""
+
+msgid "Missing image format in config file"
+msgstr ""
+
+msgid "Missing mount source in config file"
+msgstr ""
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr ""
+
+msgid "Missing mount target in config file"
+msgstr ""
+
+msgid "Missing mount type in config file"
+msgstr ""
+
+msgid "Missing mount usage in config file"
+msgstr ""
+
+msgid "No assignment in filter parameter configuration"
+msgstr ""
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr ""
+
+msgid "No devices found for domain"
+msgstr ""
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr ""
+
+#, c-format
+msgid "No mount type prefix on %s"
+msgstr ""
+
+#, c-format
+msgid "No mount with a prefix under %s"
+msgstr ""
+
+#, c-format
+msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
+msgstr ""
+
+msgid "Run '"
+msgstr ""
+
+msgid ""
+"Run 'virt-sandbox --help' to see a full list of available command line "
+"options"
+msgstr ""
+
+msgid "Sandbox is not currently running"
+msgstr ""
+
+#, c-format
+msgid "Type name '%s' in config file had wrong parent"
+msgstr ""
+
+#, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr ""
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
+
+#, c-format
+msgid "Unable to access %s: %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to attach sandbox console: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to create temporary directory %s: %s"
+msgstr ""
+
+msgid "Unable to decode message header"
+msgstr ""
+
+msgid "Unable to decode message length"
+msgstr ""
+
+msgid "Unable to decode message payload"
+msgstr ""
+
+msgid "Unable to encode message header"
+msgstr ""
+
+msgid "Unable to encode message length"
+msgstr ""
+
+msgid "Unable to encode message payload"
+msgstr ""
+
+#, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to get app console: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to get log console: %s\n"
+msgstr ""
+
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+
+#, c-format
+msgid "Unable to open connection: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to open console %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse address %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse include file: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse includes: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse mounts: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse networks: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse security: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to query terminal attributes: %s"
+msgstr ""
+
+msgid "Unable to re-encode message length"
+msgstr ""
+
+#, c-format
+msgid "Unable to read entries in %s: %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to restore terminal attributes: %s"
+msgstr ""
+
+#, c-format
+msgid "Unable to start sandbox: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to update terminal attributes: %s"
+msgstr ""
+
+#, c-format
+msgid "Unexpected rpc proc %u"
+msgstr ""
+
+#, c-format
+msgid "Unexpected rpc status %u"
+msgstr ""
+
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr ""
 
 msgid "Unknown failure"
 msgstr "falha desconhecida"
 
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown mount type %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown mount type prefix on %s"
+msgstr ""
+
+#, c-format
+msgid "Unknown parameter %s"
+msgstr ""
+
+#, c-format
+msgid "Unknown security option '%s'"
+msgstr ""
+
+#, c-format
+msgid "Unknown type name '%s' in config file"
+msgstr ""
+
+#, c-format
+msgid "Unsupported configuration type %s"
+msgstr ""
+
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr ""
+
+msgid "add a disk in the guest"
+msgstr ""
+
+msgid "add a environment variable for the sandbox"
+msgstr ""
+
+msgid "clean power off when exiting"
+msgstr ""
+
+msgid "config file path"
+msgstr ""
+
 msgid "connect to hypervisor"
 msgstr "conectar ao hipervisor"
+
+msgid "display debugging information"
+msgstr ""
+
+msgid "display verbose information"
+msgstr ""
+
+msgid "display version information"
+msgstr ""
+
+msgid "file contain list of files to include"
+msgstr ""
+
+msgid "file to copy into custom dir"
+msgstr ""
+
+msgid "kernel binary path"
+msgstr ""
+
+msgid "kernel module directory"
+msgstr ""
 
 msgid "kernel version"
 msgstr "versão do kernel"
 
+#, c-format
+msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
+msgstr ""
+
+#, c-format
+msgid "libvirt-sandbox-init-common: cannot open %s: %s"
+msgstr ""
+
+#, c-format
+msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
+msgstr ""
+
+msgid "mount a filesystem in the guest"
+msgstr ""
+
 msgid "name of the sandbox"
 msgstr "Nome do sandbox"
 
+#, c-format
+msgid "packet %u bytes received from server too large, want %d"
+msgstr ""
+
+#, c-format
+msgid "packet %u bytes received from server too small, want %u"
+msgstr ""
+
+msgid "root directory of the sandbox"
+msgstr ""
+
+msgid "run the command privileged"
+msgstr ""
+
 msgid "security properties"
 msgstr "propriedades de segurança"
+
+msgid "setup network interface properties"
+msgstr ""
+
+msgid "start a shell"
+msgstr ""
+
+msgid "switch to the given user"
+msgstr ""

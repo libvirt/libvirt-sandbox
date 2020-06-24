@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
-"POT-Creation-Date: 2019-12-16 16:07+0000\n"
+"POT-Creation-Date: 2020-05-18 13:45+0100\n"
 "PO-Revision-Date: 2014-12-17 09:20+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: French <trans-fr@lists.fedoraproject.org>\n"
@@ -46,8 +46,15 @@ msgstr "%s : Impossible de charger la configuration %s : %s\n"
 msgid "%s: must be launched as root\n"
 msgstr "%s : doit être exécuté en tant que root\n"
 
+msgid "'switchto' and 'privileged' are incompatible options\n"
+msgstr ""
+
 msgid "- Libvirt Sandbox"
 msgstr "- Libvirt Sandbox"
+
+#, c-format
+msgid "Cannot identify file extension in '%s'"
+msgstr ""
 
 msgid "Cannot request DHCP with static routes/addresses"
 msgstr ""
@@ -72,8 +79,20 @@ msgid "Domain is not currently running"
 msgstr "Le domaine n'est pas actuellement actif"
 
 #, c-format
+msgid "Failed to resolve user %s\n"
+msgstr ""
+
+#, c-format
 msgid "Got rx in unexpected state %d"
 msgstr "rx obtenu en un état inattendu %d"
+
+#, c-format
+msgid "Kernel image %s does not exist"
+msgstr ""
+
+#, c-format
+msgid "Kernel module dir %s does not exist"
+msgstr ""
 
 msgid "Libvirt Sandbox"
 msgstr "Libvirt Sandbox"
@@ -84,8 +103,41 @@ msgstr "Libvirt Sandbox Init Commun"
 msgid "Missing class name in config file"
 msgstr "Nom de classe manquant dans le fichier de configuration"
 
+msgid "Missing disk format in config file"
+msgstr ""
+
+msgid "Missing disk source in config file"
+msgstr ""
+
+#, c-format
+msgid "Missing disk source string on %s"
+msgstr ""
+
+msgid "Missing disk tag in config file"
+msgstr ""
+
+msgid "Missing disk type in config file"
+msgstr ""
+
+msgid "Missing environment key in config file"
+msgstr ""
+
+msgid "Missing environment value in config file"
+msgstr ""
+
+#, c-format
+msgid "Missing gateway in route %s"
+msgstr ""
+
+msgid "Missing image format in config file"
+msgstr ""
+
 msgid "Missing mount source in config file"
 msgstr "Source de montage manquant dans le fichier de configuration"
+
+#, c-format
+msgid "Missing mount source string on %s"
+msgstr ""
 
 msgid "Missing mount target in config file"
 msgstr "Cible de montage manquant dans le fichier de configuration"
@@ -95,6 +147,20 @@ msgstr "Type de montage manquant dans le fichier de configuration"
 
 msgid "Missing mount usage in config file"
 msgstr "Utilisation de montage manquant dans le fichier de configuration"
+
+msgid "No assignment in filter parameter configuration"
+msgstr ""
+
+#, c-format
+msgid "No device %s found for domain"
+msgstr ""
+
+msgid "No devices found for domain"
+msgstr ""
+
+#, c-format
+msgid "No disk type prefix on %s"
+msgstr ""
 
 #, c-format
 msgid "No mount type prefix on %s"
@@ -120,10 +186,21 @@ msgstr ""
 "Exécuter « virt-sandbox --help » pour  voir la liste complète des options de "
 "commande disponibles en ligne "
 
+msgid "Sandbox is not currently running"
+msgstr ""
+
 #, c-format
 msgid "Type name '%s' in config file had wrong parent"
 msgstr ""
 "Le nom de type « %s » dans le fichier de configuration n'a pas le bon parent"
+
+#, c-format
+msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
+msgstr ""
+
+#, c-format
+msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
+msgstr ""
 
 #, c-format
 msgid "Unable to access %s: %s"
@@ -156,6 +233,10 @@ msgid "Unable to encode message payload"
 msgstr "Impossible d'encoder le contenu du message"
 
 #, c-format
+msgid "Unable to get SELinux context of user: %s"
+msgstr ""
+
+#, c-format
 msgid "Unable to get app console: %s\n"
 msgstr "Impossible d'obtenir la console d''application : %s\n"
 
@@ -163,13 +244,28 @@ msgstr "Impossible d'obtenir la console d''application : %s\n"
 msgid "Unable to get log console: %s\n"
 msgstr "Impossible d'obtenir la console de journalisation : %s\n"
 
+msgid "Unable to isolate console unless direct access flag is set"
+msgstr ""
+
 #, c-format
 msgid "Unable to open connection: %s\n"
 msgstr "Impossible d'ouvrir la connexion : %s\n"
 
 #, c-format
+msgid "Unable to open console %s"
+msgstr ""
+
+#, c-format
 msgid "Unable to parse address %s"
 msgstr "Impossible d'analyser l'adresse %s"
+
+#, c-format
+msgid "Unable to parse custom environment variables: %s\n"
+msgstr ""
+
+#, c-format
+msgid "Unable to parse disks: %s\n"
+msgstr ""
 
 #, c-format
 msgid "Unable to parse include file: %s\n"
@@ -222,8 +318,36 @@ msgstr "Proc RPC innatendu %u"
 msgid "Unexpected rpc status %u"
 msgstr "État RPC inattendu %u"
 
+#, c-format
+msgid "Unimplemented disk type prefix on %s"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk format %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk format '%s'"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk image format: '%s'"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk type %s in config file"
+msgstr ""
+
+#, c-format
+msgid "Unknown disk type prefix on %s"
+msgstr ""
+
 msgid "Unknown failure"
 msgstr "Échec inconnu"
+
+#, c-format
+msgid "Unknown image format %s in config file"
+msgstr ""
 
 #, c-format
 msgid "Unknown mount type %s in config file"
@@ -249,6 +373,19 @@ msgstr "Nom de type « %s » inconnu dans le fichier de configuration"
 msgid "Unsupported configuration type %s"
 msgstr "Type de configuration %s non pris en charge"
 
+#, c-format
+msgid "Wrong environment format on %s"
+msgstr ""
+
+msgid "add a disk in the guest"
+msgstr ""
+
+msgid "add a environment variable for the sandbox"
+msgstr ""
+
+msgid "clean power off when exiting"
+msgstr ""
+
 msgid "config file path"
 msgstr "chemin du fichier de configuration"
 
@@ -269,6 +406,15 @@ msgstr "fichier qui  contient une liste de fichiers pour  inclure"
 
 msgid "file to copy into custom dir"
 msgstr "fichier pour  copier dans un répertoire personnalisé"
+
+msgid "kernel binary path"
+msgstr ""
+
+msgid "kernel module directory"
+msgstr ""
+
+msgid "kernel version"
+msgstr ""
 
 #, c-format
 msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
@@ -298,6 +444,9 @@ msgstr "le paquet de %u octets reçu du serveur est trop grand, %d attendus"
 msgid "packet %u bytes received from server too small, want %u"
 msgstr "le paquet de %u octets reçu du serveur est trop petit, %u attendus"
 
+msgid "root directory of the sandbox"
+msgstr ""
+
 msgid "run the command privileged"
 msgstr "lancer la commande des privilèges"
 
@@ -309,3 +458,6 @@ msgstr "configurer les propriétés d'interface du réseau "
 
 msgid "start a shell"
 msgstr "démarrer un interpréteur de commandes"
+
+msgid "switch to the given user"
+msgstr ""

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
-"POT-Creation-Date: 2019-12-16 16:07+0000\n"
+"POT-Creation-Date: 2020-05-18 13:45+0100\n"
 "PO-Revision-Date: 2019-04-22 07:13+0000\n"
 "Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/fedora/language/"
@@ -52,6 +52,9 @@ msgstr "%s: je třeba spustit jako správce (root)\n"
 
 msgid "'switchto' and 'privileged' are incompatible options\n"
 msgstr "volby „switchto“ a „privileged“ nelze použít zároveň\n"
+
+msgid "- Libvirt Sandbox"
+msgstr ""
 
 #, c-format
 msgid "Cannot identify file extension in '%s'"
