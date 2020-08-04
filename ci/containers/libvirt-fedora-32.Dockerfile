@@ -35,8 +35,10 @@ RUN dnf update -y && \
         ninja-build \
         patch \
         perl \
+        perl-App-cpanminus \
         pkgconfig \
         python3 \
+        python3-pip \
         python3-setuptools \
         python3-wheel \
         rpcgen \
@@ -45,6 +47,7 @@ RUN dnf update -y && \
         strace \
         sudo \
         vim \
+        xz \
         xz-devel \
         xz-static \
         zlib-devel \

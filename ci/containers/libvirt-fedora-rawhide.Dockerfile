@@ -36,8 +36,10 @@ RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
         ninja-build \
         patch \
         perl \
+        perl-App-cpanminus \
         pkgconfig \
         python3 \
+        python3-pip \
         python3-setuptools \
         python3-wheel \
         rpcgen \
@@ -46,6 +48,7 @@ RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
         strace \
         sudo \
         vim \
+        xz \
         xz-devel \
         xz-static \
         zlib-devel \
