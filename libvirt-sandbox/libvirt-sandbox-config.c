@@ -1894,7 +1894,7 @@ gboolean gvir_sandbox_config_set_security_opts(GVirSandboxConfig *config,
         gvir_sandbox_config_set_security_dynamic(config, FALSE);
     } else if (g_str_equal(tmp, "inherit")) {
         gvir_sandbox_config_set_security_dynamic(config, FALSE);
-        security_context_t scon;
+        char *scon;
         if (getcon(&scon) < 0) {
             g_set_error(error, GVIR_SANDBOX_CONFIG_ERROR, 0,
                         _("Unable to get SELinux context of user: %s"),
