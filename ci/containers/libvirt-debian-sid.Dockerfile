@@ -1,4 +1,4 @@
-FROM debian:sid
+FROM docker.io/library/debian:sid
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
@@ -11,10 +11,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             bash-completion \
             ca-certificates \
             ccache \
-            chrony \
             cpanminus \
             gcc \
-            gdb \
             gettext \
             git \
             gtk-doc-tools \
@@ -32,11 +30,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             libvirt-glib-1.0-dev \
             libxml2-dev \
             locales \
-            lsof \
             make \
-            meson \
-            net-tools \
-            ninja-build \
             patch \
             perl \
             pkgconf \
@@ -44,11 +38,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             python3-pip \
             python3-setuptools \
             python3-wheel \
-            screen \
-            strace \
-            sudo \
-            vim \
-            xz-utils \
             zlib1g-dev && \
     apt-get autoremove -y && \
     apt-get autoclean -y && \

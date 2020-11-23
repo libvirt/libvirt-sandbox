@@ -1,4 +1,4 @@
-FROM fedora:rawhide
+FROM registry.fedoraproject.org/fedora:rawhide
 
 RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
     dnf update -y && \
@@ -9,10 +9,7 @@ RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
         bash-completion \
         ca-certificates \
         ccache \
-        chrony \
-        cppi \
         gcc \
-        gdb \
         gettext \
         gettext-devel \
         git \
@@ -29,11 +26,7 @@ RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
         libvirt-devel \
         libvirt-gobject-devel \
         libxml2-devel \
-        lsof \
         make \
-        meson \
-        net-tools \
-        ninja-build \
         patch \
         perl \
         perl-App-cpanminus \
@@ -44,11 +37,6 @@ RUN dnf update -y --nogpgcheck fedora-gpg-keys && \
         python3-wheel \
         rpcgen \
         rpm-build \
-        screen \
-        strace \
-        sudo \
-        vim \
-        xz \
         xz-devel \
         xz-static \
         zlib-devel \

@@ -110,15 +110,15 @@ x64-debian-sid-container:
   variables:
     NAME: debian-sid
 
-x64-fedora-31-container:
-  <<: *container_job_definition
-  variables:
-    NAME: fedora-31
-
 x64-fedora-32-container:
   <<: *container_job_definition
   variables:
     NAME: fedora-32
+
+x64-fedora-33-container:
+  <<: *container_job_definition
+  variables:
+    NAME: fedora-33
 
 x64-fedora-rawhide-container:
   <<: *container_job_definition
@@ -152,15 +152,15 @@ x64-debian-sid-dist-build:
   variables:
     NAME: debian-sid
 
-x64-fedora-31-dist-build:
-  <<: *dist_native_build_job_definition
-  variables:
-    NAME: fedora-31
-
 x64-fedora-32-dist-build:
   <<: *dist_native_build_job_definition
   variables:
     NAME: fedora-32
+
+x64-fedora-33-dist-build:
+  <<: *dist_native_build_job_definition
+  variables:
+    NAME: fedora-33
 
 x64-fedora-rawhide-dist-build:
   <<: *dist_native_build_job_definition

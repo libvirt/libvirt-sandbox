@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM docker.io/library/ubuntu:20.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
@@ -11,10 +11,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             bash-completion \
             ca-certificates \
             ccache \
-            chrony \
             cpanminus \
             gcc \
-            gdb \
             gettext \
             git \
             gtk-doc-tools \
@@ -34,9 +32,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             libxml2-dev \
             libxml2-utils \
             locales \
-            lsof \
             make \
-            net-tools \
             ninja-build \
             patch \
             perl \
@@ -46,13 +42,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             python3-pip \
             python3-setuptools \
             python3-wheel \
-            screen \
-            strace \
-            sudo \
             valac \
-            vim \
             xsltproc \
-            xz-utils \
             zlib1g-dev && \
     apt-get autoremove -y && \
     apt-get autoclean -y && \
