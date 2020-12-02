@@ -4,21 +4,22 @@
 #
 # Translators:
 # Toni Rantala <trantalafilo@gmail.com>, 2017. #zanata
+# Ricky Tigg <ricky.tigg@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2017-03-25 03:17+0000\n"
-"Last-Translator: Toni Rantala <trantalafilo@gmail.com>\n"
-"Language-Team: Finnish (http://www.transifex.com/projects/p/fedora/language/"
-"fi/)\n"
+"PO-Revision-Date: 2020-12-02 16:35+0000\n"
+"Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
+"Language-Team: Finnish <https://translate.fedoraproject.org/projects/libvirt/"
+"libvirt-sandbox/fi/>\n"
 "Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.3.2\n"
 
 #, c-format
 msgid ""
@@ -40,58 +41,58 @@ msgstr "%s versio %s\n"
 
 #, c-format
 msgid "%s: Unable to load config %s: %s\n"
-msgstr ""
+msgstr "%s: Kokoonpanoa %s ei voi ladata: %s\n"
 
 #, c-format
 msgid "%s: must be launched as root\n"
-msgstr ""
+msgstr "%s:n on käynnistettävä rootina\n"
 
 msgid "'switchto' and 'privileged' are incompatible options\n"
-msgstr ""
+msgstr "'switchto' ja 'privileged' ovat yhteensopimattomia vaihtoehtoja\n"
 
 msgid "- Libvirt Sandbox"
 msgstr "- Libvirt-hiekkalaatikko"
 
 #, c-format
 msgid "Cannot identify file extension in '%s'"
-msgstr ""
+msgstr "Tiedostotunnistetta ei voida tunnistaa'%s':ssa"
 
 msgid "Cannot request DHCP with static routes/addresses"
-msgstr ""
+msgstr "Staattisia reittejä/osoitteita sisältävää DHCP:ta ei voi pyytää"
 
 msgid "Cannot set static addresses with DHCP"
-msgstr ""
+msgstr "Staattisia osoitteita ei voi asettaa DHCP:lla"
 
 msgid "Cannot set static routes with DHCP"
-msgstr ""
+msgstr "Staattisia reittejä ei voida asettaa DHCP:lla"
 
 msgid "Cannot set static routes without addresses"
-msgstr ""
+msgstr "Staattisia reittejä ei voi asettaa ilman osoitteita"
 
 msgid "Console is already attached to a stream"
-msgstr ""
+msgstr "Konsoli on jo liitetty johonkin virtaan"
 
 msgid "ConsoleRpc is not attached to a stream"
-msgstr ""
+msgstr "ConsoleRpc ei ole liitetty virtaan"
 
 msgid "Domain is not currently running"
-msgstr ""
+msgstr "Toimialue ei ole tällä hetkellä käynnissä"
 
 #, c-format
 msgid "Failed to resolve user %s\n"
-msgstr ""
+msgstr "Käyttäjän %s ratkaiseminen epäonnistui\n"
 
 #, c-format
 msgid "Got rx in unexpected state %d"
-msgstr ""
+msgstr "rx saatu odottamattomassa tilassa %d"
 
 #, c-format
 msgid "Kernel image %s does not exist"
-msgstr ""
+msgstr "Ytimen levykuvaa %s ei ole olemassa"
 
 #, c-format
 msgid "Kernel module dir %s does not exist"
-msgstr ""
+msgstr "Ytimen moduulihakemistoa %s ei ole olemassa"
 
 msgid "Libvirt Sandbox"
 msgstr "Libvirt-hiekkalaatikko"
@@ -100,17 +101,17 @@ msgid "Libvirt Sandbox Init Common"
 msgstr ""
 
 msgid "Missing class name in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu luokan nimi"
 
 msgid "Missing disk format in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
 
 msgid "Missing disk source in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levylähde"
 
 #, c-format
 msgid "Missing disk source string on %s"
-msgstr ""
+msgstr "Levyn lähdemerkkijono puuttuu %s"
 
 msgid "Missing disk tag in config file"
 msgstr ""
