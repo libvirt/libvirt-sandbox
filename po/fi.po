@@ -5,13 +5,14 @@
 # Translators:
 # Toni Rantala <trantalafilo@gmail.com>, 2017. #zanata
 # Ricky Tigg <ricky.tigg@gmail.com>, 2020.
+# Jan Kuparinen <copper_fin@hotmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2020-12-02 16:35+0000\n"
-"Last-Translator: Ricky Tigg <ricky.tigg@gmail.com>\n"
+"PO-Revision-Date: 2021-01-31 17:40+0000\n"
+"Last-Translator: Jan Kuparinen <copper_fin@hotmail.com>\n"
 "Language-Team: Finnish <https://translate.fedoraproject.org/projects/libvirt/"
 "libvirt-sandbox/fi/>\n"
 "Language: fi\n"
@@ -19,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.4.2\n"
 
 #, c-format
 msgid ""
@@ -114,10 +115,10 @@ msgid "Missing disk source string on %s"
 msgstr "Levyn lähdemerkkijono puuttuu %s"
 
 msgid "Missing disk tag in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
 
 msgid "Missing disk type in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
 
 msgid "Missing environment key in config file"
 msgstr ""
@@ -130,14 +131,14 @@ msgid "Missing gateway in route %s"
 msgstr ""
 
 msgid "Missing image format in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
 
 msgid "Missing mount source in config file"
-msgstr ""
+msgstr "Kokoonpanotiedostosta puuttuu levylähde"
 
 #, c-format
 msgid "Missing mount source string on %s"
-msgstr ""
+msgstr "Levyn lähdemerkkijono puuttuu %s"
 
 msgid "Missing mount target in config file"
 msgstr ""
@@ -153,7 +154,7 @@ msgstr ""
 
 #, c-format
 msgid "No device %s found for domain"
-msgstr ""
+msgstr "Toimialueelle ei löytynyt yhtään laitteita %s"
 
 msgid "No devices found for domain"
 msgstr "Toimialueelle ei löytynyt laitteita"
@@ -385,13 +386,13 @@ msgid "config file path"
 msgstr ""
 
 msgid "connect to hypervisor"
-msgstr ""
+msgstr "yhdistä hypervisoriin"
 
 msgid "display debugging information"
 msgstr ""
 
 msgid "display verbose information"
-msgstr ""
+msgstr "Näytä vuolaat tiedot"
 
 msgid "display version information"
 msgstr "Näytä version tiedot"
