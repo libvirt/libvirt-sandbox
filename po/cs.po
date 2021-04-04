@@ -6,21 +6,22 @@
 # Zdenek <chmelarz@gmail.com>, 2017. #zanata
 # Pavel Borecki <pavel.borecki@gmail.com>, 2018. #zanata
 # Pavel Borecki <pavel.borecki@gmail.com>, 2019. #zanata
+# simmon <simmon@nplob.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2019-04-22 07:13+0000\n"
-"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/fedora/language/"
-"cs/)\n"
+"PO-Revision-Date: 2021-04-04 06:02+0000\n"
+"Last-Translator: simmon <simmon@nplob.com>\n"
+"Language-Team: Czech <https://translate.fedoraproject.org/projects/libvirt/"
+"libvirt-sandbox/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Zanata 4.6.2\n"
+"X-Generator: Weblate 4.5.3\n"
 
 #, c-format
 msgid ""
@@ -54,7 +55,7 @@ msgid "'switchto' and 'privileged' are incompatible options\n"
 msgstr "volby „switchto“ a „privileged“ nelze použít zároveň\n"
 
 msgid "- Libvirt Sandbox"
-msgstr ""
+msgstr "Libvirt Sandbox"
 
 #, c-format
 msgid "Cannot identify file extension in '%s'"
