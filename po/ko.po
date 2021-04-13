@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2021-04-07 05:02+0000\n"
+"PO-Revision-Date: 2021-04-13 06:02+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/libvirt/"
 "libvirt-sandbox/ko/>\n"
@@ -36,7 +36,7 @@ msgstr ""
 #: bin/virt-sandbox.c:66 libvirt-sandbox/libvirt-sandbox-init-common.c:1380
 #, c-format
 msgid "%s version %s\n"
-msgstr "%s 상태번호 %s\n"
+msgstr "%s 버전 %s\n"
 
 #: libvirt-sandbox/libvirt-sandbox-init-common.c:1436
 #, c-format
@@ -514,7 +514,7 @@ msgstr "상세 정보 표시"
 
 #: bin/virt-sandbox.c:105 libvirt-sandbox/libvirt-sandbox-init-common.c:1393
 msgid "display version information"
-msgstr "상태번호 정보 표시"
+msgstr "버전 정보 표시"
 
 #: bin/virt-sandbox.c:125
 msgid "file contain list of files to include"
@@ -534,7 +534,7 @@ msgstr "커널 모듈 디렉토리"
 
 #: bin/virt-sandbox.c:137
 msgid "kernel version"
-msgstr "커널 상태번호"
+msgstr "커널 버전"
 
 #: libvirt-sandbox/libvirt-sandbox-init-common.c:1372
 #, c-format
