@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2021-04-13 06:02+0000\n"
+"PO-Revision-Date: 2021-04-15 16:02+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/libvirt/"
 "libvirt-sandbox/ko/>\n"
@@ -130,12 +130,12 @@ msgstr "구성 파일에 디스크 형식이 누락되었습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:2168
 msgid "Missing disk source in config file"
-msgstr "구성 파일에 디스크 원천이 누락되었습니다"
+msgstr "구성 파일에 디스크 소스가 누락되었습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:1368
 #, c-format
 msgid "Missing disk source string on %s"
-msgstr "%s에 디스크 원천 문자열이 누락되었습니다"
+msgstr "%s에 디스크 소스 문자열이 누락되었습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:2163
 msgid "Missing disk tag in config file"
@@ -199,18 +199,18 @@ msgstr "도메인을 위한 장치를 찾을 수 없습니다"
 #: libvirt-sandbox/libvirt-sandbox-config.c:1345
 #, c-format
 msgid "No disk type prefix on %s"
-msgstr "%s에 디스크 유형 접두사가 없습니다"
+msgstr "%s에 디스크 유형 프리픽스가 없습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:1556
 #, c-format
 msgid "No mount type prefix on %s"
-msgstr "%s에 적재 유형 접두사가 없습니다"
+msgstr "%s에 적재 유형 프리픽스가 없습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:1733
 #: libvirt-sandbox/libvirt-sandbox-config.c:1798
 #, c-format
 msgid "No mount with a prefix under %s"
-msgstr "%s에서 접두사와 함께 적재하지 않습니다"
+msgstr "%s에서 프리픽스와 함께 적재하지 않습니다"
 
 #: libvirt-sandbox/libvirt-sandbox-rpcpacket.c:290
 #, c-format
@@ -433,7 +433,7 @@ msgstr "환경 파일에서 알지 못하는 디스크 유형 %s"
 #: libvirt-sandbox/libvirt-sandbox-config.c:1354
 #, c-format
 msgid "Unknown disk type prefix on %s"
-msgstr "%s에서 알지 못하는 디스크 유형 접두사"
+msgstr "%s에서 알지 못하는 디스크 유형 프리픽스"
 
 #: bin/virt-sandbox.c:189 bin/virt-sandbox.c:231 bin/virt-sandbox.c:238
 #: bin/virt-sandbox.c:245 bin/virt-sandbox.c:251 bin/virt-sandbox.c:257
@@ -456,7 +456,7 @@ msgstr "환경 파일에서 알지 못하는 적재 유형 %s"
 #: libvirt-sandbox/libvirt-sandbox-config.c:1569
 #, c-format
 msgid "Unknown mount type prefix on %s"
-msgstr "%s에서 알지 못하는 적재 유형 접두사"
+msgstr "%s에서 알지 못하는 적재 유형 프리픽스"
 
 #: libvirt-sandbox/libvirt-sandbox-config.c:1120
 #, c-format
@@ -526,7 +526,7 @@ msgstr "사용자 정의 디렉토리로 복사할 파일"
 
 #: bin/virt-sandbox.c:139
 msgid "kernel binary path"
-msgstr "커널 이진수 경로"
+msgstr "커널 바이너리 경로"
 
 #: bin/virt-sandbox.c:141
 msgid "kernel module directory"
