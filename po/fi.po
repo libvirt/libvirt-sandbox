@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2021-05-27 06:02+0000\n"
+"PO-Revision-Date: 2021-09-13 17:04+0000\n"
 "Last-Translator: Jan Kuparinen <copper_fin@hotmail.com>\n"
 "Language-Team: Finnish <https://translate.fedoraproject.org/projects/libvirt/"
 "libvirt-sandbox/fi/>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.6.2\n"
+"X-Generator: Weblate 4.8\n"
 
 #, c-format
 msgid ""
@@ -99,7 +99,7 @@ msgid "Libvirt Sandbox"
 msgstr "Libvirt-hiekkalaatikko"
 
 msgid "Libvirt Sandbox Init Common"
-msgstr ""
+msgstr "Libvirt Sandbox Init Yhteinen"
 
 msgid "Missing class name in config file"
 msgstr "Kokoonpanotiedostosta puuttuu luokan nimi"
@@ -121,14 +121,14 @@ msgid "Missing disk type in config file"
 msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
 
 msgid "Missing environment key in config file"
-msgstr ""
+msgstr "Ympäristöavain puuttuu asetustiedostosta"
 
 msgid "Missing environment value in config file"
-msgstr ""
+msgstr "Ympäristöarvo puuttuu kokoonpanotiedostosta"
 
 #, c-format
 msgid "Missing gateway in route %s"
-msgstr ""
+msgstr "Reitiltä %s puuttuu yhdyskäytävä"
 
 msgid "Missing image format in config file"
 msgstr "Kokoonpanotiedostosta puuttuu levymuoto"
@@ -141,16 +141,16 @@ msgid "Missing mount source string on %s"
 msgstr "Levyn lähdemerkkijono puuttuu %s"
 
 msgid "Missing mount target in config file"
-msgstr ""
+msgstr "Liitoskohde puuttuu kokoonpanotiedostosta"
 
 msgid "Missing mount type in config file"
-msgstr ""
+msgstr "Liitostyyppi puuttuu kokoonpanotiedostosta"
 
 msgid "Missing mount usage in config file"
-msgstr ""
+msgstr "Liitoksen käyttö puuttuu kokoonpanotiedostosta"
 
 msgid "No assignment in filter parameter configuration"
-msgstr ""
+msgstr "Suodatinparametrien konfiguraatiossa ei ole kytkentää"
 
 #, c-format
 msgid "No device %s found for domain"
@@ -161,87 +161,92 @@ msgstr "Toimialueelle ei löytynyt laitteita"
 
 #, c-format
 msgid "No disk type prefix on %s"
-msgstr ""
+msgstr "Ei levytyypin etuliitettä kohteessa %s"
 
 #, c-format
 msgid "No mount type prefix on %s"
-msgstr ""
+msgstr "Ei liitostyypin etuliitettä kohteessa %s"
 
 #, c-format
 msgid "No mount with a prefix under %s"
-msgstr ""
+msgstr "Ei liitosta etuliitteellä kohteessa %s"
 
 #, c-format
 msgid "Raw data too long to send (%zu bytes needed, %zu bytes available)"
 msgstr ""
+"Raakadata on liian pitkä lähetettäväksi (%zu tavua tarvitaan, %zu tavua "
+"käytettävissä)"
 
 msgid "Run '"
-msgstr ""
+msgstr "Suorita '"
 
 msgid ""
 "Run 'virt-sandbox --help' to see a full list of available command line "
 "options"
 msgstr ""
+"Suorita `virt-sandbox --help` nähdäksesi kaikki käytettävissä olevat "
+"komentorivivalitsimet"
 
 msgid "Sandbox is not currently running"
-msgstr ""
+msgstr "Hiekkalaatikko ei ole tällä hetkellä käynnissä"
 
 #, c-format
 msgid "Type name '%s' in config file had wrong parent"
-msgstr ""
+msgstr "Tyyppinimellä '%s' asetustiedostossa oli väärä vanhempi"
 
 #, c-format
 msgid "URI '%s' unsupported as non-root, try 'qemu:///session'"
-msgstr ""
+msgstr "URI:tä '%s' ei tueta ei-root-käyttäjänä, kokeile 'qemu: /// session'"
 
 #, c-format
 msgid "URI '%s' unsupported as root, try 'lxc:///' or 'qemu:///system'"
 msgstr ""
+"URI:tä '%s' ei tueta root-käyttäjänä, kokeile 'lxc:///' tai 'qemu:///system'"
 
 #, c-format
 msgid "Unable to access %s: %s"
-msgstr ""
+msgstr "Ei pääse kohteeseen %s: %s"
 
 #, c-format
 msgid "Unable to attach sandbox console: %s\n"
-msgstr ""
+msgstr "Ei voi liittää hiekkalaatikkokonsolia: %s\n"
 
 #, c-format
 msgid "Unable to create temporary directory %s: %s"
-msgstr ""
+msgstr "Tilapäishakemiston luominen epäonnistui %s: %s"
 
 msgid "Unable to decode message header"
-msgstr ""
+msgstr "Viestin otsikon purkaminen ei onnistu"
 
 msgid "Unable to decode message length"
-msgstr ""
+msgstr "Viestin pituuden purkaminen ei onnistu"
 
 msgid "Unable to decode message payload"
-msgstr ""
+msgstr "Viestien hyötykuorman purkaminen ei onnistu"
 
 msgid "Unable to encode message header"
-msgstr ""
+msgstr "Viestin otsikkoa ei voi koodata"
 
 msgid "Unable to encode message length"
-msgstr ""
+msgstr "Viestin pituutta ei voi koodata"
 
 msgid "Unable to encode message payload"
-msgstr ""
+msgstr "Viestin hyötykuormaa ei voi koodata"
 
 #, c-format
 msgid "Unable to get SELinux context of user: %s"
-msgstr ""
+msgstr "Käyttäjän: %s SELinux-kontekstin noutaminen epäonnistui"
 
 #, c-format
 msgid "Unable to get app console: %s\n"
-msgstr ""
+msgstr "Sovelluskonsolia ei voi saada: %s\n"
 
 #, c-format
 msgid "Unable to get log console: %s\n"
-msgstr ""
+msgstr "Lokikonsolia ei voi saada: %s\n"
 
 msgid "Unable to isolate console unless direct access flag is set"
-msgstr ""
+msgstr "Konsolia ei voi eristää, ellei suoran pääsyn merkkiä ole asetettu"
 
 #, c-format
 msgid "Unable to open connection: %s\n"
@@ -249,109 +254,109 @@ msgstr "Yhteyttä %s ei voitu avata\n"
 
 #, c-format
 msgid "Unable to open console %s"
-msgstr ""
+msgstr "Konsolia %s ei voi avata"
 
 #, c-format
 msgid "Unable to parse address %s"
-msgstr ""
+msgstr "Osoitteen %s jäsentäminen epäonnistui"
 
 #, c-format
 msgid "Unable to parse custom environment variables: %s\n"
-msgstr ""
+msgstr "Muokattujen ympäristömuuttujien jäsentäminen epäonnistui: %s\n"
 
 #, c-format
 msgid "Unable to parse disks: %s\n"
-msgstr ""
+msgstr "Levyjä ei voi jäsentää: %s\n"
 
 #, c-format
 msgid "Unable to parse include file: %s\n"
-msgstr ""
+msgstr "Sisällytä tiedostoa: %s ei voi jäsentää\n"
 
 #, c-format
 msgid "Unable to parse includes: %s\n"
-msgstr ""
+msgstr "Include-tiedostoja ei voi jäsentää: %s\n"
 
 #, c-format
 msgid "Unable to parse mounts: %s\n"
-msgstr ""
+msgstr "Liitäntöjen %s jäsentäminen epäonnistui\n"
 
 #, c-format
 msgid "Unable to parse networks: %s\n"
-msgstr ""
+msgstr "Verkkojen %s jäsentäminen epäonnistui\n"
 
 #, c-format
 msgid "Unable to parse security: %s\n"
-msgstr ""
+msgstr "Suojauksen %s jäsentäminen epäonnistui\n"
 
 #, c-format
 msgid "Unable to query terminal attributes: %s"
-msgstr ""
+msgstr "Ei voi kysyä terminaalin määritteitä: %s"
 
 msgid "Unable to re-encode message length"
-msgstr ""
+msgstr "Viestin pituuden uudelleenkoodaus ei onnistu"
 
 #, c-format
 msgid "Unable to read entries in %s: %s"
-msgstr ""
+msgstr "Kohteen %s merkintöjä ei voi lukea: %s"
 
 #, c-format
 msgid "Unable to restore terminal attributes: %s"
-msgstr ""
+msgstr "Ei voi palauttaa terminaalin määritteitä: %s"
 
 #, c-format
 msgid "Unable to start sandbox: %s\n"
-msgstr ""
+msgstr "Hiekkalaatikkoa ei voi käynnistää: %s\n"
 
 #, c-format
 msgid "Unable to update terminal attributes: %s"
-msgstr ""
+msgstr "Ei voi päivittää terminaalin määritteitä: %s"
 
 #, c-format
 msgid "Unexpected rpc proc %u"
-msgstr ""
+msgstr "Odottamaton rpc proc %u"
 
 #, c-format
 msgid "Unexpected rpc status %u"
-msgstr ""
+msgstr "Odottamaton rpc tila %u"
 
 #, c-format
 msgid "Unimplemented disk type prefix on %s"
-msgstr ""
+msgstr "Toteuttamaton levytyypin etuliite kohteessa %s"
 
 #, c-format
 msgid "Unknown disk format %s in config file"
-msgstr ""
+msgstr "Tuntematon levymuoto %s asetustiedostossa"
 
 #, c-format
 msgid "Unknown disk format '%s'"
-msgstr ""
+msgstr "Tuntematon levymuoto '%s'"
 
 #, c-format
 msgid "Unknown disk image format: '%s'"
-msgstr ""
+msgstr "Tuntematon levykuvan muoto '%s'"
 
 #, c-format
 msgid "Unknown disk type %s in config file"
-msgstr ""
+msgstr "Tuntematon levytyyppi %s asetustiedostossa"
 
 #, c-format
 msgid "Unknown disk type prefix on %s"
-msgstr ""
+msgstr "Tuntematon levytyypin etuliite kohteessa %s"
 
 msgid "Unknown failure"
 msgstr "Tuntematon virhe"
 
 #, c-format
 msgid "Unknown image format %s in config file"
-msgstr ""
+msgstr "Tuntematon levykuvan muoto %s asetustiedostossa"
 
 #, c-format
 msgid "Unknown mount type %s in config file"
-msgstr ""
+msgstr "Tuntematon liitostyyppi %s asetustiedostossa"
 
 #, c-format
 msgid "Unknown mount type prefix on %s"
-msgstr ""
+msgstr "Tuntematon liitostyyppinen etuliite kohteessa %s"
 
 #, c-format
 msgid "Unknown parameter %s"
@@ -359,19 +364,19 @@ msgstr "Tuntematon parametri %s"
 
 #, c-format
 msgid "Unknown security option '%s'"
-msgstr ""
+msgstr "Tuntematon suojausvaihtoehto '%s'"
 
 #, c-format
 msgid "Unknown type name '%s' in config file"
-msgstr ""
+msgstr "Tuntematon tyyppinimi %s asetustiedostossa"
 
 #, c-format
 msgid "Unsupported configuration type %s"
-msgstr ""
+msgstr "Kokoonpanotyyppi %s ei tuettu"
 
 #, c-format
 msgid "Wrong environment format on %s"
-msgstr ""
+msgstr "Väärä ympäristömuoto kohteessa %s"
 
 msgid "add a disk in the guest"
 msgstr "lisää vieraalle levy"
@@ -380,10 +385,10 @@ msgid "add a environment variable for the sandbox"
 msgstr "lisää hiekkalaatikolle ympäristömuuttuja"
 
 msgid "clean power off when exiting"
-msgstr ""
+msgstr "puhdas virrankatkaisu poistuttaessa"
 
 msgid "config file path"
-msgstr ""
+msgstr "config-tiedoston polku"
 
 msgid "connect to hypervisor"
 msgstr "yhdistä hypervisoriin"
@@ -401,57 +406,57 @@ msgid "file contain list of files to include"
 msgstr "tiedosto sisältää listan tiedostoista jotka pitää sisällyttää"
 
 msgid "file to copy into custom dir"
-msgstr ""
+msgstr "custom kansioon kopioitava tiedosto"
 
 msgid "kernel binary path"
-msgstr ""
+msgstr "ytimen binääripolku"
 
 msgid "kernel module directory"
-msgstr ""
+msgstr "ytimen moduulihakemisto"
 
 msgid "kernel version"
 msgstr "kernel versio"
 
 #, c-format
 msgid "libvirt-sandbox-init-common: %s: cannot execute %s: %s\n"
-msgstr ""
+msgstr "libvirt-sandbox-init-common: %s: ei voi suorittaa %s: %s\n"
 
 #, c-format
 msgid "libvirt-sandbox-init-common: cannot open %s: %s"
-msgstr ""
+msgstr "libvirt-sandbox-init-common: ei voi avata %s: %s"
 
 #, c-format
 msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
-msgstr ""
+msgstr "libvirt-sandbox-init-common: signaaliputkea ei voi luoda: %s"
 
 msgid "mount a filesystem in the guest"
-msgstr ""
+msgstr "liitä tiedostojärjestelmä vieraaseen"
 
 msgid "name of the sandbox"
 msgstr "hiekkalaatikon nimi"
 
 #, c-format
 msgid "packet %u bytes received from server too large, want %d"
-msgstr ""
+msgstr "palvelimelta vastaanotettu paketti %u tavua on liian suuri, halutaan %d"
 
 #, c-format
 msgid "packet %u bytes received from server too small, want %u"
-msgstr ""
+msgstr "palvelimelta vastaanotettu paketti %u tavua on liian pieni, halutaan %u"
 
 msgid "root directory of the sandbox"
 msgstr "hiekkalaatikin juurihakemisto"
 
 msgid "run the command privileged"
-msgstr ""
+msgstr "suorita komento etuoikeutettuna"
 
 msgid "security properties"
-msgstr ""
+msgstr "turvallisuusominaisuudet"
 
 msgid "setup network interface properties"
-msgstr ""
+msgstr "määritä verkkoliitännän ominaisuudet"
 
 msgid "start a shell"
 msgstr "avaa komentokehote"
 
 msgid "switch to the given user"
-msgstr ""
+msgstr "vaihda annettuksi käyttäjäksi"
