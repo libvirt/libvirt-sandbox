@@ -127,9 +127,12 @@ SANDBOX_SOURCE_FILES = \
 			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 
-SANDBOX_COMMON_CFLAGS = \
+SANDBOX_GLIB_VERSION_CFLAGS = \
 			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
 			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
+			$(NULL)
+
+SANDBOX_COMMON_CFLAGS = \
 			-DLIBVIRT_SANDBOX_BUILD \
 			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
 			-DBINDIR="\"$(bindir)\"" \
@@ -143,6 +146,16 @@ SANDBOX_COMMON_CFLAGS = \
 			-I$(top_builddir) \
 			$(WARN_CFLAGS) \
 			$(COVERAGE_CFLAGS) \
+			$(NULL)
+
+SANDBOX_COMMON_LIB_CFLAGS = \
+			$(SANDBOX_COMMON_CFLAGS) \
+			$(COVERAGE_CFLAGS) \
+			$(GIO_UNIX_CFLAGS) \
+			$(LIBVIRT_GLIB_CFLAGS) \
+			$(LIBVIRT_GOBJECT_CFLAGS) \
+			$(SELINUX_CFLAGS) \
+			$(XDR_CFLAGS) \
 			$(NULL)
 
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
@@ -160,12 +173,8 @@ nodist_libvirt_sandbox_1_0_la_SOURCES = \
 			libvirt-sandbox-protocol.c \
 			$(NULL)
 libvirt_sandbox_1_0_la_CFLAGS = \
-			$(SANDBOX_COMMON_CFLAGS) \
-			$(GIO_UNIX_CFLAGS) \
-			$(LIBVIRT_GLIB_CFLAGS) \
-			$(LIBVIRT_GOBJECT_CFLAGS) \
-			$(SELINUX_CFLAGS) \
-			$(XDR_CFLAGS) \
+			$(SANDBOX_GLIB_VERSION_CFLAGS) \
+			$(SANDBOX_COMMON_LIB_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_1_0_la_LIBADD = \
 			$(GIO_UNIX_LIBS) \
@@ -192,6 +201,7 @@ libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c \
 			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 libvirt_sandbox_init_common_CFLAGS = \
+			$(SANDBOX_GLIB_VERSION_CFLAGS) \
 			$(SANDBOX_COMMON_CFLAGS) \
 			$(LIBVIRT_GCONFIG_CFLAGS) \
 			$(GIO_UNIX_CFLAGS) \
@@ -214,6 +224,7 @@ libvirt_sandbox_init_common_LDADD = \
 
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
 libvirt_sandbox_init_lxc_CFLAGS = \
+			$(SANDBOX_GLIB_VERSION_CFLAGS) \
 			$(SANDBOX_COMMON_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_lxc_LDFLAGS = \
@@ -224,6 +235,7 @@ libvirt_sandbox_init_lxc_LDFLAGS = \
 
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
 libvirt_sandbox_init_qemu_CFLAGS = \
+			$(SANDBOX_GLIB_VERSION_CFLAGS) \
 			$(SANDBOX_COMMON_CFLAGS) \
 			$(ZLIB_CFLAGS) \
 			$(LZMA_CFLAGS) \
@@ -273,7 +285,7 @@ LibvirtSandbox_1_0_gir_FILES = \
 	$(SANDBOX_HEADER_FILES:%=$(srcdir)/%) \
 	$(SANDBOX_GENERATED_ENUM_FILES:%=%) \
 	$(NULL)
-LibvirtSandbox_1_0_gir_CFLAGS = $(libvirt_sandbox_1_0_la_CFLAGS)
+LibvirtSandbox_1_0_gir_CFLAGS = $(SANDBOX_COMMON_LIB_CFLAGS)
 LibvirtSandbox_1_0_gir_SCANNERFLAGS = \
 	--warn-all \
 	--identifier-prefix=GVirSandbox \
