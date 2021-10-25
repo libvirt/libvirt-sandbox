@@ -127,6 +127,24 @@ SANDBOX_SOURCE_FILES = \
 			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 
+SANDBOX_COMMON_CFLAGS = \
+			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
+			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
+			-DLIBVIRT_SANDBOX_BUILD \
+			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
+			-DBINDIR="\"$(bindir)\"" \
+			-DDATADIR="\"$(datadir)\"" \
+			-DLIBEXECDIR="\"$(libexecdir)\"" \
+			-DLOCALEDIR="\"$(datadir)/locale"\" \
+			-DRUNDIR="\"$(rundir)\"" \
+			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			-DSYSCONFDIR="\"$(sysconfdir)\"" \
+			-I$(top_srcdir) \
+			-I$(top_builddir) \
+			$(WARN_CFLAGS) \
+			$(COVERAGE_CFLAGS) \
+			$(NULL)
+
 libvirt_sandbox_1_0_ladir = $(includedir)/libvirt-sandbox-1.0/libvirt-sandbox
 libvirt_sandbox_1_0_la_HEADERS = \
 			$(SANDBOX_HEADER_FILES)
@@ -142,26 +160,12 @@ nodist_libvirt_sandbox_1_0_la_SOURCES = \
 			libvirt-sandbox-protocol.c \
 			$(NULL)
 libvirt_sandbox_1_0_la_CFLAGS = \
-			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
-			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
-			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
-			-DBINDIR="\"$(bindir)\"" \
-			-DDATADIR="\"$(datadir)\"" \
-			-DLIBVIRT_SANDBOX_BUILD \
-			-DLIBEXECDIR="\"$(libexecdir)\"" \
-			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
-			-DRUNDIR="\"$(rundir)\"" \
-			-DSYSCONFDIR="\"$(sysconfdir)\"" \
-			-DLOCALEDIR="\"$(datadir)/locale"\" \
-			$(COVERAGE_CFLAGS) \
-			-I$(top_srcdir) \
-			-I$(top_builddir) \
+			$(SANDBOX_COMMON_CFLAGS) \
 			$(GIO_UNIX_CFLAGS) \
 			$(LIBVIRT_GLIB_CFLAGS) \
 			$(LIBVIRT_GOBJECT_CFLAGS) \
 			$(SELINUX_CFLAGS) \
 			$(XDR_CFLAGS) \
-			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_1_0_la_LIBADD = \
 			$(GIO_UNIX_LIBS) \
@@ -188,22 +192,12 @@ libvirt_sandbox_init_common_SOURCES = libvirt-sandbox-init-common.c \
 			$(SANDBOX_CONFIG_SOURCE_FILES) \
 			$(NULL)
 libvirt_sandbox_init_common_CFLAGS = \
-			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
-			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
-			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
-			-DLIBEXECDIR="\"$(libexecdir)\"" \
-			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
-			-DLOCALEDIR="\"$(datadir)/locale"\" \
-			-DLIBVIRT_SANDBOX_BUILD \
-			$(COVERAGE_CFLAGS) \
-			-I$(top_srcdir) \
-			-I$(top_builddir) \
+			$(SANDBOX_COMMON_CFLAGS) \
 			$(LIBVIRT_GCONFIG_CFLAGS) \
 			$(GIO_UNIX_CFLAGS) \
 			$(CAPNG_CFLAGS) \
 			$(SELINUX_CFLAGS) \
 			$(XDR_CFLAGS) \
-			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_common_LDFLAGS = \
 			-lutil \
@@ -220,14 +214,7 @@ libvirt_sandbox_init_common_LDADD = \
 
 libvirt_sandbox_init_lxc_SOURCES = libvirt-sandbox-init-lxc.c
 libvirt_sandbox_init_lxc_CFLAGS = \
-			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
-			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
-			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
-			-DLIBEXECDIR="\"$(libexecdir)\"" \
-			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
-			-I$(top_srcdir) \
-			-I$(top_builddir) \
-			$(WARN_CFLAGS) \
+			$(SANDBOX_COMMON_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_lxc_LDFLAGS = \
 			-all-static \
@@ -237,14 +224,9 @@ libvirt_sandbox_init_lxc_LDFLAGS = \
 
 libvirt_sandbox_init_qemu_SOURCES = libvirt-sandbox-init-qemu.c
 libvirt_sandbox_init_qemu_CFLAGS = \
-			-DGLIB_VERSION_MIN_REQUIRED=$(GLIB2_VERSION_SYMBOL) \
-			-DGLIB_VERSION_MAX_ALLOWED=$(GLIB2_VERSION_SYMBOL) \
-			-DGETTEXT_PACKAGE="\"libvirt-sandbox\"" \
-			-DLIBEXECDIR="\"$(libexecdir)\"" \
-			-DSANDBOXCONFIGDIR="\"$(sandboxconfigdir)\"" \
+			$(SANDBOX_COMMON_CFLAGS) \
 			$(ZLIB_CFLAGS) \
 			$(LZMA_CFLAGS) \
-			$(WARN_CFLAGS) \
 			$(NULL)
 libvirt_sandbox_init_qemu_LDFLAGS = \
 			-all-static \
