@@ -10,13 +10,19 @@ gitlab:
 targets:
   debian-10: x86_64
 
-  debian-sid: x86_64
+  debian-sid:
+    jobs:
+      - arch: x86_64
+        allow-failure: true
 
   fedora-34: x86_64
 
   fedora-35: x86_64
 
-  fedora-rawhide: x86_64
+  fedora-rawhide:
+    jobs:
+      - arch: x86_64
+        allow-failure: true
 
   opensuse-leap-152:
     jobs:
@@ -27,6 +33,7 @@ targets:
   opensuse-tumbleweed:
     jobs:
       - arch: x86_64
+        allow-failure: true
         variables:
           RPM: skip
 
