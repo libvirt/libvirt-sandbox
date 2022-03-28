@@ -27,7 +27,7 @@ st=$(
 exec 3>&-
 test "$st" = 0
 
-rm -f *.tar.gz
+rm -f *.tar.xz
 make dist
 
 if [ -f /usr/bin/rpmbuild ]; then

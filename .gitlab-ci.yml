@@ -45,7 +45,7 @@ stages:
     - $MAKE check
     - $MAKE install
     - $MAKE dist
-    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild --nodeps -ta libvirt-sandbox*.tar.gz ; fi
+    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild --nodeps -ta libvirt-sandbox*.tar.xz ; fi
 
 .native_build_job:
   extends: .gitlab_native_build_job
@@ -63,6 +63,6 @@ stages:
     - $MAKE check
     - $MAKE install
     - $MAKE dist
-    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild -ta libvirt-sandbox*.tar.gz ; fi
+    - if test -x /usr/bin/rpmbuild && test "$RPM" != "skip" ; then rpmbuild -ta libvirt-sandbox*.tar.xz ; fi
 
 include: '/ci/gitlab.yml'

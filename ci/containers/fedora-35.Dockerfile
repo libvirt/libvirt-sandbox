@@ -43,6 +43,7 @@ exec "$@"' > /usr/bin/nosync && \
         pkgconfig \
         rpcgen \
         rpm-build \
+        xz \
         xz-devel \
         xz-static \
         zlib-devel \

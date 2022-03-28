@@ -37,6 +37,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
             locales \
             make \
             pkgconf \
+            xz-utils \
             zlib1g-dev && \
     eatmydata apt-get autoremove -y && \
     eatmydata apt-get autoclean -y && \

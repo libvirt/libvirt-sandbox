@@ -13,7 +13,7 @@ config.sub
 configure
 depcomp
 install-sh
-*.tar.gz
+*.tar.xz
 libtool
 ltmain.sh
 missing

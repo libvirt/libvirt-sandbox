@@ -33,6 +33,7 @@ RUN zypper update -y && \
            pkgconfig \
            rpcgen \
            rpm-build \
+           xz \
            xz-devel \
            xz-static-devel \
            zlib-devel \
