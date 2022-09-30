@@ -4,7 +4,7 @@
 #
 # https://gitlab.com/libvirt/libvirt-ci
 
-FROM docker.io/library/debian:sid-slim
+FROM docker.io/library/ubuntu:22.04
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
@@ -26,17 +26,27 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
                       libcap-ng-dev \
                       libgirepository1.0-dev \
                       libglib2.0-dev \
+                      libglib2.0-dev-bin \
+                      libgnutls28-dev \
                       liblzma-dev \
+                      libnl-3-dev \
+                      libnl-route-3-dev \
                       libselinux1-dev \
                       libtirpc-dev \
                       libtool \
                       libtool-bin \
-                      libvirt-dev \
-                      libvirt-glib-1.0-dev \
                       libxml2-dev \
+                      libxml2-utils \
                       locales \
                       make \
+                      meson \
+                      ninja-build \
+                      perl-base \
                       pkgconf \
+                      python3 \
+                      python3-docutils \
+                      valac \
+                      xsltproc \
                       xz-utils \
                       zlib1g-dev && \
     eatmydata apt-get autoremove -y && \
@@ -51,3 +61,5 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 ENV CCACHE_WRAPPERSDIR "/usr/libexec/ccache-wrappers"
 ENV LANG "en_US.UTF-8"
 ENV MAKE "/usr/bin/make"
+ENV NINJA "/usr/bin/ninja"
+ENV PYTHON "/usr/bin/python3"

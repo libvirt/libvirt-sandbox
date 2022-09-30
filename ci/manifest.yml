@@ -15,16 +15,16 @@ targets:
       - arch: x86_64
         allow-failure: true
 
-  fedora-34: x86_64
-
   fedora-35: x86_64
+
+  fedora-36: x86_64
 
   fedora-rawhide:
     jobs:
       - arch: x86_64
         allow-failure: true
 
-  opensuse-leap-152:
+  opensuse-leap-153:
     jobs:
       - arch: x86_64
         variables:
@@ -37,9 +37,9 @@ targets:
         variables:
           RPM: skip
 
-  ubuntu-1804: x86_64
+  ubuntu-2004: x86_64
 
-  ubuntu-2004:
+  ubuntu-2204:
     projects:
       - libvirt-sandbox
       - libvirt+minimal
