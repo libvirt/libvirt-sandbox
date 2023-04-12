@@ -4,16 +4,16 @@
 #
 # Translators:
 # Zdenek <chmelarz@gmail.com>, 2017. #zanata
-# Pavel Borecki <pavel.borecki@gmail.com>, 2018. #zanata
-# Pavel Borecki <pavel.borecki@gmail.com>, 2019. #zanata
+# Pavel Borecki <pavel.borecki@gmail.com>, 2018. #zanata, 2023.
+# Pavel Borecki <pavel.borecki@gmail.com>, 2019. #zanata, 2023.
 # simmon <simmon@nplob.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: libvirt-sandbox 0.8.0\n"
 "Report-Msgid-Bugs-To: https://libvirt.org/bugs.html\n"
 "POT-Creation-Date: 2020-05-18 13:45+0100\n"
-"PO-Revision-Date: 2021-04-04 06:02+0000\n"
-"Last-Translator: simmon <simmon@nplob.com>\n"
+"PO-Revision-Date: 2023-04-10 07:20+0000\n"
+"Last-Translator: Pavel Borecki <pavel.borecki@gmail.com>\n"
 "Language-Team: Czech <https://translate.fedoraproject.org/projects/libvirt/"
 "libvirt-sandbox/cs/>\n"
 "Language: cs\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Weblate 4.5.3\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #, c-format
 msgid ""
@@ -32,7 +32,7 @@ msgid ""
 "\n"
 msgstr ""
 "\n"
-"Použití: %s [VOLBY] PRIKAZ-POPIS_UMISTENI [ARGUMENTY…]\n"
+"Použití: %s [VOLBY] POPIS-UMISTENI-PRIKAZU [ARGUMENTY…]\n"
 "\n"
 "%s\n"
 "\n"
@@ -55,7 +55,7 @@ msgid "'switchto' and 'privileged' are incompatible options\n"
 msgstr "volby „switchto“ a „privileged“ nelze použít zároveň\n"
 
 msgid "- Libvirt Sandbox"
-msgstr "Libvirt Sandbox"
+msgstr "- Libvirt Sandbox"
 
 #, c-format
 msgid "Cannot identify file extension in '%s'"
@@ -96,7 +96,7 @@ msgstr "Obraz s jádrem %s neexistuje"
 
 #, c-format
 msgid "Kernel module dir %s does not exist"
-msgstr "Složka modulu do jádra %s neexistuje"
+msgstr "Složka %s s moduly pro jádro neexistuje"
 
 msgid "Libvirt Sandbox"
 msgstr "Libvirt Sandbox"
@@ -118,7 +118,7 @@ msgid "Missing disk source string on %s"
 msgstr "Chybí řetězec zdroje disku na %s"
 
 msgid "Missing disk tag in config file"
-msgstr "V souboru s nastaveními chybí štítek disku"
+msgstr "Chybějící štítek disku v souboru s nastaveními"
 
 msgid "Missing disk type in config file"
 msgstr "Chybějící typ disku v souboru s nastaveními"
@@ -134,7 +134,7 @@ msgid "Missing gateway in route %s"
 msgstr "V trase %s chybí brána"
 
 msgid "Missing image format in config file"
-msgstr "V souboru s nastaveními chybí formát obrazu"
+msgstr "Chybějící formát obrazu v souboru s nastaveními"
 
 msgid "Missing mount source in config file"
 msgstr "Chybějící zdroj připojení v souboru s nastaveními"
@@ -416,7 +416,7 @@ msgid "kernel binary path"
 msgstr "popis umístění binárky s jádrem"
 
 msgid "kernel module directory"
-msgstr "složka modulu do jádra"
+msgstr "složka s moduly pro jádro"
 
 msgid "kernel version"
 msgstr "verze jádra"
@@ -431,7 +431,7 @@ msgstr "libvirt-sandbox-init-common: nedaří se otevřít %s: %s"
 
 #, c-format
 msgid "libvirt-sandbox-init-common: unable to create signal pipe: %s"
-msgstr "libvirt-sandbox-init-common: nedaří se vytvořit pipe pro signál: %s"
+msgstr "libvirt-sandbox-init-common: nedaří se vytvořit rouru pro signál: %s"
 
 msgid "mount a filesystem in the guest"
 msgstr "připojit v hostovi souborový systém"
@@ -442,13 +442,13 @@ msgstr "název odděleného prostředí"
 #, c-format
 msgid "packet %u bytes received from server too large, want %d"
 msgstr ""
-"počet bajtů %u paketu, obdrženého ze serveru, je příliš vysoký, je zapotřebí "
-"%d"
+"počet bajtů %u paketu, obdrženého ze serveru, je příliš vysoký – je "
+"zapotřebí %d"
 
 #, c-format
 msgid "packet %u bytes received from server too small, want %u"
 msgstr ""
-"počet bajtů %u paketu, obdrženého ze serveru, je příliš nízký, je zapotřebí "
+"počet bajtů %u paketu, obdrženého ze serveru, je příliš nízký – je zapotřebí "
 "%u"
 
 msgid "root directory of the sandbox"
